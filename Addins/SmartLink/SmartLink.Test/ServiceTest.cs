@@ -1,20 +1,22 @@
-﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿// Copyright(c) Microsoft Corporation. 
+// All rights reserved.
+//
+// Licensed under the MIT license. See LICENSE file in the solution root folder for full license information.
+
 using Autofac;
-using SmartLink.Service;
-using AutoMapper;
-using System.Data.Entity;
-using SmartLink.Entity;
-using System.Linq;
-using SmartLink.Common;
 using Autofac.Extras.Moq;
-using Moq;
-using Microsoft.WindowsAzure.Storage.Table;
+using AutoMapper;
 using DocumentFormat.OpenXml.Packaging;
-using System.IO;
 using DocumentFormat.OpenXml.Wordprocessing;
-using DocumentFormat.OpenXml;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.WindowsAzure.Storage.Table;
+using SmartLink.Common;
+using SmartLink.Entity;
+using System;
 using System.Collections.Generic;
+using System.Data.Entity;
+using System.IO;
+using System.Linq;
 
 namespace SmartLink.Service.Tests
 {

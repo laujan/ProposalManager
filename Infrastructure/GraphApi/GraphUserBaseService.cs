@@ -31,7 +31,7 @@ namespace Infrastructure.GraphApi
 
         public GraphUserBaseService(
             ILogger<GraphUserBaseService> logger,
-            IOptions<AppOptions> appOptions,
+            IOptionsMonitor<AppOptions> appOptions,
             IGraphClientContext graphClientContext,
             IHostingEnvironment hostingEnvironment) : base(logger, appOptions)
         {
@@ -289,49 +289,6 @@ namespace Infrastructure.GraphApi
         }
 
 
-        // email and misc related to user
-        public async Task<JObject> SendEmail(string userUpn, string messageJson, string requestId = "")
-        {
-            // POST: https://graph.microsoft.com/v1.0/users/{ id | userPrincipalName}/sendMail
-            // EXAMPLE: 
-
-            _logger.LogInformation($"RequestId: {requestId} - SendEmail called.");
-            
-            try
-            {
-                Guard.Against.NullOrEmpty(messageJson, "SendEmail_messageJson null-empty", requestId);
-                Guard.Against.NullOrEmpty(userUpn, "SendEmail_userUpn null-empty", requestId);
-
-                var requestUrl = $"{_appOptions.GraphRequestUrl}users/{userUpn}/sendMail";
-
-                // Create the request message and add the content.
-                HttpRequestMessage hrm = new HttpRequestMessage(HttpMethod.Post, requestUrl);
-                hrm.Content = new StringContent(messageJson, Encoding.UTF8, "application/json");
-
-                var response = new HttpResponseMessage();
-
-                // Authenticate (add access token) our HttpRequestMessage
-                await GraphClient.AuthenticationProvider.AuthenticateRequestAsync(hrm);
-
-                // Send the request and get the response.
-                response = await GraphClient.HttpProvider.SendAsync(hrm);
-
-                // Get the status response and throw if is not 202.
-                Guard.Against.NotStatus202Accepted(response.StatusCode, "SendEmail-not202", requestId);
-
-                JObject responseJObject = JObject.FromObject(response);
-
-                _logger.LogInformation($"RequestId: {requestId} - SendEmail end.");
-                return responseJObject;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"RequestId: {requestId} - SendEmail Service Exception: {ex}");
-                throw new ResponseException($"RequestId: {requestId} - SendEmail Service Exception: {ex}");
-            }
-        }
-
-
         // TODO: Reference methods to be deprecated
         public async Task<JObject> GetMyUserInfoAsync()
         {
@@ -440,73 +397,6 @@ namespace Infrastructure.GraphApi
                         return "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4NCjwhRE9DVFlQRSBzdmcgIFBVQkxJQyAnLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4nICAnaHR0cDovL3d3dy53My5vcmcvR3JhcGhpY3MvU1ZHLzEuMS9EVEQvc3ZnMTEuZHRkJz4NCjxzdmcgd2lkdGg9IjQwMXB4IiBoZWlnaHQ9IjQwMXB4IiBlbmFibGUtYmFja2dyb3VuZD0ibmV3IDMxMi44MDkgMCA0MDEgNDAxIiB2ZXJzaW9uPSIxLjEiIHZpZXdCb3g9IjMxMi44MDkgMCA0MDEgNDAxIiB4bWw6c3BhY2U9InByZXNlcnZlIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPg0KPGcgdHJhbnNmb3JtPSJtYXRyaXgoMS4yMjMgMCAwIDEuMjIzIC00NjcuNSAtODQzLjQ0KSI+DQoJPHJlY3QgeD0iNjAxLjQ1IiB5PSI2NTMuMDciIHdpZHRoPSI0MDEiIGhlaWdodD0iNDAxIiBmaWxsPSIjRTRFNkU3Ii8+DQoJPHBhdGggZD0ibTgwMi4zOCA5MDguMDhjLTg0LjUxNSAwLTE1My41MiA0OC4xODUtMTU3LjM4IDEwOC42MmgzMTQuNzljLTMuODctNjAuNDQtNzIuOS0xMDguNjItMTU3LjQxLTEwOC42MnoiIGZpbGw9IiNBRUI0QjciLz4NCgk8cGF0aCBkPSJtODgxLjM3IDgxOC44NmMwIDQ2Ljc0Ni0zNS4xMDYgODQuNjQxLTc4LjQxIDg0LjY0MXMtNzguNDEtMzcuODk1LTc4LjQxLTg0LjY0MSAzNS4xMDYtODQuNjQxIDc4LjQxLTg0LjY0MWM0My4zMSAwIDc4LjQxIDM3LjkgNzguNDEgODQuNjR6IiBmaWxsPSIjQUVCNEI3Ii8+DQo8L2c+DQo8L3N2Zz4NCg==";
                 }
             }
-        }
-
-        public async Task SendEmailAsync(string sendTo, string subject, string emailTemplate)
-        {
-            if (sendTo == null) return;
-
-            var attachments = new MessageAttachmentsCollectionPage();
-
-            try
-            {
-                // Load user's profile picture.
-                var pictureStream = await GraphClient.Me.Photo.Content.Request().GetAsync();
-
-                // Copy stream to MemoryStream object so that it can be converted to byte array.
-                var pictureMemoryStream = new MemoryStream();
-                await pictureStream.CopyToAsync(pictureMemoryStream);
-
-                // Convert stream to byte array and add as attachment.
-                attachments.Add(new FileAttachment
-                {
-                    ODataType = "#microsoft.graph.fileAttachment",
-                    ContentBytes = pictureMemoryStream.ToArray(),
-                    ContentType = "image/png",
-                    Name = "me.png"
-                });
-            }
-            catch (ServiceException ex)
-            {
-                switch (ex.Error.Code)
-                {
-                    case "Request_ResourceNotFound":
-                    case "ResourceNotFound":
-                    case "ErrorItemNotFound":
-                    case "itemNotFound":
-                        throw;
-                    case "TokenNotFound":
-                        //await HttpContext.ChallengeAsync();
-                        throw;
-                    default:
-                        throw;
-                }
-            }
-
-            // Prepare the recipient list.
-            var splitRecipientsString = sendTo.Split(new[] { ";" }, StringSplitOptions.RemoveEmptyEntries);
-            var recipientList = splitRecipientsString.Select(recipient => new Recipient
-            {
-                EmailAddress = new EmailAddress
-                {
-                    Address = recipient.Trim()
-                }
-            }).ToList();
-
-            // Build the email message.
-            var email = new Message
-            {
-                Body = new ItemBody
-                {
-                    Content = System.IO.File.ReadAllText(_hostingEnvironment.WebRootPath + emailTemplate),
-                    ContentType = BodyType.Html,
-                },
-                Subject = subject,
-                ToRecipients = recipientList,
-                Attachments = attachments
-            };
-
-            await GraphClient.Me.SendMail(email, true).Request().PostAsync();
         }
     }
 }

@@ -1,0 +1,46 @@
+{
+  "id": "",
+  "templateName": "Test Deal",
+  "description": "test desc",
+  "processes": [
+    {
+      "processStep": "New Opportunity",
+      "channel": "None",
+      "processType": "New Opportunity",
+      "order": "1",
+      "daysEstimate": "0",
+      "status": 0
+    },
+    {
+      "processStep": "Start Process",
+      "channel": "None",
+      "processType": "Start Process",
+      "order": "2",
+      "daysEstimate": "0",
+      "status": 0
+    },
+    {
+      "processStep": "CreditCheck",
+      "channel": "CreditCheck",
+      "processType": "CheckListTab",
+      "order": "3",
+      "status": 0
+    },
+    {
+      "processStep": "Customer Decision",
+      "channel": "Customer Decision",
+      "processType": "CustomerDecisionTab",
+      "order": 5,
+      "daysEstimate": "0",
+      "status": 0
+    },
+    {
+      "processStep": "Formal Proposal",
+      "channel": "Formal Proposal",
+      "processType": "ProposalStatusTab",
+      "order": 4,
+      "daysEstimate": "0",
+      "status": 0
+    }
+  ]
+}

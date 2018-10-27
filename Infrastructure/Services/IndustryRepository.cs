@@ -12,25 +12,32 @@ using Microsoft.Extensions.Options;
 using ApplicationCore.Artifacts;
 using ApplicationCore.Interfaces;
 using ApplicationCore.Entities;
-using Infrastructure.Services;
+using ApplicationCore.Services;
 using ApplicationCore.Helpers;
 using ApplicationCore.Entities.GraphServices;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using ApplicationCore;
+using Infrastructure.Authorization;
+using Microsoft.Extensions.DependencyInjection;
 
-namespace ApplicationCore.Services
+namespace Infrastructure.Services
 {
     public class IndustryRepository : BaseRepository<Industry>, IIndustryRepository
     {
         private readonly GraphSharePointAppService _graphSharePointAppService;
+        private Lazy<IAuthorizationService> _authorizationService;
 
         public IndustryRepository(
-            ILogger<IndustryRepository> logger, 
-            IOptions<AppOptions> appOptions,
-            GraphSharePointAppService graphSharePointAppService) : base(logger, appOptions)
+            ILogger<IndustryRepository> logger,
+            IOptionsMonitor<AppOptions> appOptions,
+            GraphSharePointAppService graphSharePointAppService,
+            IServiceProvider services) : base(logger, appOptions)
         {
             Guard.Against.Null(graphSharePointAppService, nameof(graphSharePointAppService));
             _graphSharePointAppService = graphSharePointAppService;
+            _authorizationService = new Lazy<IAuthorizationService>(() =>
+            services.GetRequiredService<IAuthorizationService>());
         }
 
         public async Task<StatusCodes> CreateItemAsync(Industry entity, string requestId = "")
@@ -132,6 +139,8 @@ namespace ApplicationCore.Services
 
             try
             {
+                //check access
+                //await _authorizationService.Value.CheckAdminAccsessAsync(requestId);
                 var siteList = new SiteList
                 {
                     SiteId = _appOptions.ProposalManagementRootSiteId,

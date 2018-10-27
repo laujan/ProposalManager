@@ -17,10 +17,12 @@ import {
     Spinner,
     SpinnerSize
 } from 'office-ui-fabric-react/lib/Spinner';
-import { MessageBar } from 'office-ui-fabric-react/lib/MessageBar';
-import { userRoles, oppStatusText } from '../../common';
+import { MessageBar, MessageBarType } from 'office-ui-fabric-react/lib/MessageBar';
+import { userRoles, oppStatusText, oppStatusClassName, oppStatus } from '../../common';
 import { PeoplePickerTeamMembers } from '../PeoplePickerTeamMembers';
-
+import { I18n, Trans } from "react-i18next";
+import { Dropdown } from 'office-ui-fabric-react/lib/Dropdown';
+import i18n from '../../i18n';
 
 
 export class OpportunitySummary extends Component {
@@ -35,6 +37,8 @@ export class OpportunitySummary extends Component {
 		
 		const oppId = this.props.opportunityId;
 
+		const opportunityData = this.props.opportunityData;
+
 		const teamUrl = "https://teams.microsoft.com";
 
 		let isAdmin = false;
@@ -43,20 +47,19 @@ export class OpportunitySummary extends Component {
 			isAdmin = true;
 		}
 
+		this.isDealTypeAlreadyUpdated = opportunityData.dealType===null?false:true;
         this.state = {
             loading: true,
             loadView: 'summary',
             menuLevel: 'Level2',
             LoanOfficer: [],
-            OppDetails: [],
             teamMembers: [],
             oppId: oppId,
             showPicker: false,
-            TeamMembersAll: [],
             peopleList: [],
             mostRecentlyUsed: [],
             currentSelectedItems: [],
-            oppData: [],
+			oppData: opportunityData,
 			btnSaveDisable: false,
 			//userRoles: userProfile.roles,
 			userId: userProfile.id,
@@ -66,33 +69,83 @@ export class OpportunitySummary extends Component {
             loanOfficerRole:'',
 			teamUrl: teamUrl ,
 			isAdmin: isAdmin,
-			userAssignedRole : ""
-        };
+			userAssignedRole: "",
+			oppStatusAll: [],
+			OppDetails: [],
+			TeamMembersAll: [],
+			isUpdate: false,
+            isStatusUpdate: false,
+            dealTypeItems: [],
+            dealTypeList: [],
+            isUpdateOpp: false,
+            isUpdateOppMsg: false,
+            updateOppMessagebarText: "",
+            updateMessageBarType: "",
+            dealTypeLoading: true,
+            dealTypeSelectMsgShow:false,
+            dealTypeUpdated :false
+		};
+
+
+		this.onStatusChange = this.onStatusChange.bind(this);
     }
 
     componentWillMount() {
         if (this.state.peopleList.length === 0) {
             this.getUserProfiles();
         }
-
-        this.getOppDetails();
+        this.getDealTypeLists();
+		this.getOppDetails();
+		this.getOppStatusAll();
     }
 
-    getOppDetails() {
-        //return new Promise((resolve, reject) => {
-            //fetch starts
-            let requestUrl = 'api/Opportunity/?id=' + this.state.oppId;
+	getOppStatusAll() {
+		
+		let requestUrl = 'api/context/GetOpportunityStatusAll';
+			
+			fetch(requestUrl, {
+				method: "GET",
+				headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() }
+			})
+				.then(response => response.json())
+				.then(data => {
+					try {
 
-            fetch(requestUrl, {
-                method: "GET",
-                headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() }
-            })
-                .then(response => response.json())
-                .then(data => {
+						if (this.state.oppData.opportunityState !== 11) // if the current state is not archived, remove the archive option from the array
+						{
+                            var filteredData = data.filter(x => x.Name !== 'Archived');
+                        }
+
+						let oppStatusList = [];
+						for (let i = 0; i < filteredData.length; i++) {
+                            let oppStatus = {};
+							oppStatus.key = data[i].Value;
+                            oppStatus.text = data[i].Name;
+                            oppStatusList.push(oppStatus);
+                        }
+						this.setState({
+                            oppStatusAll: oppStatusList
+						});
+					}
+					catch (err) {
+						console.log(err);
+
+					}
+			});
+			
+	}
+
+    getOppDetails() {
+      
                     try {
+						let data = this.state.oppData;
                         // filter loan officers
 
-                        let loanOfficerObj = data.teamMembers.filter(function (k) {
+						let teamMembers = [];
+
+						teamMembers = data.teamMembers;
+
+						let loanOfficerObj = teamMembers.filter(function (k) {
                             return k.assignedRole.displayName === "LoanOfficer";
                         });
                         let officer = {};
@@ -101,14 +154,10 @@ export class OpportunitySummary extends Component {
                             officer.loanOfficerName = loanOfficerObj[0].text;
                             officer.loanOfficerRole = "";
                         }
-                        let teamMembers = [];
-
-                        teamMembers = data.teamMembers;
-
+                       
 						let currentUserId = this.state.userId;
-						
 
-						let teamMemberDetails = data.teamMembers.filter(function (k) {
+						let teamMemberDetails = teamMembers.filter(function (k) {
 							return k.id === currentUserId;
 						});
 
@@ -117,7 +166,7 @@ export class OpportunitySummary extends Component {
                         this.setState({
                             loading: false,
                             teamMembers: teamMembers,
-                            oppData: data,
+                           // oppData: data,
                             LoanOfficer: loanOfficerObj.length === 0 ? loanOfficerObj : [],
 							showPicker: loanOfficerObj.length === 0 ? true : false,
 							userAssignedRole: userAssignedRole
@@ -127,8 +176,7 @@ export class OpportunitySummary extends Component {
                     catch (err) {
                         //console.log("Error")
                     }
-                });
-       // });
+       
     }
 
     getUserProfiles() {
@@ -211,16 +259,167 @@ export class OpportunitySummary extends Component {
         console.log("Opportunities Ref: " + referenceCall + " error: " + JSON.stringify(err));
     }
 
+    // Get all DealTypes
+    getDealTypeLists() {
+       // return new Promise((resolve, reject) => {
+            let opportunityObj;
+            let requestUrl = "api/template/";
+
+            fetch(requestUrl, {
+                method: "GET",
+                headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    //get dealtype list
+                    try {
+                        let dealTypeItemsList = [];
+                        let dealTypeList = [];
+                        for (let i = 0; i < data.itemsList.length; i++) {
+                            dealTypeItemsList.push(data.itemsList[i]);
+                            let dealType = {};
+                            dealType.key = data.itemsList[i].id;
+                            dealType.text = data.itemsList[i].templateName;
+                            dealTypeList.push(dealType);
+                        }
+                        
+                        this.setState({
+                            loading: false,
+                            dealTypeItems: dealTypeItemsList,
+                            dealTypeList: dealTypeList,
+                            dealTypeLoading: false
+                        });
+                    }
+                    catch (err) {
+                        return false;
+                    }
+
+                })
+                .catch(err => {
+                    this.errorHandler(err, "getDealTypeList");
+                    this.setState({
+                        loading: false,
+                        dealTypeItems: [],
+                        dealTypeList: [],
+                        dealTypeLoading: false
+                    });
+                    //reject(err);
+                });
+       // });
+    }
+
+    onChangeDealType(e) {
+        console.log(e);
+        let selDealType = this.state.dealTypeItems.filter(function (d) {
+            return d.id === e.key;
+        });
+        console.log(selDealType);
+        //this.state.oppData.dealType.id = selDealType[0].id;
+        let oppData = this.state.oppData;
+        oppData.dealType = selDealType[0];
+        this.setState({oppData});
+    }
+
+    startProcessClick() {
+        console.log("this.state.oppData : ", this.state.oppData);
+        // return false;
+        this.setState({ isUpdateOpp: true , dealTypeUpdated : true, dealTypeSelectMsgShow:false});
+        this.updateOpportunity(this.state.oppData)
+            .then(res => {
+                console.log(res);
+                if (res.ok === true) {
+                    // opportunity success
+                    this.setState({ isUpdateOpp: false, 
+                                isUpdateOppMsg: true, 
+                                updateOppMessagebarText: "Opportunity Updated successfully.", 
+                                updateMessageBarType: MessageBarType.success });
+                }
+                else {
+                    this.setState({
+                        isUpdateOpp: false,
+                        isUpdateOppMsg: true,
+                        updateOppMessagebarText: <Trans>errorWhileUpdatingPleaseTryagain</Trans>,
+                        updateMessageBarType: MessageBarType.error
+                    });
+                    this.hideMessagebar();
+                    //reject(err);
+                }
+                
+                this.hideMessagebar();
+            })
+            .catch(err => {
+                // display error
+                this.setState({
+                    isUpdateOpp: false,
+                    isUpdateOppMsg: true,
+                    updateOppMessagebarText: <Trans>errorWhileUpdatingPleaseTryagain</Trans>,
+                    updateMessageBarType: MessageBarType.error
+                });
+                this.hideMessagebar();
+                //reject(err);
+            });
+    }
+
+    updateOpportunity(opportunity) {
+        return new Promise((resolve, reject) => {
+
+            let requestUrl = 'api/opportunity';
+
+            let options = {
+                method: "PATCH",
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'authorization': 'Bearer ' + this.authHelper.getWebApiToken()
+                },
+                body: JSON.stringify(opportunity)
+            };
+
+            fetch(requestUrl, options)
+                .then(response => {
+                    
+                    return response;
+                })
+                .then(data => {
+                    resolve(data);
+                })
+                .catch(err => {
+                    this.errorHandler(err, "OppSummary_updateOpportunity");
+                    this.setState({
+                        isUpdateOpp: false,
+                        isUpdateOppMsg: true,
+                        updateOppMessagebarText: <Trans>errorWhileUpdatingPleaseTryagain</Trans>,
+                        updateMessageBarType: MessageBarType.error
+                    });
+                    this.hideMessagebar();
+                    reject(err);
+                });
+        });
+    }
+
+    hideMessagebar() {
+        setTimeout(function () {
+            this.setState({ isUpdateOpp: false, isUpdateOppMsg: false, updateOppMessagebarText: "", updateMessageBarType: "" });
+            this.hidePending = false;
+        }.bind(this), 3000);
+    }
+
     toggleHiddenPicker() {
         this.setState({
             showPicker: !this.state.showPicker
         });
     }
 
-    static funcThis(fields) {
-        if (typeof fields !== "undefined")
-            return fields.displayName;
+    onMouseEnter(){
+        let dealTypeSelectMsgShow = true;
+        this.setState({dealTypeSelectMsgShow})
     }
+    
+    onMouseLeave(){
+        let dealTypeSelectMsgShow = false;
+        this.setState({dealTypeSelectMsgShow})
+    }
+
     renderSummaryDetails(oppDeatils) {
         let loanOfficerArr = [];
         loanOfficerArr = oppDeatils.teamMembers.filter(function (k) {
@@ -228,7 +427,7 @@ export class OpportunitySummary extends Component {
 
 
         });
-
+        
 		let enableConnectWithTeam;
 		if (this.state.oppData.opportunityState !== 1 ) {
 			enableConnectWithTeam = true;
@@ -241,16 +440,16 @@ export class OpportunitySummary extends Component {
             <div className='ms-Grid-col ms-sm12 ms-md12 ms-lg12 p10A'>
                 <div className='ms-Grid-row bg-white pt15'>
                     <div className=' ms-Grid-col ms-sm12 ms-md12 ms-lg4 pb10'>
-                        <Label>Opportunity Name </Label>
+                        <Label><Trans>opportunityName</Trans> </Label>
                         <span>{oppDeatils.displayName}</span>
                     </div>
                     <div className=' ms-Grid-col ms-sm12 ms-md12 ms-lg4 pb10'>
-                        <Label>Client Name </Label>
+                        <Label><Trans>clientName</Trans> </Label>
                         <span>{oppDeatils.customer.displayName}</span>
                     </div>
                     <div className=' ms-Grid-col ms-sm12 ms-md12 ms-lg4 pb10'>
-                        <Label>Opened Date  </Label>
-                        <span>{new Date(oppDeatils.openedDate).toLocaleDateString()} </span>
+                        <Label><Trans>openedDate</Trans>  </Label>
+                        <span>{new Date(oppDeatils.openedDate).toLocaleDateString(i18n.language)} </span>
                     </div>
                 </div>
                 <div className='ms-Grid-row bg-white none'>
@@ -260,17 +459,18 @@ export class OpportunitySummary extends Component {
                 </div>
                 <div className='ms-Grid-row bg-white'>
                     <div className=' ms-Grid-col ms-sm12 ms-md12 ms-lg4 pb10'>
-                        <Label>Deal Size </Label>
+                        <Label><Trans>dealSize</Trans> </Label>
                         <span>{oppDeatils.dealSize.toLocaleString()} </span>
                     </div>
                     <div className=' ms-Grid-col ms-sm12 ms-md12 ms-lg4 pb10'>
-                        <Label>Annual Revenue </Label>
+                        <Label><Trans>annualRevenue</Trans> </Label>
                         <span>{oppDeatils.annualRevenue.toLocaleString()}</span>
                     </div>
                     <div className=' ms-Grid-col ms-sm12 ms-md12 ms-lg4 pb10'>
-                        <Label>Industry </Label>
-                        <span>{oppDeatils.industry.name} </span>
+                        <Label><Trans>targetDate</Trans> </Label>
+                        <span>{new Date(oppDeatils.targetdate).toLocaleDateString(i18n.language)} </span>
                     </div>
+                    
                 </div>
                 <div className='ms-Grid-row bg-white none'>
                     <div className='ms-Grid ms-sm12 ms-md12 ms-lg12 pb10'>
@@ -278,18 +478,42 @@ export class OpportunitySummary extends Component {
                     </div>
                 </div>
                 <div className='ms-Grid-row bg-white'>
+                    <div className=' ms-Grid-col ms-sm12 ms-md12 ms-lg4 pb10'>
+                        <Label><Trans>industry</Trans> </Label>
+                        <span>{oppDeatils.industry.name} </span>
+                    </div>
                     <div className=' ms-Grid-col ms-sm12 ms-md6 ms-lg4 pb10'>
-                        <Label>Region </Label>
-                        <span>{oppDeatils.region.name} </span>
+                        <Label><Trans>region</Trans> </Label>
+						<span>{oppDeatils.region.name} </span>
+						
                     </div>
-                    <div className=' ms-Grid-col ms-sm12 ms-md12 ms-lg4 pb10'>
-                        <Label>Status </Label>
-                        <span> {oppStatusText[oppDeatils.opportunityState]} </span>
-                    </div>
-                    <div className=' ms-Grid-col ms-sm12 ms-md12 ms-lg4 pb10'>
-                        <Label>Margin ($M) </Label>
-                        <span>{oppDeatils.margin}</span>
-                    </div>
+                    <div className=' ms-Grid-col ms-sm12 ms-md12 ms-lg2 pb10'>                       						
+						<I18n>
+							{
+								t =>
+									<Dropdown
+										label={t('status')}
+										selectedKey={this.state.oppData.opportunityState}
+										onChanged={(e) => this.onStatusChange(e)}
+										id='statusDropdown'
+										disabled={this.state.oppData.opportunityState === 1 || this.state.oppData.opportunityState === 3 || this.state.oppData.opportunityState === 5 || this.state.userAssignedRole.toLowerCase() !== "relationshipmanager" ? true : false}
+                                        options={this.state.oppStatusAll}
+												/>
+												}
+						</I18n>
+
+					</div>
+					<div className=' ms-Grid-col ms-sm12 ms-md12 ms-lg2 pb10'>
+						{this.state.isStatusUpdate
+                            ? <div className='ms-BasicSpinnersExample'>
+                                <Spinner size={SpinnerSize.small} label={<Trans>saving</Trans>} ariaLive='assertive' />
+							</div>
+							:
+							""
+							}
+					</div>
+	
+                    
                 </div>
                 <div className='ms-Grid-row bg-white none'>
                     <div className='ms-Grid ms-sm12 ms-md12 ms-lg12  '>
@@ -298,37 +522,53 @@ export class OpportunitySummary extends Component {
                 </div>
                 <div className='ms-Grid-row bg-white'>
                     <div className=' ms-Grid-col ms-sm12 ms-md12 ms-lg4 pb10'>
-                        <Label>Rate </Label>
+                        <Label><Trans>margin</Trans> ($M) </Label>
+                        <span>{oppDeatils.margin}</span>
+                    </div>
+                    <div className=' ms-Grid-col ms-sm12 ms-md12 ms-lg4 pb10'>
+                        <Label><Trans>rate</Trans> </Label>
                         <span>{oppDeatils.rate} </span>
                     </div>
                     <div className=' ms-Grid-col ms-sm12 ms-md12 ms-lg4 pb10'>
-                        <Label>Debt Ratio </Label>
+                        <Label><Trans>debtRatio</Trans> </Label>
                         <span>{oppDeatils.debtRatio}</span>
                     </div>
+                    
+                </div>
+                <div className='ms-Grid-row bg-white none'>
+                    <div className='ms-Grid ms-sm12 ms-md12 ms-lg12  '>
+                        &nbsp;
+                    </div>
+                </div>
+                <div className='ms-Grid-row bg-white'>
                     <div className=' ms-Grid-col ms-sm12 ms-md12 ms-lg4 pb10'>
 
-                        <Label>Loan Officer </Label>
-                        
+                        <Label><Trans>loanOfficer</Trans> </Label>
+
                         {
                             //loanOfficerName.length > 0 ?
                             loanOfficerArr.length > 0 ?
                                 <div>
                                     {this.state.showPicker ? "" :
                                         <div>
-                                            <Persona
-                                                { ...{ imageUrl: loanOfficerArr[0].UserPicture } }
-                                                size={PersonaSize.size40}
-                                                primaryText={loanOfficerArr[0].displayName}
-                                                secondaryText="Loan Officer"
-                                            />
-                                            {
-                                                this.state.oppData.opportunityState === 10 ?
-                                                <Link className="pull-right" disabled>Change</Link>
-                                                :
-                                                <Link onClick={this.toggleHiddenPicker.bind(this)} className="pull-right">Change</Link>
-                                            }
+                                            <div>
+                                                <Persona
+                                                    {...{ imageUrl: loanOfficerArr[0].UserPicture }}
+                                                    size={PersonaSize.size40}
+                                                    text={loanOfficerArr[0].displayName}
+                                                    secondaryText="Loan Officer"
+                                                />
+                                            </div>
+                                            <div>
+                                                <br/>
+                                                {
+                                                    this.state.oppData.opportunityState === 10 ?
+                                                        <Link className="pull-left" disabled><Trans>change</Trans></Link>
+                                                        :
+                                                        <Link onClick={this.toggleHiddenPicker.bind(this)} className="pull-leftt pr100"><Trans>change</Trans></Link>
+                                                }
+                                            </div>
                                         </div>
-
                                     }
                                 </div>
                                 :
@@ -339,7 +579,7 @@ export class OpportunitySummary extends Component {
                             <div>
                                 {this.state.usersPickerLoading
                                     ? <div className='ms-BasicSpinnersExample'>
-                                        <Spinner size={SpinnerSize.large} label='loading...' ariaLive='assertive' />
+                                        <Spinner size={SpinnerSize.large} label={<Trans>loading</Trans>} ariaLive='assertive' />
                                     </div>
                                     :
                                     <div>
@@ -350,17 +590,17 @@ export class OpportunitySummary extends Component {
                                             onClick={this._fnUpdateLoanOfficer.bind(this)}
                                             disabled={(!(this.state.currentSelectedItems.length === 1))}
                                         >
-                                            Save
+                                            <Trans>save</Trans>
                                         </Button>
                                     </div>
                                 }
                                 {
-                                   this.state.isUpdate ?
-                                          <Spinner size={SpinnerSize.large} label='updating' ariaLive='assertive' />
+                                    this.state.isUpdate ?
+                                        <Spinner size={SpinnerSize.large} label={<Trans>updating</Trans>} ariaLive='assertive' />
                                         : ""
                                 }
 
-                                </div>
+                            </div>
                             : ""
                         }
                         <br />
@@ -375,15 +615,82 @@ export class OpportunitySummary extends Component {
                         }
 
                     </div>
+                    <div className=' ms-Grid-col ms-sm12 ms-md12 ms-lg3 pb10'>
+                        {
+                        this.state.dealTypeLoading
+                                    ? <div className='ms-BasicSpinnersExample'>
+                                        <Spinner size={SpinnerSize.large} label={<Trans>loading</Trans>} ariaLive='assertive' />
+                                    </div>
+                                :
+                                <div className="dropdownContainer">
+                                    <Dropdown
+                                        placeHolder={<Trans>selectDealType</Trans>}
+                                        label={<Trans>dealType</Trans>}
+                                        defaultSelectedKey={this.state.oppData.dealType === null ? "" : this.state.oppData.dealType.id }
+                                        disabled={
+                                            this.state.oppData.opportunityState === 2 ||
+                                            this.state.oppData.opportunityState === 3 || 
+                                            this.state.oppData.opportunityState === 5 || 
+                                            this.state.userAssignedRole.toLowerCase() !== "loanofficer" ||
+                                            this.state.dealTypeUpdated  || this.isDealTypeAlreadyUpdated ? true : false}
+                                        options={this.state.dealTypeList}
+                                        onChanged={(e) => this.onChangeDealType(e)}
+                                    />
+                                </div>
+                        }
+                        <br /><br />
+                        <PrimaryButton 
+                                className='' 
+                                disabled={
+                                        this.state.oppData.opportunityState === 2 || 
+                                        this.state.oppData.opportunityState === 3 || 
+                                        this.state.oppData.opportunityState === 5 || 
+                                        this.state.userAssignedRole.toLowerCase() !== "loanofficer" 
+                                        || this.state.isUpdateOpp || this.isDealTypeAlreadyUpdated || this.state.dealTypeUpdated ? true : false
+                                        }  
+                                onClick      = {(e) => this.startProcessClick()}
+                                onMouseEnter = {(e) =>this.onMouseEnter()}
+                                onMouseLeave = {(e) =>this.onMouseLeave()}
+                                        ><Trans>save</Trans>
+                        </PrimaryButton> <br />
+                        {
+                            this.state.isUpdateOpp ? 
+                                <div className='ms-BasicSpinnersExample'>
+                                    <Spinner size={SpinnerSize.large} label={<Trans>loading</Trans>} ariaLive='assertive' />
+                                </div>
+                                :""
+                        }<br/>
+                        {
+                            this.state.isUpdateOppMsg ?
+                                <MessageBar
+                                    messageBarType={this.state.updateMessageBarType}
+                                    isMultiline={false}
+                                >
+                                    {this.state.updateOppMessagebarText}
+                                </MessageBar>
+                                : ""
+                        }<br/>
+                        {
+                            this.state.dealTypeSelectMsgShow ? <MessageBar> {<Trans>dealtypeselectmsg</Trans>}</MessageBar>: ""
+                        }
+                    </div>
+                    <div className=' ms-Grid-col ms-sm12 ms-md12 ms-lg2 pb10'>
+                        &nbsp;
+                    </div>
+                </div>
+                <div className='ms-Grid-row bg-white none'>
+                    <div className='ms-Grid ms-sm12 ms-md12 ms-lg12  '>
+                        &nbsp;
+                    </div>
                 </div>
                 <div className='ms-Grid-row bg-white'>
 					<div className=' ms-Grid-col ms-sm12 ms-md12 ms-lg3 '>
                         {
 							enableConnectWithTeam
-								?
-								<a href={this.state.teamUrl} target="_blank" rel="noopener noreferrer"><PrimaryButton className='' >Connect With Team</PrimaryButton></a>
-								:
-								<PrimaryButton className='' disabled >Connect With Team</PrimaryButton>
+                                ?
+                                <a href={this.state.teamUrl} target="_blank" rel="noopener noreferrer"><PrimaryButton className='' ><Trans>connectWithTeam</Trans></PrimaryButton></a>
+                                :
+                                <PrimaryButton className='' disabled ><Trans>connectWithTeam</Trans></PrimaryButton>
                             
 						}
                     </div>
@@ -405,10 +712,10 @@ export class OpportunitySummary extends Component {
                     <div className=' ms-Grid-col ms-sm6 ms-md8 ms-lg9 p-5 bg-grey'>
                         <div className='ms-Grid-row'>
                             <div className=' ms-Grid-col ms-sm12 ms-md12 ms-lg6 pageheading'>
-                                <h3>Opportunity Details</h3>
+                                <h3><Trans>opportunityDetails</Trans></h3>
                             </div>
                             <div className=' ms-Grid-col ms-sm12 ms-md12 ms-lg6'><br />
-                                <LinkRoute to={'/'} className='pull-right'>Back to Dashboard </LinkRoute>
+                                <LinkRoute to={'/'} className='pull-right'><Trans>backToDashboard</Trans> </LinkRoute>
                             </div>
                         </div>
                         <div className='ms-Grid-row  p-r-10'>
@@ -461,7 +768,8 @@ export class OpportunitySummary extends Component {
                 //"userPicture": selLoanOfficer[0].imageUrl,
                 "userRole": selLoanOfficer[0].userRoles,
                 "status": 0,
-                "assignedRole": selLoanOfficer[0].userRoles.filter(x => x.displayName === "LoanOfficer")[0]
+                "assignedRole": selLoanOfficer[0].userRoles.filter(x => x.displayName === "LoanOfficer")[0],
+                "processStep": "Start Process"
             };
 
         let isLoanOfficerExists = false;
@@ -477,14 +785,33 @@ export class OpportunitySummary extends Component {
         }
 
         this.setState({ memberslist: oppDetails.teamMembers });
-        this.fnUpdateCustDecision(oppDetails.teamMembers);
+        this.fnUpdateOpportunity(oppDetails,"LO");
     }
 
-    fnUpdateCustDecision(updTeamMembersObj) {
-        this.setState({ isUpdate: true });
+	onStatusChange = (event) => {
+		
+		let oppDetails = this.state.oppData; 
+		
+		oppDetails.opportunityState = event.key;
+		
 
-        let oppViewData = this.state.oppData;
-        oppViewData.teamMembers = updTeamMembersObj;
+		this.fnUpdateOpportunity(oppDetails,"Status");
+		
+	}
+
+
+	fnUpdateOpportunity(oppViewData, Updtype) {
+
+		if (Updtype === "LO") {
+			this.setState({ isUpdate: true, showPicker: true });
+		}
+		else if (Updtype === "Status") {
+			this.setState({ isStatusUpdate: true });
+		}
+
+
+        //let oppViewData = this.state.oppData;
+       // oppViewData.teamMembers = updTeamMembersObj;
 
         // API Update call        
         this.requestUpdUrl = 'api/opportunity?id=' + oppViewData.id; 
@@ -508,7 +835,13 @@ export class OpportunitySummary extends Component {
                 }
             }).then(json => {
                 //console.log(json);
-                this.setState({ isUpdate: false, showPicker: false });
+				if (Updtype === "LO") {
+					this.setState({ isUpdate: false, showPicker: false });
+				}
+				else if (Updtype === "Status")
+				{
+					this.setState({ isStatusUpdate: false});
+				}
             });
 
 
@@ -527,10 +860,15 @@ export class OpportunitySummary extends Component {
                 <div className='ms-Grid'>
                     <div className='ms-Grid-row'>
                         {this._renderSubComp()}
-                        <div className=' ms-Grid-col ms-sm12 ms-md12 ms-lg3 p-l-10 TeamMembersBG'>
-                            <h3>Team Members</h3>
-							<TeamMembers memberslist={this.state.teamMembers} createTeamId={this.state.oppData.id} opportunityName={this.state.oppData.displayName} opportunityState={this.state.oppData.opportunityState} userRole={this.state.userAssignedRole} />
-                        </div>
+						<div className=' ms-Grid-col ms-sm12 ms-md12 ms-lg3 p-l-10 TeamMembersBG'>
+							<h3>Team Members</h3>
+                            <TeamMembers 
+                                memberslist={this.state.oppData.teamMembers} 
+                                createTeamId={this.state.oppData.id} 
+                                opportunityName={this.state.oppData.displayName} 
+                                opportunityState={this.state.oppData.opportunityState} 
+                                userRole={this.state.userAssignedRole} />
+						</div>
                     </div>
                 </div>
             );

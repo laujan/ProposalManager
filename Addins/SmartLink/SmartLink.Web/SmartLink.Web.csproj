@@ -271,6 +271,7 @@
     <Compile Include="App_Start\WebApiConfig.cs" />
     <Compile Include="AuthorizeAttribute\APIAuthorizeAttribute.cs" />
     <Compile Include="Common\AuthenticationHelper.cs" />
+    <Compile Include="Common\ResourceHelper.cs" />
     <Compile Include="Controllers\DestinationPointController.cs" />
     <Compile Include="Controllers\ExcelController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
@@ -285,6 +286,12 @@
     </Compile>
     <Compile Include="Mappings\MappingProfile.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Resources\Resource.Designer.cs" />
+    <Compile Include="Resources\Resource.es-AR.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resource.es-AR.resx</DependentUpon>
+    </Compile>
     <Compile Include="Startup.cs" />
     <Compile Include="ViewModel\AdminConsentViewModel.cs" />
     <Compile Include="ViewModel\AuthModel.cs" />
@@ -292,6 +299,7 @@
     <Compile Include="ViewModel\DestinationPointForm.cs" />
     <Compile Include="ViewModel\ErrorViewModel.cs" />
     <Compile Include="ViewModel\PublishStatusViewModel.cs" />
+    <Compile Include="ViewModel\ResourceItem.cs" />
     <Compile Include="ViewModel\SourcePointViewModel.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -389,7 +397,7 @@
     <Content Include="fonts\HelveticaNeue-Light_22621.eot" />
     <Content Include="fonts\HelveticaNeue-Light_22621.otf" />
     <Content Include="fonts\HelveticaNeue-Light_22621.woff" />
-    <Content Include=".eslintrc" />
+    <None Include="Properties\PublishProfiles\glpropmgtsmartlink - Web Deploy.pubxml" />
     <None Include="Properties\PublishProfiles\msfinsmartlinkqa - Web Deploy.pubxml" />
     <None Include="Properties\PublishProfiles\propmgtsmartlink - Web Deploy.pubxml" />
     <None Include="Scripts\jquery-1.10.2.intellisense.js" />
@@ -727,6 +735,16 @@
   </ItemGroup>
   <ItemGroup>
     <Service Include="{4A0DDDB5-7A95-4FBF-97CC-616D07737A77}" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Resource.es-AR.resx">
+      <LastGenOutput>Resource.es-AR.Designer.cs</LastGenOutput>
+      <Generator>ResXFileCodeGenerator</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Resource.resx">
+      <LastGenOutput>Resource1.Designer.cs</LastGenOutput>
+      <Generator>PublicResXFileCodeGenerator</Generator>
+    </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

@@ -66,8 +66,11 @@ namespace Infrastructure.GraphApi
             IGraphAuthProvider authProvider,
             IUserContext userContext)
         {
-            _authProvider = authProvider ?? throw new ArgumentNullException(nameof(authProvider));
-            _userContext = userContext ?? throw new ArgumentNullException(nameof(userContext));
+            Guard.Against.Null(authProvider, nameof(authProvider));
+            Guard.Against.Null(userContext, nameof(userContext));
+
+            _authProvider = authProvider;
+            _userContext = userContext;
 
             // Initialize the graph client given the chosen context
             if (_graphServiceClient == null)

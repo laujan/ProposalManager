@@ -16,6 +16,8 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.Identity.Client;
 using ApplicationCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Identity.Extensions
 {
@@ -37,17 +39,45 @@ namespace Infrastructure.Identity.Extensions
             return builder;
         }
 
+        public static AuthenticationBuilder AddAzureAdBearer(this AuthenticationBuilder builder, string authenticationScheme, string displayName, Action<AzureAdOptions> configureOptions)
+        {
+            builder.AddPolicyScheme(authenticationScheme, displayName, options => 
+            {
+                options.ForwardDefault = "JwtBearer";
+            });
+
+            //builder.Services.TryAddSingleton<IConfigureOptions<JwtBearerOptions>, ConfigureAzureAdBearerOptions>();
+            builder.Services.AddSingleton<IConfigureOptions<JwtBearerOptions>, ConfigureAzureAdBearerOptions>();
+
+            builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IPostConfigureOptions<JwtBearerOptions>, JwtBearerPostConfigureOptions>());
+
+            builder.Services.Configure(configureOptions);
+
+            builder.AddJwtBearer("JwtBearer", options => { }); //Adding the JwtBearer scheme with a different name to avoid conflict with bot authentication
+
+            return builder;
+        }
+
+
+
         private class ConfigureAzureAdBearerOptions : IConfigureNamedOptions<JwtBearerOptions>
         {
             private readonly AzureAdOptions _azureOptions;
+            private readonly ILogger<ConfigureAzureAdBearerOptions> _logger;
 
-            public ConfigureAzureAdBearerOptions(IOptions<AzureAdOptions> azureOptions)
+            public ConfigureAzureAdBearerOptions(IOptions<AzureAdOptions> azureOptions, ILogger<ConfigureAzureAdBearerOptions> logger)
             {
                 _azureOptions = azureOptions.Value;
+                _logger = logger;
             }
 
             public void Configure(string name, JwtBearerOptions options)
             {
+                if (String.IsNullOrEmpty(_azureOptions.ClientId))
+                {
+                    _logger.LogError($"ConfigureAzureAdBearerOptions ClientId is Null");
+                }
+
                 options.Audience = _azureOptions.ClientId;
                 options.Authority = $"{_azureOptions.Instance}{_azureOptions.TenantId}";
 
@@ -125,11 +155,13 @@ namespace Infrastructure.Identity.Extensions
                 //context.HandleResponse();
                 //context.Response.Redirect("/Home/Error?message=" + context.Failure.Message);
                 //context.Response.Redirect("/Home/Error?message=");
+                
+                //_logger.LogError($"AuthenticationFailed token provided: {context.Request.Headers.TryGetValue("",)}");
+
                 return Task.FromResult(0);
             }
         }
         #endregion
-
 
 
         // Extenions for autheticating the user in server side NOTE: To use this the corresponding initialization is needed in startup

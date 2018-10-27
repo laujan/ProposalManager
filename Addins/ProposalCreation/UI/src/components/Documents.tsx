@@ -10,36 +10,42 @@ import {
     SelectionMode,
   } from 'office-ui-fabric-react/lib/DetailsList';
 import { ScrollablePane } from 'office-ui-fabric-react/lib/ScrollablePane';
+import { IconButton } from 'office-ui-fabric-react/lib/Button';
+import './documents.css';
+import { ErrorPopup } from './ErrorPopup';
+import { LocalizationService } from '../services/LocalizationService';
 
 export interface IDocument
 {
     name: string;
     webUrl: string;
     id: string;
-    type: string
+    type: string;
 }
 
 export interface IDocumentsState
 {
     data: IDocument[];
     columns: IColumn[];
-    isLoading: boolean
+    isLoading: boolean;
+    error?: any;
 }
 
 export interface IDocumentsProps
 {
-    token: string
+    token: string;
+    localizationService: LocalizationService;
 }
 
 export class Documents extends React.Component<IDocumentsProps,IDocumentsState>
 {
     private data: IDocument[] = [];
-    //private apiService: ApiService;
     private documentService: DocumentService;
 
     constructor(props: any)
     {
         super(props);
+        const { localizationService } = props;
 
         const columns: IColumn[] = [
             {
@@ -58,7 +64,7 @@ export class Documents extends React.Component<IDocumentsProps,IDocumentsState>
             },
             {
               key: 'name',
-              name: 'Name',
+              name: localizationService.getString("Name"),
               fieldName: 'name',
               minWidth: 100,
               maxWidth: 200,
@@ -72,7 +78,7 @@ export class Documents extends React.Component<IDocumentsProps,IDocumentsState>
             },
             {
                 key: 'clientDocs',
-                name: 'Client Documents',
+                name: localizationService.getString("ClientDocuments"),
                 fieldName: 'clientDocs',
                 minWidth: 100,
                 maxWidth: 200,
@@ -90,7 +96,6 @@ export class Documents extends React.Component<IDocumentsProps,IDocumentsState>
             isLoading: true
         };
 
-        //this.apiService = new ApiService(this.props.token);
         this.documentService = new DocumentService(new DocumentApiService(new ApiService(this.props.token)));
     }
 
@@ -107,7 +112,7 @@ export class Documents extends React.Component<IDocumentsProps,IDocumentsState>
         {
             case 'name':
                 return (
-                    <Link href={item.webUrl}>{item.name}</Link>
+                    <Link href={item.webUrl}>{decodeURI(item.name)}</Link>
                 );
             case 'docIcon':
                 return (
@@ -178,7 +183,6 @@ export class Documents extends React.Component<IDocumentsProps,IDocumentsState>
     private loadDocuments()
     {
         this.setState({isLoading: true});
-        //this.apiService.callApi("document", "list", "GET", null)
         this.documentService.getDocuments()
         .then(
             data => {
@@ -189,7 +193,12 @@ export class Documents extends React.Component<IDocumentsProps,IDocumentsState>
                 this.setState({data: info, isLoading: false});
             }
         )
-        .catch(err=>{});
+        .catch(
+            err => 
+            {
+                this.setState({error: err});
+            }
+        );
     }
 
     private onChange(text: any): void
@@ -199,21 +208,43 @@ export class Documents extends React.Component<IDocumentsProps,IDocumentsState>
 
     public render(): JSX.Element
     {
-        const { data, columns, isLoading } = this.state;
+        const { data, columns, isLoading, error } = this.state;
+        const { localizationService } = this.props;
 
+        if(error)
+        {
+            return (
+                <ErrorPopup error={error}/>
+            );
+        }
+        
         if(isLoading)
         {
             return (
-                <Loading message="Loading..."/>
+                <Loading message={localizationService.getString("Loading")+"..."}/>
             );
         }
 
         return (
             <ScrollablePane>
-                <SearchBox
-                    placeholder='Search'
-                    onChanged={this.onChange.bind(this)}
-                />
+                <div style={{display: 'flex', paddingTop: '10px'}}>
+                    <SearchBox
+                        className="ms-search-notes"
+                        placeholder={localizationService.getString("Search")}
+                        onChanged={this.onChange.bind(this)}
+                    />
+                    <IconButton
+                        iconProps={ { iconName: 'Refresh' } }
+                        title={localizationService.getString("Refresh")}
+                        ariaLabel='Refresh'
+                        onClick={
+                            (e) => {
+                                e.preventDefault();
+                                this.loadDocuments();
+                            }
+                        }
+                    />
+                </div>
                 <DetailsList
                     items={ data }
                     columns={ columns }

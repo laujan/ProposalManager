@@ -12,19 +12,19 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using WebReact.Interfaces;
+using ApplicationCore.Interfaces;
 using ApplicationCore.Helpers;
 using ApplicationCore.Artifacts;
 using Newtonsoft.Json.Linq;
-using WebReact.ViewModels;
-using WebReact.Models;
+using ApplicationCore.ViewModels;
+using ApplicationCore.Models;
 using Newtonsoft.Json;
 using Microsoft.AspNetCore.Authorization;
-using ApplicationCore.Interfaces;
 
 namespace WebReact.Api
 {
-    public class DocumentController : BaseApiController<DocumentController>
+	[Authorize(AuthenticationSchemes = "AzureAdBearer")]
+	public class DocumentController : BaseApiController<DocumentController>
     {
         private readonly IDocumentService _documentService;
 

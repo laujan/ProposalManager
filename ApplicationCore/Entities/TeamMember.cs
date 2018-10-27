@@ -25,15 +25,11 @@ namespace ApplicationCore.Entities
         [JsonProperty("fields", Order = 2)]
         public TeamMemberFields Fields { get; set; }
 
-        /// <summary>
-        /// Status in the context of an instance of an opportunity
-        /// </summary>
-        [JsonConverter(typeof(StatusConverter))]
-        [JsonProperty("status", Order = 3)]
-        public ActionStatus Status { get; set; }
-
-        [JsonProperty("assignedRole", Order = 4)]
+        [JsonProperty("assignedRole", Order = 3)]
         public Role AssignedRole { get; set; }
+
+        [JsonProperty("processStep", Order = 4)]
+        public string ProcessStep { get; set; }
 
         /// <summary>
         /// Represents the empty user profile. This field is read-only.
@@ -44,9 +40,9 @@ namespace ApplicationCore.Entities
             {
                 Id = String.Empty,
                 DisplayName = String.Empty,
-                Status = ActionStatus.NotStarted,
                 AssignedRole = Role.Empty,
-                Fields = TeamMemberFields.Empty
+                Fields = TeamMemberFields.Empty,
+                ProcessStep = String.Empty
             };
         }  
     }

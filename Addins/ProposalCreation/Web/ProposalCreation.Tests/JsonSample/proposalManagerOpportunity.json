@@ -1,0 +1,126 @@
+{
+  "id": "108",
+  "displayName": "CPL need loan for new project",
+  "reference": "c15b893e-ecb1-e811-a971-000d3ac000c8",
+  "version": "",
+  "opportunityState": 2,
+  "customer": {
+    "id": "",
+    "displayName": "City Power & Light",
+    "referenceId": ""
+  },
+  "dealSize": 0.0,
+  "annualRevenue": 0.0,
+  "openedDate": "2018-09-06T12:54:47.327488-03:00",
+  "industry": {
+    "id": "",
+    "name": ""
+  },
+  "region": {
+    "id": "",
+    "name": ""
+  },
+  "margin": 0.0,
+  "rate": 0.0,
+  "debtRatio": 0.0,
+  "purpose": "",
+  "disbursementSchedule": "",
+  "collateralAmount": 0.0,
+  "guarantees": "",
+  "riskRating": 0,
+  "opportunityChannelId": "",
+  "teamMembers": [
+    {
+      "id": "82b0f3c2-98da-420f-aa42-5980b6db279d",
+      "displayName": "Nahuel Prieto",
+      "mail": "nahuelp@agilesightms.onmicrosoft.com",
+      "userPrincipalName": "nahuelp@agilesightms.onmicrosoft.com",
+      "title": "",
+      "status": 1,
+      "assignedRole": {
+        "id": "59c13720-ec75-4ad3-98ee-3a46f747f5c2",
+        "displayName": "RelationshipManager",
+        "adGroupName": "Relationship Managers"
+      }
+    }
+  ],
+  "notes": [],
+  "checklists": [
+    {
+      "id": "Start Process",
+      "checklistChannel": "Formal Proposal",
+      "checklistStatus": 0,
+      "checklistTaskList": []
+    },
+    {
+      "id": "New Opportunity",
+      "checklistChannel": "None",
+      "checklistStatus": 0,
+      "checklistTaskList": []
+    },
+    {
+      "id": "None",
+      "checklistChannel": "None",
+      "checklistStatus": 0,
+      "checklistTaskList": []
+    },
+    {
+      "id": "CreditCheck",
+      "checklistChannel": "Credit Check",
+      "checklistStatus": 0,
+      "checklistTaskList": []
+    },
+    {
+      "id": "Compliance",
+      "checklistChannel": "Compliance",
+      "checklistStatus": 0,
+      "checklistTaskList": []
+    },
+    {
+      "id": "",
+      "checklistChannel": "Risk Assessment",
+      "checklistStatus": 0,
+      "checklistTaskList": []
+    },
+    {
+      "id": "Draft Proposal",
+      "checklistChannel": "Customer Decision",
+      "checklistStatus": 0,
+      "checklistTaskList": []
+    }
+  ],
+  "proposalDocument": {
+    "content": { "proposalSectionList": [] },
+    "id": "",
+    "contentType": null,
+    "displayName": "",
+    "reference": "",
+    "version": "1.0",
+    "documentUri": "",
+    "notes": [],
+    "category": {
+      "id": "",
+      "name": ""
+    },
+    "tags": ""
+  },
+  "customerDecision": {
+    "id": "",
+    "approved": false,
+    "approvedDate": "0001-01-01T00:00:00-03:00",
+    "loanDisbursed": "0001-01-01T00:00:00-03:00"
+  },
+  "documentAttachments": [
+    {
+      "id": "00000000-0000-0000-0000-000000000000",
+      "fileName": "Project Overview.pptx",
+      "note": "",
+      "category": {
+        "id": "",
+        "name": ""
+      },
+      "tags": "",
+      "documentUri": ""
+    }
+  ]
+}

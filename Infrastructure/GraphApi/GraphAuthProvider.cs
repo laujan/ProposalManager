@@ -17,7 +17,6 @@ using Microsoft.Graph;
 using ApplicationCore;
 using ApplicationCore.Interfaces;
 using Infrastructure.Identity;
-using Infrastructure.Identity.Proxy;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Authentication;
 //using Microsoft.IdentityModel.Clients.ActiveDirectory;
@@ -42,14 +41,12 @@ namespace Infrastructure.GraphApi
         private readonly string _graphResourceId;
         private readonly string _tenantId;
         private readonly string _authority;
-        private readonly DownstreamServiceProxyOptions _serviceOptions;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
 
         public GraphAuthProvider(
             IMemoryCache memoryCache, 
             IConfiguration configuration,
-            IOptions<DownstreamServiceProxyOptions> serviceOptions,
             IHttpContextAccessor httpContextAccessor)
         {
             var azureOptions = new AzureAdOptions();
@@ -67,7 +64,6 @@ namespace Infrastructure.GraphApi
             _memoryCache = memoryCache;
 
             _authority = azureOptions.Authority;
-            _serviceOptions = serviceOptions.Value;
             _httpContextAccessor = httpContextAccessor;
         }
 

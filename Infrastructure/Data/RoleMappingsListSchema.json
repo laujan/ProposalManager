@@ -1,0 +1,22 @@
+{
+  "name": "RoleMappings",
+  "columns": [
+    {
+      "name": "Id",
+      "text": {},
+      "indexed": true
+    },
+    {
+      "name": "ADGroupName",
+      "text": {}
+    },
+    {
+      "name": "Role",
+      "text": {}
+    },
+    {
+      "name": "Permissions",
+      "text": {}
+    }
+  ]
+}

@@ -35,8 +35,8 @@
 .ms-DetailsHeader {
     background: #3aafd9 !important;
     color: #000 !important;
-    border: 2px solid #3aafd9;
-}
+    border: 1px solid #3aafd9;
+} 
 
 @media all and (max-width: 699px) and (min-width: 0px) {
     .Filearea {
@@ -45,8 +45,7 @@
     .ms-DetailsHeader {
         background: #3aafd9 !important;
         color: #000 !important;
-        border: 2px solid #3aafd9;
-        width: 248%;
+        border: 1px solid #3aafd9;
         float: left;
     }
 }

@@ -12,17 +12,18 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using WebReact.Interfaces;
+using ApplicationCore.Interfaces;
 using ApplicationCore.Helpers;
 using ApplicationCore.Artifacts;
 using Newtonsoft.Json.Linq;
-using WebReact.ViewModels;
-using WebReact.Models;
+using ApplicationCore.ViewModels;
+using ApplicationCore.Models;
 using Newtonsoft.Json;
 using Microsoft.AspNetCore.Authorization;
 
 namespace WebReact.Api
 {
+    [Authorize(AuthenticationSchemes = "AzureAdBearer")]
     public class RegionController : BaseApiController<RegionController>
     {
         private readonly IRegionService _regionService;
@@ -36,7 +37,6 @@ namespace WebReact.Api
             _regionService = regionService;
         }
 
-        [Authorize]
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] JObject jsonObject)
         {
@@ -91,7 +91,6 @@ namespace WebReact.Api
             }
         }
 
-        [Authorize]
         [HttpPatch]
         public async Task<IActionResult> Update([FromBody] JObject jsonObject)
         {
@@ -144,7 +143,6 @@ namespace WebReact.Api
             }
         }
 
-        [Authorize]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(string id)
         {
@@ -170,7 +168,6 @@ namespace WebReact.Api
             return NoContent();
         }
 
-        [Authorize]
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {

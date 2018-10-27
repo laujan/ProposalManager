@@ -12,16 +12,17 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using WebReact.Interfaces;
+using ApplicationCore.Interfaces;
 using ApplicationCore.Helpers;
 using ApplicationCore.Artifacts;
 using Newtonsoft.Json.Linq;
-using WebReact.ViewModels;
+using ApplicationCore.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Newtonsoft.Json;
 
 namespace WebReact.Api
 {
+    [Authorize(AuthenticationSchemes = "AzureAdBearer")]
     public class OpportunityController : BaseApiController<OpportunityController>
     {
         private readonly IOpportunityService _opportunityService;
@@ -36,7 +37,6 @@ namespace WebReact.Api
         }
 
         // POST: /Opportunity
-        [Authorize]
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] JObject opportunityJson)
         {
@@ -92,7 +92,6 @@ namespace WebReact.Api
         }
 
         // PUT: /Opportunity?id={id}
-        [Authorize]
         [HttpPatch]
         public async Task<IActionResult> Update([FromBody] JObject opportunityJson)
         {
@@ -146,7 +145,6 @@ namespace WebReact.Api
         }
 
         // DELETE: /Opportunity?id={id}
-        [Authorize]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(string id)
         {
@@ -173,9 +171,8 @@ namespace WebReact.Api
         }
 
         // Get: /Opportunity
-        [Authorize]
         [HttpGet]
-        public async Task<IActionResult> GetAll(int? page, [FromQuery] string name, [FromQuery] string id, [FromQuery] string checkName = "")
+        public async Task<IActionResult> GetAll(int? page, [FromQuery] string name, [FromQuery] string id, [FromQuery] string reference, [FromQuery] string checkName = "")
         {
             var requestId = Guid.NewGuid().ToString();
             _logger.LogInformation($"RequestID:{requestId} - GetAll called.");
@@ -195,6 +192,11 @@ namespace WebReact.Api
                 if (!String.IsNullOrEmpty(id))
                 {
                     return await GetById(id);
+                }
+
+                if (!String.IsNullOrEmpty(reference))
+                {
+                    return await GetByReference(reference);
                 }
 
                 var itemsPage = 10;
@@ -222,8 +224,7 @@ namespace WebReact.Api
         }
 
         // GET: /Opportunity?id={id}
-        //[Authorize]
-        //[HttpGet("id", Name = "GetOpportunityById")]
+        [HttpGet("id")]
         public async Task<IActionResult> GetById(string id)
         {
             var requestId = Guid.NewGuid().ToString();
@@ -257,8 +258,7 @@ namespace WebReact.Api
         }
 
         // GET: /Opportunity?name={name}
-        //[Authorize]
-        //[HttpGet("name", Name = "GetOpportunityByName")]
+        [HttpGet("name")]
         public async Task<IActionResult> GetByName(string name, bool isCheckName)
         {
             var requestId = Guid.NewGuid().ToString();
@@ -286,6 +286,40 @@ namespace WebReact.Api
             {
                 _logger.LogError($"RequestID:{requestId} - GetOpportunityByName error: {ex.Message}");
                 var errorResponse = JsonErrorResponse.BadRequest($"GetOpportunityByName error: {ex.Message} ", requestId);
+
+                return BadRequest(errorResponse);
+            }
+        }
+
+        // GET: /Opportunity?id={id}
+        [HttpGet("reference")]
+        public async Task<IActionResult> GetByReference(string reference)
+        {
+            var requestId = Guid.NewGuid().ToString();
+            _logger.LogInformation($"RequestID:{requestId} - GeOpportunitytByReference called.");
+
+            try
+            {
+                if (String.IsNullOrEmpty(reference))
+                {
+                    _logger.LogError($"RequestID:{requestId} - GeOpportunitytByReference ref == null.");
+                    return NotFound($"RequestID:{requestId} - GeOpportunitytByReference Invalid parameter. ref = null.");
+                }
+                var thisOpportunity = await _opportunityService.GetItemByRefAsync(reference, requestId);
+                if (thisOpportunity == null)
+                {
+                    _logger.LogError($"RequestID:{requestId} - GeOpportunitytByReference no opportunities found.");
+                    return NotFound($"RequestID:{requestId} - GeOpportunitytByReference no opportunities found");
+                }
+
+                var responseJObject = JObject.FromObject(thisOpportunity);
+
+                return Ok(responseJObject);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"RequestID:{requestId} - GeOpportunitytByReference error: {ex.Message}");
+                var errorResponse = JsonErrorResponse.BadRequest($"GeOpportunitytByReference error: {ex.Message} ", requestId);
 
                 return BadRequest(errorResponse);
             }

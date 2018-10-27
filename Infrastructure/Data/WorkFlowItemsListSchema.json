@@ -1,0 +1,22 @@
+{
+  "name": "WorkFlowItems",
+  "columns": [
+    {
+      "name": "Id",
+      "text": {},
+      "indexed": true
+    },
+    {
+      "name": "ProcessStep",
+      "text": {}
+    },
+    {
+      "name": "Channel",
+      "text": {}
+    },
+    {
+      "name": "ProcessType",
+      "text": {}
+    }
+  ]
+}

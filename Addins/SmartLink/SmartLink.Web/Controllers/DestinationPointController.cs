@@ -19,7 +19,7 @@ using System.Web.Http;
 
 namespace SmartLink.Web.Controllers
 {
-	[APIAuthorize]
+    [APIAuthorize]
     public class DestinationPointController : ApiController
     {
         protected readonly IDestinationService _destinationService;

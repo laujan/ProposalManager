@@ -18,20 +18,24 @@ using ApplicationCore;
 using ApplicationCore.Interfaces;
 using ApplicationCore.Entities.GraphServices;
 using ApplicationCore.Helpers;
+using System.Text.RegularExpressions;
 
 namespace Infrastructure.GraphApi
 {
     public abstract class GraphTeamsBaseService : BaseService<GraphTeamsBaseService>
     {
         protected readonly IGraphClientContext _graphClientContext;
+        protected readonly IUserContext _userContext;
 
         public GraphTeamsBaseService(
-            ILogger<GraphTeamsBaseService> logger, 
-            IOptions<AppOptions> appOptions,
-            IGraphClientContext graphClientContext) : base(logger, appOptions)
+            ILogger<GraphTeamsBaseService> logger,
+            IOptionsMonitor<AppOptions> appOptions,
+            IGraphClientContext graphClientContext,
+            IUserContext userContext) : base(logger, appOptions)
         {
             Guard.Against.Null(graphClientContext, nameof(graphClientContext));
             _graphClientContext = graphClientContext;
+            _userContext = userContext;
         }
 
         /// <summary>
@@ -41,8 +45,8 @@ namespace Infrastructure.GraphApi
 
         public async Task<JObject> CreateGroupAsync(string displayName, string description = "")
         {
-            // POST: https://graph.microsoft.com/beta/groups
-            // EXAMPLE: https://graph.microsoft.com/beta/groups
+            // POST: https://graph.microsoft.com/v1.0/groups
+            // EXAMPLE: https://graph.microsoft.com/v1.0/groups
 
             _logger.LogInformation("CreateGroupAsync called.");
             try
@@ -53,18 +57,25 @@ namespace Infrastructure.GraphApi
                 var groupTypesObject = new List<string>();
                 groupTypesObject.Add("Unified");
 
+                //get owner
+                string objectId = _userContext.User.FindFirst(AzureAdConstants.ObjectIdClaimType).Value;
+                string owner = ",\"owners@odata.bind\": [\"https://graph.microsoft.com/v1.0/Users/"+ objectId + "\"]";
+                //remove unsupported charachters
+                Regex rx = new Regex(@"[^a-zA-Z0-9-.\/s]");
+                string mailNickname = rx.Replace(displayName,"");
+
                 dynamic groupSettingsObject = new JObject();
                 groupSettingsObject.description = description;
                 groupSettingsObject.displayName = displayName;
                 groupSettingsObject.groupTypes = JToken.FromObject(groupTypesObject);
                 groupSettingsObject.mailEnabled = true;
-                groupSettingsObject.mailNickname = string.Concat(displayName.Where(c => !char.IsWhiteSpace(c)));
-                groupSettingsObject.securityEnabled = false;
-
-                var requestUrl = _appOptions.GraphBetaRequestUrl + "/groups";
+                groupSettingsObject.mailNickname = mailNickname;
+                groupSettingsObject.securityEnabled = false;                
+                var completeGroupSettingsObject = groupSettingsObject.ToString().Replace("}","") + owner + "}";
+                var requestUrl = _appOptions.GraphBetaRequestUrl + "groups";
                 // Create the request message and add the content.
                 HttpRequestMessage hrm = new HttpRequestMessage(HttpMethod.Post, requestUrl);
-                hrm.Content = new StringContent(groupSettingsObject.ToString(), Encoding.UTF8, "application/json");
+                hrm.Content = new StringContent(completeGroupSettingsObject, Encoding.UTF8, "application/json");
 
                 var response = new HttpResponseMessage();
 
@@ -227,13 +238,13 @@ namespace Infrastructure.GraphApi
                     throw new ServiceException(new Error { Code = ErrorConstants.Codes.InvalidRequest, Message = response.StatusCode.ToString() });
                 }
                 else
-                {
+                {                
                     var content = await response.Content.ReadAsStringAsync();
                     JObject responseJObject = JObject.Parse(await response.Content.ReadAsStringAsync());
-
                     _logger.LogInformation("CreateTeamAsync end.");
                     return responseJObject;
                 }
+               
             }
             catch (ServiceException ex)
             {
@@ -435,6 +446,123 @@ namespace Infrastructure.GraphApi
             catch (ServiceException ex)
             {
                 _logger.LogError("CreateChannelAsync Service Exception: " + ex.Message);
+                switch (ex.Error.Code)
+                {
+                    case "Request_ResourceNotFound":
+                    case "ResourceNotFound":
+                    case "ErrorItemNotFound":
+                    case "itemNotFound":
+                        throw;
+                    case "TokenNotFound":
+                        //await HttpContext.ChallengeAsync();
+                        throw;
+                    default:
+                        throw;
+                }
+            }
+        }
+        public async Task<JObject> AddAppToTeamAsync(string groupId)
+        {
+            // POST: https://graph.microsoft.com/beta/teams/{group-id-for-teams}/apps
+            // EXAMPLE: https://graph.microsoft.com/beta/teams/69a940ef-b226-4ef2-9657-d27fab2f7cf9/apps
+
+            _logger.LogInformation("AddAppToTeamAsync called.");
+            try
+            {
+                Guard.Against.Null(groupId, nameof(groupId));
+
+                // Create JSON object to with team settings
+                dynamic appId = new JObject();
+                appId.id = _appOptions.TeamsAppInstanceId;
+
+                var requestUrl = _appOptions.GraphBetaRequestUrl + "/teams/" + groupId + "/apps";
+
+                // Create the request message and add the content.
+                HttpRequestMessage hrm = new HttpRequestMessage(HttpMethod.Post, requestUrl);
+                hrm.Content = new StringContent(appId.ToString(), Encoding.UTF8, "application/json");
+
+                var response = new HttpResponseMessage();
+
+                // Authenticate (add access token) our HttpRequestMessage
+                await GraphClient.AuthenticationProvider.AuthenticateRequestAsync(hrm);
+
+                // Send the request and get the response.
+                response = await GraphClient.HttpProvider.SendAsync(hrm);
+
+                // Get the status response and throw if is not 201.
+                if (response.StatusCode != System.Net.HttpStatusCode.Created)
+                {
+                    _logger.LogError("CreateChannelAsync error status code: " + response.StatusCode);
+                    throw new ServiceException(new Error { Code = ErrorConstants.Codes.InvalidRequest, Message = response.StatusCode.ToString() });
+                }
+                else
+                {
+                    var content = await response.Content.ReadAsStringAsync();
+                    JObject responseJObject = JObject.Parse(await response.Content.ReadAsStringAsync());
+
+                    _logger.LogInformation("AddAppToTeamAsync end.");
+                    return responseJObject;
+                }
+            }
+            catch (ServiceException ex)
+            {
+                _logger.LogError("AddAppToTeamAsync Service Exception: " + ex.Message);
+                switch (ex.Error.Code)
+                {
+                    case "Request_ResourceNotFound":
+                    case "ResourceNotFound":
+                    case "ErrorItemNotFound":
+                    case "itemNotFound":
+                        throw;
+                    case "TokenNotFound":
+                        //await HttpContext.ChallengeAsync();
+                        throw;
+                    default:
+                        throw;
+                }
+            }
+        }
+        public async Task<string> GetAppIdAsync(string groupId)
+        {
+            // POST: https://graph.microsoft.com/beta/teams/{group-id-for-teams}/apps
+            // EXAMPLE: https://graph.microsoft.com/beta/teams/69a940ef-b226-4ef2-9657-d27fab2f7cf9/apps
+
+            _logger.LogInformation("GetJObjectAsync called.");
+            try
+            {
+                Guard.Against.Null(groupId, nameof(groupId));
+
+                var requestUrl = _appOptions.GraphBetaRequestUrl + "/teams/" + groupId + "/apps";
+
+                // Create the request message and add the content.
+                HttpRequestMessage hrm = new HttpRequestMessage(HttpMethod.Get, requestUrl);
+
+                var response = new HttpResponseMessage();
+
+                // Authenticate (add access token) our HttpRequestMessage
+                await GraphClient.AuthenticationProvider.AuthenticateRequestAsync(hrm);
+
+                // Send the request and get the response.
+                response = await GraphClient.HttpProvider.SendAsync(hrm);
+
+                // Get the status response and throw if is not 201.
+                if (response.StatusCode != System.Net.HttpStatusCode.Created)
+                {
+                    _logger.LogError("GetJObjectAsync error status code: " + response.StatusCode);
+                    throw new ServiceException(new Error { Code = ErrorConstants.Codes.InvalidRequest, Message = response.StatusCode.ToString() });
+                }
+                else
+                {
+                    var content = await response.Content.ReadAsStringAsync();
+                    JObject responseJObject = JObject.Parse(await response.Content.ReadAsStringAsync());
+
+                    _logger.LogInformation("GetJObjectAsync end.");
+                    return responseJObject.ToString();
+                }
+            }
+            catch (ServiceException ex)
+            {
+                _logger.LogError("GetJObjectAsync Service Exception: " + ex.Message);
                 switch (ex.Error.Code)
                 {
                     case "Request_ResourceNotFound":

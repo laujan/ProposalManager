@@ -3,19 +3,19 @@
   "manifestVersion": "1.2",
   "version": "1.0.0",
   "id": "be9cae62-f0a5-49a1-8799-1a3c28ed88a0",
-  "packageName": "com.teams.porpmgmt",
+  "packageName": "com.microsoft.proposalmanager",
   "developer": {
     "name": "Microsoft",
-    "websiteUrl": "<to be updated>",
-    "privacyUrl": "<to be updated>",
-    "termsOfUseUrl": "<to be updated>"
+    "websiteUrl": "https://proposalmanagerwebapp.azurewebsites.net/",
+    "privacyUrl": "https://proposalmanagerwebapp.azurewebsites.net/tab/privacy",
+    "termsOfUseUrl": "https://proposalmanagerwebapp.azurewebsites.net/tab/termsofuse"
   },
   "icons": {
     "color": "color.png",
     "outline": "outline.png"
   },
   "name": {
-    "short": "Proposal Manager",
+    "short": "Proposal ManagerTest",
     "full": "Proposal Manager Tab Add-in for Microsoft Teams"
   },
   "description": {
@@ -25,7 +25,7 @@
   "accentColor": "#FFFFFF",
   "configurableTabs": [
     {
-      "configurationUrl": "<to be updated>/tab/config?channelName={channelName}&teamName={teamName}&groupId={groupId}&channelId={channelId}&upn={upn}",
+      "configurationUrl": "https://golocaldemo3.azurewebsites.net/tab/config?channelName={channelName}&teamName={teamName}&groupId={groupId}&channelId={channelId}&loginHint={loginHint}&locale={locale}",
       "canUpdateConfiguration": true,
       "scopes": [
         "team"
@@ -34,7 +34,7 @@
   ],
   "bots": [
     {
-      "botId": "<to be updated>",
+      "botId": "ae0a6a41-cc0a-4608-b9b9-2d92795cb403",
       "scopes": [
         "personal",
         "team"
@@ -46,7 +46,7 @@
     "messageTeamMembers"
   ],
   "validDomains": [
-    "<to be updated>",
+    "proposalmanagerwebapp.azurewebsites.net/",
     "login.microsoftonline.com"
   ]
 }

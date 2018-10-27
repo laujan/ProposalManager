@@ -8,6 +8,7 @@ import Utils from '../helpers/Utils';
 import * as microsoftTeams from '@microsoft/teams-js';
 import { PrimaryButton } from 'office-ui-fabric-react/lib/Button';
 import { Spinner, SpinnerSize } from 'office-ui-fabric-react/lib/Spinner';
+import { Trans } from "react-i18next";
 
 export class TabAuth extends Component {
     displayName = TabAuth.name
@@ -15,28 +16,38 @@ export class TabAuth extends Component {
     constructor(props) {
         super(props);
 
-        console.log("Constructor TabAuth");
-
         this.authHelper = window.authHelper;
         this.sdkHelper = window.sdkHelper;
         this.utils = new Utils();
+
+        this.localStorePrefix = this.props.teamsContext.localStorePrefix 
+
+        // Check to see if client is teams browser or client app
+        this.inTeamsClient = false;
+        if (navigator.userAgent.indexOf("Teams") !== -1) {
+            this.inTeamsClient = true;
+        }
 
         try {
             microsoftTeams.initialize();
         }
         catch (err) {
-            console.log("ProposalManagement_ConfigTAB error initializing teams: ");
+            console.log("TabAuth error initializing teams: ");
             console.log(err);
         }
         finally {
-            this.state = {
-                isAuthenticated: this.authHelper.isAuthenticated(),
-                channelName: "",
-                channelId: "",
-                teamName: "",
-                groupId: "",
-                contextUpn: ""
-            };
+            console.log("TabAuth_Constructor navigator.userAgent: " + navigator.userAgent);
+
+            if (navigator.userAgent.indexOf("Teams") !== -1) {
+                // Do not set state when in Teams client otherwise it will throw an error when component loaded in authentication context
+                console.log("TabAuth_Constructor_finally userAgent = Teams");
+            }
+            else {
+                console.log("TabAuth_Constructor_finally userAgent = Browser");
+                this.state = {
+                    isAuthenticated: false
+                };
+            }
 
             /** Pass the Context interface to the initialize function below */
             //microsoftTeams.getContext(context => this.initialize(context));
@@ -44,37 +55,140 @@ export class TabAuth extends Component {
 
     }
 
-    componentWillMount() {
-        // Get the teams context
-        if (this.state.teamName.length === 0) {
-            this.getTeamsContext();
+    async componentDidMount() {
+        let loginHint = this.props.teamsContext.loginHint;
+        if (loginHint === null || loginHint === undefined) {
+            loginHint = "";
         }
 
-        if (window.location.pathname.substring(0, 7) === "/tabmob") {
-            console.log("TabAuth componentWillMount in location: " + window.location.pathname);
-            this.acquireTokenSilentParam();
+        const isAdminCall = await this.isAdminCall();
+        console.log("TabAuth_componentDidMount loginHint: " + loginHint + " isAdminCall: " + isAdminCall);
+
+        const isAuthenticated = await this.authHelper.userIsAuthenticatedAsync();
+
+        console.log("TabAuth_componentDidMount userIsAuthenticated: " + isAuthenticated + " loginHint: " + loginHint);
+
+        if (isAdminCall === "true") {
+            const userHasGraphAdminToken = await this.authHelper.userHasGraphAdminToken();
+
+            console.log("TabAuth_componentDidMount_isAdminCall loginHint: " + loginHint + " userHasGraphAdminToken: " + userHasGraphAdminToken);
+            if (isAuthenticated === loginHint && userHasGraphAdminToken) {
+                this.notifySuccess(true);
+            } else {
+                loginHint = "";
+            }
+        }
+
+        if (isAuthenticated === loginHint && !isAdminCall) {
+            this.notifySuccess(true);
+        } else {
+            loginHint = "";
+        }
+
+        if (isAuthenticated !== loginHint) {
+            const resAquireTokenTeams = await this.acquireTokenTeams();
+            console.log("TabAuth_componentDidMount resAquireTokenTeams: " + resAquireTokenTeams);
         }
     }
 
-    componentDidUpdate() {
-        if (this.state.teamName.length > 0) {
-            console.log("TabAuth componentDidUpdate in context of upn: " + this.state.contextUpn);
-            this.acquireTokenSilentParam();
+    async componentDidUpdate() {
+        let loginHint = this.props.teamsContext.loginHint;
+        if (loginHint === null || loginHint === undefined) {
+            loginHint = "";
         }
-        //TODO: Handle popup error
-        //msal.error  popup_window_error  msal.error.description
+
+        console.log("TabAuth_componentDidUpdate loginHint: " + loginHint);
     }
 
-    getTeamsContext() {
-        microsoftTeams.getContext(context => {
-            this.setState({
-                channelName: context.channelName,
-                channelId: context.channelId,
-                teamName: context.teamName,
-                groupId: context.groupId,
-                contextUpn: context.upn
-            });
-        });
+    async acquireTokenTeams() {
+        let isAuthenticated = await this.authHelper.userIsAuthenticatedAsync();
+        let loginHint = this.props.teamsContext.loginHint;
+        if (loginHint === null || loginHint === undefined) {
+            loginHint = "";
+        }
+        const isAdminCall = await this.isAdminCall();
+        const userHasGraphAdminToken = await this.authHelper.userHasGraphAdminToken();
+
+        if (isAdminCall && !userHasGraphAdminToken) {
+            isAuthenticated = "error no graph admin token";
+            console.log("TabAuth_acquireTokenTeams isAuthenticated: " + isAuthenticated);
+        }
+
+        console.log("TabAuth_acquireTokenTeams v3 START loginHint: " + loginHint + " isAuthenticated: " + isAuthenticated);
+
+        if (isAuthenticated.includes("error")) {
+            console.log("TabAuth_acquireTokenTeams isAuthenticated: " + isAuthenticated);
+
+            let extraParameters = "login_hint=" + encodeURIComponent(loginHint);
+            console.log("TabAuth_acquireTokenTeams acquireTokenSilentAsync extraParameters: " + extraParameters);
+
+            if (!await isAdminCall) {
+                const tabAuthSeq1 = await this.authHelper.acquireTokenSilentAsync();
+
+                if (tabAuthSeq1.includes("error")) {
+                    const tabAuthSeq2 = await this.logonInteractive();
+                } else {
+                    const tabAuthSeq2 = await this.authHelper.acquireWebApiTokenSilentAsync();
+
+                    //localStorage.setItem("TabAuthState", tabAuthSeq2);
+                    if (!tabAuthSeq2.includes("error")) {
+                        this.notifySuccess(true);
+                    }
+                }
+            } else {
+                const tabAuthSeq1 = await this.authHelper.acquireTokenSilentAdminAsync();
+
+                if (tabAuthSeq1.includes("error")) {
+                    const tabAuthSeq2 = await this.logonInteractive();
+                } else {
+                    const tabAuthSeq2 = await this.authHelper.acquireTokenSilentAsync();
+
+                    if (!tabAuthSeq2.includes("error")) {
+                        const tabAuthSeq3 = await this.authHelper.acquireWebApiTokenSilentAsync();
+
+                        //localStorage.setItem("TabAuthState", tabAuthSeq3);
+                        if (!tabAuthSeq3.includes("error")) {
+                            this.notifySuccess(true);
+                        }
+                    }
+                }
+                
+            } 
+        }
+
+        console.log("TabAuth_acquireTokenTeams FINISH");
+    }
+
+    async logonInteractive() {
+        if (await this.isAdminCall()) {
+            window.setTimeout(function () {
+                this.authHelper.loginRedirectAdmin();
+            }, 500);
+
+            return "loginRedirect";
+        } else {
+            window.setTimeout(function () {
+                this.authHelper.loginRedirect();
+            }, 500);
+
+            return "loginRedirect";
+        }
+    }
+
+    async isAdminCall() {
+        const appTeamsRequest = localStorage.getItem(this.localStorePrefix + "appteams.request");
+
+        try {
+            if (appTeamsRequest === "/tab/generalAdministrationTab") {
+                return "true";
+            }
+            else {
+                return "false";
+            }
+        } catch (err) {
+            console.log("TabAuth_isAdminCall error: " + err);
+            return "false";
+        }
     }
 
     // Returns the value of a query variable.
@@ -87,34 +201,22 @@ export class TabAuth extends Component {
                 return decodeURIComponent(pair[1]);
             }
         }
-        return null;
+        return "";
     }
 
-
-    // Tries to get a token silently
-    acquireTokenSilentParam() {
-        console.log("TabAuth acquireTokenSilentParam login_hint: " + this.state.contextUpn);
-
-        //let extraQueryParameters = "login_hint=" + this.state.contextUpn;
-        let extraQueryParameters = {
-            login_hint: this.state.contextUpn
-        };
-
-        this.authHelper.acquireWebApiTokenSilentParam(extraQueryParameters)
-            .then(res => {
-                console.log("TabAuth acquireTokenSilentParam_acquireTokenSilentParam_then: " + JSON.stringify(res));
-                this.notifySuccess();
-            })
-            .catch(err => {
-                console.log("TabAuth_acquireTokenSilentParam error: ");
-                console.log(err);
-                this.authHelper.loginRedirect();
-                console.log("TabAuth_Login_loginRedirect");
-                //this.notifySuccess();
-            });
+    // Returns the value of a query variable from href.
+    getHrefQueryVariable = (variable) => {
+        const query = window.location.href.substring(1);
+        const vars = query.split('&');
+        for (const varPairs of vars) {
+            const pair = varPairs.split('=');
+            if (decodeURIComponent(pair[0]) === variable) {
+                return decodeURIComponent(pair[1]);
+            }
+        }
+        return "";
     }
 
-    // Sign the user out of the session.
     logout() {
         this.authHelper.logout().then(() => {
             this.setState({
@@ -124,32 +226,39 @@ export class TabAuth extends Component {
         });
     }
 
-    notifySuccess() {
+    notifySuccessBtnClick() {
         microsoftTeams.authentication.notifySuccess();
     }
 
+    notifySuccess(force) {
+        microsoftTeams.authentication.notifySuccess("notifySuccess");
+    }
+
+    notifyFailure() {
+        microsoftTeams.authentication.notifyFailure();
+    }
 
     render() {
 
         return (
             <div className="BgConfigImage ">
-                <h2 className='font-white text-center darkoverlay'>Proposal Manager</h2>
+                <h2 className='font-white text-center darkoverlay'><Trans>proposalManager</Trans></h2>
                 <div className='ms-Grid-row'>
                     <div className='ms-Grid-col ms-sm12 ms-md12 ms-lg12 mt50 mb50 text-center'>
                 <div className='TabAuthLoader'>
-                    <Spinner size={SpinnerSize.large} label='Loading your experience...' ariaLive='assertive' />
+                    <Spinner size={SpinnerSize.large} label={<Trans>loadingYourExperience</Trans>} ariaLive='assertive' />
                     </div>
                     </div>
                 </div>
 
                 <div className='ms-Grid-row mt50'>
                 <div className='ms-Grid-col ms-sm12 ms-md12 ms-lg12  text-center'>
-                        <PrimaryButton className='' onClick={this.logout.bind(this)}>
-                            Reset Token
+                        <PrimaryButton className='ml10 backbutton ' onClick={this.logout.bind(this)}>
+                            <Trans>resetToken</Trans>
                         </PrimaryButton>
               
-                        <PrimaryButton className='ml10 backbutton ' onClick={this.notifySuccess.bind(this)}>
-                            Close
+                        <PrimaryButton className='ml10 backbutton ' onClick={this.notifySuccessBtnClick.bind(this)}>
+                            <Trans>forceclose</Trans>
                         </PrimaryButton>
                     </div>
                 </div>

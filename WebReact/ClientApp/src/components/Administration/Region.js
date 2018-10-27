@@ -14,6 +14,7 @@ import {
 	SpinnerSize
 } from 'office-ui-fabric-react/lib/Spinner';
 import { MessageBar, MessageBarType } from 'office-ui-fabric-react/lib/MessageBar';
+import { Trans } from "react-i18next";
 
 export class Region extends Component {
 
@@ -29,10 +30,10 @@ export class Region extends Component {
 		this.utils = new Utils();
 		const columns = [
 			{
-				key: 'column1',
-				name: 'Region',
-				headerClassName: 'ms-List-th browsebutton',
-				className: 'docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg8',
+                key: 'column1',
+                name: <Trans>region</Trans>,
+                headerClassName: 'ms-List-th browsebutton RegionCol',
+                className: 'docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg8 RegionCol',
 				fieldName: 'Region',
 				minWidth: 150,
 				maxWidth: 250,
@@ -40,7 +41,7 @@ export class Region extends Component {
 				onRender: (item) => {
 					return (
                         <TextField
-                            id={'txtRegion' + item.id}
+                            id={'txtRegion' + item.id} 
                             value={item.name}
                             onBlur={(e) => this.onBlurRegionName(e, item)}
                         />
@@ -49,9 +50,9 @@ export class Region extends Component {
 			},
 			{
 				key: 'column2',
-				name: 'Action',
-				headerClassName: 'ms-List-th',
-				className: 'ms-Grid-col ms-sm12 ms-md12 ms-lg4',
+                name: <Trans>action</Trans>,
+                headerClassName: 'ms-List-th Regionaction',
+                className: 'ms-Grid-col ms-sm12 ms-md12 ms-lg4 Regionaction',
 				minWidth: 16,
 				maxWidth: 16,
 				onRender: (item) => {
@@ -76,39 +77,47 @@ export class Region extends Component {
 			MessageBarType: MessageBarType.success,
 			isUpdateMsg: false
 		};
+
+		this.getRegions().then();
 	}
 
 	componentWillMount() {
-		this.getRegions();
+		//this.getRegions();
 	}
 
-	getRegions() {
-		// call to API fetch data
-		let requestUrl = 'api/Region';
-		fetch(requestUrl, {
-			method: "GET",
-			headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() }
-		})
-			.then(response => response.json())
-			.then(data => {
-				try {
-					let regionList = [];
-					console.log(data);
-					for (let i = 0; i < data.length; i++) {
-						let region = {};
-						region.id = data[i].id;
-						region.name = data[i].name;
-						region.type = "old";
-						regionList.push(region);
-					}
-					this.setState({ items: regionList, loading: false, rowItemCounter: regionList.length });
-				}
-				catch (err) {
-					return false;
-				}
-
-			});
-	}
+    async getRegions() {
+        let regionList = [];
+        let regionList_length = 0;
+        try{
+            // call to API fetch Categories
+            let requestUrl = 'api/Region';
+            let response = await fetch(requestUrl, {
+                method: "GET",
+                headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() }
+            });
+            let data = await response.json();
+            if(typeof data === 'string'){
+                console.log("Region_getRegions : ", data);
+            }else if(typeof data === 'object'){
+                console.log("Region_getRegions : ", data);
+                for (let i = 0; i < data.length; i++) {
+                    let region = {};
+                    region.id = data[i].id;
+                    region.name = data[i].name;
+                    region.operation = "update";
+                    regionList.push(region);
+                }
+                regionList_length = regionList.length;
+            }
+            else{
+                throw new Error("response is not an expected type : ", data);
+            }
+        }catch(error){
+            console.log("Region_getRegions Error: ", error.message);
+        }finally{
+            this.setState({ items: regionList, loading: false, rowItemCounter:  regionList_length});
+        }
+    }
 
 	createItem(key) {
 		return {
@@ -139,8 +148,8 @@ export class Region extends Component {
 		this.region = currentItems;
 		this.deleteItem(item.id);
 		this.setState({
-			items: currentItems,
-			MessagebarText: "Region deleted successfully.",
+            items: currentItems,
+            MessagebarText: <Trans>regionDeletedSuccess</Trans>,
 			isUpdate: false,
 			isUpdateMsg: true
 		});
@@ -176,7 +185,7 @@ export class Region extends Component {
 				.catch(err => {
 					//this.errorHandler(err, "");
 					this.setState({
-						MessagebarText: "Error occured. Please try again!",
+                        MessagebarText: <Trans>errorOoccuredPleaseTryAgain</Trans>,
 						isUpdate: false,
 						isUpdateMsg: true
 					});
@@ -189,8 +198,20 @@ export class Region extends Component {
 
 
 	onBlurRegionName(e, item) {
-		let updatedItems = this.state.items;
-		console.log(item);
+        //check Region already exist in items
+        for (let p = 0; p < this.state.items.length; p++) {
+            if (this.state.items[p].name.toLowerCase() === e.target.value.toLowerCase()) {
+                this.setState({
+                    isUpdate: false,
+                    isUpdateMsg: true,
+                    MessagebarText: <Trans>regionExist</Trans>,
+                    MessageBarType: MessageBarType.error
+                });
+                setTimeout(function () { this.setState({ isUpdateMsg: false, MessageBarType: "", MessagebarText: "" }); }.bind(this), 3000);
+                return false;
+            }
+        }
+        let updatedItems = this.state.items;
 		let itemIdx = updatedItems.indexOf(item);
 		updatedItems[itemIdx].name = e.target.value;
 
@@ -201,12 +222,12 @@ export class Region extends Component {
 		currentRegion.name = item.name;
 		let messagebarText;
 		if (item.type === "new") {
-			this.createNewItem(currentRegion);
-			messagebarText = "Region added successfully.";
+            this.createNewItem(currentRegion);
+            messagebarText = <Trans>regionAddedSuccess</Trans>;
 		}
 		else {
-			this.updateItem(currentRegion);
-			messagebarText = "Region updated successfully.";
+            this.updateItem(currentRegion);
+            messagebarText = <Trans>regionUpdatedSuccess</Trans>;
 		}
 		this.setState({
 			items: updatedItems,
@@ -250,7 +271,7 @@ export class Region extends Component {
 				.catch(err => {
 					//this.errorHandler(err, "");
 					this.setState({
-						MessagebarText: "Error occured. Please try again!",
+                        MessagebarText: <Trans>errorOoccuredPleaseTryAgain</Trans>,
 						isUpdate: false,
 						isUpdateMsg: true
 					});
@@ -292,7 +313,7 @@ export class Region extends Component {
 					//this.errorHandler(err, "");
 					this.setState({
 						updateStatus: true,
-						MessagebarText: "Error while updating Region, please try again."
+                        MessagebarText: <Trans>errorOoccuredPleaseTryAgain</Trans>
 					});
 					this.hideMessagebar();
 					reject(err);
@@ -323,12 +344,12 @@ export class Region extends Component {
 	render() {
 		const { columns, isCompactMode, items, selectionDetails } = this.state;
 		const regionList = this.regionList(columns, isCompactMode, items, selectionDetails);
-		const itemCount = items.length;
+		
 		
 		if (this.state.loading) {
 			return (
 				<div className='ms-BasicSpinnersExample ibox-content pt15 '>
-					<Spinner size={SpinnerSize.large} label='loading...' ariaLive='assertive' />
+                    <Spinner size={SpinnerSize.large} label={<Trans>loading</Trans>} ariaLive='assertive' />
 				</div>
 			);
 		} else {
@@ -340,20 +361,9 @@ export class Region extends Component {
 					<div className='ms-Grid-row'>
 						<div className='ms-Grid-col ms-sm12 ms-md12 ms-lg12'>
                             <div className='ms-Grid-col ms-sm12 ms-md12 ms-lg12 pt10'>
-                                <Link href='' className='pull-left' onClick={() => this.onAddRow()} >+ Add New</Link>
+                                <Link href='' className='pull-left' onClick={() => this.onAddRow()} >+ <Trans>addNew</Trans></Link>
                             </div>
-						{itemCount === 0 ?
-								<div>	
-									<br/>
-								<h5>No records to display. Please 'Add New' records.</h5>
-								</div>
-							
-							:
-							<div className='ms-Grid-col ms-sm12 ms-md12 ms-lg12'>
-								
 								{regionList}
-							</div>
-							}
 						</div>
 					</div>
 

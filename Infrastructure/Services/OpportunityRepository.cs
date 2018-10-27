@@ -16,6 +16,7 @@ using ApplicationCore.Entities;
 using ApplicationCore.Services;
 using ApplicationCore;
 using ApplicationCore.Helpers;
+using ApplicationCore.Authorization;
 using ApplicationCore.Entities.GraphServices;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
@@ -24,6 +25,8 @@ using ApplicationCore.Helpers.Exceptions;
 using Microsoft.Graph;
 using System.Linq;
 using System.Text.RegularExpressions;
+using ApplicationCore.Models;
+using Infrastructure.Authorization;
 
 namespace Infrastructure.Services
 {
@@ -32,34 +35,41 @@ namespace Infrastructure.Services
         private readonly IOpportunityFactory _opportunityFactory;
         private readonly GraphSharePointAppService _graphSharePointAppService;
         private readonly GraphUserAppService _graphUserAppService;
-        private readonly INotificationRepository _notificationRepository;
         private readonly IUserProfileRepository _userProfileRepository;
         private readonly IUserContext _userContext;
-
+        private readonly IDashboardService _dashboardService;
+        private readonly IAuthorizationService _authorizationService;
+        private readonly IPermissionRepository _permissionRepository;
 
         public OpportunityRepository(
             ILogger<OpportunityRepository> logger,
-            IOptions<AppOptions> appOptions,
+            IOptionsMonitor<AppOptions> appOptions,
             GraphSharePointAppService graphSharePointAppService,
             GraphUserAppService graphUserAppService,
-            INotificationRepository notificationRepository,
             IUserProfileRepository userProfileRepository,
             IUserContext userContext,
-            IOpportunityFactory opportunityFactory) : base(logger, appOptions)
+            IOpportunityFactory opportunityFactory,
+            IAuthorizationService authorizationService,
+            IPermissionRepository permissionRepository,
+            IDashboardService dashboardService) : base(logger, appOptions)
         {
             Guard.Against.Null(graphSharePointAppService, nameof(graphSharePointAppService));
             Guard.Against.Null(graphUserAppService, nameof(graphUserAppService));
-            Guard.Against.Null(notificationRepository, nameof(notificationRepository));
             Guard.Against.Null(userProfileRepository, nameof(userProfileRepository));
             Guard.Against.Null(userContext, nameof(userContext));
             Guard.Against.Null(opportunityFactory, nameof(opportunityFactory));
+            Guard.Against.Null(dashboardService, nameof(dashboardService));
+            Guard.Against.Null(authorizationService, nameof(authorizationService));
+            Guard.Against.Null(permissionRepository, nameof(permissionRepository));
 
             _graphSharePointAppService = graphSharePointAppService;
             _graphUserAppService = graphUserAppService;
-            _notificationRepository = notificationRepository;
             _userProfileRepository = userProfileRepository;
             _userContext = userContext;
             _opportunityFactory = opportunityFactory;
+            _dashboardService = dashboardService;
+            _authorizationService = authorizationService;
+            _permissionRepository = permissionRepository;
         }
 
         public async Task<StatusCodes> CreateItemAsync(Opportunity opportunity, string requestId = "")
@@ -71,12 +81,12 @@ namespace Infrastructure.Services
                 Guard.Against.Null(opportunity, nameof(opportunity), requestId);
                 Guard.Against.NullOrEmpty(opportunity.DisplayName, nameof(opportunity.DisplayName), requestId);
 
-                // Check access
                 var roles = new List<Role>();
                 roles.Add(new Role { DisplayName = "RelationshipManager" });
-                var checkAccess = await _opportunityFactory.CheckAccessAsync(opportunity, roles, requestId);
-                if (!checkAccess) _logger.LogError($"RequestId: {requestId} - OpportunityRepository_CreateItemAsync CheckAccess CreateItemAsync");
 
+                //Granular Access : Start
+                if (StatusCodes.Status401Unauthorized == await _authorizationService.CheckAccessFactoryAsync(PermissionNeededTo.Create, requestId)) return StatusCodes.Status401Unauthorized;
+                //Granular Access : End
                 // Ensure id is blank since it will be set by SharePoint
                 opportunity.Id = String.Empty;
 
@@ -108,12 +118,12 @@ namespace Infrastructure.Services
 
                 // Create Json object for SharePoint create list item
                 dynamic opportunityFieldsJson = new JObject();
-                //opportunityFieldsJson.OpportunityId = opportunity.Id;
                 opportunityFieldsJson.Name = opportunity.DisplayName;
                 opportunityFieldsJson.OpportunityState = opportunity.Metadata.OpportunityState.Name;
                 opportunityFieldsJson.OpportunityObject = JsonConvert.SerializeObject(opportunity, Formatting.Indented);
                 opportunityFieldsJson.LoanOfficer = loanOfficerId;
                 opportunityFieldsJson.RelationshipManager = relationshipManagerId;
+                opportunityFieldsJson.Reference = opportunity.Reference ?? String.Empty;
 
                 dynamic opportunityJson = new JObject();
                 opportunityJson.fields = opportunityFieldsJson;
@@ -125,38 +135,19 @@ namespace Infrastructure.Services
                 };
 
                 var result = await _graphSharePointAppService.CreateListItemAsync(opportunitySiteList, opportunityJson.ToString(), requestId);
-
-                _logger.LogInformation($"RequestId: {requestId} - OpportunityRepository_CreateItemAsync finished creating SharePoint List for opportunity.");
-                // END TODO
-
-                // Add entry in Opportunities public sub site
-                var opportunitySubSiteList = new SiteList
-                {
-                    SiteId = _appOptions.OpportunitiesSubSiteId,
-                    ListId = _appOptions.PublicOpportunitiesListId
-                };
-
-
-                // Create Json object for SharePoint create list item
-                dynamic pubOpportunityFieldsJson = new JObject();
-                pubOpportunityFieldsJson.Title = opportunity.DisplayName;
-                pubOpportunityFieldsJson.LoanOfficer = loanOfficerUpn;
-                pubOpportunityFieldsJson.RelationshipManager = relationshipManagerUpn;
-                pubOpportunityFieldsJson.State = opportunity.Metadata.OpportunityState.Name;
-
-                dynamic pubOpportunityJson = new JObject();
-                pubOpportunityJson.fields = pubOpportunityFieldsJson;
-
+                //DashBoard Create call Start.
                 try
                 {
-                    var resultPub = await _graphSharePointAppService.CreateListItemAsync(opportunitySubSiteList, pubOpportunityJson.ToString(), requestId);
+                    var id = JObject.Parse(result.ToString()).SelectToken("id").ToString();
+                    await CreateDashBoardEntryAsync(requestId, id, opportunity);
                 }
                 catch (Exception ex)
                 {
-                    // Dont brak the opportunity creation of entry can't be added to subsite (public)
-                    _logger.LogError($"RequestId: {requestId} - OpportunityRepository_CreateItemAsync SubsiteOpportunity Service Exception: {ex}");
+                    _logger.LogError($"RequestId: {requestId} - OpportunityRepository_CreateItemAsync create dashboard entry Exception: {ex}");
+                    //await CreateDashBoardEntryAsync(requestId, "1", opportunity);
                 }
-
+                //DashBoard Create call End.
+                _logger.LogInformation($"RequestId: {requestId} - OpportunityRepository_CreateItemAsync finished creating SharePoint List for opportunity.");
 
                 return StatusCodes.Status201Created;
             }
@@ -178,9 +169,26 @@ namespace Infrastructure.Services
                 // TODO: This section will be replaced with a workflow
                 _logger.LogInformation($"RequestId: {requestId} - OpportunityRepository_UpdateItemAsync SharePoint List for opportunity.");
 
-                // Check access
-                var checkAccess = await _opportunityFactory.CheckAccessAnyAsync(opportunity, requestId);
-                if (!checkAccess) _logger.LogError($"RequestId: {requestId} - OpportunityRepository_UpdateItemAsync CheckAccessAny");
+                //Granular Access : Start
+                var access = await CheckAccessAsync(PermissionNeededTo.WritePartial, PermissionNeededTo.Write, PermissionNeededTo.WriteAll, requestId);
+                var currentUser = (_userContext.User.Claims).ToList().Find(x => x.Type == "preferred_username")?.Value;
+                if (!access.haveSuperAcess && !access.haveAccess && !access.havePartial)
+                {
+                    // This user is not having any write permissions, so he won't be able to update
+                    _logger.LogError($"RequestId: {requestId} - OpportunityRepository_GetItemByIdAsync current user: {currentUser} AccessDeniedException");
+                    throw new AccessDeniedException($"RequestId: {requestId} - OpportunityRepository_GetItemByIdAsync current user: {currentUser} AccessDeniedException");
+                }
+                else if (!access.haveSuperAcess)
+                {
+                    if (!(opportunity.Content.TeamMembers).ToList().Any
+                            (teamMember => teamMember.Fields.UserPrincipalName == currentUser))
+                    {
+                        // This user is not having any write permissions, so he won't be able to update
+                        _logger.LogError($"RequestId: {requestId} - OpportunityRepository_GetItemByIdAsync current user: {currentUser} AccessDeniedException");
+                        throw new AccessDeniedException($"RequestId: {requestId} - OpportunityRepository_GetItemByIdAsync current user: {currentUser} AccessDeniedException");
+                    }
+                }
+                //Granular Access : End
 
                 // Workflow processor
                 opportunity = await _opportunityFactory.UpdateWorkflowAsync(opportunity, requestId);
@@ -210,12 +218,11 @@ namespace Infrastructure.Services
                 // Create Json object for SharePoint create list item
                 dynamic opportunityJson = new JObject();
                 opportunityJson.OpportunityId = opportunity.Id;
-                //opportunityJson.Name = opportunity.DisplayName; TODO: In wave 1 nme can't be changed
                 opportunityJson.OpportunityState = opportunity.Metadata.OpportunityState.Name;
                 opportunityJson.OpportunityObject = JsonConvert.SerializeObject(opportunity, Formatting.Indented);
-                //opportunityJson.OpportunityObject = opportunityJObject.ToString();
                 opportunityJson.LoanOfficer = loanOfficerId;
                 opportunityJson.RelationshipManager = relationshipManagerId;
+                opportunityJson.Reference = opportunity.Reference ?? String.Empty;
 
                 var opportunitySiteList = new SiteList
                 {
@@ -225,43 +232,7 @@ namespace Infrastructure.Services
                 var result = await _graphSharePointAppService.UpdateListItemAsync(opportunitySiteList, opportunity.Id, opportunityJson.ToString(), requestId);
 
                 _logger.LogInformation($"RequestId: {requestId} - OpportunityRepository_UpdateItemAsync finished SharePoint List for opportunity.");
-
-
-                // Update entry in Opportunities public sub site
-                var opportunitySubSiteList = new SiteList
-                {
-                    SiteId = _appOptions.OpportunitiesSubSiteId,
-                    ListId = _appOptions.PublicOpportunitiesListId
-                };
-
-
-                // Create Json object for SharePoint create list item
-                dynamic pubOpportunityFieldsJson = new JObject();
-                pubOpportunityFieldsJson.Title = opportunity.DisplayName;
-                pubOpportunityFieldsJson.LoanOfficer = loanOfficerUpn;
-                pubOpportunityFieldsJson.RelationshipManager = relationshipManagerUpn;
-                pubOpportunityFieldsJson.State = opportunity.Metadata.OpportunityState.Name;
-
-                var options = new List<QueryParam>();
-                options.Add(new QueryParam("filter", $"startswith(fields/Title,'{opportunity.DisplayName}')"));
-
-                try
-                {
-                    var json = await _graphSharePointAppService.GetListItemAsync(opportunitySubSiteList, options, "All", requestId);
-                    Guard.Against.Null(json, "OpportunityRepository_UpdateItemAsync GetListItemAsync Null", requestId);
-                    dynamic jsonDyn = json;
-                    string opportunityId = jsonDyn.value[0].fields.id.ToString();
-                    if (!String.IsNullOrEmpty(opportunityId))
-                    {
-                        var resultPub = await _graphSharePointAppService.UpdateListItemAsync(opportunitySubSiteList, opportunityId, pubOpportunityFieldsJson.ToString(), requestId);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    // Dont brak the opportunity creation of entry can't be updated to subsite (public)
-                    _logger.LogError($"RequestId: {requestId} - OpportunityRepository_UpdateItemAsync SubsiteOpportunity Service Exception: {ex}");
-                }
-
+                //For DashBoard---
                 return StatusCodes.Status200OK;
             }
             catch (Exception ex)
@@ -285,6 +256,17 @@ namespace Infrastructure.Services
                     ListId = _appOptions.OpportunitiesListId
                 };
 
+                //Granular Access : Start
+                var access = await CheckAccessAsync(PermissionNeededTo.ReadPartial, PermissionNeededTo.Read, PermissionNeededTo.ReadAll, requestId);
+                var currentUser = (_userContext.User.Claims).ToList().Find(x => x.Type == "preferred_username")?.Value;
+                if (!access.haveSuperAcess && !access.haveAccess && !access.havePartial)
+                {
+                    // This user is not having any write permissions, so he won't be able to update
+                    _logger.LogError($"RequestId: {requestId} - OpportunityRepository_GetItemByIdAsync current user: {currentUser} AccessDeniedException");
+                    throw new AccessDeniedException($"RequestId: {requestId} - OpportunityRepository_GetItemByIdAsync current user: {currentUser} AccessDeniedException");
+                }
+                //Granular Access : End
+
                 var json = await _graphSharePointAppService.GetListItemByIdAsync(opportunitySiteList, id, "all", requestId);
                 Guard.Against.Null(json, nameof(json), requestId);
 
@@ -296,11 +278,20 @@ namespace Infrastructure.Services
                     NullValueHandling = NullValueHandling.Ignore
                 });
 
-                oppArtifact.Id = json["fields"]["id"].ToString();
+                //Granular Access : Start
+                if (!access.haveSuperAcess)
+                {
+                    if (!(oppArtifact.Content.TeamMembers).ToList().Any
+                            (teamMember => teamMember.Fields.UserPrincipalName == currentUser))
+                    {
+                        // This user is not having any write permissions, so he won't be able to update
+                        _logger.LogError($"RequestId: {requestId} - OpportunityRepository_GetItemByIdAsync current user: {currentUser} AccessDeniedException");
+                        throw new AccessDeniedException($"RequestId: {requestId} - OpportunityRepository_GetItemByIdAsync current user: {currentUser} AccessDeniedException");
+                    }
+                }
+                //Granular Access : End
 
-                // Check access
-                var checkAccess = await _opportunityFactory.CheckAccessAnyAsync(oppArtifact, requestId);
-                if (!checkAccess) _logger.LogError($"RequestId: {requestId} - OpportunityRepository_GetItemByIdAsync CheckAccessAny");
+                oppArtifact.Id = json["fields"]["id"].ToString();
 
                 return oppArtifact;
             }
@@ -318,6 +309,17 @@ namespace Infrastructure.Services
             try
             {
                 Guard.Against.NullOrEmpty(name, nameof(name), requestId);
+
+                //Granular Access : Start
+                var access = await CheckAccessAsync(PermissionNeededTo.ReadPartial,PermissionNeededTo.Read, PermissionNeededTo.ReadAll, requestId);
+                var currentUser = (_userContext.User.Claims).ToList().Find(x => x.Type == "preferred_username")?.Value;
+                if (!access.haveSuperAcess && !access.haveAccess && !access.havePartial)
+                {
+                    // This user is not having any write permissions, so he won't be able to update
+                    _logger.LogError($"RequestId: {requestId} - OpportunityRepository_GetItemByIdAsync current user: {currentUser} AccessDeniedException");
+                    throw new AccessDeniedException($"RequestId: {requestId} - OpportunityRepository_GetItemByIdAsync current user: {currentUser} AccessDeniedException");
+                }
+                //Granular Access : End
 
                 var opportunitySiteList = new SiteList
                 {
@@ -358,11 +360,17 @@ namespace Infrastructure.Services
                             });
 
                             oppArtifact.Id = jsonDyn.value[0].fields.id.ToString();
-
-                            // Check access
-                            var checkAccess = await _opportunityFactory.CheckAccessAnyAsync(oppArtifact, requestId);
-                            if (!checkAccess) _logger.LogError($"RequestId: {requestId} - OpportunityRepository_GetItemByNameAsync CheckAccessAny");
-
+                            //Granular Access : Start
+                               if (!access.haveSuperAcess)
+                               {
+                                   if (!CheckTeamMember(oppArtifact,currentUser))
+                                   {
+                                       // This user is not having any write permissions, so he won't be able to update
+                                       _logger.LogError($"RequestId: {requestId} - OpportunityRepository_GetItemByIdAsync current user: {currentUser} AccessDeniedException");
+                                       throw new AccessDeniedException($"RequestId: {requestId} - OpportunityRepository_GetItemByIdAsync current user: {currentUser} AccessDeniedException");
+                                   }
+                               }
+                            //Granular Access : End
                             return oppArtifact;
                         }
                     }
@@ -381,6 +389,87 @@ namespace Infrastructure.Services
             }
         }
 
+        public async Task<Opportunity> GetItemByRefAsync(string reference, string requestId = "")
+        {
+            _logger.LogInformation($"RequestId: {requestId} - OpportunityRepository_GetItemByRefAsync called.");
+
+            try
+            {
+                Guard.Against.NullOrEmpty(reference, nameof(reference), requestId);
+
+                //Granular Access : Start
+                var access = await CheckAccessAsync(PermissionNeededTo.ReadPartial,PermissionNeededTo.Read, PermissionNeededTo.ReadAll, requestId);
+                var currentUser = (_userContext.User.Claims).ToList().Find(x => x.Type == "preferred_username")?.Value;
+                if (!access.haveSuperAcess && !access.haveAccess && !access.havePartial)
+                {
+                    // This user is not having any write permissions, so he won't be able to update
+                    _logger.LogError($"RequestId: {requestId} - OpportunityRepository_GetItemByIdAsync current user: {currentUser} AccessDeniedException");
+                    throw new AccessDeniedException($"RequestId: {requestId} - OpportunityRepository_GetItemByIdAsync current user: {currentUser} AccessDeniedException");
+                }
+                //Granular Access : End
+
+                var opportunitySiteList = new SiteList
+                {
+                    SiteId = _appOptions.ProposalManagementRootSiteId,
+                    ListId = _appOptions.OpportunitiesListId
+                };
+
+                reference = reference.Replace("'", "");
+                var nameEncoded = WebUtility.UrlEncode(reference);
+                var options = new List<QueryParam>();
+                options.Add(new QueryParam("filter", $"startswith(fields/Reference,'{nameEncoded}')"));
+
+                var json = await _graphSharePointAppService.GetListItemAsync(opportunitySiteList, options, "all", requestId);
+                Guard.Against.Null(json, "OpportunityRepository_GetItemByRefAsync GetListItemAsync Null", requestId);
+
+                dynamic jsonDyn = json;
+
+                if (jsonDyn.value.HasValues)
+                {
+                    foreach (var item in jsonDyn.value)
+                    {
+                        if (item.fields.Reference == reference)
+                        {
+                            var opportunityJson = item.fields.OpportunityObject.ToString();
+
+                            var oppArtifact = JsonConvert.DeserializeObject<Opportunity>(opportunityJson, new JsonSerializerSettings
+                            {
+                                MissingMemberHandling = MissingMemberHandling.Ignore,
+                                NullValueHandling = NullValueHandling.Ignore
+                            });
+
+                            oppArtifact.Id = jsonDyn.value[0].fields.id.ToString();
+
+                            //Granular Access : Start
+                            if (!access.haveSuperAcess)
+                            {
+                                if (!CheckTeamMember(oppArtifact,currentUser))
+                                {
+                                    // This user is not having any write permissions, so he won't be able to update
+                                    _logger.LogError($"RequestId: {requestId} - OpportunityRepository_GetItemByIdAsync current user: {currentUser} AccessDeniedException");
+                                    throw new AccessDeniedException($"RequestId: {requestId} - OpportunityRepository_GetItemByIdAsync current user: {currentUser} AccessDeniedException");
+                                }
+                            }
+                            //Granular Access : End
+
+                            return oppArtifact;
+                        }
+                    }
+
+                }
+
+                // Not found
+                _logger.LogError($"RequestId: {requestId} - OpportunityRepository_GetItemByRefAsync opportunity: {reference} - Not found.");
+
+                return Opportunity.Empty;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"RequestId: {requestId} - OpportunityRepository_GetItemByRefAsync Service Exception: {ex}");
+                throw new ResponseException($"RequestId: {requestId} - OpportunityRepository_GetItemByRefAsync Service Exception: {ex}");
+            }
+        }
+
         public async Task<IList<Opportunity>> GetAllAsync(string requestId = "")
         {
             _logger.LogInformation($"RequestId: {requestId} - OpportunityRepository_GetAllAsync called.");
@@ -393,7 +482,11 @@ namespace Infrastructure.Services
                     ListId = _appOptions.OpportunitiesListId
                 };
 
+                //Granular Access : Start
+                var access = await CheckAccessAsync(PermissionNeededTo.ReadPartial,PermissionNeededTo.Read, PermissionNeededTo.ReadAll, requestId);
                 var currentUser = (_userContext.User.Claims).ToList().Find(x => x.Type == "preferred_username")?.Value;
+                //Granular Access : End
+                var currentUserScope = (_userContext.User.Claims).ToList().Find(x => x.Type == "http://schemas.microsoft.com/identity/claims/scope")?.Value;
                 Guard.Against.NullOrEmpty(currentUser, "OpportunityRepository_GetAllAsync CurrentUser null-empty", requestId);
 
                 var callerUser = await _userProfileRepository.GetItemByUpnAsync(currentUser, requestId);
@@ -418,15 +511,24 @@ namespace Infrastructure.Services
                 }
                 if (callerUser.Fields.UserRoles.Find(x => x.DisplayName == "Administrator") != null)
                 {
+                    //Granular Access : Start
+                    //Admin access
+                    if (StatusCodes.Status200OK == await _authorizationService.CheckAccessFactoryAsync(PermissionNeededTo.Admin, requestId)) isAdmin = true;
+                    //Granular Access : End
+                }
+                if (currentUserScope != "access_as_user") //TODO: Temp conde while graular access control is finished in w3
+                {
                     isAdmin = true;
                 }
 
-                if (isLoanOfficer == false && isRelationshipManager == false && isAdmin == false)
+                //Granular Access : Start
+                if (access.haveAccess == false && access.haveSuperAcess == false && access.havePartial==false)
                 {
-                    // This user is not LoannOfficer or RelationshipManager so it does not has access to list opportunities
+                    // This user is not having any read permissions, so he won't be able to list of opportunities
                     _logger.LogError($"RequestId: {requestId} - OpportunityRepository_GetItemByIdAsync current user: {currentUser} AccessDeniedException");
                     throw new AccessDeniedException($"RequestId: {requestId} - OpportunityRepository_GetItemByIdAsync current user: {currentUser} AccessDeniedException");
                 }
+                //Granular Access : End
 
                 var options = new List<QueryParam>();
                 var jsonLoanOfficer = new JObject();
@@ -493,7 +595,16 @@ namespace Infrastructure.Services
 
                         oppArtifact.Id = item["fields"]["id"].ToString();
 
-                        itemsList.Add(oppArtifact);
+                        //Granular Access : Start
+                        if (access.haveSuperAcess)
+                            itemsList.Add(oppArtifact);
+                        else
+                        {
+                            if ((oppArtifact.Content.TeamMembers).ToList().Any
+                                (teamMember => teamMember.Fields.UserPrincipalName==currentUser))
+                                itemsList.Add(oppArtifact);
+                        }
+                        //Granular Access : end
                     }
 
                     if (jsonRelationshipManager.HasValues)
@@ -516,7 +627,16 @@ namespace Infrastructure.Services
                         var dupeOpp = itemsList.Find(x => x.DisplayName == oppArtifact.DisplayName);
                         if (dupeOpp == null)
                         {
-                            itemsList.Add(oppArtifact);
+                            //Granular Access : Start
+                            if (access.haveSuperAcess)
+                                itemsList.Add(oppArtifact);
+                            else
+                            {
+                                if ((oppArtifact.Content.TeamMembers).ToList().Any
+                                    (teamMember => teamMember.Fields.UserPrincipalName == currentUser))
+                                    itemsList.Add(oppArtifact);
+                            }
+                            //Granular Access : end
                         }
                     }
                 }
@@ -532,11 +652,21 @@ namespace Infrastructure.Services
 
         public async Task<StatusCodes> DeleteItemAsync(string id, string requestId = "")
         {
-            _logger.LogInformation($"RequestId: {requestId} - OpportunityRepository_DeleteItemAsync called.");
-
             try
             {
                 Guard.Against.Null(id, nameof(id), requestId);
+
+                //Granular Access : Start
+                var access = await CheckAccessAsync(PermissionNeededTo.WritePartial ,PermissionNeededTo.Write, PermissionNeededTo.WriteAll, requestId);
+                var currentUser = (_userContext.User.Claims).ToList().Find(x => x.Type == "preferred_username")?.Value;
+                if (!access.haveAccess && !access.haveSuperAcess)
+                {
+                    // This user is not having any write permissions, so he won't be able to update
+                    _logger.LogError($"RequestId: {requestId} - OpportunityRepository_GetItemByIdAsync current user: {currentUser} AccessDeniedException");
+                    throw new AccessDeniedException($"RequestId: {requestId} - OpportunityRepository_GetItemByIdAsync current user: {currentUser} AccessDeniedException");
+                }
+
+                //Granular Access : End	
 
                 var opportunitySiteList = new SiteList
                 {
@@ -555,11 +685,21 @@ namespace Infrastructure.Services
                     NullValueHandling = NullValueHandling.Ignore
                 });
 
-                // Check access
                 var roles = new List<Role>();
                 roles.Add(new Role { DisplayName = "RelationshipManager" });
-                var checkAccess = await _opportunityFactory.CheckAccessAsync(oppArtifact, roles, requestId);
-                if (!checkAccess) _logger.LogError($"RequestId: {requestId} - CheckAccess DeleteItemAsync");
+
+                //Granular Access : Start
+                if (!access.haveSuperAcess)
+                {
+                    if (!(oppArtifact.Content.TeamMembers).ToList().Any
+                            (teamMember => teamMember.Fields.UserPrincipalName == currentUser))
+                    {
+                        // This user is not having any write permissions, so he won't be able to update
+                        _logger.LogError($"RequestId: {requestId} - OpportunityRepository_GetItemByIdAsync current user: {currentUser} AccessDeniedException");
+                        throw new AccessDeniedException($"RequestId: {requestId} - OpportunityRepository_GetItemByIdAsync current user: {currentUser} AccessDeniedException");
+                    }
+                }
+                //Granular Access : End
 
                 if (oppArtifact.Metadata.OpportunityState == OpportunityState.Creating)
                 {
@@ -570,6 +710,9 @@ namespace Infrastructure.Services
                 var json = await _graphSharePointAppService.DeleteListItemAsync(opportunitySiteList, id, requestId);
                 Guard.Against.Null(json, nameof(json), requestId);
 
+                //For DashBorad--delete opportunity
+                await DeleteOpportunityFrmDashboardAsync(id, requestId);
+
                 return StatusCodes.Status204NoContent;
             }
             catch (Exception ex)
@@ -578,8 +721,68 @@ namespace Infrastructure.Services
                 throw new ResponseException($"RequestId: {requestId} - OpportunityRepository_DeleteItemAsync Service Exception: {ex}");
             }
         }
+        
 
         // Private methods
+        private async Task CreateDashBoardEntryAsync(string requestId, string id, Opportunity opportunity)
+        {
+            _logger.LogInformation($"RequestId: {requestId} - CreateDashBoardEntryAsync called.");
+            try
+            {
+                if (opportunity.Metadata.TargetDate != null)
+                {
+                    if(opportunity.Metadata.TargetDate.Date != null && opportunity.Metadata.TargetDate.Date != DateTimeOffset.MinValue)
+                    {
+                        var dashboardmodel = new DashboardModel();
+                        dashboardmodel.CustomerName = opportunity.Metadata.Customer.DisplayName.ToString();
+                        dashboardmodel.OpportunityId = id;
+                        dashboardmodel.Status = opportunity.Metadata.OpportunityState.Name.ToString();
+                        dashboardmodel.TargetCompletionDate = opportunity.Metadata.TargetDate.Date;
+                        dashboardmodel.StartDate = opportunity.Metadata.OpenedDate.Date;
+                        dashboardmodel.StatusChangedDate = opportunity.Metadata.OpenedDate.Date;
+                        dashboardmodel.OpportunityName = opportunity.DisplayName.ToString();
+
+                        dashboardmodel.LoanOfficer = opportunity.Content.TeamMembers.ToList().Find(x => x.AssignedRole.DisplayName == "LoanOfficer").DisplayName ?? "";
+                        dashboardmodel.RelationshipManager = opportunity.Content.TeamMembers.ToList().Find(x => x.AssignedRole.DisplayName == "RelationshipManager").DisplayName ?? "";
+
+                        var result = await _dashboardService.CreateOpportunityAsync(dashboardmodel, requestId);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"RequestId: {requestId} - CreateDashBoardEntryAsync Service Exception: {ex}");
+            }
+        }
+
+        private bool CheckTeamMember(dynamic oppArtifact, string currentUser)
+        {
+            foreach (var member in oppArtifact.Content.TeamMembers)
+            {
+                if (member.Fields.UserPrincipalName == currentUser)
+                    return true;
+            }
+            return false;
+        }
+
+        private async Task DeleteOpportunityFrmDashboardAsync(string id, string requestId)
+        {
+            _logger.LogInformation($"RequestId: {requestId} - DeleteOpportunityFrmDashboardAsync called.");
+            try
+            {
+                _logger.LogInformation($"RequestId: {requestId} - DeleteOpportunityFrmDashboard called.");
+
+                var dashboardlist = (await _dashboardService.GetAllAsync(requestId)).ToList();
+                var dashboardId = dashboardlist.Find(x => x.OpportunityId == id).Id.ToString();
+                if (!string.IsNullOrEmpty(dashboardId))
+                    await _dashboardService.DeleteOpportunityAsync(dashboardId, requestId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"RequestId: {requestId} - DeleteOpportunityFrmDashboardAsync Service Exception: {ex}");
+            }
+        }
+
         private async Task<Opportunity> UpdateUsersAsync(Opportunity opportunity, string requestId = "")
         {
             _logger.LogInformation($"RequestId: {requestId} - OpportunityRepository_UpdateUsersAsync called.");
@@ -597,7 +800,6 @@ namespace Infrastructure.Services
                     var updatedItem = TeamMember.Empty;
                     updatedItem.Id = item.Id;
                     updatedItem.DisplayName = item.DisplayName;
-                    updatedItem.Status = item.Status;
                     updatedItem.AssignedRole = item.AssignedRole;
                     updatedItem.Fields = item.Fields;
 
@@ -638,5 +840,33 @@ namespace Infrastructure.Services
                 throw new ResponseException($"RequestId: {requestId} - OpportunityRepository_UpdateUsersAsync Service Exception: {ex}");
             }
         }
+
+        //Granular Access : Start
+        private async Task<(bool havePartial,bool haveAccess, bool haveSuperAcess)>CheckAccessAsync(PermissionNeededTo partialAccess,PermissionNeededTo actionAccess, PermissionNeededTo superAccess, string requestId)
+        {
+            bool haveAccess = false, haveSuperAcess = false, havePartial = false;
+            if (StatusCodes.Status200OK == await _authorizationService.CheckAccessFactoryAsync(superAccess, requestId))
+            {
+                havePartial = true; haveAccess = true;haveSuperAcess = true;
+            }
+            else
+            {
+                if (StatusCodes.Status200OK == await _authorizationService.CheckAccessFactoryAsync(actionAccess, requestId))
+                {
+                    havePartial = true; haveAccess = true; haveSuperAcess = false;
+                }
+                else if (StatusCodes.Status200OK == await _authorizationService.CheckAccessFactoryAsync(partialAccess, requestId))
+                {
+                    havePartial = true; haveAccess = false; haveSuperAcess = false;
+                }
+                else
+                {
+                    havePartial = false; haveAccess = true; haveSuperAcess = false;
+                }
+            }
+
+            return(havePartial: havePartial,haveAccess: haveAccess, haveSuperAcess: haveSuperAcess);
+        }
+        //Granular Access : End
     }
 }

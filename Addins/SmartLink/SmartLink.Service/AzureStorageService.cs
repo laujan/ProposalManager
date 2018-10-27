@@ -3,13 +3,12 @@
 //
 // Licensed under the MIT license. See LICENSE file in the solution root folder for full license information.
 
-using System;
-using System.Collections.Generic;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Queue;
+using Microsoft.WindowsAzure.Storage.Table;
+using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
-using Microsoft.WindowsAzure.Storage.Table;
 
 namespace SmartLink.Service
 {

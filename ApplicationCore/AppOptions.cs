@@ -19,31 +19,27 @@ namespace ApplicationCore
 
         public string ProposalManagementRootSiteId { get; set; }
 
-        public string OpportunitiesSubSiteId { get; set; }
-
         public string CategoriesListId { get; set; }
+
+        public string TemplateListId { get; set; }
+
+        public string RoleListId { get; set; }
+
+        public string ProcessListId { get; set; }
 
         public string IndustryListId { get; set; }
 
         public string RegionsListId { get; set; }
 
-        public string NotificationsListId { get; set; }
-
-        public string UsersListId { get; set; }
-
-        public string RolesListId { get; set; }
+        public string RoleMappingsListId { get; set; }
 
         public string OpportunitiesListId { get; set; }
 
-        public string PublicOpportunitiesListId { get; set; }
-
-        public string SharePointListsPrefix { get; set; }
+        public string SetupPage { get; set; }
 
         public string GraphRequestUrl { get; set; }
 
         public string GraphBetaRequestUrl { get; set; }
-
-        public string ServiceEmail { get; set; }
 
         public int UserProfileCacheExpiration { get; set; }
 
@@ -60,5 +56,27 @@ namespace ApplicationCore
         public string BotId { get; set; }
 
         public string TeamsAppInstanceId { get; set; }
+
+        public string DashboardListId { get; set; }
+
+        public string Permissions { get; set; }
+
+		public string PBIUserName { get; set; }
+
+		public string PBIUserPassword { get; set; }
+
+		public string PBIApplicationId { get; set; }
+
+		public string PBIWorkSpaceId { get; set; }
+
+		public string PBIReportId { get; set; }
+
+		public string PBITenantId { get; set; }
+
+        public string GeneralProposalManagementTeam { get; set; }
+        public string SharePointListsPrefix { get; set; }
+        public string ProposalManagerAddInName { get; set; }
+        public string ProposalManagerGroupID { get; set; }
+        public string SharePointSiteRelativeName { get; set; }
     }
 }

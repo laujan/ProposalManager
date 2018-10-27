@@ -19,20 +19,27 @@ using ApplicationCore.Entities.GraphServices;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Linq;
+using Infrastructure.Authorization;
+using ApplicationCore.Authorization;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Infrastructure.Services
 {
     public class CategoryRepository : BaseRepository<Category>, ICategoryRepository
     {
         private readonly GraphSharePointAppService _graphSharePointAppService;
+        private Lazy<IAuthorizationService> _authorizationService;
 
         public CategoryRepository(
-            ILogger<CategoryRepository> logger, 
-            IOptions<AppOptions> appOptions,
-            GraphSharePointAppService graphSharePointAppService) : base(logger, appOptions)
+            ILogger<CategoryRepository> logger,
+            IOptionsMonitor<AppOptions> appOptions,
+            GraphSharePointAppService graphSharePointAppService,
+            IServiceProvider services) : base(logger, appOptions)
         {
             Guard.Against.Null(graphSharePointAppService, nameof(graphSharePointAppService));
             _graphSharePointAppService = graphSharePointAppService;
+            _authorizationService = new Lazy<IAuthorizationService>(() =>
+            services.GetRequiredService<IAuthorizationService>());
         }
 
 
@@ -51,9 +58,9 @@ namespace Infrastructure.Services
                 // Create Json object for SharePoint create list item
                 dynamic itemFieldsJson = new JObject();
                 itemFieldsJson.Name = entity.Name;
-				itemFieldsJson.Title = entity.Id;
+                itemFieldsJson.Title = entity.Id;
 
-				dynamic itemJson = new JObject();
+                dynamic itemJson = new JObject();
                 itemJson.fields = itemFieldsJson;
 
                 var result = await _graphSharePointAppService.CreateListItemAsync(siteList, itemJson.ToString(), requestId);
@@ -135,6 +142,8 @@ namespace Infrastructure.Services
 
             try
             {
+                //check access
+                //await _authorizationService.Value.CheckAdminAccsessAsync(requestId);
                 var siteList = new SiteList
                 {
                     SiteId = _appOptions.ProposalManagementRootSiteId,

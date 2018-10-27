@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace ApplicationCore.Interfaces
 {
     /// <summary>
-    /// Interface to abstract the Graph Authentication Provider needed by Middle Tier components
+    /// Interface to abstract an Authentication Provider needed by Middle Tier components
     /// </summary>
     public interface IGraphAuthProvider
     {

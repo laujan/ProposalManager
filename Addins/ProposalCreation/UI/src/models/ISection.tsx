@@ -6,7 +6,7 @@ export interface ISection
     task: string;
     id: string;
     assignedTo: string;
-    status: number;
+    status: string;
     content?: string[];
 }
 

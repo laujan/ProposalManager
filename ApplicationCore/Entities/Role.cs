@@ -17,23 +17,18 @@ namespace ApplicationCore.Entities
         /// </summary>
         [JsonProperty("displayName", Order = 2)]
         public string DisplayName { get; set; }
-
-        /// <summary>
-        /// AD Group Id display name
-        /// </summary>
-        [JsonProperty("adGroupName", Order = 3)]
-        public string AdGroupName { get; set; }
-
         /// <summary>
         /// Represents the empty client. This field is read-only.
         /// </summary>
+        [JsonProperty("adGroupName", Order = 3)]
+        public string AdGroupName { get; set; }
         public static Role Empty
         {
             get => new Role
             {
                 Id = String.Empty,
                 DisplayName = String.Empty,
-                AdGroupName = String.Empty
+                AdGroupName =String.Empty
             };
         }
     }

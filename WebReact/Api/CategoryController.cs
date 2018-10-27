@@ -12,21 +12,31 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using WebReact.Interfaces;
+using ApplicationCore.Interfaces;
 using ApplicationCore.Helpers;
 using ApplicationCore.Artifacts;
 using Newtonsoft.Json.Linq;
-using WebReact.ViewModels;
-using WebReact.Models;
+using ApplicationCore.ViewModels;
+using ApplicationCore.Models;
 using Newtonsoft.Json;
 using Microsoft.AspNetCore.Authorization;
 
 namespace WebReact.Api
 {
+    /// <summary>
+    /// Category Controller
+    /// </summary>
+    [Authorize(AuthenticationSchemes = "AzureAdBearer")]
     public class CategoryController : BaseApiController<CategoryController>
     {
+        /// <summary>
+        /// Cartegory service object
+        /// </summary>
         public readonly ICategoryService _categoryService;
 
+        /// <summary>
+        /// Category constructor
+        /// </summary>
         public CategoryController(
             ILogger<CategoryController> logger,
             IOptions<AppOptions> appOptions,
@@ -36,10 +46,30 @@ namespace WebReact.Api
             _categoryService = categoryService;
         }
 
-
-        [Authorize]
+        /// <summary>
+        /// [Creates a new Category.]
+        /// </summary>
+        /// <remarks>
+        /// Sample request:
+        /// 
+        ///POST /Todo
+        ///{
+        ///  "id": "",
+        ///  "name": "Retail"
+        ///}
+        ///
+        ///Select Content_type : application/json
+        /// </remarks>
+        /// <param name="jsonObject"></param>
+        /// <returns>A status code of either 201/404 </returns>
+        /// <response code="201">Returns the new categories's requestId</response>
+        /// <response code="400">If name is null</response> 
+        /// <response code="401">Unauthorized</response> 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] JObject jsonObject)
+        [ProducesResponseType(typeof(string), 201)]
+        [ProducesResponseType(typeof(JsonErrorResponse), 400)]
+        [ProducesResponseType(typeof(JsonErrorResponse), 401)]
+        public async Task<IActionResult> CreateAsync([FromBody] JObject jsonObject)
         {
             var requestId = Guid.NewGuid().ToString();
             _logger.LogInformation($"RequestID:{requestId} - Category_Create called.");
@@ -92,9 +122,27 @@ namespace WebReact.Api
             }
         }
 
-        [Authorize]
+        /// <summary>
+        /// [Update the Category.]
+        /// </summary>
+        /// <remarks>
+        /// Sample request:
+        ///
+        ///PATCH /Todo
+        ///{
+        ///  "id": 5,
+        ///  "name": "Retail"
+        ///}
+        /// </remarks>
+        /// <returns>A status code of either 201/404 </returns>
+        /// <response code="201">Returns the new categories's requestId</response>
+        /// <response code="400">If name is null</response> 
+        /// <response code="401">Unauthorized</response> 
+        [ProducesResponseType(typeof(string), 201)]
+        [ProducesResponseType(typeof(JsonErrorResponse), 400)]
+        [ProducesResponseType(typeof(JsonErrorResponse), 401)]
         [HttpPatch]
-        public async Task<IActionResult> Update([FromBody] JObject jsonObject)
+        public async Task<IActionResult> UpdateAsync([FromBody] JObject jsonObject)
         {
             var requestId = Guid.NewGuid().ToString();
             _logger.LogInformation($"RequestID:{requestId} - Category_Update called.");
@@ -145,9 +193,26 @@ namespace WebReact.Api
             }
         }
 
-        [Authorize]
+        /// <summary>
+        /// [Delete the Category]
+        /// </summary>
+        /// <remarks>
+        /// Sample request:
+        ///
+        ///DELETE /Todo
+        ///{
+        ///  "id": 5
+        ///}
+        /// </remarks>
+        /// <returns>A status code of either 201/404 </returns>
+        /// <response code="201">Returns the new categories's requestId</response>
+        /// <response code="400">If name is null</response> 
+        /// <response code="401">Unauthorized</response> 
+        [ProducesResponseType(typeof(string), 201)]
+        [ProducesResponseType(typeof(JsonErrorResponse), 400)]
+        [ProducesResponseType(typeof(JsonErrorResponse), 401)]
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(string id)
+        public async Task<IActionResult> DeleteAsync(string id)
         {
             var requestId = Guid.NewGuid().ToString();
             _logger.LogInformation($"RequestID:{requestId} - Category_Delete called.");
@@ -171,9 +236,18 @@ namespace WebReact.Api
             return NoContent();
         }
 
-        [Authorize]
+        /// <summary>
+        /// [Get Category List]
+        /// </summary>
+        /// <returns>A status code of either 201/404 </returns>
+        /// <response code="201">return the category as a json array</response>
+        /// <response code="400">if value is null</response> 
+        /// <response code="401">Unauthorized</response> 
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        [ProducesResponseType(typeof(CategoryModel), 200)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(401)]
+        public async Task<IActionResult> GetAllAsync()
         {
             var requestId = Guid.NewGuid().ToString();
             _logger.LogInformation($"RequestID:{requestId} - Category_GetAll called.");

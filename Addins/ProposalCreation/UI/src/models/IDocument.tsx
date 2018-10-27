@@ -23,7 +23,7 @@ export interface ISectionItem
     id: string;
     displayName: string;
     owner: IUser;
-    sectionStatus: number;
+    sectionStatus: string;
     task: string;
     assignedTo: IUser;
     lastModifiedDateTime: string;

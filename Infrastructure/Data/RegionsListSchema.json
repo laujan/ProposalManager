@@ -1,0 +1,14 @@
+{
+  "name": "Regions",
+  "columns": [
+    {
+      "name": "Id",
+      "text": {},
+      "indexed": true
+    },
+    {
+      "name": "Name",
+      "text": {}
+    }
+  ]
+}

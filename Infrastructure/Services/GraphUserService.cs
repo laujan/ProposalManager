@@ -19,8 +19,8 @@ namespace Infrastructure.Services
     public class GraphUserAppService : GraphUserBaseService
     {
         public GraphUserAppService(
-            ILogger<GraphUserAppService> logger, 
-            IOptions<AppOptions> appOptions,
+            ILogger<GraphUserAppService> logger,
+            IOptionsMonitor<AppOptions> appOptions,
             IGraphClientAppContext graphClientContext, 
             IHostingEnvironment hostingEnvironment) : base(logger, appOptions, graphClientContext, hostingEnvironment)
         {
@@ -31,7 +31,7 @@ namespace Infrastructure.Services
     {
         public GraphUserUserService(
             ILogger<GraphUserUserService> logger,
-            IOptions<AppOptions> appOptions,
+            IOptionsMonitor<AppOptions> appOptions,
             IGraphClientUserContext graphClientContext,
             IHostingEnvironment hostingEnvironment) : base(logger, appOptions, graphClientContext, hostingEnvironment)
         {

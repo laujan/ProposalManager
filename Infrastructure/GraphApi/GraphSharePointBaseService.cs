@@ -32,8 +32,8 @@ namespace Infrastructure.GraphApi
         protected readonly IGraphClientContext _graphClientContext;
 
         public GraphSharePointBaseService(
-            ILogger<GraphSharePointBaseService> logger, 
-            IOptions<AppOptions> appOptions,
+            ILogger<GraphSharePointBaseService> logger,
+            IOptionsMonitor<AppOptions> appOptions,
             IGraphClientContext graphClientContext) : base(logger, appOptions)
         {
             Guard.Against.Null(graphClientContext, nameof(graphClientContext));
@@ -122,10 +122,9 @@ namespace Infrastructure.GraphApi
             }
         }
 
-        
 
         // List Management
-        public Task<JObject> CreateSiteListAsync(SiteList siteList, string requestId = "")
+        public async Task<JObject> CreateSiteListAsync(string htmlBody, string requestId = "")
         {
             // POST: https://graph.microsoft.com/beta/sites/{site-id}/lists
             // EXAMPLE: https://graph.microsoft.com/v1.0/sites/onterawe.sharepoint.com,988079b1-450c-44ae-bad2-41aeffe2fadb,7028bf8f-4174-4578-96cc-e5a9f52e542c/lists
@@ -133,16 +132,39 @@ namespace Infrastructure.GraphApi
             _logger.LogInformation($"RequestId: {requestId} - CreateSiteListAsync called.");
             try
             {
-                Guard.Against.Null(siteList, nameof(siteList), requestId);
+                if (String.IsNullOrEmpty(htmlBody)) throw new ArgumentNullException(nameof(htmlBody));
+                if (String.IsNullOrEmpty(_appOptions.ProposalManagementRootSiteId)) throw new ArgumentNullException(nameof(_appOptions.ProposalManagementRootSiteId));
 
-                // TODO: Method partially implemented
-                throw new ResponseException($"RequestId: {requestId} - CreateSiteListAsync Not implemented");
+                var requestUrl = _appOptions.GraphRequestUrl + "/sites/" + _appOptions.ProposalManagementRootSiteId + "/lists";
+
+                // Create the request message and add the content.
+                HttpRequestMessage hrm = new HttpRequestMessage(HttpMethod.Post, requestUrl);
+                hrm.Content = new StringContent(htmlBody, System.Text.Encoding.UTF8, "application/json");
+
+                var response = new HttpResponseMessage();
+
+                // Authenticate (add access token) our HttpRequestMessage
+                await GraphClient.AuthenticationProvider.AuthenticateRequestAsync(hrm);
+
+                // Send the request and get the response.
+                response = await GraphClient.HttpProvider.SendAsync(hrm);
+
+                var content = await response.Content.ReadAsStringAsync();
+                JObject responseJObject = JObject.Parse(await response.Content.ReadAsStringAsync());
+
+                // Get the content from the response.
+                if (response.StatusCode != System.Net.HttpStatusCode.Created)
+                {
+                    // TODO: Depending on code, rise proper exception for now invalid request is
+                    throw new ServiceException(new Error { Code = ErrorConstants.Codes.InvalidRequest, Message = response.StatusCode.ToString() });
+                }
+                return responseJObject;
 
             }
             catch (Exception ex)
             {
-                _logger.LogError($"RequestId: {requestId} - GetSiteIdAsync Service Exception: {ex}");
-                throw new ResponseException($"RequestId: {requestId} - GetSiteIdAsync Service Exception: {ex}");
+                _logger.LogError($"RequestId: {requestId} - CreateSiteListAsync Service Exception: {ex}");
+                throw new ResponseException($"RequestId: {requestId} - CreateSiteListAsync Service Exception: {ex}");
             }
         }
 
@@ -194,9 +216,7 @@ namespace Infrastructure.GraphApi
 
             return await GetSiteListAsync(siteList.SiteId, siteList.ListId, requestId);
         }
-
-
-        
+     
         // List Item Management
         public async Task<JObject> CreateListItemAsync(SiteList siteList, string siteListItemJson, string requestId = "")
         {

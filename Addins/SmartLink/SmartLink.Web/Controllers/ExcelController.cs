@@ -4,23 +4,25 @@
 // Licensed under the MIT license. See LICENSE file in the solution root folder for full license information.
 
 using Microsoft.Azure;
+using SmartLink.Web.Common;
 using SmartLink.Web.ViewModel;
 using System.Web.Mvc;
 
 namespace SmartLink.Web.Controllers
 {
-	public class ExcelController : Controller
+    public class ExcelController : Controller
     {
         // GET: Excel
         public ActionResult Point()
         {
-			var model = new AuthModel()
-			{
-				ApplicationId = CloudConfigurationManager.GetSetting("ida:ClientId"),
-				TenantId = CloudConfigurationManager.GetSetting("ida:TenantId")
-			};
+            var model = new AuthModel()
+            {
+                ApplicationId = CloudConfigurationManager.GetSetting("ida:ClientId"),
+                TenantId = CloudConfigurationManager.GetSetting("ida:TenantId"),
+                Resources = ResourceHelper.GetResourceItems()
+            };
 
-			return View(model);
-		}
+            return View(model);
+        }
     }
 }

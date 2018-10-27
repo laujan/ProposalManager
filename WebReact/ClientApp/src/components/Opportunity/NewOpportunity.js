@@ -9,7 +9,67 @@ import { PrimaryButton } from 'office-ui-fabric-react/lib/Button';
 import { TextField } from 'office-ui-fabric-react/lib/TextField';
 import { Dropdown } from 'office-ui-fabric-react/lib/Dropdown';
 import { MessageBar, MessageBarType } from 'office-ui-fabric-react/lib/MessageBar';
+import {  Trans } from "react-i18next";
+import { DatePicker } from 'office-ui-fabric-react/lib/DatePicker';
 
+
+const DayPickerStrings = {
+    months: [
+        'January',
+        'February',
+        'March',
+        'April',
+        'May',
+        'June',
+        'July',
+        'August',
+        'September',
+        'October',
+        'November',
+        'December'
+    ],
+
+    shortMonths: [
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec'
+    ],
+
+    days: [
+        'Sunday',
+        'Monday',
+        'Tuesday',
+        'Wednesday',
+        'Thursday',
+        'Friday',
+        'Saturday'
+    ],
+
+    shortDays: [
+        'S',
+        'M',
+        'T',
+        'W',
+        'T',
+        'F',
+        'S'
+    ],
+
+    goToToday: 'Go to today',
+    prevMonthAriaLabel: 'Go to previous month',
+    nextMonthAriaLabel: 'Go to next month',
+    prevYearAriaLabel: 'Go to previous year',
+    nextYearAriaLabel: 'Go to next year'
+};
 
 export class NewOpportunity extends Component {
     displayName = NewOpportunity.name
@@ -46,7 +106,7 @@ export class NewOpportunity extends Component {
     onBlurCustomer(e) {
         if (e.target.value.length === 0) {
             this.setState({
-                messagebarTextCust: "Customer name can not be empty.",
+                messagebarTextCust: <Trans>customerNameNotEmpty</Trans>,
                 custNameError: false
             });
             this.opportunity.customer.displayName = "";
@@ -70,7 +130,7 @@ export class NewOpportunity extends Component {
         } else {
             this.opportunity.displayName = "";
             this.setState({
-                messagebarTextOpp: "Opportunity name can not be empty.",
+                messagebarTextOpp: <Trans>opportunityNameNotEmpty</Trans>,
                 oppNameError: false
             });
         }
@@ -115,7 +175,7 @@ export class NewOpportunity extends Component {
         if (this.opportunity.displayName.length > 0) {
             if (this.dashboardList.find(itm => itm.opportunity === name)) {
                 this.setState({
-                    messagebarTextOpp: "Opportunity name must be unique.",
+                    messagebarTextOpp: <Trans>opportunityNameUnique</Trans>,
                     oppNameError: false
                 });
                 return true;
@@ -126,6 +186,46 @@ export class NewOpportunity extends Component {
             // If empty also return false
             return false;
         }
+    }
+
+    _onSelectTargetDate = (date) => {
+        this.opportunity.targetDate = date;
+
+    }
+
+    _onFormatDate = (date) => {
+        return (
+            date.getMonth() + 1 +
+            '/' +
+            date.getDate() +
+            '/' +
+            date.getFullYear()
+        );
+    }
+
+    _onParseDateFromString = (value) => {
+        const date = this.state.value || new Date();
+        const values = (value || '').trim().split('/');
+        const day =
+            values.length > 0
+                ? Math.max(1, Math.min(31, parseInt(values[0], 10)))
+                : date.getDate();
+        const month =
+            values.length > 1
+                ? Math.max(1, Math.min(12, parseInt(values[1], 10))) - 1
+                : date.getMonth();
+        let year = values.length > 2 ? parseInt(values[2], 10) : date.getFullYear();
+        if (year < 100) {
+            year += date.getFullYear() - date.getFullYear() % 100;
+        }
+        return new Date(year, month, day);
+    }
+
+    _setItemDate(dt) {
+        let lmDate = new Date(dt);
+        if (lmDate.getFullYear() === 1 || lmDate.getFullYear() === 0) {
+            return new Date();
+        } else return new Date(dt);
     }
 
     render() {
@@ -139,13 +239,13 @@ export class NewOpportunity extends Component {
         return (
             <div className='ms-Grid'>
                 <div className='ms-Grid-row'>
-                    <h3 className='pageheading'>Create New Opportunity</h3>
+                    <h3 className='pageheading'><Trans>createNewOpportunity</Trans></h3>
                     <div className='ms-lg12 ibox-content'>
                         <div className="ms-Grid-row">
                             <div className='docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg6'>
                                 <TextField
                                     id='customerName'
-                                    label='Customer Name' value={this.opportunity.customer.displayName}
+                                    label={<Trans>customerName</Trans>} value={this.opportunity.customer.displayName}
                                     errorMessage={this.state.messagebarTextCust}
                                     onBlur={(e) => this.onBlurCustomer(e)}
                                 />
@@ -160,7 +260,7 @@ export class NewOpportunity extends Component {
 
                             <div className='docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg6'>
                                 <TextField
-                                    label='Opportunity Name' value={this.opportunity.displayName}
+                                    label={<Trans>opportunityName</Trans>} value={this.opportunity.displayName}
                                     errorMessage={this.state.messagebarTextOpp}
                                     onBlur={(e) => this.onBlurOpportunityName(e)}
 
@@ -176,7 +276,7 @@ export class NewOpportunity extends Component {
                         <div className="ms-Grid-row">
                             <div className='docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg6'>
                                 <TextField
-                                    label='Deal Size' value={this.opportunity.dealSize}
+                                    label={<Trans>dealSize</Trans>} value={this.opportunity.dealSize}
                                     onBlur={(e) => this.onBlurDealSize(e)}
                                 />
                                 {this.state.dealSizeError ?
@@ -188,7 +288,7 @@ export class NewOpportunity extends Component {
                             </div>
                             <div className='docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg6'>
                                 <TextField
-                                    label='Annual Revenue' value={this.opportunity.annualRevenue}
+                                    label={<Trans>annualRevenue</Trans>} value={this.opportunity.annualRevenue}
                                     onBlur={(e) => this.onBlurAnnualRevenue(e)}
 
                                 />
@@ -204,10 +304,10 @@ export class NewOpportunity extends Component {
                         <div className="ms-Grid-row">
                             <div className='docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg6'>
                                 <Dropdown
-                                    placeHolder='Select Industry'
-                                    label='Industry'
+                                    placeHolder={<Trans>selectIndustry</Trans>}
+                                    label={<Trans>industry</Trans>}
                                     id='Basicdrop1'
-                                    ariaLabel='Industry'
+                                    ariaLabel={<Trans>industry</Trans>}
                                     value={this.opportunity.industry.id}
                                     options={this.state.industryList}
                                     defaultSelectedKey={this.opportunity.industry.id}
@@ -217,10 +317,10 @@ export class NewOpportunity extends Component {
                             </div>
                             <div className='docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg6'>
                                 <Dropdown
-                                    placeHolder='Select Region'
-                                    label='Region'
+                                    placeHolder={<Trans>selectRegion</Trans>}
+                                    label={<Trans>region</Trans>}
                                     id='ddlRegion'
-                                    ariaLabel='Region'
+                                    ariaLabel={<Trans>region</Trans>}
                                     value={this.opportunity.region.id}
                                     options={this.state.regionList}
                                     defaultSelectedKey={this.opportunity.region.id}
@@ -230,9 +330,25 @@ export class NewOpportunity extends Component {
                             </div>
                         </div>
                         <div className="ms-Grid-row">
+                            <div className='docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg6'>
+                                <DatePicker strings={DayPickerStrings}
+                                    label={<Trans>targetDate</Trans>}
+                                    showWeekNumbers={false}
+                                    firstWeekOfYear={1}
+                                    showMonthPickerAsOverlay='true'
+                                    iconProps={{ iconName: 'Calendar' }}
+                                    value={this.opportunity.targetDate ? this._setItemDate(this.opportunity.targetDate) : ""}
+                                    onSelectDate={this._onSelectTargetDate}
+                                    formatDate={this._onFormatDate}
+                                    parseDateFromString={this._onParseDateFromString}
+                                    minDate={new Date()}
+                                />
+                            </div>
+                        </div>
+                        <div className="ms-Grid-row">
                             <div className='docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg12'>
                                 <TextField
-                                    label='Notes'
+                                    label={<Trans>notes</Trans>}
                                     multiline
                                     rows={6}
                                     value={this.opportunity.notes.noteBody}
@@ -244,10 +360,10 @@ export class NewOpportunity extends Component {
                 </div>
                 <div className='ms-Grid-row pb20'>
                     <div className='ms-Grid-col ms-sm6 ms-md6 ms-lg6 pl0'><br />
-                        <PrimaryButton className='backbutton pull-left' onClick={this.props.onClickCancel}>Cancel</PrimaryButton>
+                        <PrimaryButton className='backbutton pull-left' onClick={this.props.onClickCancel}>{<Trans>cancel</Trans>}</PrimaryButton>
                     </div>
                     <div className='ms-Grid-col ms-sm6 ms-md6 ms-lg6 pr0'><br />
-                        <PrimaryButton className='pull-right' onClick={this.props.onClickNext} disabled={nextDisabled}>Next</PrimaryButton>
+                        <PrimaryButton className='pull-right' onClick={this.props.onClickNext} disabled={nextDisabled}>{<Trans>next</Trans>}</PrimaryButton>
                     </div>
                 </div>
             </div>

@@ -10,14 +10,24 @@
     <UserSecretsId>63336072-2236-4418-8c5e-735bd037732e</UserSecretsId>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DocumentationFile>bin\Debug\netcoreapp2.1\WebReact.xml</DocumentationFile>
+    <NoWarn>1701;1702;1591</NoWarn>
+  </PropertyGroup>
+
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.All" Version="2.1.0" />
-    <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="2.1.0" />
-    <PackageReference Include="Microsoft.AspNetCore.StaticFiles" Version="2.1.0" />
-    <PackageReference Include="Microsoft.Bot.Connector.AspNetCore" Version="2.0.1.7" />
-    <PackageReference Include="Microsoft.Graph" Version="1.9.0" />
-    <PackageReference Include="Microsoft.Identity.Client" Version="1.1.4-preview0002" />
-    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="2.1.0" />
+    <PackageReference Include="Microsoft.AspNetCore.All" Version="2.1.2" />
+    <PackageReference Include="Microsoft.AspNetCore.App" Version="2.1.2" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication" Version="2.1.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Core" Version="2.1.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Authorization" Version="2.1.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity" Version="2.1.2" />
+    <PackageReference Include="Microsoft.AspNetCore.WebHooks.Receivers.DynamicsCRM" Version="1.0.0-preview2-final" />
+    <PackageReference Include="Microsoft.Bot.Connector" Version="3.16.1.38846" />
+    <PackageReference Include="Microsoft.Bot.Connector.AspNetCore" Version="2.0.1.38846" />
+    <PackageReference Include="Microsoft.Graph" Version="1.10.0" />
+    <PackageReference Include="Microsoft.Identity.Client" Version="2.2.0-preview" />
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="2.1.1" />
   </ItemGroup>
 
   <ItemGroup>
@@ -27,18 +37,95 @@
   <ItemGroup>
     <!-- Don't publish the SPA source files, but do show them in the project files list -->
     <Compile Remove="ClientApp\src\SampleSrcDir\**" />
+    <Compile Remove="Controllers\**" />
+    <Compile Remove="Helpers\**" />
     <Content Remove="$(SpaRoot)**" />
     <Content Remove="ClientApp\src\SampleSrcDir\**" />
+    <Content Remove="Controllers\**" />
+    <Content Remove="Helpers\**" />
     <None Include="$(SpaRoot)**" Exclude="$(SpaRoot)node_modules\**" />
   </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Remove="ClientApp\src\SampleSrcDir\**" />
+    <EmbeddedResource Remove="Controllers\**" />
+    <EmbeddedResource Remove="Helpers\**" />
     <None Remove="ClientApp\src\SampleSrcDir\**" />
+    <None Remove="Controllers\**" />
+    <None Remove="Helpers\**" />
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="app_data\jobs\triggered\DocumentIdActivator\DocumentIdActivator.exe" />
+    <None Remove="app_data\jobs\triggered\DocumentIdActivator\DocumentIdActivator.pdb" />
+    <None Remove="app_data\jobs\triggered\DocumentIdActivator\Microsoft.Office.Client.Policy.dll" />
+    <None Remove="app_data\jobs\triggered\DocumentIdActivator\Microsoft.Office.Client.TranslationServices.dll" />
+    <None Remove="app_data\jobs\triggered\DocumentIdActivator\Microsoft.Office.SharePoint.Tools.dll" />
+    <None Remove="app_data\jobs\triggered\DocumentIdActivator\Microsoft.Online.SharePoint.Client.Tenant.dll" />
+    <None Remove="app_data\jobs\triggered\DocumentIdActivator\Microsoft.ProjectServer.Client.dll" />
+    <None Remove="app_data\jobs\triggered\DocumentIdActivator\Microsoft.SharePoint.Client.dll" />
+    <None Remove="app_data\jobs\triggered\DocumentIdActivator\Microsoft.SharePoint.Client.DocumentManagement.dll" />
+    <None Remove="app_data\jobs\triggered\DocumentIdActivator\Microsoft.SharePoint.Client.Publishing.dll" />
+    <None Remove="app_data\jobs\triggered\DocumentIdActivator\Microsoft.SharePoint.Client.Runtime.dll" />
+    <None Remove="app_data\jobs\triggered\DocumentIdActivator\Microsoft.SharePoint.Client.Runtime.Windows.dll" />
+    <None Remove="app_data\jobs\triggered\DocumentIdActivator\Microsoft.SharePoint.Client.Search.Applications.dll" />
+    <None Remove="app_data\jobs\triggered\DocumentIdActivator\Microsoft.SharePoint.Client.Search.dll" />
+    <None Remove="app_data\jobs\triggered\DocumentIdActivator\Microsoft.SharePoint.Client.Taxonomy.dll" />
+    <None Remove="app_data\jobs\triggered\DocumentIdActivator\Microsoft.SharePoint.Client.UserProfiles.dll" />
+    <None Remove="app_data\jobs\triggered\DocumentIdActivator\Microsoft.SharePoint.Client.WorkflowServices.dll" />
+    <None Remove="app_data\jobs\triggered\OneDriveSubscriptionsRenewer\ApplicationCore.dll" />
+    <None Remove="app_data\jobs\triggered\OneDriveSubscriptionsRenewer\ApplicationCore.pdb" />
+    <None Remove="app_data\jobs\triggered\OneDriveSubscriptionsRenewer\Infrastructure.dll" />
+    <None Remove="app_data\jobs\triggered\OneDriveSubscriptionsRenewer\Infrastructure.pdb" />
+    <None Remove="app_data\jobs\triggered\OneDriveSubscriptionsRenewer\OneDriveSubscriptionRenewal.dll" />
+    <None Remove="app_data\jobs\triggered\OneDriveSubscriptionsRenewer\OneDriveSubscriptionRenewal.pdb" />
+    <None Remove="app_data\jobs\triggered\OneDriveSubscriptionsRenewer\run.cmd" />
+    <None Remove="app_data\jobs\triggered\OneDriveSubscriptionsRenewer\settings.job" />
     <None Remove="Properties\PublishProfiles\CustomProfile.pubxml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="app_data\jobs\triggered\DocumentIdActivator\DocumentIdActivator.exe" />
+    <Content Include="app_data\jobs\triggered\DocumentIdActivator\DocumentIdActivator.pdb" />
+    <Content Include="app_data\jobs\triggered\DocumentIdActivator\Microsoft.Office.Client.Policy.dll" />
+    <Content Include="app_data\jobs\triggered\DocumentIdActivator\Microsoft.Office.Client.TranslationServices.dll" />
+    <Content Include="app_data\jobs\triggered\DocumentIdActivator\Microsoft.Office.SharePoint.Tools.dll" />
+    <Content Include="app_data\jobs\triggered\DocumentIdActivator\Microsoft.Online.SharePoint.Client.Tenant.dll" />
+    <Content Include="app_data\jobs\triggered\DocumentIdActivator\Microsoft.ProjectServer.Client.dll" />
+    <Content Include="app_data\jobs\triggered\DocumentIdActivator\Microsoft.SharePoint.Client.dll" />
+    <Content Include="app_data\jobs\triggered\DocumentIdActivator\Microsoft.SharePoint.Client.DocumentManagement.dll" />
+    <Content Include="app_data\jobs\triggered\DocumentIdActivator\Microsoft.SharePoint.Client.Publishing.dll" />
+    <Content Include="app_data\jobs\triggered\DocumentIdActivator\Microsoft.SharePoint.Client.Runtime.dll" />
+    <Content Include="app_data\jobs\triggered\DocumentIdActivator\Microsoft.SharePoint.Client.Runtime.Windows.dll" />
+    <Content Include="app_data\jobs\triggered\DocumentIdActivator\Microsoft.SharePoint.Client.Search.Applications.dll" />
+    <Content Include="app_data\jobs\triggered\DocumentIdActivator\Microsoft.SharePoint.Client.Search.dll" />
+    <Content Include="app_data\jobs\triggered\DocumentIdActivator\Microsoft.SharePoint.Client.Taxonomy.dll" />
+    <Content Include="app_data\jobs\triggered\DocumentIdActivator\Microsoft.SharePoint.Client.UserProfiles.dll" />
+    <Content Include="app_data\jobs\triggered\DocumentIdActivator\Microsoft.SharePoint.Client.WorkflowServices.dll" />
+    <Content Include="app_data\jobs\triggered\OneDriveSubscriptionsRenewer\ApplicationCore.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\OneDriveSubscriptionsRenewer\ApplicationCore.pdb">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\OneDriveSubscriptionsRenewer\Infrastructure.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\OneDriveSubscriptionsRenewer\Infrastructure.pdb">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\OneDriveSubscriptionsRenewer\OneDriveSubscriptionRenewal.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\OneDriveSubscriptionsRenewer\OneDriveSubscriptionRenewal.pdb">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\OneDriveSubscriptionsRenewer\run.cmd">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\OneDriveSubscriptionsRenewer\settings.job">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>
@@ -47,6 +134,18 @@
 
   <ItemGroup>
     <Folder Include="Controllers\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Update="app_data\jobs\triggered\OneDriveSubscriptionsRenewer\appsettings.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Update="app_data\jobs\triggered\OneDriveSubscriptionsRenewer\OneDriveSubscriptionRenewal.deps.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Update="app_data\jobs\triggered\OneDriveSubscriptionsRenewer\OneDriveSubscriptionRenewal.runtimeconfig.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <Target Name="DebugEnsureNodeEnv" BeforeTargets="Build" Condition=" '$(Configuration)' == 'Debug' And !Exists('$(SpaRoot)node_modules') ">
@@ -73,5 +172,7 @@
       </ResolvedFileToPublish>
     </ItemGroup>
   </Target>
+
+  <ProjectExtensions><VisualStudio><UserProperties appsettings_1json__JSONSchema="" /></VisualStudio></ProjectExtensions>
 
 </Project>

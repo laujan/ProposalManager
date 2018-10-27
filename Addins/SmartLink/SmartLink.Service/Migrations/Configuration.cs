@@ -3,14 +3,11 @@
 //
 // Licensed under the MIT license. See LICENSE file in the solution root folder for full license information.
 
+using SmartLink.Entity;
+using System.Data.Entity.Migrations;
+
 namespace SmartLink.Service.Migrations
 {
-    using Entity;
-    using System;
-    using System.Data.Entity;
-    using System.Data.Entity.Migrations;
-    using System.Linq;
-
     public sealed class Configuration : DbMigrationsConfiguration<SmartLink.Service.SmartlinkDbContext>
     {
         public Configuration()

@@ -7,12 +7,11 @@ import async from 'async';
 import Promise from 'promise';
 import AuthHelper from './AuthHelper';
 import Utils from './Utils';
-import { teamsAppInstanceId } from './AppSettings';
 
 export default class GraphSdkHelper {
 	constructor(props) {
 		const MicrosoftGraph = require("@microsoft/microsoft-graph-client");
-
+        console.log("GraphSdkHelper: Contructor");
 		if (window.authHelper) {
 			this.authHelper = window.authHelper;
 		} else {
@@ -44,7 +43,7 @@ export default class GraphSdkHelper {
         const MicrosoftGraph = require("@microsoft/microsoft-graph-client");
 
         let graphAdminToken = this.authHelper.getGraphAdminToken();
-
+        console.log("GraphSdkHelper_initClientAdmin graphAdminToken = empty ==> ", graphAdminToken);
         if (graphAdminToken) {
             this.clientAdmin = MicrosoftGraph.Client.init({
                 debugLogging: true,
@@ -56,19 +55,6 @@ export default class GraphSdkHelper {
             console.log("GraphSdkHelper_initClientAdmin graphAdminToken = empty");
         }
     }
-
-	// GET me (OLD TODO: Deprecate after replacement is tested)
-	getMeOld(callback) {
-		this.client
-			.api('/me')
-			.select('displayName')
-			.get((err, res) => {
-				if (!err) {
-					callback(null, res);
-				}
-				else this._handleError(err);
-			});
-	}
 
 	// GET me
 	getMe() {
@@ -239,7 +225,7 @@ export default class GraphSdkHelper {
 	createTeamGroup(displayName, description) {
         return new Promise((resolve, reject) => {
             this.initClientAdmin();
-
+            console.log("GraphSkHelper_createTeamGroup graph displayName: ", displayName);
             if (this.clientAdmin) {
                 //let mailNickname = displayName.replace(/[\s`~!@#$%^&*()_|+\-=?;:'",.<>{}[]\\\/]/gi, '');
                 const regExpr = /[^a-zA-Z0-9-.\/s]/g;
@@ -266,17 +252,19 @@ export default class GraphSdkHelper {
 			        "funSettings": {
 				        "allowGiphy": "true",
 				        "giphyContentRating": "strict"
-			        }}`;
+                    }}`;
+                console.log("GrapSDKHelper_createTeamGroup groupSettings", groupSettings);
                 this.clientAdmin
                     .api('/groups')
                     .post(groupSettings)
                     .then(res => {
+                        console.log("GrapSDKHelper_createTeamGroup res: ", res);
                         this.clientAdmin
                             .api('/groups/' + res.id + '/team')
                             .version('beta')
                             .put(teamSettings)
                             .then(res => {
-                                console.log("GraphSdkHelper_createTeamGroup group created: " + JSON.stringify(res));
+                                console.log("vishnu GraphSdkHelper_createTeamGroup group created: " + JSON.stringify(res));
                                 resolve(res.id);
                             })
                             .catch(err => {
@@ -326,8 +314,60 @@ export default class GraphSdkHelper {
         });
 	}
 
+    // POST /teams/{id}/archive
+    archiveTeam(teamId) {
+        return new Promise((resolve, reject) => {
+            this.initClientAdmin();
+
+            if (this.clientAdmin) {
+                this.clientAdmin
+                    .api('/teams/' + teamId + '/archive')
+                    .version('beta')
+                    .then(res => {
+                        console.log("archiveTeam: " + res);
+                        console.log(res);
+                        resolve(res);
+                    })
+                    .catch(err => {
+                        this._handleError("archiveTeam: " + err);
+                        //reject(err);
+                        resolve(err); // Forcing resolve so it continues creating other channels
+                    });
+            } else {
+                console.log("GraphSdkHelper_archiveTeam clientAdmin invalid");
+                reject(false);
+            }
+        });
+    }
+
+    // POST /teams/{id}/unarchive
+    unarchiveTeam(teamId) {
+        return new Promise((resolve, reject) => {
+            this.initClientAdmin();
+
+            if (this.clientAdmin) {
+                this.clientAdmin
+                    .api('/teams/' + teamId + '/unarchive')
+                    .version('beta')
+                    .then(res => {
+                        console.log("archiveTeam: " + res);
+                        console.log(res);
+                        resolve(res);
+                    })
+                    .catch(err => {
+                        this._handleError("archiveTeam: " + err);
+                        //reject(err);
+                        resolve(err); // Forcing resolve so it continues creating other channels
+                    });
+            } else {
+                console.log("GraphSdkHelper_archiveTeam clientAdmin invalid");
+                reject(false);
+            }
+        });
+    }
+
     // POST /beta/teams/{id}/apps
-    addAppToTeam(teamId) {
+    addAppToTeam(teamId,teamsAppInstanceId) {
         return new Promise((resolve, reject) => {
             this.initClientAdmin();
 
@@ -377,18 +417,25 @@ export default class GraphSdkHelper {
 	// GET /groups/{id}/channels/{id}
 	getTeamByName(teamName) {
         return new Promise((resolve, reject) => {
-            this.client
-                .api("/groups?filter=startswith(displayName,'" + teamName + "')")
-                .version('beta')
-                .get()
-                .then(res => {
-                    console.log("getTeamByName: " + res);
-                    resolve(res);
-                })
-                .catch(err => {
-                    this._handleError(err);
-                    reject(err);
-                });
+            this.initClientAdmin();
+            if (this.clientAdmin) {
+                this.clientAdmin
+                    .api("/groups?filter=startswith(displayName,'" + teamName + "')")
+                    .version('beta')
+                    .get()
+                    .then(res => {
+                        console.log("getTeamByName: " + res);
+                        resolve(res);
+                    })
+                    .catch(err => {
+                        this._handleError(err);
+                        reject(err);
+                    });
+            }
+            else {
+                console.log("GraphSdkHelper_getTeamByName clientAdmin invalid");
+                reject("Error: GraphSdkHelper_getTeamByName clientAdmin invalid");
+            }
         });
 	}
 
@@ -472,5 +519,120 @@ export default class GraphSdkHelper {
                     console.log(err);
 				});
 		}
-	}
+    }
+    
+    //add user as onwer of the team.
+    async addOwnerToTeam(userId,groupId){
+        console.log("SDKHELPER_addOwnerToTeam user & team", userId, groupId)
+        try {
+
+            let response = "";
+            if(userId && groupId && this.clientAdmin){
+                let requestBody = `{'@odata.id': 'https://graph.microsoft.com/beta/users/${userId}'}`;
+                response = await this.clientAdmin.api(`/groups/${groupId}/owners/$ref`).version('beta').post(requestBody);
+                console.log("SDKHELPER_addOwnerToTeam complete : ", response)
+                return true;
+            }else{
+                console.log("SDKHELPER_addOwnerToTeam params empty : ");
+                return false
+            }
+
+        } catch (error) {
+            console.log("SDKHELPER_addOwnerToTeam complete : ")
+            return false
+        }
+    }
+
+
+    //add user as members to the team.
+    async addMemberToTeam(userId,groupId){
+        console.log("SDKHELPER_addMemberToTeam user & team", userId, groupId)
+        try {
+
+            let response = "";
+            if(userId && groupId && this.clientAdmin){
+                let requestBody = `{'@odata.id': 'https://graph.microsoft.com/beta/directoryObjects/${userId}'}`;
+                response = await this.clientAdmin.api(`/groups/${groupId}/members/$ref`).version('beta').post(requestBody);
+                console.log("SDKHELPER_addMemberToTeam complete : ", response)
+                return true;
+            }else{
+                console.log("SDKHELPER_addMemberToTeam params empty : ");
+                return false
+            }
+
+        } catch (error) {
+            console.log("SDKHELPER_addOwnerToTeam complete : ")
+            return false
+        }
+    }
+
+    //add user as onwer of the team.
+    async delOwnerToTeam(userId,groupId){
+        console.log("SDKHELPER_delOwnerToTeam")
+        try {
+
+            let response = "";
+            if(userId && groupId && this.clientAdmin){
+                let requestBody = `{'@odata.id': 'https://graph.microsoft.com/beta/users/${userId}'`;
+                response = await this.clientAdmin.api(`/groups/${groupId}/owners/$ref`).version('beta').delete(requestBody);
+                console.log("SDKHELPER_delOwnerToTeam complete : ", response)
+            }else{
+                console.log("SDKHELPER_delOwnerToTeam params empty : ");
+                return false
+            }
+
+            return response;
+
+        } catch (error) {
+            console.log("SDKHELPER_delOwnerToTeam complete : ")
+            return false
+        }
+    }
+
+
+    // GET /beta/teams/{id}/apps
+    async getApps(teamId) {
+        console.log("SDKHELPER_getApps")
+        try {
+
+            let response = "";
+            if(teamId && this.clientAdmin){
+                response = await this.clientAdmin.api(`/teams/${teamId}/apps`).version('beta').get();
+                console.log("SDKHELPER_getApps complete : ", response)
+            }else{
+                console.log("SDKHELPER_getApps params empty : ");
+                return false
+            }
+
+            return response;
+
+        } catch (error) {
+            console.log("SDKHELPER_getApps complete : ", error)
+            return false
+        }
+    }
+
+
+    // GET Sharepoint Root ID
+    async getSharepointRootId(hostname,relativepath) {
+        await this.initClientAdmin();
+        console.log("SDKHELPER_getSharepointRootId ",hostname,relativepath)
+        try {
+            ///https://graph.microsoft.com/v1.0/sites/onterawe.sharepoint.com:/sites/ProposalManager?$select=id
+            let response = "";
+            if(hostname && this.clientAdmin){
+                response = await this.clientAdmin.api(`/sites/${hostname}:/sites/${relativepath}?$select=id`).version('v1.0').get();
+                console.log("SDKHELPER_getSharepointRootId complete : ", response)
+            }else{
+                console.log("SDKHELPER_getSharepointRootId params empty : ");
+                return false
+            }
+
+            return response;
+
+        } catch (error) {
+            console.log("SDKHELPER_getSharepointRootId complete : ", error)
+            return false
+        }
+    }
 }

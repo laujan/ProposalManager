@@ -1,0 +1,385 @@
+{
+  "BusinessUnitId": "94068ec3-f79d-e811-a96f-000d3ac1b0d4",
+  "CorrelationId": "ad77a79b-ae93-4e1a-8a66-6cfc3e8e55d3",
+  "Depth": 1,
+  "InitiatingUserId": "2530d8e0-dec9-4666-a7e7-7ebfec77409e",
+  "InputParameters": [
+    {
+      "key": "Target",
+      "value": {
+        "__type": "Entity:http:\/\/schemas.microsoft.com\/xrm\/2011\/Contracts",
+        "Attributes": [
+          {
+            "key": "ismaster",
+            "value": true
+          },
+          {
+            "key": "owningbusinessunit",
+            "value": {
+              "__type": "EntityReference:http:\/\/schemas.microsoft.com\/xrm\/2011\/Contracts",
+              "Id": "94068ec3-f79d-e811-a96f-000d3ac1b0d4",
+              "KeyAttributes": [],
+              "LogicalName": "businessunit",
+              "Name": null,
+              "RowVersion": null
+            }
+          },
+          {
+            "key": "record1objecttypecode",
+            "value": {
+              "__type": "OptionSetValue:http:\/\/schemas.microsoft.com\/xrm\/2011\/Contracts",
+              "Value": 3
+            }
+          },
+          {
+            "key": "record2roleid",
+            "value": {
+              "__type": "EntityReference:http:\/\/schemas.microsoft.com\/xrm\/2011\/Contracts",
+              "Id": "c28836f4-a5a7-e811-a96a-000d3ac009b4",
+              "KeyAttributes": [],
+              "LogicalName": "connectionrole",
+              "Name": null,
+              "RowVersion": null
+            }
+          },
+          {
+            "key": "record1id",
+            "value": {
+              "__type": "EntityReference:http:\/\/schemas.microsoft.com\/xrm\/2011\/Contracts",
+              "Id": "c15b893e-ecb1-e811-a971-000d3ac000c8",
+              "KeyAttributes": [],
+              "LogicalName": "opportunity",
+              "Name": null,
+              "RowVersion": null
+            }
+          },
+          {
+            "key": "statecode",
+            "value": {
+              "__type": "OptionSetValue:http:\/\/schemas.microsoft.com\/xrm\/2011\/Contracts",
+              "Value": 0
+            }
+          },
+          {
+            "key": "connectionid",
+            "value": "d4652a84-fbb1-e811-a971-000d3ac000c8"
+          },
+          {
+            "key": "statuscode",
+            "value": {
+              "__type": "OptionSetValue:http:\/\/schemas.microsoft.com\/xrm\/2011\/Contracts",
+              "Value": 1
+            }
+          },
+          {
+            "key": "createdby",
+            "value": {
+              "__type": "EntityReference:http:\/\/schemas.microsoft.com\/xrm\/2011\/Contracts",
+              "Id": "2530d8e0-dec9-4666-a7e7-7ebfec77409e",
+              "KeyAttributes": [],
+              "LogicalName": "systemuser",
+              "Name": null,
+              "RowVersion": null
+            }
+          },
+          {
+            "key": "record2objecttypecode",
+            "value": {
+              "__type": "OptionSetValue:http:\/\/schemas.microsoft.com\/xrm\/2011\/Contracts",
+              "Value": 8
+            }
+          },
+          {
+            "key": "relatedconnectionid",
+            "value": {
+              "__type": "EntityReference:http:\/\/schemas.microsoft.com\/xrm\/2011\/Contracts",
+              "Id": "d4652a84-fbb1-e811-a971-000d3ac000c8",
+              "KeyAttributes": [],
+              "LogicalName": "connection",
+              "Name": null,
+              "RowVersion": null
+            }
+          },
+          {
+            "key": "modifiedonbehalfby",
+            "value": null
+          },
+          {
+            "key": "ownerid",
+            "value": {
+              "__type": "EntityReference:http:\/\/schemas.microsoft.com\/xrm\/2011\/Contracts",
+              "Id": "2530d8e0-dec9-4666-a7e7-7ebfec77409e",
+              "KeyAttributes": [],
+              "LogicalName": "systemuser",
+              "Name": null,
+              "RowVersion": null
+            }
+          },
+          {
+            "key": "modifiedon",
+            "value": "\/Date(1536255445000)\/"
+          },
+          {
+            "key": "modifiedby",
+            "value": {
+              "__type": "EntityReference:http:\/\/schemas.microsoft.com\/xrm\/2011\/Contracts",
+              "Id": "2530d8e0-dec9-4666-a7e7-7ebfec77409e",
+              "KeyAttributes": [],
+              "LogicalName": "systemuser",
+              "Name": null,
+              "RowVersion": null
+            }
+          },
+          {
+            "key": "createdon",
+            "value": "\/Date(1536255445000)\/"
+          },
+          {
+            "key": "record2id",
+            "value": {
+              "__type": "EntityReference:http:\/\/schemas.microsoft.com\/xrm\/2011\/Contracts",
+              "Id": "1a7fcf3e-7372-4de6-849e-339ccee35021",
+              "KeyAttributes": [],
+              "LogicalName": "systemuser",
+              "Name": null,
+              "RowVersion": null
+            }
+          },
+          {
+            "key": "transactioncurrencyid",
+            "value": {
+              "__type": "EntityReference:http:\/\/schemas.microsoft.com\/xrm\/2011\/Contracts",
+              "Id": "ce57cfe0-069e-e811-a96f-000d3ac1b0d4",
+              "KeyAttributes": [],
+              "LogicalName": "transactioncurrency",
+              "Name": null,
+              "RowVersion": null
+            }
+          },
+          {
+            "key": "exchangerate",
+            "value": 1.0000000000
+          }
+        ],
+        "EntityState": null,
+        "FormattedValues": [
+          {
+            "key": "ismaster",
+            "value": "Yes"
+          },
+          {
+            "key": "record1objecttypecode",
+            "value": "Opportunity"
+          },
+          {
+            "key": "statecode",
+            "value": "Active"
+          },
+          {
+            "key": "statuscode",
+            "value": "Active"
+          },
+          {
+            "key": "record2objecttypecode",
+            "value": "User"
+          },
+          {
+            "key": "modifiedon",
+            "value": "2018-09-06T14:37:25-03:00"
+          },
+          {
+            "key": "createdon",
+            "value": "2018-09-06T14:37:25-03:00"
+          }
+        ],
+        "Id": "d4652a84-fbb1-e811-a971-000d3ac000c8",
+        "KeyAttributes": [],
+        "LogicalName": "connection",
+        "RelatedEntities": [],
+        "RowVersion": null
+      }
+    }
+  ],
+  "IsExecutingOffline": false,
+  "IsInTransaction": true,
+  "IsOfflinePlayback": false,
+  "IsolationMode": 1,
+  "MessageName": "Create",
+  "Mode": 0,
+  "OperationCreatedOn": "\/Date(1536255446267)\/",
+  "OperationId": "60299505-2464-4afd-955f-208bb6b6d70e",
+  "OrganizationId": "534f3eba-ae96-49e3-8797-6e638b2e10bc",
+  "OrganizationName": "orge86cb77a",
+  "OutputParameters": [
+    {
+      "key": "id",
+      "value": "d4652a84-fbb1-e811-a971-000d3ac000c8"
+    }
+  ],
+  "OwningExtension": {
+    "Id": "7d1d95e4-ada7-e811-a96c-000d3ac000c8",
+    "KeyAttributes": [],
+    "LogicalName": "sdkmessageprocessingstep",
+    "Name": "Proposal Manager Connections: Create of connection",
+    "RowVersion": null
+  },
+  "ParentContext": {
+    "BusinessUnitId": "94068ec3-f79d-e811-a96f-000d3ac1b0d4",
+    "CorrelationId": "ad77a79b-ae93-4e1a-8a66-6cfc3e8e55d3",
+    "Depth": 1,
+    "InitiatingUserId": "2530d8e0-dec9-4666-a7e7-7ebfec77409e",
+    "InputParameters": [
+      {
+        "key": "Target",
+        "value": {
+          "__type": "Entity:http:\/\/schemas.microsoft.com\/xrm\/2011\/Contracts",
+          "Attributes": [
+            {
+              "key": "record1id",
+              "value": {
+                "__type": "EntityReference:http:\/\/schemas.microsoft.com\/xrm\/2011\/Contracts",
+                "Id": "c15b893e-ecb1-e811-a971-000d3ac000c8",
+                "KeyAttributes": [],
+                "LogicalName": "opportunity",
+                "Name": null,
+                "RowVersion": null
+              }
+            },
+            {
+              "key": "record2id",
+              "value": {
+                "__type": "EntityReference:http:\/\/schemas.microsoft.com\/xrm\/2011\/Contracts",
+                "Id": "1a7fcf3e-7372-4de6-849e-339ccee35021",
+                "KeyAttributes": [],
+                "LogicalName": "systemuser",
+                "Name": null,
+                "RowVersion": null
+              }
+            },
+            {
+              "key": "record2roleid",
+              "value": {
+                "__type": "EntityReference:http:\/\/schemas.microsoft.com\/xrm\/2011\/Contracts",
+                "Id": "c28836f4-a5a7-e811-a96a-000d3ac009b4",
+                "KeyAttributes": [],
+                "LogicalName": "connectionrole",
+                "Name": null,
+                "RowVersion": null
+              }
+            },
+            {
+              "key": "ownerid",
+              "value": {
+                "__type": "EntityReference:http:\/\/schemas.microsoft.com\/xrm\/2011\/Contracts",
+                "Id": "2530d8e0-dec9-4666-a7e7-7ebfec77409e",
+                "KeyAttributes": [],
+                "LogicalName": "systemuser",
+                "Name": null,
+                "RowVersion": null
+              }
+            },
+            {
+              "key": "transactioncurrencyid",
+              "value": {
+                "__type": "EntityReference:http:\/\/schemas.microsoft.com\/xrm\/2011\/Contracts",
+                "Id": "ce57cfe0-069e-e811-a96f-000d3ac1b0d4",
+                "KeyAttributes": [],
+                "LogicalName": "transactioncurrency",
+                "Name": null,
+                "RowVersion": null
+              }
+            },
+            {
+              "key": "connectionid",
+              "value": "d4652a84-fbb1-e811-a971-000d3ac000c8"
+            },
+            {
+              "key": "ismaster",
+              "value": false
+            },
+            {
+              "key": "statuscode",
+              "value": {
+                "__type": "OptionSetValue:http:\/\/schemas.microsoft.com\/xrm\/2011\/Contracts",
+                "Value": 1
+              }
+            }
+          ],
+          "EntityState": null,
+          "FormattedValues": [
+            {
+              "key": "ismaster",
+              "value": "False"
+            }
+          ],
+          "Id": "d4652a84-fbb1-e811-a971-000d3ac000c8",
+          "KeyAttributes": [],
+          "LogicalName": "connection",
+          "RelatedEntities": [],
+          "RowVersion": null
+        }
+      },
+      {
+        "key": "SuppressDuplicateDetection",
+        "value": false
+      }
+    ],
+    "IsExecutingOffline": false,
+    "IsInTransaction": true,
+    "IsOfflinePlayback": false,
+    "IsolationMode": 1,
+    "MessageName": "Create",
+    "Mode": 0,
+    "OperationCreatedOn": "\/Date(1536255445903)\/",
+    "OperationId": "60299505-2464-4afd-955f-208bb6b6d70e",
+    "OrganizationId": "534f3eba-ae96-49e3-8797-6e638b2e10bc",
+    "OrganizationName": "orge86cb77a",
+    "OutputParameters": [],
+    "OwningExtension": {
+      "Id": "a04f4397-f710-4b96-a179-2e43e8ecc35a",
+      "KeyAttributes": [],
+      "LogicalName": "sdkmessageprocessingstep",
+      "Name": "ObjectModel Implementation",
+      "RowVersion": null
+    },
+    "ParentContext": null,
+    "PostEntityImages": [],
+    "PreEntityImages": [],
+    "PrimaryEntityId": "d4652a84-fbb1-e811-a971-000d3ac000c8",
+    "PrimaryEntityName": "connection",
+    "RequestId": "60299505-2464-4afd-955f-208bb6b6d70e",
+    "SecondaryEntityName": "none",
+    "SharedVariables": [
+      {
+        "key": "DefaultsAddedFlag",
+        "value": true
+      },
+      {
+        "key": "ChangedEntityTypes",
+        "value": [
+          {
+            "__type": "KeyValuePairOfstringstring:#System.Collections.Generic",
+            "key": "connection",
+            "value": "Update"
+          }
+        ]
+      }
+    ],
+    "Stage": 30,
+    "UserId": "2530d8e0-dec9-4666-a7e7-7ebfec77409e"
+  },
+  "PostEntityImages": [],
+  "PreEntityImages": [],
+  "PrimaryEntityId": "d4652a84-fbb1-e811-a971-000d3ac000c8",
+  "PrimaryEntityName": "connection",
+  "RequestId": "60299505-2464-4afd-955f-208bb6b6d70e",
+  "SecondaryEntityName": "none",
+  "SharedVariables": [
+    {
+      "key": "DefaultsAddedFlag",
+      "value": true
+    }
+  ],
+  "Stage": 40,
+  "UserId": "2530d8e0-dec9-4666-a7e7-7ebfec77409e"
+}

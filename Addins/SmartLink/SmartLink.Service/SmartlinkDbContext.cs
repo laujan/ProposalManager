@@ -3,13 +3,11 @@
 //
 // Licensed under the MIT license. See LICENSE file in the solution root folder for full license information.
 
-namespace SmartLink.Service
-{
-    using System;
-    using System.Data.Entity;
-    using System.Linq;
+using SmartLink.Entity;
+using System.Data.Entity;
 
-    using SmartLink.Entity;
+namespace SmartLink.Service
+{    
     public class SmartlinkDbContext : System.Data.Entity.DbContext
     {
         // Your context has been configured to use a 'dbContext' connection string from your application's 

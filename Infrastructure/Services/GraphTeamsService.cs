@@ -18,9 +18,10 @@ namespace Infrastructure.Services
     public class GraphTeamsAppService : GraphTeamsBaseService
     {
         public GraphTeamsAppService(
-            ILogger<GraphTeamsAppService> logger, 
-            IOptions<AppOptions> appOptions,
-            IGraphClientAppContext graphClientContext) : base(logger, appOptions, graphClientContext)
+            ILogger<GraphTeamsAppService> logger,
+            IOptionsMonitor<AppOptions> appOptions,
+            IGraphClientAppContext graphClientContext,
+            IUserContext userContext) : base(logger, appOptions, graphClientContext, userContext)
         {
         }
     }
@@ -29,8 +30,9 @@ namespace Infrastructure.Services
     {
         public GraphTeamUserService(
             ILogger<GraphTeamUserService> logger,
-            IOptions<AppOptions> appOptions,
-            IGraphClientUserContext graphClientContext) : base(logger, appOptions, graphClientContext)
+            IOptionsMonitor<AppOptions> appOptions,
+            IGraphClientUserContext graphClientContext,
+            IUserContext userContext) : base(logger, appOptions, graphClientContext, userContext)
         {
         }
     }

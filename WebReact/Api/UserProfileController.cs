@@ -12,38 +12,68 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using WebReact.Interfaces;
+using ApplicationCore.Interfaces;
 using ApplicationCore.Helpers;
 using ApplicationCore.Artifacts;
 using Newtonsoft.Json.Linq;
+using Microsoft.AspNetCore.Authorization;
 
 namespace WebReact.Api
 {
+    [Authorize(AuthenticationSchemes = "AzureAdBearer")]
     public class UserProfileController : BaseApiController<UserProfileController>
     {
         private readonly IUserProfileService _userProfileService;
+        private readonly IUserContext _userContext;
 
         public UserProfileController(
             ILogger<UserProfileController> logger, 
             IOptions<AppOptions> appOptions,
-            IUserProfileService userProfileService) : base(logger, appOptions)
+            IUserProfileService userProfileService,
+            IUserContext userContext) : base(logger, appOptions)
         {
             Guard.Against.Null(userProfileService, nameof(userProfileService));
+            Guard.Against.Null(userContext, nameof(userContext));
+
             _userProfileService = userProfileService;
+            _userContext = userContext;
         }
 
         // GET: /UserProfile/me
-        [HttpGet("me", Name = "GetUserProfile")]
+        [HttpGet("me")]
         public async Task<IActionResult> GetById()
         {
-            _logger.LogInformation("GetById called.");
+            var requestId = Guid.NewGuid().ToString();
+            _logger.LogInformation("UserProfileController_GetById called.");
 
-            // TODO: get id from user context
-            var id = "usercontext";
+            try
+            {
+                var userUpn = (_userContext.User.Claims).ToList().Find(x => x.Type == "preferred_username")?.Value;
 
-            var thisUserProfile = await _userProfileService.GetItemByIdAsync(id);
-            var responseJObject = JObject.FromObject(thisUserProfile);
-            return Ok(responseJObject);
+                if (String.IsNullOrEmpty(userUpn))
+                {
+                    _logger.LogError($"UPN:{requestId} - UserProfileController_GetById name == null.");
+                    return NotFound($"UPN:{requestId} - UserProfileController_GetById Invalid parameter passed");
+                }
+
+                var userProfile = await _userProfileService.GetItemByUpnAsync(userUpn);
+                if (userProfile == null)
+                {
+                    _logger.LogError($"UPN:{requestId} - UserProfileController_GetById no user found.");
+                    return NotFound($"UPN:{requestId} - UserProfileController_GetById no user found");
+                }
+
+                var responseJObject = JObject.FromObject(userProfile);
+
+                return Ok(responseJObject);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"UPN:{requestId} - UserProfileController_GetById error: {ex.Message}");
+                var errorResponse = JsonErrorResponse.BadRequest($"UserProfileController_GetById error: {ex.Message} ", requestId);
+
+                return BadRequest(errorResponse);
+            }
         }
 
         // GET: /UserProfile
@@ -51,7 +81,7 @@ namespace WebReact.Api
         public async Task<IActionResult> GetAll(int? page, [FromQuery] string upn)
         {
             var requestId = Guid.NewGuid().ToString();
-            _logger.LogInformation($"RequestID:{requestId} - GetAll called.");
+            _logger.LogInformation($"RequestID:{requestId} - UserProfileController_GetAll called.");
 
             try
             {
@@ -67,8 +97,8 @@ namespace WebReact.Api
 
                 if (modelList.ItemsList.Count == 0)
                 {
-                    _logger.LogError($"RequestID:{requestId} - GetAll no items found.");
-                    return NotFound($"RequestID:{requestId} - GetAll no items found");
+                    _logger.LogError($"RequestID:{requestId} - UserProfileController_GetAll no items found.");
+                    return NotFound($"RequestID:{requestId} - UserProfileController_GetAll no items found");
                 }
 
                 var responseJson = JObject.FromObject(modelList);
@@ -77,33 +107,32 @@ namespace WebReact.Api
             }
             catch (Exception ex)
             {
-                _logger.LogError($"RequestID:{requestId} - GetAll error: {ex.Message}");
-                var errorResponse = JsonErrorResponse.BadRequest($"GetAll error: {ex.Message} ", requestId);
+                _logger.LogError($"RequestID:{requestId} - UserProfileController_GetAll error: {ex.Message}");
+                var errorResponse = JsonErrorResponse.BadRequest($"UserProfileController_GetAll error: {ex.Message} ", requestId);
 
                 return BadRequest(errorResponse);
             }
         }
 
         // GET: /UserProfile?upn={name}
-        //[Authorize]
-        //[HttpGet("name", Name = "GetOpportunityByName")]
+        [HttpGet("name")]
         public async Task<IActionResult> GetByUpn(string upn)
         {
             var requestId = Guid.NewGuid().ToString();
-            _logger.LogInformation($"UPN:{upn} - GetByUPN called.");
+            _logger.LogInformation($"UPN:{upn} - UserProfileController_GetByUPN called.");
 
             try
             {
 				if (String.IsNullOrEmpty(upn))
                 {
-                    _logger.LogError($"UPN:{requestId} - GetByUPN name == null.");
-                    return NotFound($"UPN:{requestId} - GetByUPN Invalid parameter passed");
+                    _logger.LogError($"UPN:{requestId} - UserProfileController_GetByUPN name == null.");
+                    return NotFound($"UPN:{requestId} - UserProfileController_GetByUPN Invalid parameter passed");
                 }
                 var userProfile = await _userProfileService.GetItemByUpnAsync(upn);
                 if (userProfile == null)
                 {
-                    _logger.LogError($"UPN:{requestId} - GetByUPN no user found.");
-                    return NotFound($"UPN:{requestId} - GetByUPN no user found");
+                    _logger.LogError($"UPN:{requestId} - UserProfileController_GetByUPN no user found.");
+                    return NotFound($"UPN:{requestId} - UserProfileController_GetByUPN no user found");
                 }
 
                 var responseJObject = JObject.FromObject(userProfile);
@@ -112,8 +141,8 @@ namespace WebReact.Api
             }
             catch (Exception ex)
             {
-                _logger.LogError($"UPN:{requestId} - GetByUPN error: {ex.Message}");
-                var errorResponse = JsonErrorResponse.BadRequest($"GetByUPN error: {ex.Message} ", requestId);
+                _logger.LogError($"UPN:{requestId} - UserProfileController_GetByUPN error: {ex.Message}");
+                var errorResponse = JsonErrorResponse.BadRequest($"UserProfileController_GetByUPN error: {ex.Message} ", requestId);
 
                 return BadRequest(errorResponse);
             }

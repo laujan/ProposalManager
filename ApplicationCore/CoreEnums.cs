@@ -17,8 +17,9 @@ namespace ApplicationCore
         public static ActionStatus InProgress = new ActionStatus(nameof(InProgress), 1);
         public static ActionStatus Blocked = new ActionStatus(nameof(Blocked), 2);
         public static ActionStatus Completed = new ActionStatus(nameof(Completed), 3);
+		public static ActionStatus Delayed = new ActionStatus(nameof(Delayed), 4);
 
-        [JsonConstructor]
+		[JsonConstructor]
         protected ActionStatus(string name, int value) : base(name, value)
         {
         }
@@ -46,21 +47,6 @@ namespace ApplicationCore
 
         [JsonConstructor]
         protected DocumentContext(string name, int value) : base(name, value)
-        {
-        }
-    }
-
-    public class OpportunityChannel : SmartEnum<OpportunityChannel, int>
-    {
-        public static OpportunityChannel General = new OpportunityChannel("General", 0);
-        public static OpportunityChannel RiskAssessment = new OpportunityChannel("Risk Assessment", 1);
-        public static OpportunityChannel CreditCheck = new OpportunityChannel("Credit Check", 2);
-        public static OpportunityChannel Compliance = new OpportunityChannel("Compliance", 3);
-        public static OpportunityChannel FormalProposal = new OpportunityChannel("Formal Proposal", 4);
-        public static OpportunityChannel CustomerDecision = new OpportunityChannel("Customer Decision", 5);
-
-        [JsonConstructor]
-        protected OpportunityChannel(string name, int value) : base(name, value)
         {
         }
     }

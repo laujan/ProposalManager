@@ -18,6 +18,7 @@ import {
     Persona,
     PersonaSize
 } from 'office-ui-fabric-react/lib/Persona';
+import { Trans } from "react-i18next";
 
 
 export class OpportunityStatus extends Component {
@@ -33,6 +34,8 @@ export class OpportunityStatus extends Component {
 
         const oppId = this.props.opportunityId;
 
+		const opportunityData = this.props.opportunityData;
+		
         this.state = {
             oppId: oppId,
             loading: true,
@@ -40,26 +43,23 @@ export class OpportunityStatus extends Component {
             LoanOfficer: [],
             userId: userProfile.id,
             UserRoleList: [],
-            OtherRolesMapping: []
+			OtherRolesMapping: [],
+			oppData: opportunityData
         };
 
     }
 
     componentWillMount() {
-        this.getUserRoles();
-        this.getOppDetails();
+		this.getUserRoles();
+		
+		
+		
     }
 
     getOppDetails() {
-        let requestUrl = 'api/Opportunity/?id=' + this.state.oppId;
-
-        fetch(requestUrl, {
-            method: "GET",
-            headers: { 'authorization': 'Bearer ' + window.authHelper.getWebApiToken() }
-        })
-            .then(response => response.json())
-            .then(data => {
-                
+        console.log(this.state.oppData);
+        console.log("test oppData..1");
+		let data = this.state.oppData;
                 let loanOfficerObj = data.teamMembers.filter(function (k) {
                     return k.assignedRole.displayName === "LoanOfficer"; // "loan officer";
                 });
@@ -67,27 +67,42 @@ export class OpportunityStatus extends Component {
                 let relManagerObj = data.teamMembers.filter(function (k) {
                     return k.assignedRole.displayName === "RelationshipManager"; // "relationshipmanager";
                 });
-
+        console.log(loanOfficerObj);
+        console.log("test oppData..111");
+        console.log(relManagerObj);
+        console.log("test oppData..122");
                 // Get Other role officers list
-
+        let processList = data.dealType.processes;
+        // Get Other role officers list
+        let otherRolesMapping = processList.filter(function (k) {
+            return k.processType.toLowerCase() !== "new opportunity" && k.processType.toLowerCase() !== "start process" && k.processType.toLowerCase() !== "customerdecisiontab" && k.processType.toLowerCase() !== "proposalstatustab";
+        });
+			/*
                 let otherRolesMapping = this.state.UserRoleList.filter(function (k) {
                     //return (k.roleName.toLowerCase() !== "relationshipmanager" && k.roleName.toLowerCase() !== "loanofficer" && k.roleName.toLowerCase() !== "administrator");
                     return k.processType.toLowerCase() !== "base" && k.processType.toLowerCase() !== "administration" && k.processType.toLowerCase() !== "customerdecisiontab" && k.processType.toLowerCase() !== "proposalstatustab";
                 });
+            */
 
                 this.setState({ OtherRolesMapping: otherRolesMapping });
+        console.log(otherRolesMapping);
+        console.log("test oppData..2");
                 let otherRolesArr1 = [];
                 for (let j = 0; j < otherRolesMapping.length; j++) {
-                    let teamMember = data.teamMembers.filter(function (k) {
-                        if (k.assignedRole.displayName.toLowerCase() === otherRolesMapping[j].roleName.toLowerCase()) {
+                    let processTeamMember = new Array();
+                    //processTeamMember = data.teamMembers.filter(t => t.processStep.toLowerCase() === otherRolesMapping[j].processStep.toLowerCase());
+                    processTeamMember = data.teamMembers.filter(function (k) {
+                        if (k.processStep.toLowerCase() === otherRolesMapping[j].processStep.toLowerCase()) {
                             //ProcessStep
                             k.processStep = otherRolesMapping[j].processStep;
-                            return k.assignedRole.displayName.toLowerCase() === otherRolesMapping[j].roleName.toLowerCase();
+                            //ProcessStatus
+                            k.processStatus = otherRolesMapping[j].status;
+                            k.status = otherRolesMapping[j].status;
+                            return k.processStep.toLowerCase() === otherRolesMapping[j].processStep.toLowerCase();
                         }
                     });
-                    
-                    if (teamMember.length === 0) {
-                        teamMember = [{
+                    if (processTeamMember.length === 0) {
+                        processTeamMember = [{
                             "displayName": "",
                             "assignedRole": {
                                 "displayName": otherRolesMapping[j].roleName,
@@ -98,13 +113,15 @@ export class OpportunityStatus extends Component {
                             "status": 0
                         }];
                     }
-                    otherRolesArr1 = otherRolesArr1.concat(teamMember);
+
+                    otherRolesArr1 = otherRolesArr1.concat(processTeamMember);
+                            //otherRolesArr1 = otherRolesArr1.concat(teamMember);
                 }
 
                 let otherRolesArr = otherRolesArr1.reduce(function (res, currentValue) {
-                    if (res.indexOf(currentValue.assignedRole.displayName) === -1) {
-                        res.push(currentValue.assignedRole.displayName);
-                    }
+                    if (res.indexOf(currentValue.processStep) === -1) {
+                                res.push(currentValue.processStep);
+                            }
                     return res;
                 }, []).map(function (group) {
                     return {
@@ -141,12 +158,12 @@ export class OpportunityStatus extends Component {
                     RelationShipOfficer: relManagerObj,
                     OtherRoleOfficers: otherRolesObj,
                     teamMembers: data.teamMembers,
-                    oppData: data,
+                    //oppData: data,
                     userRole: assignedUserRole,
                     loading: false
                 });
-
-            });
+		
+           // });
     }
 
     getUserRoles() {
@@ -170,12 +187,16 @@ export class OpportunityStatus extends Component {
                         userRoleList.push(userRole);
                     }
                     this.setState({ UserRoleList: userRoleList });
+                    this.getOppDetails();
                 }
+
+
                 catch (err) {
                     return false;
                 }
 
             });
+			
     }
     render() {
         if (this.state.loading) {
@@ -188,13 +209,13 @@ export class OpportunityStatus extends Component {
             return (
                 <div className='ms-Grid'>
                     <div className='ms-Grid-row'>
-                        <div className=' ms-Grid-col ms-sm12 ms-md12 ms-lg9 p-r-10 bg-white'>
+                        <div className=' ms-Grid-col ms-sm12 ms-md12 ms-lg9 p-r-10'>
                             <div className='ms-Grid-row'>
                                 <div className=' ms-Grid-col ms-sm12 ms-md12 ms-lg6 pageheading'>
-                                    <h3>Status</h3>
+                                    <h3><Trans>status</Trans></h3>
                                 </div>
                                 <div className=' ms-Grid-col ms-sm12 ms-md12 ms-lg6'><br />
-                                    <LinkRoute to={'/'} className='pull-right'>Back to Dashboard </LinkRoute>
+                                    <LinkRoute to={'/'} className='pull-right'><Trans>backToDashboard</Trans> </LinkRoute>
                                 </div>
                             </div>
                             <div className='ms-Grid-row p-5'>
@@ -202,7 +223,7 @@ export class OpportunityStatus extends Component {
                                     <div className='ms-Grid-row pt35'>
                                         <div className=' ms-Grid-col ms-sm12 ms-md12 ms-lg3  bg-gray newOpBg p20A'>
                                                 <i className="ms-Icon ms-Icon--ArrangeBringForward" aria-hidden="true"></i>
-                                                &nbsp;&nbsp;<span>New Opportunity</span>
+                                                &nbsp;&nbsp;<span><Trans>newOpportunity</Trans></span>
                                                 {this.state.RelationShipOfficer.length > 0 ?
                                                     this.state.RelationShipOfficer.map(officer =>
                                                         <EmployeeStatusCard key={officer.id}
@@ -222,18 +243,18 @@ export class OpportunityStatus extends Component {
                                         </div>
                                         <div className=' ms-Grid-col ms-sm12 ms-md12 ms-lg3 newOpBg p20A'>
                                             <i className="ms-Icon ms-Icon--ArrangeBringForward" aria-hidden="true"></i>
-                                            &nbsp;&nbsp;<span>Start Process</span>
+                                            &nbsp;&nbsp;<span><Trans>startProcess</Trans></span>
                                             {
                                                 this.state.LoanOfficer.length === 0 ?
                                                     <div className=' ms-Grid-col ms-sm6 ms-md8 ms-lg12 bg-grey p-5'>
                                                         <div className='ms-PersonaExample'>
                                                             <div className='ms-Grid-row'>
                                                                 <div className='ms-Grid-col ms-sm6 ms-md8 ms-lg4'>
-                                                                    <Label>Status</Label>
+                                                                    <Label><Trans>status</Trans></Label>
 
                                                                 </div>
                                                                 <div className=' ms-Grid-col ms-sm6 ms-md8 ms-lg8'>
-                                                                    <Label><span className='notstarted'> Not Started </span></Label>
+                                                                    <Label><span className='notstarted'><Trans>notStarted</Trans> </span></Label>
 
                                                                 </div>
                                                             </div>
@@ -350,14 +371,14 @@ export class OpportunityStatus extends Component {
                                         <div className=' ms-Grid-col ms-sm12 ms-md12 ms-lg3'>
                                             <div>
                                                 <i className="ms-Icon ms-Icon--ArrangeBringForward" aria-hidden="true"></i>
-                                                &nbsp;&nbsp;<span>Draft Proposal</span>
+                                                &nbsp;&nbsp;<span><Trans>draftProposal</Trans></span>
                                                 {
                                                     this.state.LoanOfficer.length === 0 ?
                                                         <div className=' ms-Grid-col ms-sm6 ms-md8 ms-lg12 bg-grey p-5'>
                                                             <div className='ms-PersonaExample'>
                                                                 <div className='ms-Grid-row'>
                                                                     <div className='ms-Grid-col ms-sm6 ms-md8 ms-lg4'>
-                                                                        <Label>Status</Label>
+                                                                        <Label><Trans>status</Trans></Label>
 
                                                                     </div>
                                                                     <div className=' ms-Grid-col ms-sm6 ms-md8 ms-lg8'>
@@ -407,10 +428,10 @@ export class OpportunityStatus extends Component {
                             </div>
 
                         </div>
-                        <div className=' ms-Grid-col ms-sm12 ms-md8 ms-lg3 p-l-10 TeamMembersBG'>
-                            <h3>Team Members</h3>
-                            <TeamMembers memberslist={this.state.teamMembers} createTeamId={this.state.oppId} opportunityState={this.state.oppData.opportunityState} userRole={this.state.userRole} />
-                        </div>
+						<div className='ms-Grid-col ms-sm12 ms-md8 ms-lg3 p-l-10 TeamMembersBG'>
+							<h3>Team Members</h3>
+							<TeamMembers memberslist={this.state.teamMembers} createTeamId={this.state.oppId} opportunityState={this.state.oppData.opportunityState} userRole={this.state.userRole} />
+						</div>
                     </div>
 
 

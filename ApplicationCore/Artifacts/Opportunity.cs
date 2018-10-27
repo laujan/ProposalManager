@@ -60,7 +60,7 @@ namespace ApplicationCore.Artifacts
                 Version = "1.0",
                 Metadata = OpportunityMetadata.Empty,
                 Content = OpportunityContent.Empty,
-                DocumentAttachments = new List<DocumentAttachment>()
+                DocumentAttachments = new List<DocumentAttachment>(),
             };
         }   
     }
@@ -116,6 +116,8 @@ namespace ApplicationCore.Artifacts
         [JsonProperty("opportunityChannelId")]
         public String OpportunityChannelId { get; set; }
 
+        [JsonProperty("targetDate")]
+        public DateTimeOffset TargetDate { get; set; }
         /// <summary>
         /// Represents the empty opportunity. This field is read-only.
         /// </summary>
@@ -138,7 +140,8 @@ namespace ApplicationCore.Artifacts
                 CollateralAmount = 0.0,
                 Guarantees = String.Empty,
                 RiskRating = 0,
-                OpportunityChannelId = String.Empty
+                OpportunityChannelId = String.Empty,
+                TargetDate = DateTimeOffset.MinValue
             };
         }    
     }
@@ -159,6 +162,9 @@ namespace ApplicationCore.Artifacts
 
         [JsonProperty("customerDecision")]
         public CustomerDecision CustomerDecision { get; set; }
+        // DealType
+        [JsonProperty("dealType")]
+        public Template DealType { get; set; }
 
         /// <summary>
         /// Represents the empty opportunity. This field is read-only.
@@ -170,7 +176,8 @@ namespace ApplicationCore.Artifacts
                 TeamMembers = new List<TeamMember>(),
                 Notes = new List<Note>(),
                 Checklists = new List<Checklist>(),
-                ProposalDocument = ProposalDocument.Empty
+                ProposalDocument = ProposalDocument.Empty,
+                DealType = new Template()
             };
         }  
     }
@@ -188,8 +195,9 @@ namespace ApplicationCore.Artifacts
         public static OpportunityState Completed = new OpportunityState(nameof(Completed), 8);
         public static OpportunityState Submitted = new OpportunityState(nameof(Submitted), 9);
         public static OpportunityState Accepted = new OpportunityState(nameof(Accepted), 10);
+		public static OpportunityState Archived = new OpportunityState(nameof(Archived), 11);
 
-        [JsonConstructor]
+		[JsonConstructor]
         protected OpportunityState(string name, int value) : base(name, value)
         {
         }

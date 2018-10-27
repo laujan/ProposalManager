@@ -69,14 +69,14 @@
 }
 
 .TopLeftArrow {
-    background: url(../components-teams/images/Arrow.png);
+    background: url(../components-teams/Images/Arrow.png);
     height: 125px;
     background-repeat: no-repeat;
     background-position: right 50px;
 }
 
 .TopRightArrow {
-    background:url(../components-teams/images/Arrow-3.png);
+    background: url(../components-teams/Images/Arrow-3.png);
     height: 125px;
     background-repeat: no-repeat;
     background-position: -6px 58px;
@@ -84,14 +84,14 @@
 
 
 .BottomLeftArrow {
-    background: url(../components-teams/images/Arrow-1.png);
+    background: url(../components-teams/Images/Arrow-1.png);
     height: 125px;
     background-repeat: no-repeat;
     background-position: right -40px;
 }
 
 .BottomRightArrow {
-    background: url(../components-teams/images/Arrow-2.png);
+    background: url(../components-teams/Images/Arrow-2.png);
     height: 125px;
     background-repeat: no-repeat;
     background-position: -8px 11px;
@@ -107,9 +107,12 @@
     padding-left: 10px;
     padding-right: 20px;
 }
+.font-normal {
+    font-weight:normal !important;
+}
 
 .font-white {
-    color:#fff !important;
+    color: #fff !important;
 }
 
 .pa15px {

@@ -14,6 +14,7 @@ import {
     SpinnerSize
 } from 'office-ui-fabric-react/lib/Spinner';
 import { MessageBar, MessageBarType } from 'office-ui-fabric-react/lib/MessageBar';
+import { Trans } from "react-i18next";
 
 export class Industry extends Component {
     displayName = Industry.name
@@ -27,10 +28,10 @@ export class Industry extends Component {
         this.utils = new Utils();
         const columns = [
             {
-                key: 'column1',
-                name: 'Industry',
-                headerClassName: 'ms-List-th browsebutton',
-                className: 'docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg8',
+                key: 'column1', 
+                name: <Trans>industry</Trans>,
+                headerClassName: 'ms-List-th browsebutton RegionCol',
+                className: 'docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg8 RegionCol',
                 fieldName: 'Region',
                 minWidth: 150,
                 maxWidth: 250,
@@ -47,9 +48,9 @@ export class Industry extends Component {
             },
             {
                 key: 'column2',
-                name: 'Action',
-                headerClassName: 'ms-List-th',
-                className: 'ms-Grid-col ms-sm12 ms-md12 ms-lg4',
+                name: <Trans>action</Trans>,
+                headerClassName: 'ms-List-th industryaction',
+                className: 'ms-Grid-col ms-sm12 ms-md12 ms-lg4 industryaction',
                 minWidth: 16,
                 maxWidth: 16,
                 onRender: (item) => {
@@ -76,38 +77,46 @@ export class Industry extends Component {
             MessageBarType: MessageBarType.success,
             isUpdateMsg: false
         };
+
+        this.getIndustries().then();
     }
 
     componentWillMount() {
-        this.getIndustries();
+        //this.getIndustries();
     }
 
-    getIndustries() {
-        // call to API fetch Industry
-        let requestUrl = 'api/Industry';
-        fetch(requestUrl, {
-            method: "GET",
-            headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() }
-        })
-            .then(response => response.json())
-            .then(data => {
-                try {
-                    let industryList = [];
-                    for (let i = 0; i < data.length; i++) {
-                        let industry = {};
-                        industry.id = data[i].id;
-                        industry.name = data[i].name;
-                        industry.operation = "update";
-                        industryList.push(industry);
-                    }
-                    console.log(industryList);
-                    this.setState({ items: industryList, loading: false, rowItemCounter: industryList.length });
-                }
-                catch (err) {
-                    return false;
-                }
-
+    async getIndustries() {
+        let industryList = [];
+        let industryList_length = 0;
+        try{
+            // call to API fetch Categories
+            let requestUrl = 'api/Industry';
+            let response = await fetch(requestUrl, {
+                method: "GET",
+                headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() }
             });
+            let data = await response.json();
+            if(typeof data === 'string'){
+                console.log("Industry_getIndustries : ", data);
+            }else if(typeof data === 'object'){
+                console.log("Industry_getIndustries : ", data);
+                for (let i = 0; i < data.length; i++) {
+                    let region = {};
+                    region.id = data[i].id;
+                    region.name = data[i].name;
+                    region.operation = "update";
+                    industryList.push(region);
+                }
+                industryList_length = industryList.length;
+            }
+            else{
+                throw new Error("response is not an expected type : ", data);
+            }
+        }catch(error){
+            console.log("Region_getRegions Error: ", error.message);
+        }finally{
+            this.setState({ items: industryList, loading: false, rowItemCounter:  industryList_length});
+        }
     }
 
     createItem(key) {
@@ -157,15 +166,24 @@ export class Industry extends Component {
 
     onBlurIndustryName(e, item, operation) {
         this.setState({ isUpdate: true });
+        //check Industry already exist in items
+        for (let p = 0; p < this.state.items.length; p++) {
+            if (this.state.items[p].name.toLowerCase() === e.target.value.toLowerCase()) {
+                this.setState({
+                    isUpdate: false,
+                    isUpdateMsg: true,
+                    MessagebarText: <Trans>industryExist</Trans>,
+                    MessageBarType: MessageBarType.error
+                });
+                setTimeout(function () { this.setState({ isUpdateMsg: false, MessageBarType: "", MessagebarText: "" }); }.bind(this), 3000);
+                return false;
+            }
+        }
         delete item['operation'];
 
         let updatedItems = this.state.items;
         let itemIdx = updatedItems.indexOf(item);
         updatedItems[itemIdx].name = e.target.value;
-        //this.industry = updatedItems;
-        //this.setState({
-        //    items: updatedItems
-        //});
         this.setState({
             updatedItems: updatedItems
         });
@@ -199,19 +217,21 @@ export class Industry extends Component {
                 if (response.ok) {
                     this.setState({
                         items: this.state.updatedItems,
-                        MessagebarText: "Industry added successfully.",
+                        MessagebarText: <Trans>industryAddedSuccess</Trans>,
                         isUpdate: false,
-                        isUpdateMsg: true
+                        isUpdateMsg: true,
+                        MessageBarType: MessageBarType.success
                     });
-                    setTimeout(function () { this.setState({ isUpdateMsg: false, MessageBarType: MessageBarType.success, MessagebarText: "" }); }.bind(this), 3000);
+                    setTimeout(function () { this.setState({ isUpdateMsg: false, MessageBarType: "", MessagebarText: "" }); }.bind(this), 3000);
                     return response.json;
                 } else {
                     this.setState({
-                        MessagebarText: "Error occured. Please try again!",
+                        MessagebarText: <Trans>errorOoccuredPleaseTryAgain</Trans>,
                         isUpdate: false,
-                        isUpdateMsg: true
+                        isUpdateMsg: true,
+                        MessageBarType: MessageBarType.error
                     });
-                    setTimeout(function () { this.setState({ isUpdateMsg: false, MessageBarType: MessageBarType.error, MessagebarText: "" }); }.bind(this), 3000);
+                    setTimeout(function () { this.setState({ isUpdateMsg: false, MessageBarType: "", MessagebarText: "" }); }.bind(this), 3000);
                 }
             }).then(json => {
                 //console.log(json);
@@ -242,18 +262,20 @@ export class Industry extends Component {
                 if (response.ok) {
                     this.setState({
                         items: this.state.updatedItems,
-                        MessagebarText: "Industry updated successfully.",
+                        MessagebarText: <Trans>industryUpdatedSuccess</Trans>,
                         isUpdate: false,
-                        isUpdateMsg: true
+                        isUpdateMsg: true,
+                        MessageBarType: MessageBarType.success
                     });
-                    setTimeout(function () { this.setState({ isUpdateMsg: false, MessageBarType: MessageBarType.success, MessagebarText: "" }); }.bind(this), 3000);
+                    setTimeout(function () { this.setState({ isUpdateMsg: false, MessageBarType: "", MessagebarText: "" }); }.bind(this), 3000);
 
                     return response.json;
                 } else {
                     this.setState({
-                        MessagebarText: "Error occured. Please try again!",
+                        MessagebarText: <Trans>errorOoccuredPleaseTryAgain</Trans>,
                         isUpdate: false,
-                        isUpdateMsg: true
+                        isUpdateMsg: true,
+                        MessageBarType: MessageBarType.error
                     });
                     setTimeout(function () { this.setState({ isUpdateMsg: false, MessageBarType: MessageBarType.error, MessagebarText: "" }); }.bind(this), 3000);
                 }
@@ -288,20 +310,22 @@ export class Industry extends Component {
                     });
                     this.setState({
                         items: currentItems,
-                        MessagebarText: "Industry deleted successfully.",
+                        MessagebarText: <Trans>industryDeletedSuccess</Trans>,
                         isUpdate: false,
-                        isUpdateMsg: true
+                        isUpdateMsg: true,
+                        MessageBarType: MessageBarType.success
                     });
 
-                    setTimeout(function () { this.setState({ isUpdateMsg: false, MessageBarType: MessageBarType.success, MessagebarText: "" }); }.bind(this), 3000);
+                    setTimeout(function () { this.setState({ isUpdateMsg: false, MessageBarType: "", MessagebarText: "" }); }.bind(this), 3000);
                     return response.json;
                 } else {
                     this.setState({
-                        MessagebarText: "Error occured. Please try again!",
+                        MessagebarText: <Trans>errorOoccuredPleaseTryAgain</Trans>,
                         isUpdate: false,
-                        isUpdateMsg: true
+                        isUpdateMsg: true,
+                        MessageBarType: MessageBarType.error
                     });
-                    setTimeout(function () { this.setState({ isUpdateMsg: false, MessageBarType: MessageBarType.error, MessagebarText: "" }); }.bind(this), 3000);
+                    setTimeout(function () { this.setState({ isUpdateMsg: false, MessageBarType: "", MessagebarText: "" }); }.bind(this), 3000);
                 }
             }).then(json => {
                 //console.log(json);
@@ -318,7 +342,7 @@ export class Industry extends Component {
         if (this.state.loading) {
             return (
                 <div className='ms-BasicSpinnersExample ibox-content pt15 '>
-                    <Spinner size={SpinnerSize.large} label='loading...' ariaLive='assertive' />
+                    <Spinner size={SpinnerSize.large} label={<Trans>loading</Trans>} ariaLive='assertive' />
                 </div>
             );
         } else {
@@ -329,7 +353,7 @@ export class Industry extends Component {
                     <div className='ms-Grid-row'>
                         <div className='ms-Grid-col ms-sm12 ms-md12 ms-lg12'>
                             <div className='ms-Grid-col ms-sm12 ms-md12 ms-lg12 pt10'>
-                                <Link href='' className='pull-left' onClick={() => this.onAddRow()} >+ Add New</Link>
+                                <Link href='' className='pull-left' onClick={() => this.onAddRow()} >+ <Trans>addNew</Trans></Link>
                             </div>
                             {industryList}
                         </div>

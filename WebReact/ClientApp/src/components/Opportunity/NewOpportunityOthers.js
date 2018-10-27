@@ -7,8 +7,7 @@ import React, { Component } from 'react';
 import { PrimaryButton } from 'office-ui-fabric-react/lib/Button';
 import { TextField } from 'office-ui-fabric-react/lib/TextField';
 import { PeoplePickerTeamMembers } from '../PeoplePickerTeamMembers';
-
-
+import {  Trans } from "react-i18next";
 
 export class NewOpportunityOthers extends Component {
     displayName = NewOpportunityOthers.name
@@ -75,6 +74,7 @@ export class NewOpportunityOthers extends Component {
             newMember.userRoles = value[0].userRoles;
             newMember.status = 0;
             newMember.assignedRole = value[0].userRoles.filter(x => x.displayName === "LoanOfficer")[0];
+            newMember.ProcessStep = "Start Process";
 
             updatedTeamMembers.push(newMember);
             this.opportunity.teamMembers = updatedTeamMembers;
@@ -110,6 +110,8 @@ export class NewOpportunityOthers extends Component {
     }
 
 
+    
+
     render() {
         let selectedUsers = this.getSelectedUsers();
 
@@ -117,25 +119,25 @@ export class NewOpportunityOthers extends Component {
             <div>
                 <div className='ms-Grid'>
                     <div className='ms-grid-row'>
-                        <h3 className='pageheading'>Customer Input</h3>
+                        <h3 className='pageheading'><Trans>customerInput</Trans></h3>
                         <div className='ms-lg12 ibox-content'>
                             <div className='docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg4'>
                                 <TextField
-                                    label='Margin ($M)'
+                                    label={<Trans>margin</Trans>}
                                     value={this.opportunity.margin}
                                     onBlur={(e) => this.onBlurMargin(e)}
                                 />
                             </div>
                             <div className='docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg4'>
                                 <TextField
-                                    label='Rate'
+                                    label={<Trans>rate</Trans>}
                                     value={this.opportunity.rate}
                                     onBlur={(e) => this.onBlurRate(e)}
                                 />
                             </div>
                             <div className='docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg4'>
                                 <TextField
-                                    label='Debt Ratio'
+                                    label={<Trans>debtRatio</Trans>}
                                     value={this.opportunity.debtRatio}
                                     onBlur={(e) => this.onBlurDebtRatio(e)}
                                 />
@@ -147,18 +149,18 @@ export class NewOpportunityOthers extends Component {
 
                 <div className='ms-Grid'>
                     <div className='ms-grid-row'>
-                        <h3 className="pageheading">Credit Facility</h3>
+                        <h3 className="pageheading"><Trans>creditFacility</Trans></h3>
                         <div className='ms-lg12 ibox-content pb20'>
                             <div className='docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg6'>
                                 <TextField
-                                    label='Purpose'
+                                    label={<Trans>purpose</Trans>}
                                     value={this.opportunity.purpose}
                                     onBlur={(e) => this.onBlurPurpose(e)}
                                 />
                             </div>
                             <div className='docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg6'>
                                 <TextField
-                                    label='Disbursement Schedule'
+                                    label={<Trans>disbursementSchedule</Trans>}
                                     value={this.opportunity.disbursementSchedule}
                                     onBlur={(e) => this.onBlurDisbursementSchedule(e)}
                                 />
@@ -167,14 +169,14 @@ export class NewOpportunityOthers extends Component {
                             <div className='ms-grid-row'>
                                 <div className='docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg6'>
                                     <TextField
-                                        label='Collateral Amount'
+                                        label={<Trans>collateralAmount</Trans>}
                                         value={this.opportunity.collateralAmount}
                                         onBlur={(e) => this.onBlurCollateralAmount(e)}
                                     />
                                 </div>
                                 <div className='docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg6'>
                                     <TextField
-                                        label='Guarantees'
+                                        label={<Trans>guarantees</Trans>}
                                         value={this.opportunity.guarantees}
                                         onBlur={(e) => this.onBlurGuarantees(e)}
                                     />
@@ -183,14 +185,11 @@ export class NewOpportunityOthers extends Component {
                             <div className='ms-grid-row'>
                                 <div className='docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg6'>
                                     <TextField
-                                        label='Risk Rating'
+                                        label={<Trans>riskRating</Trans>}
                                         value={this.opportunity.riskRating}
                                         onBlur={(e) => this.onBlurRiskRating(e)}
                                     />
                                 </div>
-                                <div className='docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg6'>
-                                    &nbsp;
-								</div>
                             </div>
                         </div>
                     </div>
@@ -198,22 +197,31 @@ export class NewOpportunityOthers extends Component {
 
                 <div className='ms-Grid'>
                     <div className='ms-grid-row'>
-                        <h3 className="pageheading">Loan Officer</h3>
+                        <h3 className="pageheading"><Trans>loanOfficer</Trans></h3>
                         <div className='ms-lg12 ibox-content pb20'>
                             <div className='docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg6'>
                                 <PeoplePickerTeamMembers teamMembers={this.state.teamMembers} defaultSelectedUsers={selectedUsers} onChange={(e) => this.onChangeLoanOfficer(e)} />
                             </div>
                         </div>
+
                     </div>
+                    
+                    
+                </div>
+
+                <div className='ms-Grid'>
+
+
                     <div className='ms-grid-row '>
                         <div className='ms-Grid-col ms-sm6 ms-md6 ms-lg6 pb20'><br />
-                            <PrimaryButton className='backbutton pull-left' onClick={this.props.onClickBack}>Back</PrimaryButton>
+                            <PrimaryButton className='backbutton pull-left' onClick={this.props.onClickBack}><Trans>back</Trans></PrimaryButton>
                         </div>
                         <div className='ms-Grid-col ms-sm6 ms-md6 ms-lg6 pb20'><br />
-                            <PrimaryButton className='pull-right' onClick={this.props.onClickNext}>Submit</PrimaryButton>
+                            <PrimaryButton className='pull-right' onClick={this.props.onClickNext}><Trans>submit</Trans></PrimaryButton>
                         </div>
                     </div><br /><br />
                 </div>
+                
             </div>
         );
     }

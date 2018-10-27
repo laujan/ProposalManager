@@ -18,6 +18,7 @@ namespace ApplicationCore.Interfaces
         Task<StatusCodes> DeleteItemAsync(string id, string requestId = "");
         Task<Opportunity> GetItemByIdAsync(string id, string requestId = "");
         Task<Opportunity> GetItemByNameAsync(string name, bool isCheckName, string requestId = "");
+        Task<Opportunity> GetItemByRefAsync(string reference, string requestId = "");
         Task<IList<Opportunity>> GetAllAsync(string requestId = "");
         Task<StatusCodes> UpdateItemAsync(Opportunity opportunity, string requestId = "");
     }

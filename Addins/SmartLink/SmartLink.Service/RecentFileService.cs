@@ -3,13 +3,13 @@
 //
 // Licensed under the MIT license. See LICENSE file in the solution root folder for full license information.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Data.Entity;
-using System.Threading.Tasks;
 using AutoMapper;
 using SmartLink.Entity;
+using System;
+using System.Collections.Generic;
+using System.Data.Entity;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace SmartLink.Service
 {

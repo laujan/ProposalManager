@@ -8,11 +8,16 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ApplicationCore", "ApplicationCore\ApplicationCore.csproj", "{C96522C3-37D0-4B84-A7C9-F8D2266A6146}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebReact", "WebReact\WebReact.csproj", "{76036759-272D-4A14-8C65-973A12E57BFB}"
+	ProjectSection(ProjectDependencies) = postProject
+		{01377574-3C53-422D-9B81-DE46C2EF1D18} = {01377574-3C53-422D-9B81-DE46C2EF1D18}
+		{0B3A5DCE-1D2D-4433-839D-ACD949546DD9} = {0B3A5DCE-1D2D-4433-839D-ACD949546DD9}
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TeamsAddinPackage", "TeamsAddinPackage", "{2EDFDEC8-6610-4070-88B7-B2A2F6B1FBB4}"
 	ProjectSection(SolutionItems) = preProject
 		TeamsAddinPackage\color.png = TeamsAddinPackage\color.png
 		TeamsAddinPackage\manifest.json = TeamsAddinPackage\manifest.json
+		TeamsAddinPackage\manifest_golocaldemo3.json = TeamsAddinPackage\manifest_golocaldemo3.json
 		TeamsAddinPackage\manifest_golocaldemos.json = TeamsAddinPackage\manifest_golocaldemos.json
 		TeamsAddinPackage\manifest_onterawe.json = TeamsAddinPackage\manifest_onterawe.json
 		TeamsAddinPackage\manifest_terawelabs.json = TeamsAddinPackage\manifest_terawelabs.json
@@ -20,50 +25,15 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TeamsAddinPackage", "TeamsA
 		TeamsAddinPackage\README.md = TeamsAddinPackage\README.md
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Workflows", "Workflows", "{314E8514-F56B-4A60-916E-8D65BE6926C0}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{5625403B-2457-4296-B09C-22AEF7960C59}"
-	ProjectSection(SolutionItems) = preProject
-		.gitignore = .gitignore
-		Solution Items\golocaldemos - AppSettings.js = Solution Items\golocaldemos - AppSettings.js
-		Solution Items\golocaldemos - appsettings.json = Solution Items\golocaldemos - appsettings.json
-		Solution Items\JasonTestSample2.json = Solution Items\JasonTestSample2.json
-		Solution Items\Notes.txt = Solution Items\Notes.txt
-		Solution Items\onterawe - AppSettings.js = Solution Items\onterawe - AppSettings.js
-		Solution Items\onterawe - appsettings.json = Solution Items\onterawe - appsettings.json
-		Solution Items\OpportunitySample.json = Solution Items\OpportunitySample.json
-		Solution Items\OpportunityViewModelSample.json = Solution Items\OpportunityViewModelSample.json
-		Solution Items\README.md = Solution Items\README.md
-		Solution Items\SimpleDoc.docx = Solution Items\SimpleDoc.docx
-		Solution Items\TeamsContext.json = Solution Items\TeamsContext.json
-		Solution Items\terawelabs - AppSettings.js = Solution Items\terawelabs - AppSettings.js
-		Solution Items\terawelabs - appsettings.json = Solution Items\terawelabs - appsettings.json
-		Solution Items\XMLFile1.xml = Solution Items\XMLFile1.xml
-	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Functions", "Functions", "{618DE021-4A31-4636-A5EF-A4123C68C256}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Dynamics Integration", "Dynamics Integration", "{1CF4CF69-4586-4C3F-95EB-55B152B40F4E}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SampleSrcDir", "SampleSrcDir", "{2901A599-4049-4D24-83F1-6B747D14CCBE}"
-	ProjectSection(SolutionItems) = preProject
-		SampleSrcDir\App.js = SampleSrcDir\App.js
-		SampleSrcDir\App.test.js = SampleSrcDir\App.test.js
-		SampleSrcDir\CmdBar.js = SampleSrcDir\CmdBar.js
-		SampleSrcDir\config.tsx = SampleSrcDir\config.tsx
-		SampleSrcDir\Counter.js = SampleSrcDir\Counter.js
-		SampleSrcDir\CreateOpportunity.js = SampleSrcDir\CreateOpportunity.js
-		SampleSrcDir\FetchData.js = SampleSrcDir\FetchData.js
-		SampleSrcDir\graph-js-sdk-web.js = SampleSrcDir\graph-js-sdk-web.js
-		SampleSrcDir\Home.js = SampleSrcDir\Home.js
-		SampleSrcDir\index.css = SampleSrcDir\index.css
-		SampleSrcDir\index.d.ts = SampleSrcDir\index.d.ts
-		SampleSrcDir\index.js = SampleSrcDir\index.js
-		SampleSrcDir\MsalApp.js = SampleSrcDir\MsalApp.js
-		SampleSrcDir\MsalApp2.js = SampleSrcDir\MsalApp2.js
-		SampleSrcDir\NavMenu.js = SampleSrcDir\NavMenu.js
-		SampleSrcDir\OpportunityGeneral.js = SampleSrcDir\OpportunityGeneral.js
-		SampleSrcDir\TeamsTabSample.js = SampleSrcDir\TeamsTabSample.js
-		SampleSrcDir\TestFetch.js = SampleSrcDir\TestFetch.js
-	EndProjectSection
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Utilities", "Utilities", "{9F617D6F-6790-4C54-8F72-DC3129458213}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OneDriveSubscriptionRenewal", "Dynamics Integration\OneDriveSubscriptionRenewal\OneDriveSubscriptionRenewal.csproj", "{01377574-3C53-422D-9B81-DE46C2EF1D18}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DocumentIdActivator", "Utilities\DocumentIdActivator\DocumentIdActivator.csproj", "{0B3A5DCE-1D2D-4433-839D-ACD949546DD9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -83,9 +53,21 @@ Global
 		{76036759-272D-4A14-8C65-973A12E57BFB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{76036759-272D-4A14-8C65-973A12E57BFB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{76036759-272D-4A14-8C65-973A12E57BFB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{01377574-3C53-422D-9B81-DE46C2EF1D18}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{01377574-3C53-422D-9B81-DE46C2EF1D18}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{01377574-3C53-422D-9B81-DE46C2EF1D18}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{01377574-3C53-422D-9B81-DE46C2EF1D18}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0B3A5DCE-1D2D-4433-839D-ACD949546DD9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0B3A5DCE-1D2D-4433-839D-ACD949546DD9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0B3A5DCE-1D2D-4433-839D-ACD949546DD9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0B3A5DCE-1D2D-4433-839D-ACD949546DD9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{01377574-3C53-422D-9B81-DE46C2EF1D18} = {1CF4CF69-4586-4C3F-95EB-55B152B40F4E}
+		{0B3A5DCE-1D2D-4433-839D-ACD949546DD9} = {9F617D6F-6790-4C54-8F72-DC3129458213}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {07EDDBE2-A092-4BD4-917A-FC4A211900C3}

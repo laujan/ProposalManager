@@ -15,14 +15,25 @@ using ApplicationCore.Helpers;
 
 namespace WebReact.Api
 {
+    /// <summary>
+    /// Base Controller Class
+    /// </summary>
     [Produces("application/json")]
     [Route("api/[controller]")]
     //[Route("api/[controller]/[action]")]
     public class BaseApiController<T> : Controller
     {
+        /// <summary>
+        /// Ilogger property
+        /// </summary>
         protected readonly ILogger _logger;
+        /// <summary>
+        /// AppOptions property
+        /// </summary>
         protected readonly AppOptions _appOptions;
-
+        /// <summary>
+        /// BaseApiController
+        /// </summary>
         protected BaseApiController(
             ILogger<T> logger,
             IOptions<AppOptions> appOptions)

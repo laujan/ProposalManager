@@ -8,13 +8,13 @@ import { PrimaryButton } from 'office-ui-fabric-react/lib/Button';
 import { Link as LinkRoute } from 'react-router-dom';
 import { TextField } from 'office-ui-fabric-react/lib/TextField';
 import { Glyphicon } from 'react-bootstrap';
-import { TeamMembers } from '../../components/Opportunity/TeamMembers';
 import { MessageBar, MessageBarType } from 'office-ui-fabric-react/lib/MessageBar';
 import {
     Spinner,
     SpinnerSize
 } from 'office-ui-fabric-react/lib/Spinner';
-
+import {   Trans } from "react-i18next";
+import { TeamMembers } from './TeamMembers';
 
 //let oppID = decodeURIComponent(window.location.search.replace(new RegExp("^(?:.*[&\\?]" + encodeURIComponent("id").replace(/[\.\+\*]/g, "\\$&") + "(?:\\=([^&]*))?)?.*$", "i"), "$1"));;
 
@@ -30,6 +30,7 @@ export class OpportunityNotes extends Component {
         const userProfile = this.props.userProfile;
 
         const oppId = this.props.opportunityId;
+		const opportunityData = this.props.opportunityData;
 
         let isAdmin = false;
 
@@ -40,9 +41,9 @@ export class OpportunityNotes extends Component {
         this.state = {
             loading: true,
             NotesList: [],
-            oppData: [],
+			oppData: opportunityData,
             addNotes: '',
-            teamMembers: [],
+			teamMembers: [],
             oppId: oppId,
             newNotesLoading: false,
             MessagebarText: "",
@@ -55,47 +56,48 @@ export class OpportunityNotes extends Component {
 
         };
 
-        // Get Notes details
-        this.getOppDetails();
-
+        
         
         this.handleChangeNewNotes = this.handleChangeNewNotes.bind(this);
         this.fnSaveNewNotes = this.fnSaveNewNotes.bind(this);
     }
 
+	componentWillMount() {
+		this.getOppDetails();
+		
+	}
+	
+    
+
+
     getOppDetails() {
-        this.requestUrl = 'api/Opportunity/?id=' + this.state.oppId;
+       
+		try {
+		
 
-        //GetById
-        fetch(this.requestUrl, {
-            method: "GET",
-            headers: { 'authorization': 'Bearer ' + window.authHelper.getWebApiToken() }
-        })
-            .then(response => response.json())
-            .then(data => {
-                try {
-                    let teamMembers = [];
-                    teamMembers = data.teamMembers;
+			let data = this.state.oppData;
+               
+			let teamMembers = [];
+			teamMembers = data.teamMembers;
 
-                    let currentUserId = this.state.userId;
-                    let teamMemberDetails = data.teamMembers.filter(function (k) {
-                        return k.id === currentUserId;
-                    });
+			let currentUserId = this.state.userId;
+			let teamMemberDetails = data.teamMembers.filter(function (k) {
+				return k.id === currentUserId;
+			});
 
-                    let userAssignedRole = teamMemberDetails[0].assignedRole.displayName;
+			let userAssignedRole = teamMemberDetails[0].assignedRole.displayName;
 
-                    this.setState({
-                        NotesList: data.notes,
-                        loading: false,
-                        oppData: data,
-                        teamMembers: teamMembers,
-                        userAssignedRole: userAssignedRole
-                    });
+			this.setState({
+				NotesList: data.notes,
+				loading: false,
+				teamMembers: teamMembers,
+				userAssignedRole: userAssignedRole
+			});
                 }
                 catch (err) {
                     console.log("Error");
                 }
-            });
+            
     }
 
     handleChangeNewNotes(value) {
@@ -199,10 +201,10 @@ export class OpportunityNotes extends Component {
                         <div className=' ms-Grid-col ms-sm12 ms-md12 ms-lg9 p-r-10 bg-grey'>
                             <div className='ms-Grid-row'>
                                 <div className=' ms-Grid-col ms-sm12 ms-md12 ms-lg6 pageheading'>
-                                    <h3>Notes</h3>
+                                    <h3><Trans>notes</Trans></h3>
                                 </div>
                                 <div className=' ms-Grid-col ms-sm12 ms-md12 ms-lg6'><br />
-                                    <LinkRoute to={'/'} className='pull-right'>Back to Dashboard </LinkRoute>
+                                    <LinkRoute to={'/'} className='pull-right'><Trans>backToDashboard</Trans></LinkRoute>
                                 </div>
                             </div>
                             {notes ? 
@@ -216,7 +218,7 @@ export class OpportunityNotes extends Component {
                                 <div className='ms-Grid-row pt15'>
                                     <div className=' ms-Grid-col ms-sm12 ms-md12 ms-lg12'>
                                         <TextField
-                                            label='New Notes'
+                                            label={<Trans>newNotes</Trans>}
                                             multiline
                                             rows={6}
                                             value={this.state.addNotes}
@@ -252,10 +254,10 @@ export class OpportunityNotes extends Component {
                             </div>
 
                         </div>
-                        <div className=' ms-Grid-col ms-sm12 ms-md12 ms-lg3 p-l-10 TeamMembersBG'>
-                            <h3>Team Members</h3>
-                            <TeamMembers memberslist={this.state.teamMembers} createTeamId={this.state.oppId} opportunityState={this.state.oppData.opportunityState} userRole={this.state.userAssignedRole} />
-                        </div>
+						<div className=' ms-Grid-col ms-sm12 ms-md12 ms-lg3 p-l-10 TeamMembersBG'>
+							<h3>Team Members</h3>
+							<TeamMembers memberslist={this.state.teamMembers} createTeamId={this.state.oppId} opportunityState={this.state.oppData.opportunityState} userRole={this.state.userAssignedRole} />
+						</div>
                     </div>
                 </div>
 

@@ -5,22 +5,14 @@
 
 using Microsoft.Azure.WebJobs;
 using Microsoft.WindowsAzure.Storage.Table;
-using Newtonsoft.Json;
+using SmartLink.Common;
+using SmartLink.Entity;
+using SmartLink.Service;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using Microsoft.WindowsAzure.Storage;
-using Microsoft.WindowsAzure;
-using Microsoft.Azure;
-using System.Security.Cryptography;
-using System.Diagnostics;
-using Newtonsoft.Json.Linq;
-using SmartLink.Service;
-using SmartLink.Common;
-using SmartLink.Entity;
 
 namespace Smartlink.WebJob
 {

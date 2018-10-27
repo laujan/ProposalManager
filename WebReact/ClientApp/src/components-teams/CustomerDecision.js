@@ -4,7 +4,7 @@
 */
 import React, { Component } from 'react';
 import * as microsoftTeams from '@microsoft/teams-js';
-import { TeamsComponentContext, Panel, PanelBody, PanelFooter, PanelHeader} from 'msteams-ui-components-react';
+import { TeamsComponentContext, Panel, PanelBody, PanelFooter, PanelHeader } from 'msteams-ui-components-react';
 import { DatePicker } from 'office-ui-fabric-react/lib/DatePicker';
 import {
     Spinner,
@@ -13,6 +13,7 @@ import {
 import { Dropdown } from 'office-ui-fabric-react/lib/Dropdown';
 import { MessageBar, MessageBarType } from 'office-ui-fabric-react/lib/MessageBar';
 import { getQueryVariable } from '../common';
+import { I18n, Trans } from "react-i18next";
 
 let teamContext = {};
 const DayPickerStrings = {
@@ -77,7 +78,11 @@ export class CustomerDecision extends Component {
     displayName = CustomerDecision.name
     constructor(props) {
         super(props);
-        
+
+        this.authHelper = window.authHelper;
+        this.sdkHelper = window.sdkHelper;
+        this.accessGranted = false;
+
         this.onChangedTxtApprovedDate = this.onChangedTxtApprovedDate.bind(this);
         this.onChangedTxtLoadDisbursed = this.onChangedTxtLoadDisbursed.bind(this);
         this.fnDdlCustomerApproved = this.fnDdlCustomerApproved.bind(this);
@@ -90,67 +95,180 @@ export class CustomerDecision extends Component {
             loading: true,
             oppData: [],
             isUpdate: false,
-            MessagebarText: ""
+            MessagebarText: "",
+            oppStatusAll: [],
+            haveGranularAccess: false
         };
 
-        
-       
-	}
+        this.onStatusChange = this.onStatusChange.bind(this);
 
+    }
+     
     componentWillMount() {
-        // condition to check loading from mobile view
-        if (window.location.href.indexOf("tabMob") > -1) {
-            let teamName = getQueryVariable('teamName');
-            this.fnGetOpportunityData(teamName);
-        } else {
-            // API call to fetch details
-            microsoftTeams.getContext(context => this.initialize(context));
+        console.log("CustomerDecision_componentWillMount isauth: " + this.authHelper.isAuthenticated());
+    }
+
+    componentDidMount() {
+        console.log("CustomerDecision_componentDidMount isauth: " + this.authHelper.isAuthenticated());
+        if (!this.state.isAuthenticated) {
+            this.authHelper.callGetUserProfile()
+                .then(userProfile => {
+                    this.setState({
+                        userProfile: userProfile,
+                        loading: true
+                    });
+                });
         }
     }
 
-	initialize({ groupId, channelName, teamName }) {
-		
-		let tc = {
-			group: groupId,
-			channel: channelName,
-			team: teamName
-		};
-		teamContext = tc;
+
+    componentDidUpdate() {
+        if (this.authHelper.isAuthenticated() && !this.accessGranted) {
+            console.log("CustomerDecision_componentDidUpdate callCheckAccess");
+            this.accessGranted = true;
+            this.getOppStatusAll();
+            let teamName = getQueryVariable('teamName');
+            this.fnGetOpportunityData(teamName);
+        }
+    }
+
+    initialize({ groupId, channelName, teamName }) {
+
+        let tc = {
+            group: groupId,
+            channel: channelName,
+            team: teamName
+        };
+        teamContext = tc;
 
         this.fnGetOpportunityData(teamName);
-	}
+    }
 
+    getOppStatusAll() {
+        let requestUrl = 'api/context/GetOpportunityStatusAll';
 
-    fnGetOpportunityData(teamName) {
-        // API - Fetch call
-        this.requestUrl = "api/Opportunity?name='" + teamName + "'";
-        fetch(this.requestUrl, {
+        fetch(requestUrl, {
             method: "GET",
             headers: { 'authorization': 'Bearer ' + window.authHelper.getWebApiToken() }
-
         })
             .then(response => response.json())
             .then(data => {
+                try {
 
-                let customerDesionObj = data.customerDecision;
-                this.setState({
-                    loading: false,
-                    CustomerDecision: customerDesionObj,
-                    CustomerDecisionId: customerDesionObj.id,
-                    LoadDisbursed: new Date(customerDesionObj.loanDisbursed),
-                    ApprovedDate: new Date(customerDesionObj.approvedDate),
-                    ApprovedStatus: customerDesionObj.approved,
-                    oppData: data,
-                    isUpdate: false
-                });
+                    if (this.state.oppData.opportunityState !== 11) // if the current state is not archived, remove the archive option from the array
+                    {
+                        var filteredData = data.filter(x => x.Name !== 'Archived');
+                    }
+
+                    let oppStatusList = [];
+                    for (let i = 0; i < filteredData.length; i++) {
+                        let oppStatus = {};
+                        oppStatus.key = data[i].Value;
+                        oppStatus.text = data[i].Name;
+                        oppStatusList.push(oppStatus);
+                    }
+                    this.setState({
+                        oppStatusAll: oppStatusList
+                    });
+                }
+                catch (err) {
+                    console.log(err);
+                }
             });
     }
 
-    fnUpdateCustDecision(custDecisionObj) {
-        this.setState({ isUpdate: true, MessagebarText: "Updating..." });
+    fnGetOpportunityData(teamName) {
+        return new Promise((resolve, reject) => {
+            // API - Fetch call
+            //let requestUrl = "api/Opportunity?name='" + teamName + "'";
+            //changing to template string
+            this.requestUrl = `api/Opportunity?name=${teamName}`;
+            fetch(this.requestUrl, {
+                method: "GET",
+                headers: { 'authorization': 'Bearer ' + window.authHelper.getWebApiToken() }
+
+            })
+                .then(response => response.json())
+                .then(data => {
+                    // If badrequest - user Access Denied 
+                    if (data.error && data.error.code.toLowerCase() === "badrequest") {
+                        this.setState({
+                            loading: false,
+                            haveGranularAccess: false
+                        });
+                        resolve(true);
+                    } else {
+                        // Start Check Access
+                        let permissionRequired = ["Opportunity_ReadWrite_All", "Opportunities_ReadWrite_All", "Administrator"];
+                        this.authHelper.callCheckAccess(permissionRequired).then(checkAccess => {
+                            if (checkAccess) {
+                                let customerDesionObj = data.customerDecision;
+                                this.setState({
+                                    loading: false,
+                                    CustomerDecision: customerDesionObj,
+                                    CustomerDecisionId: customerDesionObj.id,
+                                    LoadDisbursed: new Date(customerDesionObj.loanDisbursed),
+                                    ApprovedDate: new Date(customerDesionObj.approvedDate),
+                                    ApprovedStatus: customerDesionObj.approved,
+                                    oppData: data,
+                                    isUpdate: false,
+                                    haveGranularAccess: true
+                                });
+
+                                resolve(true);
+                            }
+                            else {
+                                this.setState({
+                                    haveGranularAccess: false,
+                                    loading: false
+                                });
+                                resolve(true);
+                            }
+                        })
+                            .catch(err => {
+                                //this.errorHandler(err, "CustomerDecision_checkUserAccess");
+                                this.setState({
+                                    loading: false,
+                                    haveGranularAccess: false
+                                });
+                                //this.hideMessagebar();
+                                reject(err);
+                            });
+                        // End Check Access
+                        
+                    }
+
+                })
+                .catch(function (err) {
+                    this.setState({
+                        loading: false,
+                        haveGranularAccess: false
+                    });
+                    console.log("Error: OpportunityGetByName--");
+                    reject(err);
+                });
+        });
+    }
+
+    onStatusChange = (event) => {
+
+        let oppDetails = this.state.oppData;
+        oppDetails.opportunityState = event.key;
+
+        this.fnUpdateCustDecision(oppDetails, true);
+
+    }
+
+    fnUpdateCustDecision(obj, flagOppObj) {
+        this.setState({ isUpdate: true, MessagebarText: <Trans>updating</Trans> });
 
         let oppViewData = this.state.oppData;
-        oppViewData.customerDecision = custDecisionObj;
+        if (flagOppObj) {
+            oppViewData = obj;
+        }
+        else {
+            oppViewData.customerDecision = obj;
+        }
 
         // API Update call        
         this.requestUpdUrl = 'api/opportunity?id=' + oppViewData.id;
@@ -161,8 +279,8 @@ export class CustomerDecision extends Component {
                 'Content-Type': 'application/json',
                 'authorization': 'Bearer    ' + window.authHelper.getWebApiToken()
             },
-            body: JSON.stringify(oppViewData),
-            id: this.props.match.params.id
+            body: JSON.stringify(oppViewData)
+            //id: this.props.match.params.id
         };
 
         fetch(this.requestUpdUrl, options)
@@ -174,12 +292,11 @@ export class CustomerDecision extends Component {
                     console.log('Error...: ');
                 }
             }).then(json => {
-                this.setState({ MessagebarText: "Updated successfully." });
-                console.log(json);
+                this.setState({ MessagebarText: <Trans>updatedSuccessfully</Trans> });
                 // this.setState({ isUpdate: false, MessagebarText: "" });
                 setTimeout(function () { this.setState({ isUpdate: false, MessagebarText: "" }); }.bind(this), 3000);
             });
-            
+
 
     }
 
@@ -199,7 +316,7 @@ export class CustomerDecision extends Component {
             "approvedDate": this.state.ApprovedDate,
             "loanDisbursed": this.state.LoadDisbursed
         };
-        this.fnUpdateCustDecision(custDecisionObj);
+        this.fnUpdateCustDecision(custDecisionObj, false);
     }
 
     _onSelectApproved = (date) => {
@@ -210,7 +327,7 @@ export class CustomerDecision extends Component {
             "approvedDate": date,
             "loanDisbursed": this.state.LoadDisbursed
         };
-        this.fnUpdateCustDecision(custDecisionObj);
+        this.fnUpdateCustDecision(custDecisionObj, false);
     }
 
 
@@ -222,7 +339,7 @@ export class CustomerDecision extends Component {
             "approvedDate": this.state.ApprovedDate,
             "loanDisbursed": date
         };
-        this.fnUpdateCustDecision(custDecisionObj);
+        this.fnUpdateCustDecision(custDecisionObj, false);
     }
 
     _onFormatDate = (date) => {
@@ -264,60 +381,82 @@ export class CustomerDecision extends Component {
     renderContent(customerObj, isUpdate) {
         return (
             <div className='ms-Grid-row'>
-            <div className='docs-TextFieldExample ms-Grid-col ms-sm6 ms-md8 ms-lg3'>
-                <Dropdown
-                    label='Customer Approved'
-                    selectedKey={this.state.ApprovedStatus}
-                    onChanged={this.fnDdlCustomerApproved}
-                    options={
-                        [
-                            { key: true, text: "Yes" },
-                            { key: false, text: "No" }
-                        ]
+                <div className='docs-TextFieldExample ms-Grid-col ms-sm6 ms-md8 ms-lg3'>
+                    <Dropdown
+                        label={<Trans>customerApproved</Trans>}
+                        selectedKey={this.state.ApprovedStatus}
+                        onChanged={this.fnDdlCustomerApproved}
+                        options={
+                            [
+                                { key: true, text: "Yes" },
+                                { key: false, text: "No" }
+                            ]
+                        }
+                    />
+                </div>
+                <div className='ms-Grid-col ms-sm6 ms-md8 ms-lg3 docs-TextFieldExample'>
+                    <DatePicker strings={DayPickerStrings}
+                        showWeekNumbers={false}
+                        firstWeekOfYear={1}
+                        showMonthPickerAsOverlay='true'
+                        label={<Trans>approvedDate</Trans>}
+                        placeholder={<Trans>approvedDate</Trans>}
+                        iconProps={{ iconName: 'Calendar' }}
+                        value={this._setItemDate(this.state.ApprovedDate)}
+                        onSelectDate={this._onSelectApproved}
+                        formatDate={this._onFormatDate}
+                        parseDateFromString={this._onParseDateFromString}
+                    />
+                </div>
+                <div className='ms-Grid-col ms-sm6 ms-md8 ms-lg3 docs-TextFieldExample'>
+                    <DatePicker strings={DayPickerStrings}
+                        showWeekNumbers={false}
+                        firstWeekOfYear={1}
+                        showMonthPickerAsOverlay='true'
+                        label={<Trans>loanDisbursed</Trans>}
+                        placeholder={<Trans>loanDisbursed</Trans>}
+                        iconProps={{ iconName: 'Calendar' }}
+                        value={this._setItemDate(this.state.LoadDisbursed)}
+                        onSelectDate={this._onSelectLoanDisbursed}
+                        formatDate={this._onFormatDate}
+                        parseDateFromString={this._onParseDateFromString}
+                    />
+                </div>
+                <div className=' ms-Grid-col ms-sm12 ms-md12 ms-lg3 pb10'>
+
+                    <I18n>
+                        {
+                            t => {
+                                return (
+                                    <Dropdown
+                                        label={t('status')}
+                                        onChanged={(e) => this.onStatusChange(e)}
+                                        id='statusDropdown'
+                                        disabled={this.state.oppData.opportunityState === 1 || this.state.oppData.opportunityState === 3 || this.state.oppData.opportunityState === 5 ? true : false}
+                                        options={this.state.oppStatusAll}
+                                        defaultSelectedKey={this.state.oppData.opportunityState}
+                                    />
+                                );
+                            }
+
+                        }
+                    </I18n>
+
+                </div>
+                <div className='ms-Grid-col ms-sm6 ms-md8 ms-lg2 hide'>
+                    {
+                        this.state.isUpdate ?
+                            <Spinner size={SpinnerSize.large} label='' ariaLive='assertive' className="pt15 pull-center" />
+                            : ""
                     }
-                />
+                </div>
             </div>
-            <div className='ms-Grid-col ms-sm6 ms-md8 ms-lg3 docs-TextFieldExample'>
-                <DatePicker strings={DayPickerStrings}
-                    showWeekNumbers={false}
-                    firstWeekOfYear={1}
-                    showMonthPickerAsOverlay='true'
-                    label="Approved Date"
-                    placeholder='Approved Date'
-                    iconProps={{ iconName: 'Calendar' }}
-                    value={this._setItemDate(this.state.ApprovedDate)}
-                    onSelectDate={this._onSelectApproved}
-                    formatDate={this._onFormatDate}
-                    parseDateFromString={this._onParseDateFromString}
-                />
-            </div>
-            <div className='ms-Grid-col ms-sm6 ms-md8 ms-lg3 docs-TextFieldExample'>
-                <DatePicker strings={DayPickerStrings}
-                    showWeekNumbers={false}
-                    firstWeekOfYear={1}
-                    showMonthPickerAsOverlay='true'
-                    label="Loan Disbursed"
-                    placeholder='Loan Disbursed'
-                    iconProps={{ iconName: 'Calendar' }}
-                    value={this._setItemDate(this.state.LoadDisbursed)}
-                    onSelectDate={this._onSelectLoanDisbursed}
-                    formatDate={this._onFormatDate}
-                    parseDateFromString={this._onParseDateFromString}
-                />
-            </div>
-            <div className='ms-Grid-col ms-sm6 ms-md8 ms-lg2 hide'>
-                {
-                    this.state.isUpdate ?
-                        <Spinner size={SpinnerSize.large} label='' ariaLive='assertive' className="pt15 pull-center" />
-                        : ""
-                }
-            </div>
-        </div>
         );
     }
 
     render() {
         let isUpdate = this.state.isUpdate;
+
         let content = this.state.loading
             ? <p><em>Loading...</em></p>
             : this.renderContent(this.state.CustomerDecision, isUpdate);
@@ -325,60 +464,65 @@ export class CustomerDecision extends Component {
         if (this.state.loading) {
             return (
                 <div className='ms-BasicSpinnersExample pull-center'>
-                    <Spinner size={SpinnerSize.medium} label='loading...' ariaLive='assertive' />
+                    <Spinner size={SpinnerSize.medium} label={<Trans>loading</Trans>} ariaLive='assertive' />
                 </div>
             );
         } else {
             return (
                 <div>
                     <TeamsComponentContext>
-                        <Panel>
-                            <PanelHeader>
-                                <h3 className="pl10">Customer Decision</h3>
-                            </PanelHeader>
-                            <PanelBody>
-                                <div className='ms-Grid'>
-                                    <div className='ms-Grid-row'>
-                                        <div className=' ms-Grid-col ms-sm6 ms-md8 ms-lg12 hide'>
-                                            
-                                            {
-                                                isUpdate ?
-                                                    <Spinner size={SpinnerSize.large} label='' ariaLive='assertive' className="pt15 pull-center" />
-                                                    : ""
-                                            }
+                        {
+                            this.state.haveGranularAccess
+                                ?
+                                <Panel>
+                                    <PanelHeader>
+                                        <h3 className="pl10"><Trans>customerDecision</Trans></h3>
+                                    </PanelHeader>
+                                    <PanelBody>
+                                        <div className='ms-Grid'>
+                                            <div className='ms-Grid-row'>
+                                                <div className=' ms-Grid-col ms-sm6 ms-md8 ms-lg12 hide'>
+
+                                                    {
+                                                        isUpdate ?
+                                                            <Spinner size={SpinnerSize.large} label='' ariaLive='assertive' className="pt15 pull-center" />
+                                                            : ""
+                                                    }
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
-                                </div>
 
-                                <div className='ms-Grid'>
-                                    {content}
-                                </div>
-                                <br /><br /><br /><br />
-
-                            </PanelBody>
-                            <PanelFooter>
-                                <div className='ms-Grid'>
-                                    <div className='ms-Grid-row'>
-                                        <div className=' ms-Grid-col ms-sm6 ms-md8 ms-lg8'>
+                                        <div className='ms-Grid'>
+                                            {content}
                                         </div>
-                                        <div className=' ms-Grid-col ms-sm6 ms-md8 ms-lg4'>
-                                            {this.state.isUpdate ?
-                                                <MessageBar
-                                                    messageBarType={MessageBarType.success}
-                                                    isMultiline={false}
-                                                >
-                                                    {this.state.MessagebarText}
-                                            </MessageBar>
-                                            : ""
-                                            }
+                                        <br /><br /><br /><br />
 
+                                    </PanelBody>
+                                    <PanelFooter>
+                                        <div className='ms-Grid'>
+                                            <div className='ms-Grid-row'>
+                                                <div className=' ms-Grid-col ms-sm6 ms-md8 ms-lg8' />
+                                                <div className=' ms-Grid-col ms-sm6 ms-md8 ms-lg4'>
+                                                    {this.state.isUpdate ?
+                                                        <MessageBar
+                                                            messageBarType={MessageBarType.success}
+                                                            isMultiline={false}
+                                                        >
+                                                            {this.state.MessagebarText}
+                                                        </MessageBar>
+                                                        : ""
+                                                    }
+
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
-                                </div>
-                                
 
-                            </PanelFooter>
-                        </Panel>
+
+                                    </PanelFooter>
+                                </Panel>
+                                : <div className="ms-Grid-col ms-sm6 ms-md8 ms-lg12 p-10 bgwhite tabviewUpdates"><h2><Trans>accessDenied</Trans></h2></div>
+                        }
+
 
 
                     </TeamsComponentContext>

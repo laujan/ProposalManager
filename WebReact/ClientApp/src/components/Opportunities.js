@@ -6,19 +6,15 @@
 import React, { Component } from 'react';
 import { Spinner, SpinnerSize } from 'office-ui-fabric-react/lib/Spinner';
 import { MessageBar, MessageBarType } from 'office-ui-fabric-react/lib/MessageBar';
-import { LinkContainer } from 'react-router-bootstrap';
-import { Glyphicon, Nav, Navbar, NavItem } from 'react-bootstrap';
-//import { Link } from 'office-ui-fabric-react/lib/Link';
 import { Dashboard } from './Opportunity/Dashboard';
 
 import { NewOpportunity } from './Opportunity/NewOpportunity';
 import { NewOpportunityDocuments } from './Opportunity/NewOpportunityDocuments';
 import { NewOpportunityOthers } from './Opportunity/NewOpportunityOthers';
-import { applicationId, redirectUri, graphScopes, resourceUri, webApiScopes } from '../helpers/AppSettings';
-
-import { debug } from 'util';
-import { oppStatus, userRoles, oppStatusText, oppStatusClassName } from '../common';
+import { oppStatusClassName } from '../common';
 import '../Style.css';
+import {  Trans } from "react-i18next";
+import i18n from '../i18n';
 
 
 export class Opportunities extends Component {
@@ -159,6 +155,11 @@ export class Opportunities extends Component {
                     return false;
                 }
 
+            })
+            .catch(err => {
+                console.log("Opportunities_getRegions error: ");
+                console.log(err);
+                return false;
             });
     }
 
@@ -185,6 +186,11 @@ export class Opportunities extends Component {
                     return false;
                 }
 
+            })
+            .catch(err => {
+                console.log("Opportunities_getIndustries error: ");
+                console.log(err);
+                return false;
             });
     }
 
@@ -211,6 +217,11 @@ export class Opportunities extends Component {
                     return false;
                 }
 
+            })
+            .catch(err => {
+                console.log("Opportunities_getCategories error: ");
+                console.log(err);
+                return false;
             });
     }
 
@@ -311,9 +322,11 @@ export class Opportunities extends Component {
                 }
             ],
             notes: [],
-            documentAttachments: []
+            documentAttachments: [],
+            targetDate: ""
         };
-
+        console.log("vishnu : create opportunity step 1 : " , this.newOpportunity);
+        console.log("vishnu : create opportunity step 1 : " , this.state.userProfile)
         this.setState({
             viewState: "createStep1"
         });
@@ -366,10 +379,10 @@ export class Opportunities extends Component {
             });
 
             // Save data
-            this.setMessageBar(true, "Saving opportunity data...", MessageBarType.info);
+            this.setMessageBar(true, i18n.t('savingOpportunityData'), MessageBarType.info);
             this.createOpportunity()
                 .then(res => {
-                    this.setMessageBar(true, "Uploading files...", MessageBarType.info);
+                    this.setMessageBar(true, i18n.t('uploadingFiles'), MessageBarType.info);
                     this.uploadFiles()
                         .then(res => {
                             this.setMessageBar(false, "", MessageBarType.info);
@@ -463,7 +476,7 @@ export class Opportunities extends Component {
                     resolve(data);
                 })
                 .catch(err => {
-                    this.setMessageBar(true, "Error saving opportunity data", MessageBarType.error);
+                    this.setMessageBar(true, i18n.t('errorSavingOpportunityData'), MessageBarType.error);
                     reject(err);
                 });
         });
@@ -476,7 +489,7 @@ export class Opportunities extends Component {
 
             let files = this.filesToUpload;
             for (let i = 0; i < files.length; i++) {
-                this.setMessageBar(true, "Uploading files " + (i + 1) + "/" + this.filesToUpload.length, MessageBarType.info);
+                this.setMessageBar(true, i18n.t('uploadingFiles')  + (i + 1) + "/" + this.filesToUpload.length, MessageBarType.info);
                 let fd = new FormData();
                 fd.append('opportunity', "NewOpportunity");
                 fd.append('file', files[i].file);
@@ -517,7 +530,7 @@ export class Opportunities extends Component {
                     isLoading ?
                         <div>
                             <br /><br /><br />
-                            <Spinner size={SpinnerSize.medium} label='Loading opportunities...' ariaLive='assertive' />
+                            <Spinner size={SpinnerSize.medium} label={<Trans>loadingOpportunities</Trans>} ariaLive='assertive' />
                         </div>
                         :
                         <div>

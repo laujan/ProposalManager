@@ -10,9 +10,9 @@ import { Label } from 'office-ui-fabric-react/lib/Label';
 import { Category } from '../Administration/Category';
 import { Industry } from '../Administration/Industry';
 import { Region } from '../Administration/Region';
-import { UserRole } from '../Administration/UserRole';
 
 import '../../Style.css';
+import { Trans } from "react-i18next";
 
 export class Settings extends Component { 
     displayName = Settings.name
@@ -26,26 +26,23 @@ export class Settings extends Component {
     render() {
 
         return (
-            <div className='ms-Grid'>
+            <div className='ms-Grid'> 
                 <div className='ms-Grid-row'>
                     <div className='ms-Grid-col ms-sm12 ms-md12 ms-lg6 pageheading'>
-                        <h3>Settings</h3>
+                        <h3><Trans>settings</Trans></h3>
                     </div>
                 </div>
                 <div className='ms-Grid-row ibox-content'>
                     <div className='ms-Grid-col ms-sm12 ms-md12 ms-lg12'>
                         <Pivot linkFormat={PivotLinkFormat.tabs} linkSize={PivotLinkSize.large}>
-                            <PivotItem linkText="Category" className="TabBorder">
+                            <PivotItem linkText={<Trans>category</Trans>} className="TabBorder">
                                 <Category/> 
                                 </PivotItem>    
-                            <PivotItem linkText="Industry" className="TabBorder">
+                            <PivotItem linkText={<Trans>industry</Trans>} className="TabBorder">
                                 <Industry/>
                                 </PivotItem>
-                            <PivotItem linkText="Region" className="TabBorder">
+                            <PivotItem linkText={<Trans>region</Trans>} className="TabBorder">
                                 <Region/>
-                            </PivotItem>
-                            <PivotItem linkText="Role Mapping" className="TabBorder">
-                                <UserRole/>
                             </PivotItem>
                         </Pivot>
                     </div>

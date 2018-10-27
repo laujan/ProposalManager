@@ -10,13 +10,17 @@ import AuthHelper from './helpers/AuthHelper';
 import { AppBrowser } from './AppBrowser';
 import { AppTeams } from './AppTeams';
 //import { loadTheme } from 'office-ui-fabric-react/lib/Styling';
-
+import { I18nextProvider } from "react-i18next";
+import i18n from './i18n';
 
 export default class App extends Component {
     displayName = App.name
 
     constructor(props) {
         super(props);
+        // Get Browser supported language
+        const language = (navigator.languages && navigator.languages[0]) || navigator.language || navigator.userLanguage;
+
 
         if (window.authHelper) {
             this.authHelper = window.authHelper;
@@ -34,25 +38,16 @@ export default class App extends Component {
             window.sdkHelper = this.sdkHelper;
         }
 
-        // Officec-fabrix-ui theme overrides
-        //loadTheme({
-        //    palette: {
-        //        'themePrimary': 'red'
-        //    }
-        //});
-
         this.state = {
-            inTeams: this.inTeams()
+            inTeams: this.inTeams(),
+            language: language
         };
+
+        console.log("App_Contructor window.location: " + window.location);
     }
 
-    componentWillMount() {
-        let inTeams = this.inTeams();
-        if (inTeams) {
-            this.setState({
-                inTeams: true
-            });
-        }
+    componentDidMount() {
+
     }
 
     // This is a simple method to check if your webpage is running inside of MS Teams.
@@ -77,15 +72,25 @@ export default class App extends Component {
     }
 
     render() {
+        //Set Language
+        //i18n.changeLanguage(this.state.language);
+        i18n.init({ lng: this.state.language }, function (t) {
+            i18n.t('key');
+        });
+
         console.log("App_render inTeams: " + this.state.inTeams + " iframed: " + this.iframed());
         
         if (this.state.inTeams) {
             return (
-                <AppTeams />
+                <I18nextProvider i18n={i18n}>
+                    <AppTeams />
+                </I18nextProvider>
             );
         } else {
             return (
-                <AppBrowser />
+                <I18nextProvider i18n={i18n}>
+                    <AppBrowser />
+                </I18nextProvider>
             );
         }
     }

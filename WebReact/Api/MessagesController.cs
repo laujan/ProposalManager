@@ -8,34 +8,26 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ApplicationCore;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Bot.Connector;
-using Microsoft.Bot.Connector.Teams;
-using Microsoft.Bot.Connector.Teams.Models;
-using Microsoft.AspNetCore.Mvc;
-using WebReact.Interfaces;
-using ApplicationCore.Helpers;
-using ApplicationCore.Artifacts;
-using Newtonsoft.Json.Linq;
-using WebReact.ViewModels;
-using Microsoft.AspNetCore.Authorization;
-using System.IO;
 using ApplicationCore.Interfaces;
-using Microsoft.Rest;
+using ApplicationCore.Helpers;
+using Newtonsoft.Json.Linq;
+using Microsoft.AspNetCore.Authorization;
 using System.Net.Http;
 using Infrastructure.Services;
 using System.Net;
+using ApplicationCore.Services;
 
 namespace WebReact.Api
 {
     /// <summary>
     /// Messaging controller.
     /// </summary>
+    [Authorize(AuthenticationSchemes = "Bearer")]
     [Route("api/[controller]")]
-    //[TenantFilter]
     public class MessagesController : BaseApiController<MessagesController>
     {
         private readonly MicrosoftAppCredentials _microsoftAppCredentials;
@@ -68,7 +60,7 @@ namespace WebReact.Api
         /// </summary>
         /// <param name="activity">Bot framework incoming request.</param>
         /// <returns>Ok result.</returns>
-        //[Authorize(Roles = "Bot")]
+        [Authorize(Roles = "Bot")]
         [HttpPost]
         public async Task<HttpResponseMessage> Post([FromBody]Activity activity)
         {

@@ -1,0 +1,144 @@
+{
+    "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#Collection(microsoft.graph.list)",
+	"value": [
+		{
+			"@odata.etag": "\"59af4eab-0293-4513-bde0-554950765e5d,1\"",
+			"createdDateTime": "2018-07-11T20:56:20Z",
+			"description": "",
+			"eTag": "\"59af4eab-0293-4513-bde0-554950765e5d,1\"",
+			"id": "59af4eab-0293-4513-bde0-554950765e5d",
+			"lastModifiedDateTime": "2018-07-11T21:02:05Z",
+			"name": "Categories",
+			"webUrl": "https://foo.sharepoint.com/sites/proposalmanager/Lists/Categories",
+			"displayName": "Categories",
+			"createdBy": {
+				"user": {
+					"email": "johndoe@foo.onmicrosoft.com",
+					"id": "82b0f3c2-98da-420f-aa42-5980b6db279d",
+					"displayName": "John Doe"
+				}
+			},
+			"parentReference": {},
+			"list": {
+				"contentTypesEnabled": false,
+				"hidden": false,
+				"template": "genericList"
+			},
+			"items@odata.context": "https://graph.microsoft.com/v1.0/$metadata#Collection(microsoft.graph.list)('59af4eab-0293-4513-bde0-554950765e5d')/items",
+			"items": [
+				{
+					"@odata.etag": "\"e247319d-7b76-422a-984b-e7dd812ec3d4,1\"",
+					"createdDateTime": "2018-07-11T21:01:24Z",
+					"eTag": "\"e247319d-7b76-422a-984b-e7dd812ec3d4,1\"",
+					"id": "1",
+					"lastModifiedDateTime": "2018-07-11T21:01:24Z",
+					"webUrl": "https://foo.sharepoint.com/sites/proposalmanager/Lists/Categories/1_.000",
+					"createdBy": {
+						"user": {
+							"email": "johndoe@foo.onmicrosoft.com.onmicrosoft.com",
+							"id": "82b0f3c2-98da-420f-aa42-5980b6db279d",
+							"displayName": "John Doe"
+						}
+					},
+					"lastModifiedBy": {
+						"user": {
+							"email": "johndoe@foo.onmicrosoft.com.onmicrosoft.com",
+							"id": "82b0f3c2-98da-420f-aa42-5980b6db279d",
+							"displayName": "John Doe"
+						}
+					},
+					"parentReference": {},
+					"contentType": {
+						"id": "0x0100AB6439E5E641DC4C8CBDB5585285C01B"
+					}
+				}
+			]
+		},
+		{
+			"@odata.etag": "\"156a527f-9bb1-4572-8794-b6f03fcbe07e,9\"",
+			"createdDateTime": "2018-06-28T02:29:30Z",
+			"description": "",
+			"eTag": "\"156a527f-9bb1-4572-8794-b6f03fcbe07e,9\"",
+			"id": "156a527f-9bb1-4572-8794-b6f03fcbe07e",
+			"lastModifiedDateTime": "2018-08-21T18:31:30Z",
+			"name": "Shared Documents",
+			"webUrl": "https://foo.sharepoint.com/sites/proposalmanager/Shared%20Documents",
+			"displayName": "Documents",
+			"createdBy": {
+				"user": {
+					"displayName": "System Account"
+				}
+			},
+			"lastModifiedBy": {
+				"user": {
+					"displayName": "System Account"
+				}
+			},
+			"parentReference": {},
+			"list": {
+				"contentTypesEnabled": false,
+				"hidden": false,
+				"template": "documentLibrary"
+			},
+			"items@odata.context": "https://graph.microsoft.com/v1.0/$metadata#Collection(microsoft.graph.list)('156a527f-9bb1-4572-8794-b6f03fcbe07e')/items",
+			"items": [
+				{
+					"@odata.etag": "\"8bfbfbe7-a318-48a9-80f7-a3fb19767797,4\"",
+					"createdDateTime": "2018-08-15T19:31:07Z",
+					"eTag": "\"8bfbfbe7-a318-48a9-80f7-a3fb19767797,4\"",
+					"id": "4",
+					"lastModifiedDateTime": "2018-08-15T19:31:07Z",
+					"webUrl": "https://foo.sharepoint.com/sites/proposalmanager/Shared%20Documents/Test.docx",
+					"createdBy": {
+						"user": {
+							"email": "johndoe@foo.onmicrosoft.com",
+							"id": "82b0f3c2-98da-420f-aa42-5980b6db279d",
+							"displayName": "John Doe"
+						}
+					},
+					"lastModifiedBy": {
+						"user": {
+							"email": "johndoe@foo.onmicrosoft.com",
+							"id": "82b0f3c2-98da-420f-aa42-5980b6db279d",
+							"displayName": "John Doe"
+						}
+					},
+					"parentReference": {
+						"id": "1c97ccef-855b-4971-9a14-9e4fc8143d46"
+					},
+					"contentType": {
+						"id": "0x0101004F74CD98263AEB419F4B4131A674E3B4"
+					}
+				},
+				{
+					"@odata.etag": "\"3f552c7d-63df-408b-bb39-7470a514f516,3\"",
+					"createdDateTime": "2018-08-23T15:07:09Z",
+					"eTag": "\"3f552c7d-63df-408b-bb39-7470a514f516,3\"",
+					"id": "91",
+					"lastModifiedDateTime": "2018-08-23T15:07:49Z",
+					"webUrl": "https://foo.sharepoint.com/sites/proposalmanager/Shared%20Documents/TempFolder/Test%20102/One%20spreadsheet.xlsx",
+					"createdBy": {
+						"user": {
+							"email": "johndoe@foo.onmicrosoft.com",
+							"id": "82b0f3c2-98da-420f-aa42-5980b6db279d",
+							"displayName": "John Doe"
+						}
+					},
+					"lastModifiedBy": {
+						"user": {
+							"email": "johndoe@foo.onmicrosoft.com",
+							"id": "82b0f3c2-98da-420f-aa42-5980b6db279d",
+							"displayName": "John Doe"
+						}
+					},
+					"parentReference": {
+						"id": "2cfc13bf-c7df-475a-b479-77f2e1845ebf"
+					},
+					"contentType": {
+						"id": "0x0101004F74CD98263AEB419F4B4131A674E3B4"
+					}
+				}
+			]
+		}
+	]
+}

@@ -29,23 +29,27 @@ namespace Infrastructure.Services
 		private readonly GraphSharePointAppService _graphSharePointAppService;
 		private readonly GraphUserAppService _graphUserAppService;
         private readonly IRoleMappingRepository _roleMappingRepository;
-		private JArray _roleMappingList;
+        private readonly IUserContext _userContext;
+        private JArray _roleMappingList;
 		private List<UserProfile> _usersList;
 
 		public UserProfileRepository(ILogger<UserProfileRepository> logger,
 			 GraphSharePointAppService graphSharePointAppService,
 			 GraphUserAppService graphUserAppService,
              IRoleMappingRepository roleMappingRepository,
-             IOptions<AppOptions> appOptions,
+             IUserContext userContext,
+             IOptionsMonitor<AppOptions> appOptions,
 			 IMemoryCache memoryCache) : base(logger, appOptions)
 		{
 			Guard.Against.Null(graphSharePointAppService, nameof(graphSharePointAppService));
             Guard.Against.Null(graphUserAppService, nameof(graphUserAppService));
             Guard.Against.Null(roleMappingRepository, nameof(roleMappingRepository));
+            Guard.Against.Null(userContext, nameof(userContext));
 
             _graphSharePointAppService = graphSharePointAppService;
 			_graphUserAppService = graphUserAppService;
             _roleMappingRepository = roleMappingRepository;
+            _userContext = userContext;
             _cache = memoryCache;
 
 			_roleMappingList = null;
@@ -131,7 +135,7 @@ namespace Infrastructure.Services
 					var siteList = new SiteList
 					{
 						SiteId = _appOptions.ProposalManagementRootSiteId,
-						ListId = _appOptions.RolesListId
+						ListId = _appOptions.RoleMappingsListId
 					};
 
 					var json = await _graphSharePointAppService.GetListItemsAsync(siteList, "all", requestId);
@@ -159,12 +163,15 @@ namespace Infrastructure.Services
 					foreach(var role in roleMappings)
 					{
 						var userRole = Role.Empty;
-						userRole.DisplayName = role.RoleName;
-						userRole.AdGroupName = role.AdGroupName;
+                        //TODO : Change needed here
+                        userRole.DisplayName = role.Role.DisplayName;
+                        //Granular Permission Change :  Start
+                        userRole.AdGroupName = role.AdGroupName;
 
-						var options = new List<QueryParam>();
-						options.Add(new QueryParam("filter", $"startswith(displayName,'{userRole.AdGroupName}')"));
-						var groupIdJson = await _graphUserAppService.GetGroupAsync(options, "", requestId);
+                        var options = new List<QueryParam>();
+                        //Granular Permission Change :  Start
+                        options.Add(new QueryParam("filter", $"startswith(displayName,'{role.AdGroupName}')"));
+                        var groupIdJson = await _graphUserAppService.GetGroupAsync(options, "", requestId);
 						dynamic jsonDyn = groupIdJson;
 						if (jsonDyn.value.HasValues)
 						{

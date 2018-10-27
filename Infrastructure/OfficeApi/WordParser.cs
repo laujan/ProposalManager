@@ -25,7 +25,7 @@ namespace Infrastructure.OfficeApi
 {
     public class WordParser : BaseService<WordParser>, IWordParser
     {
-        public WordParser(ILogger<WordParser> logger, IOptions<AppOptions> appOptions) : base(logger, appOptions)
+        public WordParser(ILogger<WordParser> logger, IOptionsMonitor<AppOptions> appOptions) : base(logger, appOptions)
         {
         }
 
