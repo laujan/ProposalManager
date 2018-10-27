@@ -17,8 +17,35 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TeamsAddinPackage", "TeamsA
 	ProjectSection(SolutionItems) = preProject
 		TeamsAddinPackage\color.png = TeamsAddinPackage\color.png
 		TeamsAddinPackage\manifest.json = TeamsAddinPackage\manifest.json
+		TeamsAddinPackage\manifest_golocaldemo3.json = TeamsAddinPackage\manifest_golocaldemo3.json
+		TeamsAddinPackage\manifest_golocaldemos.json = TeamsAddinPackage\manifest_golocaldemos.json
+		TeamsAddinPackage\manifest_onterawe.json = TeamsAddinPackage\manifest_onterawe.json
+		TeamsAddinPackage\manifest_terawelabs.json = TeamsAddinPackage\manifest_terawelabs.json
 		TeamsAddinPackage\outline.png = TeamsAddinPackage\outline.png
 		TeamsAddinPackage\README.md = TeamsAddinPackage\README.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{5625403B-2457-4296-B09C-22AEF7960C59}"
+	ProjectSection(SolutionItems) = preProject
+		.gitignore = .gitignore
+		Github - AppSettings.js = Github - AppSettings.js
+		Github - appsettings.json = Github - appsettings.json
+		Solution Items\golocaldemo3 - AppSettings.js = Solution Items\golocaldemo3 - AppSettings.js
+		Solution Items\golocaldemo3 - appsettings.json = Solution Items\golocaldemo3 - appsettings.json
+		Solution Items\golocaldemos - AppSettings.js = Solution Items\golocaldemos - AppSettings.js
+		Solution Items\golocaldemos - appsettings.json = Solution Items\golocaldemos - appsettings.json
+		Solution Items\JasonTestSample2.json = Solution Items\JasonTestSample2.json
+		Solution Items\Notes.txt = Solution Items\Notes.txt
+		Solution Items\onterawe - AppSettings.js = Solution Items\onterawe - AppSettings.js
+		Solution Items\onterawe - appsettings.json = Solution Items\onterawe - appsettings.json
+		Solution Items\OpportunitySample.json = Solution Items\OpportunitySample.json
+		Solution Items\OpportunityViewModelSample.json = Solution Items\OpportunityViewModelSample.json
+		Solution Items\README.md = Solution Items\README.md
+		Solution Items\SimpleDoc.docx = Solution Items\SimpleDoc.docx
+		Solution Items\TeamsContext.json = Solution Items\TeamsContext.json
+		Solution Items\terawelabs - AppSettings.js = Solution Items\terawelabs - AppSettings.js
+		Solution Items\terawelabs - appsettings.json = Solution Items\terawelabs - appsettings.json
+		Solution Items\XMLFile1.xml = Solution Items\XMLFile1.xml
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OneDriveSubscriptionRenewal", "OneDriveSubscriptionRenewal\OneDriveSubscriptionRenewal.csproj", "{41F83F5E-F4EF-49CB-AB8F-9CDDDAC02A39}"
