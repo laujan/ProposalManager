@@ -5,17 +5,17 @@
 This guide is created for consuming the rest API using the Postman tool.
 
 ### Sections:
-[Create Opportunity](./Opportunity/CreateOpportunity.md)
+[Create Opportunity](CreateOpportunity.md)
 <br>
-[Get Opportunity](./Opportunity/GetOpportunity.md)
+[Get Opportunity](GetOpportunity.md)
 <br>
-[Update Opportunity](./Opportunity/UpdateOpportunity.md)
+[Update Opportunity](UpdateOpportunity.md)
 <br>
-[Upload Checklist Document](./Opportunity/UploadChecklistDocument.md)
+[Upload Checklist Document](UploadChecklistDocument.md)
 <br>
-[Upload Proposal Document](./Opportunity/UploadProposalDocument.md)
+[Upload Proposal Document](UploadProposalDocument.md)
 <br>
-[Delete Opportunity](./Opportunity/DeleteOpportunity.md)
+[Delete Opportunity](DeleteOpportunity.md)
 
 
 ### Important Points:
