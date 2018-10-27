@@ -18,26 +18,20 @@ using ApplicationCore.Entities.GraphServices;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using ApplicationCore;
-using Infrastructure.Authorization;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Infrastructure.Services
 {
     public class RegionRepository : BaseRepository<Region>, IRegionRepository
     {
         private readonly GraphSharePointAppService _graphSharePointAppService;
-        private Lazy<IAuthorizationService> _authorizationService;
 
         public RegionRepository(
-            ILogger<RegionRepository> logger,
-            IOptionsMonitor<AppOptions> appOptions,
-            GraphSharePointAppService graphSharePointAppService,
-            IServiceProvider services) : base(logger, appOptions)
+            ILogger<RegionRepository> logger, 
+            IOptions<AppOptions> appOptions,
+            GraphSharePointAppService graphSharePointAppService) : base(logger, appOptions)
         {
             Guard.Against.Null(graphSharePointAppService, nameof(graphSharePointAppService));
             _graphSharePointAppService = graphSharePointAppService;
-            _authorizationService = new Lazy<IAuthorizationService>(() =>
-            services.GetRequiredService<IAuthorizationService>());
         }
 
         public async Task<StatusCodes> CreateItemAsync(Region entity, string requestId = "")
@@ -140,8 +134,6 @@ namespace Infrastructure.Services
 
             try
             {
-                //check access
-                //await _authorizationService.Value.CheckAdminAccsessAsync(requestId);
                 var siteList = new SiteList
                 {
                     SiteId = _appOptions.ProposalManagementRootSiteId,

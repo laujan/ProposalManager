@@ -13,18 +13,16 @@ import { ScrollablePane } from 'office-ui-fabric-react/lib/ScrollablePane';
 import { MarqueeSelection } from 'office-ui-fabric-react/lib/MarqueeSelection';
 import { IDocument, ISection } from '../models';
 import { IPersonaProps } from 'office-ui-fabric-react/lib/Persona';
+import { IconButton } from 'office-ui-fabric-react/lib/Button';
 import {
     CompactPeoplePicker,
     IBasePickerSuggestionsProps,
     ValidationState
   } from 'office-ui-fabric-react/lib/Pickers';
 import { assign } from 'office-ui-fabric-react/lib/Utilities';
-import { PrimaryButton, DefaultButton, IconButton } from 'office-ui-fabric-react/lib/Button';
+import { PrimaryButton, DefaultButton } from 'office-ui-fabric-react/lib/Button';
 import { Panel, PanelType } from 'office-ui-fabric-react/lib/Panel';
 import { ApiService } from '../services/ApiService'
-import './home.css';
-import { ErrorPopup } from './ErrorPopup';
-import { LocalizationService } from '../services/LocalizationService';
 
 export interface IHomeState
 {
@@ -38,8 +36,9 @@ export interface IHomeState
     peopleList: IPersonaProps[];
     isSaving: boolean;
     showPanel: boolean;
-    error?: any;
 }
+import './home.css';
+
 const suggestionProps: IBasePickerSuggestionsProps = {
     suggestionsHeaderText: 'Suggested Members',
     noResultsFoundText: 'No results found',
@@ -48,8 +47,7 @@ const suggestionProps: IBasePickerSuggestionsProps = {
 
 export interface IHomeProps
 {
-    token: string;
-    localizationService: LocalizationService;
+    token: string
 }
 
 export interface IDialogData
@@ -69,12 +67,11 @@ export class Home extends React.Component<IHomeProps,IHomeState>
     constructor(props: any)
     {
         super(props);
-        const { localizationService } = props;
         const columns: IColumn[] = 
         [
             {
                 key: 'displayName',
-                name: localizationService.getString("Name"),
+                name: 'Name',
                 fieldName: 'displayName',
                 minWidth: 100,
                 maxWidth: 150,
@@ -91,7 +88,7 @@ export class Home extends React.Component<IHomeProps,IHomeState>
             },
             {
                 key: 'task',
-                name: localizationService.getString("Task"),
+                name: 'Task',
                 fieldName: 'task',
                 minWidth: 100,
                 maxWidth: 150,
@@ -104,7 +101,7 @@ export class Home extends React.Component<IHomeProps,IHomeState>
             },
             {
                 key: 'assignedTo',
-                name: localizationService.getString("AssignedTo"),
+                name: 'Assigned To',
                 fieldName: 'assignedTo',
                 minWidth: 100,
                 maxWidth: 150,
@@ -155,7 +152,7 @@ export class Home extends React.Component<IHomeProps,IHomeState>
             selectionDetails: this.getSelectionDetails(),
             columns: columns,
             isLoading: true,
-            title: localizationService.getString("Loading"),
+            title: "Loading",
             peopleList: [],
             isSaving: false,
             showPanel: false
@@ -173,7 +170,6 @@ export class Home extends React.Component<IHomeProps,IHomeState>
     private renderColumn(item: any, index: number, column: IColumn)
     {
         const fieldContent = item[column.name];
-        const { localizationService } = this.props;
 
         switch(column.key)
         {
@@ -181,7 +177,7 @@ export class Home extends React.Component<IHomeProps,IHomeState>
                 return (
                     <div className="homeCell ellipsis">
                         <span title={item.name}>{item.name}</span><br/>
-                        <span className="ms-font-xs">{localizationService.getString("Status")}: {item.status}</span><br/>
+                        <span className="ms-font-xs">Status: {item.status}</span><br/>
                         <div className="homeCell ellipsis">
                             <span className="ms-font-xs" title={item.owner}>{item.owner}</span>
                          </div>
@@ -203,7 +199,7 @@ export class Home extends React.Component<IHomeProps,IHomeState>
                 return (
                     <IconButton
                         iconProps={ { iconName: 'MoreVertical' } }
-                        title={localizationService.getString("Edit")}
+                        title='Edit'
                         ariaLabel='MoreVertical'
                         onClick={
                             (e) => {
@@ -479,12 +475,7 @@ export class Home extends React.Component<IHomeProps,IHomeState>
             
                 this.setState({document: document, data: sections, isLoading: false, title: documentName, isDocumentLoaded: true, peopleList: peopleList });
             })
-            .catch(
-                err => 
-                {
-                    this.setState({error: err});
-                }
-            );
+            .catch(err => {console.log(err)});
     }
 
     private onChange(text: any): void
@@ -503,27 +494,19 @@ export class Home extends React.Component<IHomeProps,IHomeState>
 
     public render(): JSX.Element
     {
-        const { data, columns, isLoading, title, isDocumentLoaded, isSaving, error } = this.state;
-        const { localizationService } = this.props;
-
-        if(error)
-        {
-            return (
-                <ErrorPopup error={error}/>
-            );
-        }
+        const { data, columns, isLoading, title, isDocumentLoaded, isSaving } = this.state;
 
         if(isLoading)
         {
             return (
-                <Loading message={localizationService.getString("Loading")+"..."}/>
+                <Loading message="Loading..."/>
             );
         }
 
         if(isSaving)
         {
             return (
-                <Loading message={localizationService.getString("Saving")+"..."} overlay={true}/>
+                <Loading message="Saving..." overlay={true}/>
             );
         }
 
@@ -537,16 +520,17 @@ export class Home extends React.Component<IHomeProps,IHomeState>
                 <Panel
                 isOpen={ this.state.showPanel }
                 type={ PanelType.smallFluid }
+                // tslint:disable-next-line:jsx-no-lambda
                 onDismiss={ this.closePanel }
                 hasCloseButton={false}
                 headerText={this.currentSection ? this.currentSection.name : ""}>
                     <div>
                         <div className="ms-font-m">
-                            <span>{localizationService.getString("Owner")}:</span><br/>
+                            <span>Owner:</span><br/>
                             {this.currentSection ? this.currentSection.owner : ""}
                         </div>
                         <div className="ms-font-m" style={{paddingTop: "10px"}}>
-                            <span>{localizationService.getString("Task")}:</span><br/>
+                            <span>Task:</span><br/>
                             <select style={{height: "32px"}} 
                                 defaultValue={this.currentSection ? this.currentSection.task : "Unassigned"}
                                 onChange={this.onTaskChange.bind(this)}
@@ -557,31 +541,17 @@ export class Home extends React.Component<IHomeProps,IHomeState>
                             </select>
                         </div>
                         <div className="ms-font-m" style={{paddingTop: "10px"}}>
-                            <span>{localizationService.getString("AssignedTo")}:</span><br/>
+                            <span>Assigned To:</span><br/>
                             {this.renderPeoplePicker(this.currentSection ? this.currentSection.assignedTo : "")}
                         </div>
                         <div style={{paddingTop: "10px", display: 'flex'}}>
-                            <div><PrimaryButton onClick={ this.save } text={localizationService.getString("Update")} /></div>
-                            <div style={{paddingLeft: "10px"}}><DefaultButton onClick={ this.closePanel } text={localizationService.getString("Cancel")} /></div>
+                            <div><PrimaryButton onClick={ this.save } text='Update' /></div>
+                            <div style={{paddingLeft: "10px"}}><DefaultButton onClick={ this.closePanel } text='Cancel' /></div>
                         </div>
                     </div>
                 </Panel>
                 <ScrollablePane>
-                    <div style={{display: 'flex'}}> 
-                        <h1 className='ms-font-xxl ms-search-notes'>{title}</h1>
-                        <IconButton
-                        className='ms-agile-refresh'
-                        iconProps={ { iconName: 'Refresh' } }
-                        title={localizationService.getString("Refresh")}
-                        ariaLabel='Refresh'
-                        onClick={
-                            (e) => {
-                                e.preventDefault();
-                                this.loadDocument();
-                            }
-                        }
-                    />
-                </div>
+                    <h1 className='ms-font-xxl'>{title}</h1>
                     <MarqueeSelection selection={ this.selection }>
                         <DetailsList
                             items={ data }

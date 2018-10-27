@@ -6,19 +6,7 @@ body {
 a:hover, a:focus {
     color: #23527c;
     text-decoration: none !important;
-}
-.f-left {
-    display:inline-block;
-}
-.hScroll {
-    overflow: scroll;
-    width: 100%;
-    white-space: nowrap;
-}
-
-.border-none {
-    border:none !important;
-}
+} 
 
 .normalPicker {
     width: auto !important;
@@ -110,7 +98,7 @@ a:hover, a:focus {
     padding: 15px 20px 20px 20px;
     border: 1px solid #e1e1e1;
     float: left;
-    min-width: 100%;
+    width: 100%;
 }
 .mt0 {
     margin-top:0px !important;
@@ -126,22 +114,12 @@ a:hover, a:focus {
 .pb15 {
     padding-bottom:15px;
 }
-.mt5 {
-    margin-top:5px !important;
-}
-.mt10 {
-    margin-top:10px !important;
-}
 .mt20 {
     margin-top:20px;
 }
 
 .mr20 {
     margin-right:20px;
-}
-
-.ml15 {
-    margin-left:15px !important;
 }
 
 .p25A {
@@ -162,14 +140,6 @@ a:hover, a:focus {
 
 .pb70 {
     padding-bottom: 70px !important;
-}
-
-.pb250 {
-    padding-bottom: 250px !important;
-}
-
-.pr100{
-    padding-right: 100px !important;
 }
 
 .rootIsHorizontalConstrained_a0d2d5ce {
@@ -323,10 +293,6 @@ a:hover, a:focus {
     padding-bottom: 10px !important;
 }
 
-.posAbs {
-    position: absolute !important;
-}
-
 /*.TopLeftArrow {
     background: url(Images/Arrow.png);
     height: 125px;
@@ -444,7 +410,8 @@ a:hover, a:focus {
     z-index: 1000;
 }
 
-
+.TeamsBGnew {
+}
 .ModifyButton {
     width:100%;
 }
@@ -923,104 +890,6 @@ a:hover, a:focus {
     float: left;
 }
 
-.stickyBG {
-    position: absolute;
-    /* bottom: 0; */
-    top: 0;
-    right: 0;
-    height: 100%;
-    overflow-y: scroll;
-}
-
-.flexBoxy {
-    position: absolute;
-    right: 0;
-    height: 100%;
-    top: 72px;
-}
-.hScrollDealType {
-    overflow: auto;
-    width: 100%;
-    white-space: nowrap; 
-}
-
-.groupLeft {
-    background: url(../src/components/Images/ArrowLeft.png);
-    width: 40px;
-    background-repeat: no-repeat;
-}
-
-.groupRight {
-    background: url(../src/components/Images/ArrowRight.png);
-    width: 40px;
-    background-repeat: no-repeat;
-}
-.AddDealScrollEdit {
-    overflow: auto;
-    WIDTH: 100%;
-    white-space: nowrap;
-}
-.displayInline {
-    float: none !important;
-    display: inline-block;
-    vertical-align: top;
-}
-/*.LsitBoxAlign .rootIsHorizontalConstrained_8eab4ccb {
-    overflow-x: hidden !important;
-}*/
-.ml4percentage {
-    margin-left: 4% !important;
-}
-
-.ScrollHeight {
-    height:400px !important;
-}
-
-.CategoryCol {
-    width: 266px !important;
-}
-.RegionCol {
-    width: 266px !important;
-}
-.RegionCol {
-    width: 266px !important;
-}
-.Categoryaction {
-    width: 550px !important;
-}
-
-.industryaction {
-    width: 550px !important;
-}
-.Regionaction {
-    width: 550px !important;
-}
-
-.ADGroupNameCol {
-    width:200px !important;
-}
-.RoleNameCol {
-    width:166px !important;
-}
-.processStepCol {
-    width: 166px !important;
-}
-.processTypeCol {
-    width: 166px !important;
-}
-.channelCol{
-    width: 150px !important;
-}
-.RoleMappingActiion {
-    width: 73px !important;
-}
-
-.NavmenuAlign {
-    padding-right:10px;
-}
-
-
-
 
 @media (max-width: 767px) {
     body {
@@ -1031,30 +900,12 @@ a:hover, a:focus {
 
 
 @media all and (max-width: 699px) and (min-width: 0px) {
-    .NavmenuAlign {
-        padding-left: 15px;
-    }
     .rootIsHorizontalConstrained_a0d2d5ce {
         overflow-x: auto !important;
         overflow-y: visible;
         -webkit-overflow-scrolling: touch;
     }
-
-    .flexBoxy {
-        position: relative;
-        right: 0;
-        height: 100%;
-        top: 10px;
-    }
-    .stickyBG {
-        position: relative;
-        /* bottom: 0; */
-        top: 0;
-        right: 0;
-        height: 100%;
-        overflow-y: scroll;
-    }
-        .TopLeftArrow {
+    .TopLeftArrow {
         display: none;
     }
 
@@ -1139,6 +990,7 @@ a:hover, a:focus {
         overflow-y: visible;
         -webkit-overflow-scrolling: touch;
     }
+    /* Index CSS Responsive merge */
 
     .Caption h2 {
         font-size: 2em;
@@ -1171,250 +1023,4 @@ a:hover, a:focus {
         background-color: #000;
         padding: 15px;
     }
-    .staticProcess1 {
-        float: left;
-    }
-    .columnwidth {
-        float:none !important;
-        margin:15px 0  15px 0;
-        width: 290px !important;
-    }
-    .hScrollDealType {
-        overflow: visible;
-        width: auto;
-    }
-    .newOpBg {
-        background:none;
-    }
-
-    .groupLeft {
-        background: url(../src/components/Images/ArrowUp.png);
-        width: 30px;
-        background-repeat: no-repeat;
-    }
-    .groupRight {
-        background: url(../src/components/Images/ArrowDown.png);
-        width: 30px;
-        background-repeat: no-repeat;
-    }
-
-    .staticProcess2 {
-        float:left;
-        vertical-align: top;
-    }
-
-    .dynamicProcess {
-        float: left;
-        vertical-align: top;
-        width: max-content;
-    }
-    .divUserRolegroup-arrow {
-        background: none;
-        
-    }
-    .displayInline {
-        float:left !important;
-    }
-    .AddDealScrollEdit {
-        overflow:visible;
-    }
-    .ResponsiveArrowAlign {
-        position: absolute;
-        left: auto;
-        right: -19px;
-        z-index: 5;
-        top: 54px;
-    }
-    .LsitBoxAlign .rootIsHorizontalConstrained_8eab4ccb {
-        overflow-x: scroll !important;
-    }
-    .ml4percentage {
-        margin-left: 0 !important;
-    }
-    .bgwhite{
-        padding: 0px !important;
-    }
-    .pb250 {
-        padding-bottom: 50px !important;
-    }
-}
-
-  
-
-.f30{
-    font-size:30px;
-}
-.f20 {
-    font-size: 20px;
-}
-.processBg {
-    background-color: #464775;
-    color: #fff !important;
-    -webkit-border-radius: 3px;
-    -moz-border-radius: 3px;
-    border-radius: 3px;
-}
-
-/* Add Group Modal */
-
-.DealNameBG {
-    background: #fff !important;
-    border: 1px solid #ccc;
-    border-radius: 2px;
-    text-align: center;
-  
-}
-.LinkAction-Button {
-    color: #247cbb !important;
-    font-size: 12px !important;
-    font-weight: normal !important;
-}
-
-.DealNameBG h5 {
-    font-weight: normal !important;
-}
-
-.ms-modalExample-container {
-    height: 80vh;
-    width: 80vw;
-    display: flex;
-    flex-flow: column nowrap;
-    align-items: stretch;
-}
-.ms-modalExample-header
-{
-    flex: 1 1 auto;
-    color: #fff;
-    display: flex;
-    align-items: center;
-    padding: 0 28px;
-    min-height: 40px;
-}
-
-.ms-modalExample-body {
-    flex: 4 4 auto;
-    padding: 5px 28px;
-    overflow-y: auto;
-}
-.font10 {
-    font-size:10px;
-}
-.font12 {
-    font-size: 12px;
-}
-.processBg h5 {
-    margin-bottom:3px;
-    font-size:12px;
-    font-weight:normal;
-}
-.select-heading h5 {
-    font-size:12px;
-}
-.p-l-30 {
-    padding-left: 30px;
-}
-.textboxSize .fieldGroup_df60a678 { 
-    height: 15px;
-}
-.ms-Checkbox .CheckBoxWidth {
-    width: 1000% !important;
-} 
-
-.adddealtypeheading  h3{
-    margin-top:4px;
-
-}
-.processBoxes {
-    padding:5px 15px 0px 15px;
-}
-.font-20 {
-    font-size: 20px !important;
-}
-.dealtype {
-    color: #ccc;
-}
-
-.linkbutton {
-    font-size: 14px;
-    color: #197fa7;
-    padding-top: 6px;
-    padding-bottom: 6px;
-    cursor: pointer;
-}
-
-.purpleBG {
-    background: #464775;
-    font-size:14px;
-    color:#fff !important;
-   
-}
-.purpleBG h5 {
-        font-weight: normal !important;
-        font-size:10px;
-        
-    }
-.GrayBorder {
-    border:1px solid #ccc;
-}
-/*.mainDivScroll {
-    overflow: scroll;
-    width: 100%;
-}
-    */
-.staticProcess1 {
-    display: inline-block;
-}
-.staticProcess2 {
-    display: inline-block;
-    vertical-align: top;
-}
-.dynamicProcess {
-    display: inline-block;
-    vertical-align: top;
-    width: max-content;
-}
-.columnwidth {
-    width: 220px; 
-    padding: 0 47px 0px 0;
-    margin-left: 27px;
-}
-
-.GreyBorder {
-    border:1px solid #ccc
-}
-.dealTypeAction {
-    width: 56px !important;
-}
-.cell_a1e60cdd.cellIsActionable_a1e60cdd:hover {
-    background: #3aafd9 !important;
-    color: #ffffff !important;
-}
-.cell_a1e60cdd {
-    color: #ffffff !important;
-}
-
-.p-3 {
-    padding:3px;
-}
-.width102 {
-    width:102%;
-}
-
-.ms-Dropdown-items .ms-Checkbox {
-    width: 100% !important;
-}
-#reportContainer iframe {
-	height: 600px !important;
-}
-
-.dropdownContainer{
-    width: 60% !important;
-}
-
-.prereqLine {
-    background-color: #a4cf0c;
-    border-radius: 3px;
-    display: block;
-    height: 4px;
-    border: 0;
 }

@@ -9,8 +9,6 @@ import { DefaultButton, PrimaryButton, IconButton, IButtonProps } from 'office-u
 import { Label } from 'office-ui-fabric-react/lib/Label';
 import { Icon } from 'office-ui-fabric-react/lib/Icon';
 import { TextField } from 'office-ui-fabric-react/lib/TextField';
-import { Trans } from "react-i18next";
-
 
 export class FilePicker extends Component {
     displayName = FilePicker.name
@@ -60,7 +58,7 @@ export class FilePicker extends Component {
     }
 
     render() {
-        let btnCaption = <Trans>browse</Trans>;
+        let btnCaption = "Browse...";
         if (this.props.btnCaption) {
             btnCaption = this.props.btnCaption;
         }
@@ -78,7 +76,7 @@ export class FilePicker extends Component {
                     <TextField
                         id={'lblFile' + this.props.id}
                         value={this.state.file.name}
-                        disabled={true}
+                        disabled='true'
                         className='filepickerAlign'
                     />
                 }
@@ -86,7 +84,7 @@ export class FilePicker extends Component {
                 {
                     showLink &&
                     <Link id={'lnkFile' + this.props.id} href={this.state.fileUri} target='_blank'>
-                        &nbsp; <Icon iconName='View' /> &nbsp; <Trans>viewDocument</Trans>
+                        &nbsp; <Icon iconName='View' /> &nbsp; View Document
                     </Link>
                 }
 

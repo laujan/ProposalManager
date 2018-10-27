@@ -10,7 +10,7 @@ using System.IdentityModel.Tokens;
 
 namespace SmartLink.Web
 {
-    public partial class Startup
+	public partial class Startup
     {
         private static string clientId = CloudConfigurationManager.GetSetting("ida:ClientId");
         private static string tenantId = CloudConfigurationManager.GetSetting("ida:TenantId");

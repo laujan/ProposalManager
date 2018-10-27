@@ -13,9 +13,7 @@ import { MessageBar, MessageBarType } from 'office-ui-fabric-react/lib/MessageBa
 import { FocusZone, FocusZoneDirection } from 'office-ui-fabric-react/lib/FocusZone';
 import { List } from 'office-ui-fabric-react/lib/List';
 import { PeoplePickerTeamMembers } from '../components/PeoplePickerTeamMembers';
-import './teams.css';
-import { Trans } from "react-i18next";
-
+import './teams.css'; 
 
 const DayPickerStrings = {
     months: [
@@ -88,9 +86,6 @@ export class ProposalStatus extends Component {
     constructor() {
         super();
 
-        this.authHelper = window.authHelper;
-        this.sdkHelper = window.sdkHelper;
-        this.accessGranted = false;
         this.state = {
             proposalDocumentList: [],
             loading: true,
@@ -99,44 +94,28 @@ export class ProposalStatus extends Component {
             mostRecentlyUsed: [],
             showPicker: false,
             isUpdate: false,
-            MessagebarText: "",
-            haveGranularAccess: false
+            MessagebarText: ""
         };
-
+      
         this.ddlStatusChange = this.ddlStatusChange.bind(this);
         //this.fnChangeOwner = this.fnChangeOwner.bind(this);
         this.toggleHiddenPicker = this.toggleHiddenPicker.bind(this);
         this._onSelectLastUpdated = this._onSelectLastUpdated.bind(this);
         this.fnUpdateFormalProposal = this.fnUpdateFormalProposal.bind(this);
         this._onRenderCell = this._onRenderCell.bind(this);
+
     }
 
     componentWillMount() {
-        console.log("FormalProposal_componentWillMount isauth: " + this.authHelper.isAuthenticated());
-    }
-
-    componentDidMount() {
-        console.log("FormalProposal_componentDidMount isauth: " + this.authHelper.isAuthenticated());
-        if (!this.state.isAuthenticated) {
-            this.authHelper.callGetUserProfile()
-                .then(userProfile => {
-                    this.setState({
-                        userProfile: userProfile,
-                        loading: true
-                    });
-                });
-        }
-    }
-
-
-    componentDidUpdate() {
-        if (this.authHelper.isAuthenticated() && !this.accessGranted) {
-            console.log("FormalProposal_componentDidUpdate callCheckAccess");
-            this.accessGranted = true;
+        // condition to check loading from mobile view
+        if (window.location.href.indexOf("tabMob") > -1) {
             let teamName = getQueryVariable('teamName');
             this.fnGetOpportunityData(teamName);
+        } else {
+            microsoftTeams.getContext(context => this.initialize(context));
         }
     }
+
 
     initialize({ groupId, channelName, teamName }) {
         //this.setState({ groupId, channelName, teamName });
@@ -152,111 +131,64 @@ export class ProposalStatus extends Component {
 
 
     fnGetOpportunityData(teamName) {
-        return new Promise((resolve, reject) => {
-            // API - Fetch call
-            //let requestUrl = "api/Opportunity?name='" + teamName + "'";
-            //changing to template string
-            this.requestUrl = `api/Opportunity?name=${teamName}`;
-            //this.requestUrl = 'api/Opportunity?id=140';
-            fetch(this.requestUrl, {
-                method: "GET",
-                headers: { 'authorization': 'Bearer ' + window.authHelper.getWebApiToken() }
-            })
-                .then(response => response.json())
-                .then(data => {
-                    // If badrequest - user Access Denied 
-                    if (data.error && data.error.code.toLowerCase() === "badrequest") {
-                        this.setState({
-                            loading: false,
-                            haveGranularAccess: false
-                        });
-                        resolve(true);
-                    } else {
-                        // Start Check Access
-                        //Opportunity_Read_Partial,Opportunity_ReadWrite_Partial,CreditCheck_Read,CreditCheck_ReadWrite
-                        let permissionRequired = ["Opportunity_ReadWrite_All", "Opportunities_ReadWrite_All", "Administrator"];
-                        this.authHelper.callCheckAccess(permissionRequired).then(checkAccess => {
-                            if (checkAccess) {
-                                let peopleListAll = [];
-                                if (data.teamMembers.length > 0) {
-                                    for (let i = 0; i < data.teamMembers.length; i++) {
-                                        let people = {};
-                                        let item = data.teamMembers[i];
-                                        if (item.displayName !== "") {
-                                            people.key = item.id;
-                                            people.imageUrl = "";
-                                            people.displayName = item.displayName;
-                                            people.primaryText = item.displayName;
-                                            people.userPrincipalName = item.userPrincipalName;
-                                            people.secondaryText = item.assignedRole.adGroupName;
-                                            people.userRole = item.assignedRole.adGroupName;
-                                            people.mail = item.mail;
-                                            people.phoneNumber = "";
-                                            peopleListAll.push(people);
-                                        }
-                                    }
-                                }
-                                let proposalSectionListArr = [];
-                                let proposalSectionList = data.proposalDocument.content.proposalSectionList;
-                                for (let p = 0; p < proposalSectionList.length; p++) {
-                                    proposalSectionList[p].ddlStatusChange = (event) => this.ddlStatusChange(p);
-                                    proposalSectionListArr.push(proposalSectionList[p]);
-                                }
+        // API - Fetch call
+        this.requestUrl = "api/Opportunity?name='" + teamName + "'";
+        //this.requestUrl = 'api/Opportunity?id=140';
+        fetch(this.requestUrl, {
+            method: "GET",
+            headers: { 'authorization': 'Bearer ' + window.authHelper.getWebApiToken() }
+        })
+            .then(response => response.json())
+            .then(data => {
 
-                                this.setState({
-                                    loading: false,
-                                    proposalDocumentList: proposalSectionListArr,
-                                    teamMembers: data.teamMembers,
-                                    peopleList: peopleListAll, // peopleListLoan
-                                    mostRecentlyUsed: peopleListAll.slice(0, 5),
-                                    oppData: data,
-                                    haveGranularAccess: true
-                                });
-                                resolve(true);
-
-                            } else {
-                                this.setState({
-                                    haveGranularAccess: false,
-                                    loading: false
-                                });
-                                resolve(true);
-                            }
-                        })
-                            .catch(err => {
-                                //this.errorHandler(err, "FormalProposal_checkUserAccess");
-                                this.setState({
-                                    loading: false,
-                                    isReadOnly: true,
-                                    haveGranularAccess:false
-                                });
-                                //this.hideMessagebar();
-                                reject(err);
-                            });
-
-                        // End Check Access
-                        
+                let peopleListAll = [];
+                if (data.teamMembers.length > 0) {
+                    for (let i = 0; i < data.teamMembers.length; i++) {
+                        let people = {};
+                        let item = data.teamMembers[i];
+                        if (item.displayName !== "") {
+                            people.key = item.id;
+                            people.imageUrl = "";
+                            people.displayName = item.displayName;
+                            people.primaryText = item.displayName;
+                            people.userPrincipalName = item.userPrincipalName;
+                            people.secondaryText = item.assignedRole.adGroupName;
+                            people.userRole = item.assignedRole.adGroupName;
+                            people.mail = item.mail;
+							people.phoneNumber = "";
+                            peopleListAll.push(people);
+                        }
                     }
-                })
-                .catch(function (err) {
-                    console.log("Error: OpportunityGetByName--");
-                    reject(err);
-                    this.setState({
-                        loading: false,
-                        haveGranularAccess: false
-                    });
+                }
+                let proposalSectionListArr = [];
+                let proposalSectionList = data.proposalDocument.content.proposalSectionList;
+                for (let p = 0; p < proposalSectionList.length; p++) {
+                    proposalSectionList[p].ddlStatusChange = (event) => this.ddlStatusChange(p);
+                    proposalSectionListArr.push(proposalSectionList[p]);
+                }
+
+                this.setState({
+                    loading: false,
+                    proposalDocumentList: proposalSectionListArr,
+                    teamMembers: data.teamMembers,
+                    peopleList: peopleListAll, // peopleListLoan
+                    mostRecentlyUsed: peopleListAll.slice(0, 5),
+                    oppData: data
                 });
-
-
-        });
+            });
     }
 
 
     fnUpdateFormalProposal(oppViewData) {
-        this.setState({ isUpdate: true, MessagebarText: <Trans>updating</Trans> });
+        const { isUpdate } = this.state;
+        this.setState({ isUpdate: true, MessagebarText: "Updating..." });
 
 
         // API Update call        
+        let oppViewModelObj = {};
         this.requestUpdUrl = 'api/opportunity?id=' + oppViewData.id; //56';// + oppID;
+        let headers = new Headers();
+        let bearer = "Bearer " + window.authHelper.getWebApiToken();
         let options = {
             method: "PATCH",
             headers: {
@@ -277,7 +209,7 @@ export class ProposalStatus extends Component {
                     console.log('Error...: ');
                 }
             }).then(json => {
-                this.setState({ MessagebarText: <Trans>updatedSuccessfully</Trans> });
+                this.setState({ MessagebarText: "Updated successfully." });
                 console.log(json);
                 // this.setState({ isUpdate: false, MessagebarText: "" });
                 setTimeout(function () { this.setState({ isUpdate: false, MessagebarText: "" }); }.bind(this), 3000);
@@ -404,18 +336,20 @@ export class ProposalStatus extends Component {
 
     proposalListHeading() {
         return (
-            <div className='ms-List-th TablHeading'>
-                <div className='ms-List-th itemSections'><Trans>sections</Trans></div>
-                <div className='ms-List-th-itemOwner'><Trans>owner</Trans></div>
-                <div className='ms-List-th-itemStatus'><Trans>status</Trans></div>
-                <div className='ms-List-th-itemLastUpdated'><Trans>lastUpdated</Trans></div>
+            <div className='ms-List-th TablHeading'> 
+                <div className='ms-List-th itemSections'>Sections</div>
+                <div className='ms-List-th-itemOwner'>Owner</div>
+                <div className='ms-List-th-itemStatus'>Status</div>
+                <div className='ms-List-th-itemLastUpdated'>Last Updated</div>
             </div>
         );
     }
 
     proposalList(itemsList, tm) {
+        const length = typeof itemsList !== 'undefined' ? itemsList.length : 0;
         // Add all team members to itemList Objec
         itemsList.AllTeamMembers = tm;
+        const tmList = tm;
         const items = itemsList;
 
         return (
@@ -433,6 +367,8 @@ export class ProposalStatus extends Component {
     }
 
     _onRenderCell(item, idx) {
+        let renderPicker = "Display Picker"; 
+        const onStatusChangeEvent = item.ddlStatusChange(idx);
         return (
             <div className='ms-List-itemCell' data-is-focusable='true'>
                 <div className='ms-List-itemContent'>
@@ -481,54 +417,57 @@ export class ProposalStatus extends Component {
 
 
     render() {
+        const { items } = this.state;
         const proposalListHeading = this.proposalListHeading();
         const proposalListComponent = this.proposalList(this.state.proposalDocumentList, this.state.teamMembers);
+
+        let contents = this.state.loading
+            ? <span><em>Loading...</em></span>
+            : "";
 
         if (this.state.loading) {
             return (
                 <div className='ms-BasicSpinnersExample pull-center'>
-                    <Spinner size={SpinnerSize.medium} label={<Trans>loading</Trans>} ariaLive='assertive' />
+                    <Spinner size={SpinnerSize.medium} label='loading...' ariaLive='assertive' />
                 </div>
             );
         } else {
             return (
                 <div>
                     <TeamsComponentContext>
-                        {
-                            this.state.haveGranularAccess
-                                ?
-                                <Panel>
-                                    <PanelHeader />
-                                    <PanelBody>
-                                        <div className='ms-Grid '>
-                                            <div className='ms-Grid-row' />
-                                            <div className='ms-Grid-row'>
-                                                <div className=' ms-Grid-col ms-sm6 ms-md8 ms-lg12 bgwhite tabviewUpdates noscroll'>
-                                                    <h3><Trans>formalProposal</Trans></h3>
-                                                    {
-                                                        this.state.isUpdate ?
-                                                            <MessageBar
-                                                                messageBarType={MessageBarType.success}
-                                                                isMultiline={false}
-                                                            >
-                                                                {this.state.MessagebarText}
-                                                            </MessageBar>
-                                                            : ""
-                                                    }
-                                                    {proposalListHeading}
-                                                    {proposalListComponent}
-                                                    <br />
+                        <Panel>
+                            <PanelHeader/>
+                            <PanelBody>
+                                <div className='ms-Grid '>
+                                    <div className='ms-Grid-row'>
+                                    </div>
+                                    <div className='ms-Grid-row'>
+                                        <div className=' ms-Grid-col ms-sm6 ms-md8 ms-lg12 bgwhite tabviewUpdates noscroll'>
+                                            <h3>Formal Proposal</h3>
+                                            {
+                                                this.state.isUpdate ?
+                                                    <MessageBar
+                                                        messageBarType={MessageBarType.success}
+                                                        isMultiline={false}
+                                                    >
+                                                        {this.state.MessagebarText}
+                                                    </MessageBar>
+                                                    : ""
+                                            }
+                                            {proposalListHeading}
+                                            {proposalListComponent}
+                                            <br />
 
-                                                </div>
-                                            </div>
                                         </div>
+                                    </div>
+                                </div>
 
 
-                                    </PanelBody>
-                                    <PanelFooter />
-                                </Panel>
-                                : <div className="ms-Grid-col ms-sm6 ms-md8 ms-lg12 p-10 bgwhite tabviewUpdates"><h2><Trans>accessDenied</Trans></h2></div>
-                        }
+                            </PanelBody>
+                            <PanelFooter/>
+                        </Panel>
+
+
                     </TeamsComponentContext>
                 </div >
 

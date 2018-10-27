@@ -1,5 +1,5 @@
 ﻿{
-  "name": "Opportunities",
+  "name": "Opportunity",
   "columns": [
     {
       "name": "Id",
@@ -7,12 +7,7 @@
       "indexed": true
     },
     {
-      "name": "OpportunityId",
-      "text": {},
-      "indexed": true
-    },
-    {
-      "name": "Name",
+      "name": "DisplayName",
       "text": {},
       "indexed": true
     },
@@ -21,22 +16,11 @@
       "text": {}
     },
     {
-      "name": "OpportunityObject",
-      "text": {}
-    },
-    {
-      "name": "LoanOfficer",
-      "text": {},
-      "indexed": true
-    },
-    {
-      "name": "RelationshipManager",
-      "text": {},
-      "indexed": true
-    },
-    {
-      "name": "Reference",
+      "name": "OpportunityArtifact",
       "text": {}
     }
-  ]
+  ],
+  "list": {
+    "template": "genericList"
+  }
 }

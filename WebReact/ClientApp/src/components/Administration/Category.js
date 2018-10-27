@@ -14,7 +14,6 @@ import {
     SpinnerSize
 } from 'office-ui-fabric-react/lib/Spinner';
 import { MessageBar, MessageBarType } from 'office-ui-fabric-react/lib/MessageBar';
-import { Trans } from "react-i18next";
 
 
 export class Category extends Component {
@@ -29,10 +28,10 @@ export class Category extends Component {
         this.utils = new Utils();
         const columns = [
             {
-                key: 'column1', 
-                name: <Trans>category</Trans>,
-                headerClassName: 'ms-List-th browsebutton CategoryCol',
-                className: 'docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg8 CategoryCol',
+                key: 'column1',
+                name: 'Category',
+                headerClassName: 'ms-List-th browsebutton',
+                className: 'docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg8',
                 fieldName: 'Category',
                 minWidth: 150,
                 maxWidth: 250,
@@ -49,9 +48,9 @@ export class Category extends Component {
             },
             {
                 key: 'column2',
-                name: <Trans>action</Trans>,
-                headerClassName: 'ms-List-th Categoryaction',
-                className: 'ms-Grid-col ms-sm12 ms-md12 ms-lg4 Categoryaction',
+                name: 'Action',
+                headerClassName: 'ms-List-th',
+                className: 'ms-Grid-col ms-sm12 ms-md12 ms-lg4',
                 minWidth: 16,
                 maxWidth: 16,
                 onRender: (item) => {
@@ -81,46 +80,37 @@ export class Category extends Component {
             MessageBarType: MessageBarType.success,
             isUpdateMsg: false
         };
-
-        this.getCategories().then();
     }
 
     componentWillMount() {
-        //this.getCategories();
+        this.getCategories();
     }
 
-    async getCategories() {
-        let categoryList = [];
-        let categoryList_length = 0;
-        try{
-            // call to API fetch Categories
-            let requestUrl = 'api/Category';
-            let response = await fetch(requestUrl, {
-                method: "GET",
-                headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() }
-            });
-            let data = await response.json();
-            if(typeof data === 'string'){
-                console.log("Categorty_getCategories : ", data);
-            }else if(typeof data === 'object'){
-                console.log("Categorty_getCategories : ", data);
-                for (let i = 0; i < data.length; i++) {
-                    let category = {};
-                    category.id = data[i].id;
-                    category.name = data[i].name;
-                    category.operation = "update";
-                    categoryList.push(category);
+    getCategories() {
+        // call to API fetch Categories
+        let requestUrl = 'api/Category';
+        fetch(requestUrl, {
+            method: "GET",
+            headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() }
+        })
+            .then(response => response.json())
+            .then(data => {
+                try {
+                    let categoryList = [];
+                    for (let i = 0; i < data.length; i++) {
+                        let category = {};
+                        category.id = data[i].id;
+                        category.name = data[i].name;
+                        category.operation = "update";
+                        categoryList.push(category);
+                    }
+                    this.setState({ items: categoryList, loading: false, rowItemCounter: categoryList.length });
                 }
-                categoryList_length = categoryList.length;
-            }
-            else{
-                throw new Error("response is not an expected type : ", data);
-            }
-        }catch(error){
-            console.log("Categorty_getCategories Error: ", error.message);
-        }finally{
-            this.setState({ items: categoryList, loading: false, rowItemCounter:  categoryList_length});
-        }
+                catch (err) {
+                    return false;
+                }
+
+            });
     }
 
     createCategoryItem(key) {
@@ -171,23 +161,14 @@ export class Category extends Component {
 
     onBlurCategoryName(e, item, operation) {
         this.setState({ isUpdate: true });
-        //check Category already exist in items
-        for (let p = 0; p < this.state.items.length; p++) {
-            if (this.state.items[p].name.toLowerCase() === e.target.value.toLowerCase()) {
-                this.setState({
-                    isUpdate: false,
-                    isUpdateMsg: true,
-                    MessagebarText: <Trans>categoryExist</Trans>,
-                    MessageBarType: MessageBarType.error
-                });
-                setTimeout(function () { this.setState({ isUpdateMsg: false, MessageBarType: "", MessagebarText: "" }); }.bind(this), 3000);
-                return false;
-            }
-        }
         delete item['operation'];
         let updatedItems = this.state.items;
         let itemIdx = updatedItems.indexOf(item);
         updatedItems[itemIdx].name = e.target.value;
+        //this.category = updatedItems;
+        //this.setState({
+        //    items: updatedItems
+        //});
         this.setState({
             updatedItems: updatedItems
         });
@@ -221,21 +202,19 @@ export class Category extends Component {
                 if (response.ok) {
                     this.setState({
                         items: this.state.updatedItems,
-                        MessagebarText: <Trans>categoryAddSuccess</Trans>,
+                        MessagebarText: "Category added successfully.",
                         isUpdate: false,
-                        isUpdateMsg: true,
-                        MessageBarType: MessageBarType.success
+                        isUpdateMsg: true
                     });
-                    setTimeout(function () { this.setState({ isUpdateMsg: false, MessageBarType: "", MessagebarText: "" }); }.bind(this), 3000);
+                    setTimeout(function () { this.setState({ isUpdateMsg: false, MessageBarType: MessageBarType.success, MessagebarText: "" }); }.bind(this), 3000);
                     return response.json;
                 } else {
                     this.setState({
-                        MessagebarText: <Trans>errorOoccuredPleaseTryAgain</Trans>,
+                        MessagebarText: "Error occured. Please try again!",
                         isUpdate: false,
-                        isUpdateMsg: true,
-                        MessageBarType: MessageBarType.error
+                        isUpdateMsg: true
                     });
-                    setTimeout(function () { this.setState({ isUpdateMsg: false, MessageBarType: "", MessagebarText: "" }); }.bind(this), 3000);
+                    setTimeout(function () { this.setState({ isUpdateMsg: false, MessageBarType: MessageBarType.error, MessagebarText: "" }); }.bind(this), 3000);
                 }
             }).then(json => {
                 //console.log(json);
@@ -246,6 +225,7 @@ export class Category extends Component {
     }
 
     updateCategory(categoryItem) {
+        console.log(categoryItem);
         let categoriesObj = categoryItem;
         // API Update call        
         this.requestUpdUrl = 'api/Category';
@@ -265,22 +245,20 @@ export class Category extends Component {
                 if (response.ok) {
                     this.setState({
                         items: this.state.updatedItems,
-                        MessagebarText: <Trans>categoryUpdatedSuccess</Trans>,
+                        MessagebarText: "Category updated successfully.",
                         isUpdate: false,
-                        isUpdateMsg: true,
-                        MessageBarType: MessageBarType.success
+                        isUpdateMsg: true
                     });
-                    setTimeout(function () { this.setState({ isUpdateMsg: false, MessageBarType: "", MessagebarText: "" }); }.bind(this), 3000);
+                    setTimeout(function () { this.setState({ isUpdateMsg: false, MessageBarType: MessageBarType.success, MessagebarText: "" }); }.bind(this), 3000);
 
                     return response.json;
                 } else {
                     this.setState({
-                        MessagebarText: <Trans>errorOoccuredPleaseTryAgain</Trans>,
+                        MessagebarText: "Error occured. Please try again!",
                         isUpdate: false,
-                        isUpdateMsg: true,
-                        MessageBarType: MessageBarType.error
+                        isUpdateMsg: true
                     });
-                    setTimeout(function () { this.setState({ isUpdateMsg: false, MessageBarType: "", MessagebarText: "" }); }.bind(this), 3000);
+                    setTimeout(function () { this.setState({ isUpdateMsg: false, MessageBarType: MessageBarType.error, MessagebarText: "" }); }.bind(this), 3000);
                 }
             }).then(json => {
                 //console.log(json);
@@ -305,22 +283,20 @@ export class Category extends Component {
                     this.category = currentItems;
                     this.setState({
                         items: currentItems,
-                        MessagebarText: <Trans>categoryDeletedSuccess</Trans>,
+                        MessagebarText: "Category deleted successfully.",
                         isUpdate: false,
-                        isUpdateMsg: true,
-                        MessageBarType: MessageBarType.success
+                        isUpdateMsg: true
                     });
 
-                    setTimeout(function () { this.setState({ isUpdateMsg: false, MessageBarType: "", MessagebarText: "" }); }.bind(this), 3000);
+                    setTimeout(function () { this.setState({ isUpdateMsg: false, MessageBarType: MessageBarType.success, MessagebarText: "" }); }.bind(this), 3000);
                     return response.json;
                 } else {
                     this.setState({
-                        MessagebarText: <Trans>errorOoccuredPleaseTryAgain</Trans>,
+                        MessagebarText: "Error occured. Please try again!",
                         isUpdate: false,
-                        isUpdateMsg: true,
-                        MessageBarType: MessageBarType.error
+                        isUpdateMsg: true
                     });
-                    setTimeout(function () { this.setState({ isUpdateMsg: false, MessageBarType: "", MessagebarText: "" }); }.bind(this), 3000);
+                    setTimeout(function () { this.setState({ isUpdateMsg: false, MessageBarType: MessageBarType.error, MessagebarText: "" }); }.bind(this), 3000);
                 }
             }).then(json => {
                 //console.log(json);
@@ -336,7 +312,7 @@ export class Category extends Component {
         if (this.state.loading) {
             return (
                 <div className='ms-BasicSpinnersExample ibox-content pt15 '>
-                    <Spinner size={SpinnerSize.large} label={<Trans>loading</Trans>} ariaLive='assertive' />
+                    <Spinner size={SpinnerSize.large} label='loading...' ariaLive='assertive' />
                 </div>
             );
         } else {
@@ -347,7 +323,7 @@ export class Category extends Component {
                     <div className='ms-Grid-row'>
                         <div className='ms-Grid-col ms-sm12 ms-md12 ms-lg12'>
                             <div className='ms-Grid-col ms-sm12 ms-md12 ms-lg12 pt10'>
-                                <Link href='' className='pull-left' onClick={() => this.onAddRow()} >+ <Trans>addNew</Trans></Link>
+                                <Link href='' className='pull-left' onClick={() => this.onAddRow()} >+ Add New</Link>
                             </div>
                             {categoryList}
                         </div>

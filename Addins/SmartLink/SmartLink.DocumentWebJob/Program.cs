@@ -3,14 +3,18 @@
 //
 // Licensed under the MIT license. See LICENSE file in the solution root folder for full license information.
 
-using Autofac;
-using AutoMapper;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Microsoft.Azure.WebJobs;
+using System.Net;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.Azure;
-using Microsoft.Azure.WebJobs;
+using Autofac;
 using SmartLink.Service;
-using System;
-using System.Net;
+using AutoMapper;
 
 namespace SmartLink.DocumentWebJob
 {

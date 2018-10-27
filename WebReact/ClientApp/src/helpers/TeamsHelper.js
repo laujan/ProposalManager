@@ -4,6 +4,7 @@
 */
 
 import Msal, { UserAgentApplication, Logger } from 'msal';
+import { clientId, redirectUri, graphScopes, resourceUri, webApiScopes, clientSecret, authority } from './AppSettings';
 import Promise from 'promise';
 import * as microsoftTeams from '@microsoft/teams-js';
 

@@ -12,21 +12,18 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using ApplicationCore.Interfaces;
+using WebReact.Interfaces;
 using ApplicationCore.Helpers;
 using ApplicationCore.Artifacts;
 using Newtonsoft.Json.Linq;
-using ApplicationCore.ViewModels;
-using ApplicationCore.Models;
+using WebReact.ViewModels;
+using WebReact.Models;
 using Newtonsoft.Json;
 using Microsoft.AspNetCore.Authorization;
-using ApplicationCore.Authorization;
-using WebReact.ModelExamples;
 
 namespace WebReact.Api
 {
-	[Authorize(AuthenticationSchemes = "AzureAdBearer")]
-	public class RoleMappingController : BaseApiController<RoleMappingController>
+    public class RoleMappingController : BaseApiController<RoleMappingController>
     {
         private readonly IRoleMappingService _roleMappingService;
 
@@ -39,12 +36,9 @@ namespace WebReact.Api
             _roleMappingService = roleMappingService;
         }
 
-        /// <summary>
-        /// [Create a new RoleMapping.]
-        /// </summary>
+        [Authorize]
         [HttpPost]
-
-        public async Task<IActionResult> CreateAsync([FromBody] JObject jsonObject)
+        public async Task<IActionResult> Create([FromBody] JObject jsonObject)
         {
             var requestId = Guid.NewGuid().ToString();
             _logger.LogInformation($"RequestID:{requestId} - RoleMapping_Create called.");
@@ -59,13 +53,11 @@ namespace WebReact.Api
                     return BadRequest(errorResponse);
                 }
 
-                //modelObject.PermissionsList = permissionlist;
                 var modelObject = JsonConvert.DeserializeObject<RoleMappingModel>(jsonObject.ToString(), new JsonSerializerSettings
                 {
                     MissingMemberHandling = MissingMemberHandling.Ignore,
                     NullValueHandling = NullValueHandling.Ignore
                 });
-
 
                 //TODO: P2 Refactor into Guard
                 if (String.IsNullOrEmpty(modelObject.AdGroupName))
@@ -99,8 +91,9 @@ namespace WebReact.Api
             }
         }
 
+        [Authorize]
         [HttpPatch]
-        public async Task<IActionResult> UpdateAsync([FromBody] JObject jsonObject)
+        public async Task<IActionResult> Update([FromBody] JObject jsonObject)
         {
             var requestId = Guid.NewGuid().ToString();
             _logger.LogInformation($"RequestID:{requestId} - RoleMapping_Update called.");
@@ -122,7 +115,7 @@ namespace WebReact.Api
                 });
 
                 //TODO: P2 Refactor into Guard
-                if (String.IsNullOrEmpty(modelObject.AdGroupName))
+                if (String.IsNullOrEmpty(modelObject.Id))
                 {
                     _logger.LogError($"RequestID:{requestId} - RoleMapping_Update error: invalid id");
                     var errorResponse = JsonErrorResponse.BadRequest($"RoleMapping_Update error: invalid id", requestId);
@@ -151,8 +144,9 @@ namespace WebReact.Api
             }
         }
 
+        [Authorize]
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteAsync(string id)
+        public async Task<IActionResult> Delete(string id)
         {
             var requestId = Guid.NewGuid().ToString();
             _logger.LogInformation($"RequestID:{requestId} - RoleMapping_Delete called.");
@@ -176,8 +170,9 @@ namespace WebReact.Api
             return NoContent();
         }
 
+        [Authorize]
         [HttpGet]
-        public async Task<IActionResult> GetAllAsync()
+        public async Task<IActionResult> GetAll()
         {
             var requestId = Guid.NewGuid().ToString();
             _logger.LogInformation($"RequestID:{requestId} - RoleMapping_GetAll called.");

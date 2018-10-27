@@ -5,6 +5,7 @@
 
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
+
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Newtonsoft.Json.Linq;
 using SmartLink.Entity;
@@ -15,6 +16,7 @@ using System.Linq;
 using System.Net;
 using System.Runtime.Caching;
 using System.Security.Cryptography.X509Certificates;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 

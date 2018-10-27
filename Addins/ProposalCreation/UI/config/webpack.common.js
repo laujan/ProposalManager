@@ -58,7 +58,7 @@ const rules = [
 ];
 
 const output = {
-    path: path.resolve('../Web/ProposalCreationWeb/wwwroot/dist'),
+    path: path.resolve('../Web/CommLendingWeb/wwwroot/dist'),
     publicPath: '/',
     filename: '[name].js',
     chunkFilename: '[id].chunk.js'

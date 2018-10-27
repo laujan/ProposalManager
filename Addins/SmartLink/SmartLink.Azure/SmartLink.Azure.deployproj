@@ -39,8 +39,6 @@
     <Content Include="Deploy-AzureResourceGroup.ps1" />
     <Content Include="resource.qa.parameters.json" />
     <Content Include="resource.json" />
-    <Content Include="resource.dev.parameters.json" />
-    <None Include="resource.product.parameters.json" />
   </ItemGroup>
   <Target Name="GetReferenceAssemblyPaths" />
 </Project>

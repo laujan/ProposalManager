@@ -13,7 +13,6 @@ import {
 } from 'office-ui-fabric-react/lib/Persona';
 import '../../Style.css';
 import { oppStatus, oppStatusText } from '../../common';
-import { Trans } from "react-i18next";
 
 
 export class EmployeeStatusCard extends Component {
@@ -45,11 +44,11 @@ export class EmployeeStatusCard extends Component {
                         <div>
                         <div className='ms-Grid-row'>
                             <div className='ms-Grid-col ms-sm6 ms-md8 ms-lg4'>
-                                <Label><Trans>status</Trans></Label>
+                                <Label>Status</Label>
 
                             </div>
                             <div className=' ms-Grid-col ms-sm6 ms-md8 ms-lg8'>
-                                    <Label><span className={statusClassName}> <Trans>{status}</Trans> </span></Label>
+                                    <Label><span className={statusClassName}> {status} </span></Label>
 
                             </div>
                         </div>
@@ -69,11 +68,11 @@ export class EmployeeStatusCard extends Component {
                         <div>
                             <div className='ms-Grid-row'>
                                 <div className='ms-Grid-col ms-sm6 ms-md8 ms-lg4'>
-                                    <Label><Trans>status</Trans></Label>
+                                    <Label>Status</Label>
 
                                 </div>
                                 <div className=' ms-Grid-col ms-sm6 ms-md8 ms-lg8'>
-                                    <Label><span className={statusClassName}> <Trans>{status}</Trans> </span></Label>
+                                    <Label><span className={statusClassName}> {status} </span></Label>
 
                                 </div>
                             </div>
@@ -85,7 +84,7 @@ export class EmployeeStatusCard extends Component {
                                             imageInitials: ""
                                         } }
                                         size={PersonaSize.size40}
-                                        primaryText={<Trans>userNotSelected</Trans>}
+                                        primaryText="User Not Selected"
                                         secondaryText={this.props.role}
                                     />
                                     

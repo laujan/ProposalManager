@@ -44,7 +44,7 @@ namespace Infrastructure.GraphApi
 
         public GraphBaseService(
             ILogger<T> logger,
-            IOptionsMonitor<AppOptions> appOptions,
+            IOptions<AppOptions> appOptions,
             IGraphAuthProvider authProvider, 
             IUserContext userContext,
             IGraphClientContext graphClientContext) : base(logger, appOptions)

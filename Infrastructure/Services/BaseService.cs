@@ -26,13 +26,13 @@ namespace Infrastructure.Services
         /// </summary>
         public BaseService(
             ILogger<T> logger,
-            IOptionsMonitor<AppOptions> appOptions)
+            IOptions<AppOptions> appOptions)
         {
             Guard.Against.Null(logger, nameof(logger));
             Guard.Against.Null(appOptions, nameof(appOptions));
 
             _logger = logger;
-            _appOptions = appOptions.CurrentValue;
+            _appOptions = appOptions.Value;
         }
     }
 }

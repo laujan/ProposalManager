@@ -47,7 +47,7 @@ export class WordService implements IDocumentService
                             task: "UnAssigned",
                             id: index+"",
                             assignedTo: "",
-                            status: "Done",
+                            status: 1,
                             content: [],
                             owner: "Foo"
                         });

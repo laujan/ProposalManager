@@ -13,7 +13,6 @@ import { Persona, PersonaSize } from 'office-ui-fabric-react/lib/Persona';
 import { Spinner, SpinnerSize } from 'office-ui-fabric-react/lib/Spinner';
 import { MessageBar, MessageBarType } from 'office-ui-fabric-react/lib/MessageBar';
 import { PeoplePickerTeamMembers } from '../PeoplePickerTeamMembers';
-import { Trans } from "react-i18next";
 
 
 export class ChooseTeam extends Component {
@@ -51,110 +50,136 @@ export class ChooseTeam extends Component {
 			MessagebarTextFinalizeTeam: "",
 			MessageBarTypeFinalizeTeam: "",
 			otherPeopleList: [],
+			oppTeamMembers: [],
 			loading: true,
 			usersPickerLoading: true,
 			oppID: oppID,
 			proposalDocumentFileName: "",
+			creditAnalystList: [],
+			legalCounselList: [],
+			seniorRiskOfficerList: [],
+			selectedCreditAnalyst: [],
+			selectedLegalCounsel: [],
+            selectedSeniorRiskOfficer: [],
             UserRoleMapList: [],
-			isEnableFinalizeTeamButton: false,
-			TeamsObject:[]
+            isDisableCreditAnalyst: false,
+            isDisableLegalCounsel: false,
+            isDisableSeniorRiskOfficer: false,
+            isEnableFinalizeTeamButton: false
 		};
 
+		//this._ddlRolechangeState = this._ddlRolechangeState.bind(this);
 		this.onFinalizeTeam = this.onFinalizeTeam.bind(this);
 		this.handleFileUpload = this.handleFileUpload.bind(this);
 		this.saveFile = this.saveFile.bind(this);
-		this.selectedTeamMemberFromDropDown = this.selectedTeamMemberFromDropDown.bind(this);
+		this.selectSeniorRiskOfficer = this.selectSeniorRiskOfficer.bind(this);
+		this.selectLegalCounsel = this.selectLegalCounsel.bind(this);
+		this.selectCreditAnalyst = this.selectCreditAnalyst.bind(this);
 	}
 
-    async componentWillMount() {
-        await this.getUserRoles()
-        await this.getOpportunity();
+    componentWillMount() {
+        this.getUserRoles();
+        this.getOpportunity();
 	}
 
-    async getOpportunity() {
+    getOpportunity() {
+        let oppDetails = {};
         let requestUrl = 'api/Opportunity/?id=' + this.state.oppID;
 
-		try {
-			let response = await fetch(requestUrl, {
-				method: "GET",
-				headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() }
-			});
-			
-			let data = await response.json();
-			console.log("VIshnu getOpportunity : ", data)
-			let TeamsObject = await this.getUserProfiles();
-					
-			let oppSelTeam = [];
-			if (data.teamMembers.length > 0) {
-				for (let m = 0; m < data.teamMembers.length; m++) {
-					let item = data.teamMembers[m];
-					if (item.displayName.length > 0) {
-						let newItem = {};
+        fetch(requestUrl, {
+            method: "GET",
+            headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() }
+        })
+            .then(response => response.json())
+            .then(data => {
 
-						newItem.id = item.id;
-						newItem.displayName = item.displayName;
-						newItem.mail = item.mail;
-						newItem.userPrincipalName = item.userPrincipalName;
-						//newItem.userRoles = item.userRoles;
-						//newItem.status = item.status;
-						newItem.assignedRole = item.assignedRole;
-						newItem.processStep = item.processStep
-						oppSelTeam.push(newItem);
-					}
-				}
-			}
-			console.log("VIshnu getOpportunity 2: ", oppSelTeam)
-			TeamsObject.forEach(team=>{
-				oppSelTeam.forEach(selectedTeam=>{
-					if(selectedTeam.assignedRole.displayName.toLowerCase()===team.role.toLowerCase())
-						team.selectedMemberList.push(selectedTeam);
-				})
-			})
-	
-			console.log("vishnu getOpportunity selectedTeamList : ", TeamsObject)
+                //get users for people picker 
+                this.getUserProfiles();
 
-			let fileName = data.proposalDocument !== null ? this.getDocumentName(data.proposalDocument["documentUri"]) :"";
+                let oppSelTeam = [];
+                if (data.teamMembers.length > 0) {
+                    for (let m = 0; m < data.teamMembers.length; m++) {
+                        //let member = {};
+                        let item = data.teamMembers[m];
+                        if (item.displayName.length > 0) {
+                            let newItem = {};
 
-			this.setState({
-				oppData: data,
-				oppName: data.displayName,
-				oppID: data.id,
-				currentSelectedItems: oppSelTeam,
-				loading: false,
-				proposalDocumentFileName: fileName,
-			});
+                            newItem.id = item.id;
+                            newItem.displayName = item.displayName;
+                            newItem.mail = item.mail;
+                            newItem.userPrincipalName = item.userPrincipalName;
+                            newItem.userRoles = item.userRoles;
+                            newItem.status = 0;
+                            newItem.assignedRole = item.assignedRole;
 
-		} catch (error) {
-			console.log("Choose Team Error : ", JSON.stringify(error))
-		}
-        
+                            oppSelTeam.push(newItem);
+                        }
+                    }
+                }
+
+                let creditAnalyst = [];
+                let creditAnalystCheck = oppSelTeam.filter(x => x.assignedRole.displayName === "CreditAnalyst");
+                if (creditAnalystCheck.length > 0) {
+                    creditAnalyst.push(creditAnalystCheck[0]);
+                }
+
+                let legalCounsel = [];
+                let legalCounselCheck = oppSelTeam.filter(x => x.assignedRole.displayName === "LegalCounsel");
+                if (legalCounselCheck.length > 0) {
+                    legalCounsel.push(legalCounselCheck[0]);
+                }
+
+                let seniorRiskOfficer = [];
+                let seniorRiskOfficerCheck = oppSelTeam.filter(x => x.assignedRole.displayName === "SeniorRiskOfficer");
+                if (seniorRiskOfficerCheck.length > 0) {
+                    seniorRiskOfficer.push(seniorRiskOfficerCheck[0]);
+                }
+
+                let fileName = this.getDocumentName(data.proposalDocument.documentUri);
+
+                this.setState({
+                    oppData: data,
+                    oppName: data.displayName,
+                    oppTeamMembers: oppSelTeam,
+                    oppID: data.id,
+                    currentSelectedItems: oppSelTeam,
+                    loading: false,
+                    proposalDocumentFileName: fileName,
+                    selectedCreditAnalyst: creditAnalyst,
+                    selectedLegalCounsel: legalCounsel,
+                    selectedSeniorRiskOfficer: seniorRiskOfficer
+
+                });
+            });
     }
 
-    async getUserRoles() {
-		let requestUrl = 'api/RoleMapping';
-		try {
-			let response = await fetch(requestUrl, { method: "GET", headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() }});
-			let data = await response.json()
-			try {
-				let userRoleList = [];
-				for (let i = 0; i < data.length; i++) {
-					let userRole = {};
-					userRole.id = data[i].id;
-					userRole.roleName = data[i].role.displayName;
-					userRole.adGroupName = data[i].adGroupName;
-					//userRole.processStep = data[i].processStep;
-					//userRole.processType = data[i].processType;
-					userRoleList.push(userRole);
-				}
-				console.log("Vishnu ChooseTeam getUserROles : ", userRoleList)
-				this.setState({ UserRoleMapList: userRoleList });
-			}
-			catch (err) {
-				return false;
-			}
-		} catch (error) {
-			return false;
-		}
+    getUserRoles() {
+        // call to API fetch data
+        let requestUrl = 'api/RoleMapping';
+        fetch(requestUrl, {
+            method: "GET",
+            headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() }
+        })
+            .then(response => response.json())
+            .then(data => {
+                try {
+                    let userRoleList = [];
+                    for (let i = 0; i < data.length; i++) {
+                        let userRole = {};
+                        userRole.id = data[i].id;
+                        userRole.roleName = data[i].roleName;
+                        userRole.adGroupName = data[i].adGroupName;
+                        userRole.processStep = data[i].processStep;
+                        userRole.processType = data[i].processType;
+                        userRoleList.push(userRole);
+                    }
+                    this.setState({ UserRoleMapList: userRoleList });
+                }
+                catch (err) {
+                    return false;
+                }
+
+            });
     }
 
 	getDocumentName(fileUri) {
@@ -167,65 +192,89 @@ export class ChooseTeam extends Component {
 		}
 	}
 
-	async getUserProfiles() {
+	getUserProfiles() {
 		let requestUrl = 'api/UserProfile/';
-		try {
-			let response = await fetch(requestUrl, {
-				method: "GET",
-				headers: {
-					'authorization': 'Bearer ' + this.authHelper.getWebApiToken()
-				}
-			});
-			let data = await response.json()
-
-			let itemslist = [];
-			let TeamsObject = []
-			
-			this.state.UserRoleMapList.forEach(role=>{
-				if(role.roleName.toLowerCase() !== "administrator" 
-					&& role.roleName.toLowerCase() !== "relationshipmanager" 
-					&& role.roleName.toLowerCase() !== "loanofficer")
-					{
-						TeamsObject.push({"role":role.roleName.toLowerCase(),"memberList":[],"selectedMemberList":[]})
-					}
-			});
-			console.log("vishnu refactoring 1:", TeamsObject)
-
-			if (data.ItemsList.length > 0) {
-				for (let i = 0; i < data.ItemsList.length; i++) {
-					let item = data.ItemsList[i];
-					let newItem = {};
-						
-					newItem.id = item.id;
-					newItem.displayName = item.displayName;
-					newItem.mail = item.mail;
-					newItem.userPrincipalName = item.userPrincipalName;
-					newItem.userRoles = item.userRoles;
-					newItem.status = 0;
-
-					TeamsObject.forEach(team=>{
-						newItem.userRoles.forEach(role=>{
-							if(role.displayName.toLowerCase()===team.role.toLowerCase())
-								team.memberList.push(newItem);
-						})
-					})
-					itemslist.push(newItem);
-				}
+		fetch(requestUrl, {
+			method: "GET",
+			headers: {
+				'authorization': 'Bearer ' + this.authHelper.getWebApiToken()
 			}
-	
-			this.setState({
-				allOfficersList: itemslist,
-				usersPickerLoading: false,
-				otherPeopleList: [],
-				isDisableFinalizeTeamButton: TeamsObject.length>0 ? false : true,
-				TeamsObject:TeamsObject
+		})
+			.then(response => {
+				if (response.ok) {
+					return response.json();
+				} else {
+					this.setState({ usersPickerLoading: false });
+					this.fetchResponseHandler(response, "getUserProfiles");
+					return [];
+				}
+			})
+			.then(data => {
+				let itemslist = [];
+				let CreditAnalystList = [];
+				let LegalCounselList = [];
+				let SeniorRiskOfficerList = [];
+
+                //Check "CreditAnalyst,LegaCounsel,SeniorRiskOfficer" roles exist in UserRoleMapList"
+                let creditAnalystRoleArr = this.state.UserRoleMapList.filter(x => x.roleName.toLowerCase() === "creditanalyst");
+                let isDisableCreditAnalyst = creditAnalystRoleArr.length > 0 ? false :  true;
+
+                let legalCounselRoleArr = this.state.UserRoleMapList.filter(x => x.roleName.toLowerCase() === "legalcounsel");
+                let isDisableLegalCounsel = legalCounselRoleArr.length > 0 ? false : true;
+
+                let seniorRiskOfficerRoleArr = this.state.UserRoleMapList.filter(x => x.roleName.toLowerCase() === "seniorriskofficer");
+                let isDisableSeniorRiskOfficer = seniorRiskOfficerRoleArr.length > 0 ? false : true;
+
+
+				if (data.ItemsList.length > 0) {
+					for (let i = 0; i < data.ItemsList.length; i++) {
+						
+						let item = data.ItemsList[i];
+
+						let newItem = {};
+							
+                        newItem.id = item.id;
+                        newItem.displayName = item.displayName;
+						newItem.mail = item.mail;
+						newItem.userPrincipalName = item.userPrincipalName;
+						newItem.userRoles = item.userRoles;
+						newItem.status = 0;
+						// newItem.assignedRole = item.assigned; //RoleuserRoles.filter(x => (x.displayName === "CreditAnalyst") || (x.displayName === "LegalCounsel") || (x.displayName === "SeniorRiskOfficer") )[0];                   						
+						let creditAnalyst = newItem.userRoles.filter(x => x.displayName === "CreditAnalyst");
+						if (creditAnalyst.length > 0) {
+							CreditAnalystList.push(newItem);
+						}
+
+						let legalCounsel = newItem.userRoles.filter(x => x.displayName === "LegalCounsel");
+						if (legalCounsel.length > 0) {
+							LegalCounselList.push(newItem);
+						}
+
+						let seniorRiskOfficer = newItem.userRoles.filter(x => x.displayName === "SeniorRiskOfficer");
+						if (seniorRiskOfficer.length > 0) {
+							SeniorRiskOfficerList.push(newItem);
+						}
+
+						itemslist.push(newItem);
+					}
+				}
+
+				this.setState({
+					allOfficersList: itemslist,
+					usersPickerLoading: false,
+					otherPeopleList: [],
+					creditAnalystList: CreditAnalystList,
+					legalCounselList: LegalCounselList,
+                    seniorRiskOfficerList: SeniorRiskOfficerList,
+                    isDisableCreditAnalyst: isDisableCreditAnalyst,
+                    isDisableLegalCounsel: isDisableLegalCounsel,
+                    isDisableSeniorRiskOfficer: isDisableSeniorRiskOfficer,
+                    isDisableFinalizeTeamButton: isDisableCreditAnalyst && isDisableLegalCounsel && isDisableSeniorRiskOfficer ? true : false
+				});
+			})
+			.catch(err => {
+				console.log("Opportunities_getUserProfiles error: " + JSON.stringify(err));
 			});
-
-			return TeamsObject
-
-		} catch (error) {
-			console.log("Opportunities_getUserProfiles error: " + JSON.stringify(error));
-		}
 	}
 
 	saveFile() {
@@ -258,16 +307,16 @@ export class ChooseTeam extends Component {
 						} else {
 							console.log('Error...: ');
 						}
-                    }).then(data => {
-                        this.setState({ IsfileUpload: false, fileUploadMsg: true, MessagebarText: <Trans>templateUploadedSuccessfully</Trans> });
+					}).then(data => {
+						this.setState({ IsfileUpload: false, fileUploadMsg: true, MessagebarText: "Template uploaded successfully" });
 						setTimeout(function () { this.setState({ fileUploadMsg: false, MessagebarText: "" }); }.bind(this), 3000);
 					});
 			}
 			catch (err) {
 				this.setState({
 					IsfileUpload: false,
-                    fileUploadMsg: true,
-                    MessagebarText: <Trans>errorWhileUploadingTemplatePleaseTryAgain</Trans>
+					fileUploadMsg: true,
+					MessagebarText: "Error while uploading template. Please try again."
 				});
 				//alert("Error Uploading File");
 				return false;
@@ -304,28 +353,95 @@ export class ChooseTeam extends Component {
 
         fetch(requestUrl, fetchData)
 			.catch(error => console.error('Error:', error))
-            .then(response => {
-                this.setState({ isFinalizeTeam: false, finazlizeTeamMsg: true, MessagebarTextFinalizeTeam: <Trans>finalizeTeamComplete</Trans>, MessageBarTypeFinalizeTeam: MessageBarType.success });
+			.then(response => {
+				this.setState({ isFinalizeTeam: false, finazlizeTeamMsg: true, MessagebarTextFinalizeTeam: "Finalize Team Complete", MessageBarTypeFinalizeTeam: MessageBarType.success });
 				setTimeout(function () {
 					this.setState({ finazlizeTeamMsg: false, MessagebarTextFinalizeTeam: "" });
 				}.bind(this), 3000);
 			});
 	}
 
-	selectedTeamMemberFromDropDown(item,processStep) {
-		console.log("Vishnu selectedTeamMemberFromDropDown: " , item)
-		console.log("vishnu selectedTeamMemberFromDropDown: currentSel ," , this.state.currentSelectedItems)
+	selectCreditAnalyst(item) {
 		let tempSelectedTeamMembers = this.state.currentSelectedItems;
 		let finalTeam = [];
 			
 		for (let i = 0; i < tempSelectedTeamMembers.length; i++) {
 
-			if (tempSelectedTeamMembers[i].assignedRole.displayName !== processStep) {
+			if (tempSelectedTeamMembers[i].assignedRole.displayName !== "CreditAnalyst") {
 
 				finalTeam.push(tempSelectedTeamMembers[i]);
 			}
 		}
-		console.log("vishnu selectedTeamMemberFromDropDown: currentSel 2," , finalTeam)
+			if (item.length === 0) {
+			this.setState({
+				currentSelectedItems: finalTeam
+			});
+			return;
+		}
+		else {
+
+			let newMember = {};
+			newMember.id = item[0].id;
+			newMember.displayName = item[0].text;
+			newMember.mail = item[0].mail;
+			newMember.userPrincipalName = item[0].userPrincipalName;
+			newMember.userRoles = item[0].userRoles;
+			newMember.status = 0;
+			newMember.assignedRole = item[0].userRoles.filter(x => x.displayName === "CreditAnalyst")[0];
+
+			finalTeam.push(newMember);
+
+			this.setState({
+				currentSelectedItems: finalTeam
+			});
+		}
+	}
+
+	selectLegalCounsel(item) {
+
+		let tempSelectedTeamMembers = this.state.currentSelectedItems;
+		let finalTeam = [];
+		
+		for (let i = 0; i < tempSelectedTeamMembers.length; i++) {
+			
+			if (tempSelectedTeamMembers[i].assignedRole.displayName !== "LegalCounsel") {
+				finalTeam.push(tempSelectedTeamMembers[i]);
+			}
+		}
+		if (item.length === 0) {
+			this.setState({
+				currentSelectedItems: finalTeam
+			});
+			return;
+		}
+		else {
+			let newMember = {};
+			newMember.id = item[0].id;
+			newMember.displayName = item[0].text;
+			newMember.mail = item[0].mail;
+			newMember.userPrincipalName = item[0].userPrincipalName;
+			newMember.userRoles = item[0].userRoles;
+			newMember.status = 0;
+			newMember.assignedRole = item[0].userRoles.filter(x => x.displayName === "LegalCounsel")[0];
+
+			finalTeam.push(newMember);
+
+			this.setState({
+				currentSelectedItems: finalTeam
+			});
+		}
+	}
+
+	selectSeniorRiskOfficer(item) {
+		let tempSelectedTeamMembers = this.state.currentSelectedItems;
+		let finalTeam = [];
+		
+		for (let i = 0; i < tempSelectedTeamMembers.length; i++) {
+
+			if (tempSelectedTeamMembers[i].assignedRole.displayName !== "SeniorRiskOfficer") {
+				finalTeam.push(tempSelectedTeamMembers[i]);
+			}
+		}
 		if (item.length === 0) {
 			this.setState({
 				currentSelectedItems: finalTeam
@@ -341,8 +457,7 @@ export class ChooseTeam extends Component {
 			newMember.userPrincipalName = item[0].userPrincipalName;
 			newMember.userRoles = item[0].userRoles;
 			newMember.status = 0;
-			newMember.assignedRole = item[0].userRoles.filter(x => x.displayName === processStep)[0];
-            newMember.processStep = newMember.assignedRole.displayName;
+			newMember.assignedRole = item[0].userRoles.filter(x => x.displayName === "SeniorRiskOfficer")[0];
 
 			finalTeam.push(newMember);
 
@@ -352,45 +467,17 @@ export class ChooseTeam extends Component {
 		}
 	}
 
-	getPeoplePickerTeamMembers(){
-		let processes = this.state.oppData.dealType.processes
-		let teamMembersObject = this.state.TeamsObject
-
-		let teammembertemplate = processes.map(process=>{
-			if(process.processStep.toLowerCase()!=="new opportunity" 
-				&& process.processStep.toLowerCase()!=="start process"
-				&& process.processStep.toLowerCase()!=="test1"){
-					let members = teamMembersObject.find(team=>{
-						if(process.processStep.toLowerCase()===team.role.toLowerCase()){
-							return team;
-						}
-					});
-					if(typeof members !== 'undefined'){
-						return (<div className='ms-Grid-col ms-sm11 ms-md11 ms-lg11 light-grey '> 
-						<h5>{process.processStep}</h5>
-						<span className="p-b-10"> </span>
-						<PeoplePickerTeamMembers 
-							teamMembers={members.memberList} 
-							defaultSelectedUsers={members.selectedMemberList} 
-							onChange={(e) => this.selectedTeamMemberFromDropDown(e,process.processStep)}  />
-					
-					</div>);
-					}
-			}
-		})
-		return (<div className='ms-Grid-row bg-white'>{teammembertemplate}</div>);
-	}
-
 	render() {
-
+		const { isChecked, selectedRole } = this.state;
+		let oppTeamMembers = this.state.oppTeamMembers;
 		let oppID = this.state.oppID;
 		let itemFileUri = "";
         let uploadedFile = { name: this.state.proposalDocumentFileName };
 
 		if (this.state.loading) {
 			return (
-                <div className='ms-BasicSpinnersExample ibox-content pt15 '>
-                    <Spinner size={SpinnerSize.large} label={<Trans>loading</Trans>} ariaLive='assertive' />
+				<div className='ms-BasicSpinnersExample ibox-content pt15 '>
+					<Spinner size={SpinnerSize.large} label='loading...' ariaLive='assertive' />
 				</div>
 			);
 		} else {
@@ -399,17 +486,17 @@ export class ChooseTeam extends Component {
 					<div className='ms-Grid-row'>
 						<div className='ms-Grid-col ms-sm12 ms-md12 ms-lg8 '>
 							<div className='ms-Grid-row'>
-                                <div className='ms-Grid-col ms-sm12 ms-md12 ms-lg6 pageheading'>
-                                    <h3><Trans>updateTeam</Trans></h3>
+								<div className='ms-Grid-col ms-sm12 ms-md12 ms-lg6 pageheading'>
+									<h3>Update Team</h3>
 								</div>
-                                <div className=' ms-Grid-col ms-sm12 ms-md12 ms-lg6'><br />
-                                    <LinkRoute to={"/OpportunityDetails?opportunityId=" + oppID} className='pull-right'> <Trans>backToOpportunity</Trans> </LinkRoute>
+								<div className=' ms-Grid-col ms-sm12 ms-md12 ms-lg6'><br />
+									<LinkRoute to={"/OpportunitySummary?opportunityId=" + oppID} className='pull-right'> Back to Opportunity </LinkRoute>
 								</div>
 							</div>
 							<div className='ms-Grid-row'>
 								
 								<div className='ms-Grid-col ms-sm12 ms-md12 ms-lg3 hide'>
-									<span><Trans>search</Trans></span>
+									<span>Search</span>
                                     <SearchBox
                                         placeholder='Search'
                                         className='bg-white'
@@ -426,20 +513,44 @@ export class ChooseTeam extends Component {
 									<div className='ms-Grid-row bg-white '>
 										<div className='ms-Grid-col ms-sm12 ms-md12 ms-lg12 TeamsBGnew pull-right pb15'>
 											<div className='ms-BasicSpinnersExample ibox-content pt15 '>
-                                                <Spinner size={SpinnerSize.large} label={<Trans>loading</Trans>} ariaLive='assertive' />
+												<Spinner size={SpinnerSize.large} label='loading...' ariaLive='assertive' />
 											</div>
 										</div>
 									</div>
 									:
 									<div>
 
-										{this.getPeoplePickerTeamMembers()}
+										<div className='ms-Grid-row bg-white'>
+											<div className='ms-Grid-col ms-sm11 ms-md11 ms-lg11 light-grey '> 
+												<h5>Credit Analyst</h5>
+
+												<span className="p-b-10"> </span>
+                                                <PeoplePickerTeamMembers teamMembers={this.state.creditAnalystList} itemLimit='1' defaultSelectedUsers={this.state.selectedCreditAnalyst} onChange={(e) => this.selectCreditAnalyst(e)} isDisableTextBox={this.state.isDisableCreditAnalyst} />
+
+											</div>
+
+											<div className='ms-Grid-col ms-sm11 ms-md11 ms-lg11 light-grey '> 
+												<h5>Legal Counsel</h5>
+
+												<span className="p-b-10">  </span>
+                                                <PeoplePickerTeamMembers teamMembers={this.state.legalCounselList} itemLimit='1' defaultSelectedUsers={this.state.selectedLegalCounsel} onChange={(e) => this.selectLegalCounsel(e)} isDisableTextBox={this.state.isDisableLegalCounsel} />
+
+											</div>
+
+											<div className='ms-Grid-col ms-sm11 ms-md11 ms-lg11 light-grey '> 
+												<h5>Senior Risk Officer</h5>
+
+												<span className="p-b-10"> </span>
+                                                <PeoplePickerTeamMembers teamMembers={this.state.seniorRiskOfficerList} itemLimit='1' defaultSelectedUsers={this.state.selectedSeniorRiskOfficer} onChange={(e) => this.selectSeniorRiskOfficer(e)} isDisableTextBox={this.state.isDisableSeniorRiskOfficer} />
+
+											</div>
+										</div>
 
 										<div className='ms-Grid-row bg-white'>
 											<div className='ms-Grid-col ms-sm12 ms-md12 ms-lg10 TeamsBGnew pb15'>
 												{
 													this.state.isFinalizeTeam ?
-                                                        <Spinner size={SpinnerSize.small} label={<Trans>finalizingTeam</Trans>} ariaLive='assertive' className="pull-right p-5" />
+														<Spinner size={SpinnerSize.small} label='Finalizing Team..' ariaLive='assertive' className="pull-right p-5" />
 														: ""
 												}
 												{
@@ -455,7 +566,7 @@ export class ChooseTeam extends Component {
 											</div>
 											<div className='ms-Grid-col ms-sm12 ms-md12 ms-lg4 pull-right TeamsBGnew pb15'>
 
-                                                <PrimaryButton onClick={this.onFinalizeTeam} className='pull-right' disabled={this.state.isFinalizeTeam || this.state.isDisableFinalizeTeamButton} ><Trans>finalizeTeam</Trans></PrimaryButton >
+                                                <PrimaryButton onClick={this.onFinalizeTeam} className='pull-right' disabled={this.state.isFinalizeTeam || this.state.isDisableFinalizeTeamButton} >Finalize Team</PrimaryButton >
 
 											</div>
 
@@ -466,7 +577,7 @@ export class ChooseTeam extends Component {
 						<div className='ms-Grid-col ms-sm12 ms-md12 ms-lg3 bg-white p10 pr0 pull-right'>
 							<div className='ms-Grid-row'>
 								<div className='ms-Grid-col ms-sm12 ms-md12 ms-lg12 pl0'>
-                                    <h4 className='p15'> <Trans>selectedTeam</Trans></h4>
+									<h4 className='p15'> Selected Team</h4>
 									{
 										this.state.currentSelectedItems.map((member, index) =>
 											member.displayName !== "" ?
@@ -492,27 +603,17 @@ export class ChooseTeam extends Component {
 						<div className='ms-Grid-col ms-sm12 ms-md12 ms-lg8 mt20 '>
 							<div className='ms-Grid-row'>
                                 <div className='ms-Grid-col ms-sm12 ms-md12 ms-lg12 pageheading bg-white pb20'>
-                                    <h4 className=" mb0 pt15"><Trans>updateTemplate</Trans></h4>
+                                    <h4 className=" mb0 pt15">Update Template</h4>
 									<div className='docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg12 pt10 '>
 										<div className='ms-Grid-col ms-sm12 ms-md6 ms-lg9 pl0 pull-left' >
                                             <FilePicker
-												id='filePicker'
-												//Bug Fix, proposaldocument coming as null start
-                                                fileUri={this.state.oppData.proposalDocument !==null ?this.state.oppData.proposalDocument.documentUri :""}
-												//Bug Fix, proposaldocument coming as null end
-												file={uploadedFile}
-												//Bug Fix, proposaldocument coming as null start
-                                                showBrowse={
-													this.state.oppData.proposalDocument !== null?
-														(this.state.oppData.proposalDocument.documentUri ? false : true):false
-													}
-												//Bug Fix, proposaldocument coming as null end
+                                                id='filePicker'
+                                                fileUri={this.state.oppData.proposalDocument.documentUri}
+                                                file={uploadedFile}
+                                                showBrowse='true'
                                                 showLabel='true'
-												onChange={(e) => this.handleFileUpload(e)}
-												//Bug Fix, proposaldocument coming as null start
-                                                btnCaption={this.state.oppData.proposalDocument !== null?
-													(this.state.oppData.proposalDocument.documentUri ? "Change File" : ""):""}
-												//Bug Fix, proposaldocument coming as null end
+                                                onChange={(e) => this.handleFileUpload(e)}
+                                                btnCaption={this.state.oppData.proposalDocument.documentUri ? "Change File" : ""}
                                             />
 										</div>
 										<div className='ms-Grid-col ms-sm12 ms-md6 ms-lg3 '>
@@ -522,15 +623,8 @@ export class ChooseTeam extends Component {
 													: ""
 											}
 
-											
-											<PrimaryButton className='pull-right' onClick={this.saveFile} disabled={
-												//Bug Fix, proposaldocument coming as null start
-												this.state.IsfileUpload || 
-												(this.state.oppData.proposalDocument !== null?
-												(this.state.oppData.proposalDocument.documentUri ? true : false) : false)
-												//Bug Fix, proposaldocument coming as null end
-												}>
-											<Trans>save</Trans></PrimaryButton >
+
+											<PrimaryButton className='pull-right' onClick={this.saveFile} disabled={this.state.IsfileUpload}>Save</PrimaryButton >
 											{
 												this.state.fileUploadMsg ?
                                                     <MessageBar

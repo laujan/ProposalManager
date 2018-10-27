@@ -6,35 +6,23 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <title>Point</title>
-    <script src="../../Scripts/jquery-1.10.2.js" type="text/javascript"></script>
+	<meta charset="UTF-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+	<title>Point</title>
+	<script src="../../Scripts/jquery-1.10.2.js" type="text/javascript"></script>
 
-    <link href="../../Content/Office.css" rel="stylesheet" type="text/css" />
-    <script src="https://appsforoffice.microsoft.com/lib/beta/hosted/office.js" type="text/javascript"></script>
-    <script src="https://secure.aadcdn.microsoftonline-p.com/lib/1.0.17/js/adal.min.js"></script>
-    <script src="https://statics.teams.microsoft.com/sdk/v1.0/js/MicrosoftTeams.min.js" crossorigin="anonymous"></script>
-    <link href="../../Content/fabric.min.css" rel="stylesheet" type="text/css" />
-    <link href="../../Content/fabric.components.min.css" rel="stylesheet" type="text/css" />
-    @*Globalization*@
-    <script type="text/javascript">
-    (function ()
-    {
-        var localizationStrings = {};
-        @foreach (var item in Model.Resources)
-        {
-            @:localizationStrings["@item.Key"] = "@Html.Raw(item.Value)";
-        }
+	<link href="../../Content/Office.css" rel="stylesheet" type="text/css" />
+	<script src="https://appsforoffice.microsoft.com/lib/beta/hosted/office.js" type="text/javascript"></script>
+	<script src="https://secure.aadcdn.microsoftonline-p.com/lib/1.0.17/js/adal.min.js"></script>
+	<script src="https://statics.teams.microsoft.com/sdk/v1.0/js/MicrosoftTeams.min.js" crossorigin="anonymous"></script>
+	<link href="../../Content/fabric.min.css" rel="stylesheet" type="text/css" />
+	<link href="../../Content/fabric.components.min.css" rel="stylesheet" type="text/css" />
 
-        window.stringResources = localizationStrings;
-    })();
-    </script>
-    <!-- To enable offline debugging using a local reference to Office.js, use:                        -->
-    <!-- <script src="../../Scripts/Office/MicrosoftAjax.js" type="text/javascript"></script>  -->
-    <!-- <script src="../../Scripts/Office/1/office.js" type="text/javascript"></script>  -->
+	<!-- To enable offline debugging using a local reference to Office.js, use:                        -->
+	<!-- <script src="../../Scripts/Office/MicrosoftAjax.js" type="text/javascript"></script>  -->
+	<!-- <script src="../../Scripts/Office/1/office.js" type="text/javascript"></script>  -->
 
-    <script>
+	<script>
 		var timestamp = Math.random();
 		var config = {
 					tenant: "@Model.TenantId",
@@ -44,13 +32,13 @@
 		document.write("<link href='../../Content/App.css?t=" + timestamp + "' rel='stylesheet' type='text/css' />");
 		document.write("<script src='../../Scripts/App/App.js?t=" + timestamp + "' type='text/javascript'></s" + "cript>");
 		document.write("<script src='../../Scripts/App/Excel/Point.js?t=" + timestamp + "' type='text/javascript'></s" + "cript>");
-    </script>
+	</script>
 </head>
 <body>
 	<div class="loading-login" id="dvLogin">
-        <div class="ms-Spinner-label circle-label">
-            @SmartLink.Web.Resources.Resource.Loading ...
-        </div>
+		<div class="ms-Spinner-label circle-label">
+			Loading...
+		</div>
 		<div class="circle-Loading">
 		</div>
 	</div>
@@ -59,24 +47,24 @@
 		<!--Header-->
 		<div class="header">
 			<div class="nav-header">
-				<a class="n-back" href="javascript:" title="@SmartLink.Web.Resources.Resource.Back">
+				<a class="n-back" href="javascript:" title="Back">
 					<i></i>
-                    <span class="n-name-add">@SmartLink.Web.Resources.Resource.AddSourcePoint</span>
-                    <span class="n-name-edit">@SmartLink.Web.Resources.Resource.EditSourcePoint</span>
-					@*<span class="n-name-clone">Clone Files & Points</span>*@
+					<span class="n-name-add">Add Source Point</span>
+					<span class="n-name-edit">Edit Source Point</span>
+					<span class="n-name-clone">Clone Files & Points</span>
 				</a>
-				<a class="n-add" href="javascript:" title="@SmartLink.Web.Resources.Resource.Add"><i></i><span>@SmartLink.Web.Resources.Resource.Add</span></a>
-				<a class="n-bulk" href="javascript:" title="@SmartLink.Web.Resources.Resource.AddBulk"><i></i><span>@SmartLink.Web.Resources.Resource.AddBulk</span></a>
-				<a class="n-publishall" href="javascript:" title="@SmartLink.Web.Resources.Resource.PublishAll"><i></i><span>@SmartLink.Web.Resources.Resource.PublishAll</span></a>
-				<a class="n-refresh" href="javascript:" title="@SmartLink.Web.Resources.Resource.RefreshAll"><i></i><span>@SmartLink.Web.Resources.Resource.RefreshAll</span></a>
-				<a class="n-publish" href="javascript:" title="@SmartLink.Web.Resources.Resource.Publish"><i></i><span>@SmartLink.Web.Resources.Resource.Publish</span></a>
-				<a class="n-delete" href="javascript:" title="@SmartLink.Web.Resources.Resource.Delete"><i></i><span>@SmartLink.Web.Resources.Resource.Delete</span></a>
-				<a class="n-more" href="javascript:" title="@SmartLink.Web.Resources.Resource.More"><i></i></a>
+				<a class="n-add" href="javascript:" title="Add"><i></i><span>Add</span></a>
+				<a class="n-bulk" href="javascript:" title="Bulk Add"><i></i><span>Bulk Add</span></a>
+				<a class="n-publishall" href="javascript:" title="Publish All"><i></i><span>Publish All</span></a>
+				<a class="n-refresh" href="javascript:" title="Refresh All"><i></i><span>Refresh All</span></a>
+				<a class="n-publish" href="javascript:" title="Publish"><i></i><span>Publish</span></a>
+				<a class="n-delete" href="javascript:" title="Delete"><i></i><span>Delete</span></a>
+				<a class="n-more" href="javascript:" title="More"><i></i></a>
 
 			</div>
 			<div class="more-menu">
-				<a class="n-publish" href="javascript:" title="@SmartLink.Web.Resources.Resource.Publish"><i></i><span>@SmartLink.Web.Resources.Resource.Publish</span></a>
-				<a class="n-delete" href="javascript:" title="@SmartLink.Web.Resources.Resource.Delete"><i></i><span>@SmartLink.Web.Resources.Resource.Delete</span></a>
+				<a class="n-publish" href="javascript:" title="Publish"><i></i><span>Publish</span></a>
+				<a class="n-delete" href="javascript:" title="Delete"><i></i><span>Delete</span></a>
 			</div>
 			<div class="clone-header">
 				<div class="title">
@@ -105,14 +93,14 @@
 					<div class="source-type-block">
 						<div class="ms-Pivot p-classify">
 							<ul class="ms-Pivot-links point-types-add">
-								<li class="ms-Pivot-link is-selected" data-content="Points" title="@SmartLink.Web.Resources.Resource.Points" tabindex="1">
-                                    <span>@SmartLink.Web.Resources.Resource.Point</span>
+								<li class="ms-Pivot-link is-selected" data-content="Points" title="Points" tabindex="1">
+									<span>Point</span>
 								</li>
-								<li class="ms-Pivot-link " data-content="Charts" title="@SmartLink.Web.Resources.Resource.Charts" tabindex="1">
-                                    <span>@SmartLink.Web.Resources.Resource.Chart</span>
+								<li class="ms-Pivot-link " data-content="Charts" title="Charts" tabindex="1">
+									<span>Chart</span>
 								</li>
-								<li class="ms-Pivot-link " data-content="Tables" title="@SmartLink.Web.Resources.Resource.Tables" tabindex="1">
-                                    <span>@SmartLink.Web.Resources.Resource.Table</span>
+								<li class="ms-Pivot-link " data-content="Tables" title="Tables" tabindex="1">
+									<span>Table</span>
 								</li>
 							</ul>
 						</div>
@@ -143,16 +131,16 @@
 
 				<div class="manage-header">
 					<div class="manage-title">
-                        <span>@SmartLink.Web.Resources.Resource.ManageSourcePoints</span>
+						<span>Manage Source Points</span>
 						<div>
-							<a href="javascript:" id="btnMoveUp" title="@SmartLink.Web.Resources.Resource.Up" class="disabled"><i class="ms-Icon ms-Icon--CaretUpSolid8"></i></a>
-							<a href="javascript:" id="btnMoveDown" title="@SmartLink.Web.Resources.Resource.Down" class="disabled"><i class="ms-Icon ms-Icon--CaretDownSolid8"></i></a>
+							<a href="javascript:" id="btnMoveUp" title="Up" class="disabled"><i class="ms-Icon ms-Icon--CaretUpSolid8"></i></a>
+							<a href="javascript:" id="btnMoveDown" title="Down" class="disabled"><i class="ms-Icon ms-Icon--CaretDownSolid8"></i></a>
 						</div>
 					</div>
 					<div class="search">
 						<div class="s-input">
 							<div>
-								<input type="text" id="txtSearchSourcePoint" data-default="@SmartLink.Web.Resources.Resource.SearchSourcePointName" />
+								<input type="text" id="txtSearchSourcePoint" data-default="Search by Source Point Name" />
 								<ul id="autoCompleteWrap2" class="search-tooltips"></ul>
 							</div>
 						</div>
@@ -164,14 +152,14 @@
 					<div class="source-type-block">
 						<div class="ms-Pivot p-classify">
 							<ul class="ms-Pivot-links point-types-mana">
-								<li class="ms-Pivot-link is-selected" data-content="Points" title="@SmartLink.Web.Resources.Resource.Points" tabindex="1">
-									<span>@SmartLink.Web.Resources.Resource.Points (</span><span>0</span><span>)</span>
+								<li class="ms-Pivot-link is-selected" data-content="Points" title="Points" tabindex="1">
+									<span>Points(</span><span>0</span><span>)</span>
 								</li>
-								<li class="ms-Pivot-link " data-content="Charts" title="@SmartLink.Web.Resources.Resource.Charts" tabindex="1">
-									<span>@SmartLink.Web.Resources.Resource.Charts (</span><span>0</span><span>)</span>
+								<li class="ms-Pivot-link " data-content="Charts" title="Charts" tabindex="1">
+									<span>Charts(</span><span>0</span><span>)</span>
 								</li>
-								<li class="ms-Pivot-link " data-content="Tables" title="@SmartLink.Web.Resources.Resource.Tables" tabindex="1">
-									<span>@SmartLink.Web.Resources.Resource.Tables (</span><span>0</span><span>)</span>
+								<li class="ms-Pivot-link " data-content="Tables" title="Tables" tabindex="1">
+									<span>Tables(</span><span>0</span><span>)</span>
 								</li>
 							</ul>
 						</div>
@@ -181,11 +169,11 @@
 									<input type="checkbox" />
 									<i class="ms-Icon ms-Icon--CheckMark"></i>
 								</div>
-                                <label>@SmartLink.Web.Resources.Resource.Errors</label>
+								<label>errors</label>
 							</div>
 							<div class="resort">
 								<i class="ms-Icon ms-Icon--Sort"></i>
-                                <span>@SmartLink.Web.Resources.Resource.ResetSort</span>
+								<span>Reset sort</span>
 							</div>
 						</div>
 					</div>
@@ -199,9 +187,9 @@
 										<i class="ms-Icon ms-Icon--CheckMark"></i>
 									</div>
 								</div>
-								<div class="i2 sort-asc"><span>@SmartLink.Web.Resources.Resource.SourcePoint</span><i class="ms-Icon ms-Icon--Down"></i><i class="ms-Icon ms-Icon--Up"></i></div>
-								<div class="i3"><span>@SmartLink.Web.Resources.Resource.PublishedStatus</span><i class="ms-Icon ms-Icon--Down"></i><i class="ms-Icon ms-Icon--Up"></i></div>
-								<div class="i4"><span>@SmartLink.Web.Resources.Resource.DocumentValue</span><i class="ms-Icon ms-Icon--Down"></i><i class="ms-Icon ms-Icon--Up"></i></div>
+								<div class="i2 sort-asc"><span>Source Point</span><i class="ms-Icon ms-Icon--Down"></i><i class="ms-Icon ms-Icon--Up"></i></div>
+								<div class="i3"><span>Published Status</span><i class="ms-Icon ms-Icon--Down"></i><i class="ms-Icon ms-Icon--Up"></i></div>
+								<div class="i4"><span>Document Value</span><i class="ms-Icon ms-Icon--Down"></i><i class="ms-Icon ms-Icon--Up"></i></div>
 								<div class="i5"></div>
 							</div>
 						</li>
@@ -213,7 +201,7 @@
 
 		<!--Footer-->
 		<div class="footer">
-			<i class="f-logo"><img src="../../Images/logo-s-front.png" /></i><span>@Model.ApplicationName</span>
+			<i class="f-logo"><img src="../../Images/logo-s-front.png" /></i><span>Smart Link</span>
 			<i class="ms-Icon ms-Icon--Settings f-settings"></i>
 		</div>
 		<div class="settings">
@@ -222,8 +210,8 @@
 					<a href="javascript:" class="s-username"></a>
 					<a href="javascript:" class="s-email"></a>
 				</li>
-				@*<li><a class="s-cloning" href="javascript:" title="Clone Folder">Cloning</a></li>*@
-				<li><a class="s-signout" href="../Account/SignOut" title="@SmartLink.Web.Resources.Resource.Signout">@SmartLink.Web.Resources.Resource.Signout</a></li>
+				<li><a class="s-cloning" href="javascript:" title="Clone Folder">Cloning</a></li>
+				<li><a class="s-signout" href="../Account/SignOut" title="Sign Out">Sign out</a></li>
 			</ul>
 			<i class="ms-Icon ms-Icon--Settings s-settings"></i>
 		</div>
@@ -236,19 +224,19 @@
 					<div class="content add-point">
 						<div class="point-single">
 							<div class="point-item input-wrapper source-name">
-                                <label>@SmartLink.Web.Resources.Resource.SourcePointName<em>*</em></label>
+								<label>Source Point Name<em>*</em></label>
 								<div class="select-range">
 									<input type="text" id="txtName" />
-									<a href="javascript:" id="btnSelectName" title="@SmartLink.Web.Resources.Resource.SelectSourcePointName">
+									<a href="javascript:" id="btnSelectName" title="Select source point name">
 										<i class="ms-Icon ms-Icon--Table"></i>
 									</a>
 								</div>
 							</div>
 							<div class="point-item input-wrapper">
-                                <label>@SmartLink.Web.Resources.Resource.SelectRange:<em>*</em></label>
+								<label>Select range:<em>*</em></label>
 								<div class="select-range">
 									<input type="text" id="txtLocation" />
-									<a href="javascript:" id="btnLocation" title="@SmartLink.Web.Resources.Resource.SelectRange">
+									<a href="javascript:" id="btnLocation" title="Select range">
 										<i class="ms-Icon ms-Icon--Table"></i>
 									</a>
 								</div>
@@ -258,13 +246,13 @@
 
 						<div class="point-chart">
 							<div class="point-item input-wrapper source-name">
-                                <label>@SmartLink.Web.Resources.Resource.SourceChartTitle<em>*</em></label>
+								<label>Source Chart Title<em>*</em></label>
 								<div>
 									<input type="text" id="txtChartName" />
 								</div>
 							</div>
 							<div class="point-item input-wrapper">
-                                <label>@SmartLink.Web.Resources.Resource.SelectChart<em>*</em></label>
+								<label>Select Chart<em>*</em></label>
 								<div class="select-chart">
 									<input type="text" id="txtChartLocation" value="" />
 									<a href="javascript:" id="btnChartLocation">
@@ -277,16 +265,16 @@
 
 						<div class="point-table">
 							<div class="point-item input-wrapper source-name">
-                                <label>@SmartLink.Web.Resources.Resource.SourceTableTitle<em>*</em></label>
+								<label>Source Table Title<em>*</em></label>
 								<div>
 									<input type="text" id="txtTableTitle" />
 								</div>
 							</div>
 							<div class="point-item input-wrapper">
-                                <label>@SmartLink.Web.Resources.Resource.SourceTableRange<em>*</em></label>
+								<label>Source Table Range<em>*</em></label>
 								<div class="select-range">
 									<input type="text" id="txtTableLocation" />
-									<a href="javascript:" id="btnTableLocation" title="@SmartLink.Web.Resources.Resource.SelectRange">
+									<a href="javascript:" id="btnTableLocation" title="Select range">
 										<i class="ms-Icon ms-Icon--Table"></i>
 									</a>
 								</div>
@@ -296,16 +284,15 @@
 						<hr />
 						<div class="btnWrapper">
 							<button class="ms-Button" id="btnCancel">
-                                <span class="ms-Button-label">@SmartLink.Web.Resources.Resource.Cancel</span>
+								<span class="ms-Button-label">Cancel</span>
 							</button>
 							<button class="ms-Button ms-Button--primary" id="btnSave">
-                                <span class="ms-Button-label">@SmartLink.Web.Resources.Resource.Save</span>
+								<span class="ms-Button-label">Save</span>
 							</button>
 						</div>
 
-
 						<div class="point-associated">
-                            <div>@SmartLink.Web.Resources.Resource.FilesAssociatedWithThisSourcePoint:</div>
+							<div>Files associated with this Source Point:</div>
 							<ul id="listAssociated"></ul>
 						</div>
 					</div>
@@ -410,9 +397,9 @@
 						</div>
 					</div>
 					<div class="content document-error">
-                        <p>@SmartLink.Web.Resources.Resource.LoadDocumentIdFailed</p>
+						<p>Load document ID failed.</p>
 						<span id="lblDocumentIDError"></span>
-                        <a id="btnDocumentIDReload" href="javascript:">@SmartLink.Web.Resources.Resource.ClickReload</a>
+						<a id="btnDocumentIDReload" href="javascript:">Click to reload document ID</a>
 					</div>
 
 
@@ -424,11 +411,11 @@
 								<span id="lblSuccessMessage"></span>
 							</div>-->
 							<div id="popupErrorMain" class="error-wrapper">
-                                <h5>@SmartLink.Web.Resources.Resource.Error</h5>
+								<h5>Error</h5>
 								<h6 id="lblErrorTitle"></h6>
 								<ul id="lblErrorMessage"></ul>
 								<h6 id="lblErrorRepair"></h6>
-                                <button id="btnErrorOK">@SmartLink.Web.Resources.Resource.OK</button>
+								<button id="btnErrorOK">OK</button>
 							</div>
 						</div>
 						<div id="popupProcessing" class="popup processing">
@@ -447,10 +434,10 @@
 								</div>
 								<div class="ms-Dialog-actions">
 									<button id="btnYes" class="ms-Button ms-Dialog-action ms-Button--primary">
-                                        <span class="ms-Button-label">@SmartLink.Web.Resources.Resource.Yes</span>
+										<span class="ms-Button-label">Yes</span>
 									</button>
 									<button id="btnNo" class="ms-Button ms-Dialog-action">
-                                        <span class="ms-Button-label">@SmartLink.Web.Resources.Resource.No</span>
+										<span class="ms-Button-label">No</span>
 									</button>
 								</div>
 							</div>
@@ -460,11 +447,11 @@
 								<div class="browse-file">
 									<div class="browse-filter">
 										<div>
-                                            <a href="javascript:" id="btnBrowseBack">&lt;&lt; @SmartLink.Web.Resources.Resource.Back</a>
+											<a href="javascript:" id="btnBrowseBack">&lt;&lt; Back</a>
 											<i id="btnBrowseCancel"></i>
-											<a href="javascript:" class="browse-newfolder-action" id="btnNewFolder"><i></i><span>@SmartLink.Web.Resources.Resource.NewFolder</span></a>
+											<a href="javascript:" class="browse-newfolder-action" id="btnNewFolder"><i></i><span>New Folder</span></a>
 										</div>
-                                        <span><i></i>@SmartLink.Web.Resources.Resource.SelectFolderToClone</span>
+										<span><i></i>Select folder to clone</span>
 									</div>
 									<div class="browse-content">
 										<ul id="browseList"></ul>
@@ -472,7 +459,7 @@
 											<label>Folder Name:</label>
 											<input id="txtNewFolderName" />
 											<div>
-                                                <button id="btnCreateNewFolder">@SmartLink.Web.Resources.Resource.Create</button>
+												<button id="btnCreateNewFolder">Create</button>
 											</div>
 											<div id="browseNewFolderMessage">
 											</div>
@@ -481,7 +468,7 @@
 									<div class="browse-message" id="txtBrowseMessage">
 									</div>
 									<div class="browse-button" id="wrapBrowseOK">
-                                        <button id="btnBrowseOK">@SmartLink.Web.Resources.Resource.OK</button>
+										<button id="btnBrowseOK">OK</button>
 									</div>
 								</div>
 								<div class="loading" id="popBrowseLoading">
@@ -500,3 +487,5 @@
 	</div>
 </body>
 </html>
+
+

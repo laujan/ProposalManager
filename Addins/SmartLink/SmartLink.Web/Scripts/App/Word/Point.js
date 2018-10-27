@@ -1,28 +1,28 @@
 ﻿$(function ()
 {
-	Office.initialize = function (reason) {
+    Office.initialize = function (reason) {
 
-		$(document).ready(function () {
-			BigNumber.config({ EXPONENTIAL_AT: 1e+9 });
+        $(document).ready(function () {
+            BigNumber.config({ EXPONENTIAL_AT: 1e+9 });
 
-			let token = sessionStorage["token"];
+            let token = sessionStorage["token"];
 
-			if (!token)
-				window.location.replace("/");
+            if (!token)
+                window.location.replace("/");
 
-			point.init(token);
-			$("#dvLogin").hide();
-			$("#word-addin").show();
+            point.init(token);
+            $("#dvLogin").hide();
+            $("#word-addin").show();
 
-			
-		});
 
-	};
+        });
+
+    };
 });
 
 var point = (function () {
     var point = {
-        token: "",
+		token: "",
         filePath: "",
         documentId: "",
         controls: {},
@@ -65,8 +65,8 @@ var point = (function () {
     }, that = point;
 
     that.init = function (accessToken) {
-        that.token = accessToken;
-        that.filePath = Office.context.document.url;
+		that.token = accessToken;
+		that.filePath = Office.context.document.url;
         that.controls = {
             body: $("body"),
             main: $(".main"),
@@ -178,8 +178,8 @@ var point = (function () {
         };
 
         that.highlighted = that.utility.highlight.get();
-        that.controls.highlight.find("span").html(that.highlighted ? window.stringResources["HighlightOff"] : window.stringResources["HighlightOn"]);
-        that.controls.highlight.prop("title", that.highlighted ? window.stringResources["HighlightOff"] : window.stringResources["HighlightOn"]);
+        that.controls.highlight.find("span").html(that.highlighted ? "Highlight Off" : "Highlight On");
+        that.controls.highlight.prop("title", that.highlighted ? "Highlight Off" : "Highlight On");
         that.controls.body.click(function () {
             that.action.body();
         });
@@ -461,10 +461,10 @@ var point = (function () {
             }
 
             if ($(this).data("content") != "Points" && !_t) {
-                that.controls.headerListPoints.find(".i3 span")[0].innerText = window.stringResources["PublishedStatus"];
+                that.controls.headerListPoints.find(".i3 span")[0].innerText = "Published Status";
             }
             else {
-                that.controls.headerListPoints.find(".i3 span")[0].innerText = window.stringResources["Value"];
+                that.controls.headerListPoints.find(".i3 span")[0].innerText = "Value";
             }
             $(".ckb-wrapper.all").find("input").prop("checked", false);
             $(".ckb-wrapper.all").removeClass("checked");
@@ -589,7 +589,7 @@ var point = (function () {
         that.controls.pagerGo.on("click", function () {
             var _v = $.trim(that.controls.pagerValue.val());
             if (isNaN(_v)) {
-                that.popup.message({ success: false, title: window.stringResources["OnlyNumbers"] });
+                that.popup.message({ success: false, title: "Only numbers are a valid input." });
             }
             else {
                 _n = parseInt(_v);
@@ -597,7 +597,7 @@ var point = (function () {
                     that.utility.pager.init({ index: _n, refresh: false });
                 }
                 else {
-                    that.popup.message({ success: false, title: window.stringResources["InvalidNumber"] });
+                    that.popup.message({ success: false, title: "Invalid number." });
                 }
             }
         });
@@ -688,7 +688,7 @@ var point = (function () {
                 that.action.select(options);
             }
             else {
-                that.popup.message({ success: false, title: window.stringResources["SourcePointFailed"] });
+                that.popup.message({ success: false, title: "Load source points failed." });
             }
         });
     };
@@ -971,7 +971,7 @@ var point = (function () {
                         });
                     }
                     else {
-                        that.popup.message({ success: false, title: window.stringResources["RecentFilesFailed"] });
+                        that.popup.message({ success: false, title: "Load recent files failed." });
                     }
                 });
             });
@@ -1095,7 +1095,7 @@ var point = (function () {
                 }
                 else {
                     // that.controls.tooltipMessage.removeClass("active");
-                    that.popup.message({ success: true, title: window.stringResources["RefreshDestinationPoints"] }, function () { that.popup.hide(3000); });
+                    that.popup.message({ success: true, title: "Refresh all destination points succeeded." }, function () { that.popup.hide(3000); });
                 }
             });
         },
@@ -1152,17 +1152,17 @@ var point = (function () {
                                     }
                                     that.utility.add($.extend({}, result.data, { existed: true, changed: false, orderBy: _index, PublishedStatus: true, DocumentValue: _v }));
                                     that.utility.pager.init({ refresh: false, index: that.pagerIndex }, function () {
-                                        that.popup.message({ success: true, title: window.stringResources["NewDestPoint"] }, function () { that.popup.hide(3000); });
+                                        that.popup.message({ success: true, title: "Add new destination point succeeded." }, function () { that.popup.hide(3000); });
                                     });
                                 });
                             }
                             else {
-                                that.popup.message({ success: false, title: window.stringResources["NewDestPointFailed"] });
+                                that.popup.message({ success: false, title: "Add destination point failed." });
                             }
                         });
                     }
                     else {
-                        that.popup.message({ success: false, title: window.stringResources["CreateRangeFailed"] });
+                        that.popup.message({ success: false, title: "Create range in Word failed." });
                     }
                 });
             });
@@ -1189,16 +1189,16 @@ var point = (function () {
                             if (result.status == app.status.succeeded) {
                                 that.utility.update($.extend({}, result.data, { existed: true, changed: that.model.changed, orderBy: that.model.orderBy, PublishedStatus: that.model.PublishedStatus, DocumentValue: _v }));
                                 that.utility.pager.init({ refresh: false, index: that.pagerIndex }, function () {
-                                    that.popup.message({ success: true, title: window.stringResources["UpdateDestPoint"] }, function () { that.popup.hide(3000); });
+                                    that.popup.message({ success: true, title: "Update destination point custom format succeeded." }, function () { that.popup.hide(3000); });
                                 });
                             }
                             else {
-                                that.popup.message({ success: false, title: window.stringResources["UpdateDestPointFailed"] });
+                                that.popup.message({ success: false, title: "Update destination point custom format failed." });
                             }
                         });
                     }
                     else {
-                        that.popup.message({ success: false, title: window.stringResources["UpdateRangeFailed"] });
+                        that.popup.message({ success: false, title: "Update range in Word failed." });
                     }
                 });
             });
@@ -1226,8 +1226,8 @@ var point = (function () {
             else {
                 that.highlighted = !that.highlighted;
                 that.utility.highlight.set(that.highlighted, function () {
-                    that.controls.highlight.find("span").html(that.highlighted ? window.stringResources["HighlightOff"] : window.stringResources["HighlightOn"]);
-                    that.controls.highlight.prop("title", that.highlighted ? window.stringResources["HighlightOff"] : window.stringResources["HighlightOn"]);
+                    that.controls.highlight.find("span").html(that.highlighted ? "Highlight Off" : "Highlight On");
+                    that.controls.highlight.prop("title", that.highlighted ? "Highlight Off" : "Highlight On");
                     that.popup.processing(false);
                 });
             }
@@ -1235,7 +1235,7 @@ var point = (function () {
         del: function (o) {
             that.utility.mode(function () {
                 var _i = o.data("id"), _rid = o.data("range"), _dl = o.hasClass("item-error");
-                that.popup.confirm({ title: window.stringResources["DeleteDestPoint"], message: window.stringResources["CannotRemoveDestPoint"] }, function () {
+                that.popup.confirm({ title: "Do you want to delete the destination point?", message: "Removing this destination point cannot be undone." }, function () {
                     // Ask if user want to stay value in document
                     that.action.requestValueInDoc(_dl, function (keepContent) {
 
@@ -1244,18 +1244,18 @@ var point = (function () {
                             if (result.status == app.status.succeeded) {
                                 that.range.del({ RangeId: _rid }, function (result) {
                                     if (result.status == app.status.succeeded) {
-                                        that.popup.message({ success: true, title: window.stringResources["DeleteDestPointOK"] }, function () { that.popup.hide(3000); });
+                                        that.popup.message({ success: true, title: "Delete destination point succeeded." }, function () { that.popup.hide(3000); });
                                         that.utility.remove({ Id: _i });
                                         that.ui.remove({ Id: _i });
                                         that.utility.pager.init({ refresh: false, index: that.controls.list.find(".point-item").length > 0 ? that.pagerIndex : that.pagerIndex - 1 });
                                     }
                                     else {
-                                        that.popup.message({ success: false, title: window.stringResources["DeleteDestPointWord"] });
+                                        that.popup.message({ success: false, title: "Delete destination point in Word failed." });
                                     }
                                 }, keepContent); // Add the parameter here to stay value or not.
                             }
                             else {
-                                that.popup.message({ success: false, title: window.stringResources["DeleteDestPointFailed"] });
+                                that.popup.message({ success: false, title: "Delete destination point failed." });
                             }
                         });
 
@@ -1276,8 +1276,8 @@ var point = (function () {
                 });
                 that.utility.mode(function () {
                     that.popup.confirm({
-                        title: window.stringResources["DeleteSelectedDestPoint"],
-                        message: window.stringResources["CannotRemoveSelectedDestPoint"]
+                        title: "Do you want to delete the selected destination point?",
+                        message: "Removing these destination points cannot be undone."
                     }, function () {
                         // Ask if user want to stay value in document
                         that.action.requestValueInDoc(_dl, function (keepContent) {
@@ -1286,7 +1286,7 @@ var point = (function () {
                             that.service.deleteSelected({ data: { "": _ss } }, function (result) {
                                 if (result.status == app.status.succeeded) {
                                     that.range.delSelected({ data: _sr, index: 0 }, function () {
-                                        that.popup.message({ success: true, title: window.stringResources["DeleteDestPointOK"] }, function () { that.popup.hide(3000); });
+                                        that.popup.message({ success: true, title: "Delete destination point succeeded." }, function () { that.popup.hide(3000); });
                                         $.each(_ss, function (_m, _n) {
                                             that.utility.remove({ Id: _n });
                                             that.ui.remove({ Id: _n });
@@ -1296,7 +1296,7 @@ var point = (function () {
                                     }, keepContent); // Add the parameter here to stay value or not.
                                 }
                                 else {
-                                    that.popup.message({ success: false, title: window.stringResources["DeleteDestPointFailed"] });
+                                    that.popup.message({ success: false, title: "Delete destination point failed." });
                                 }
                             });
 
@@ -1308,7 +1308,7 @@ var point = (function () {
                 });
             }
             else {
-                that.popup.message({ success: false, title: window.stringResources["SelectDestPoint"] });
+                that.popup.message({ success: false, title: "Please select destination point." });
             }
         },
         // Ask if user want to stay value in document
@@ -1317,7 +1317,7 @@ var point = (function () {
                 callback(true);
             }
             else {
-                that.popup.confirm({ title: window.stringResources["StayInDoc"], message: "" },
+                that.popup.confirm({ title: "Do you want the value to stay in the document?", message: "" },
                     function () {
                         callback(true); // Stay value in document.
                     },
@@ -1347,12 +1347,12 @@ var point = (function () {
                             }
                         }
                         else {
-                            that.popup.message({ success: false, title: window.stringResources["PointDeletedInWord"] });
+                            that.popup.message({ success: false, title: "The point in Word has been deleted." });
                         }
                     });
                 }
                 else {
-                    that.popup.message({ success: false, title: window.stringResources["DestPointDeleted"] });
+                    that.popup.message({ success: false, title: "The destination point has been deleted." });
                 }
             });
         },
@@ -1388,7 +1388,7 @@ var point = (function () {
                 var _rid = _selectedItem.data("range");
                 that.range.goto({ RangeId: _rid }, function (result) {
                     if (result.status == app.status.failed) {
-                        that.popup.message({ success: false, title: window.stringResources["PointDeletedInWord"] });
+                        that.popup.message({ success: false, title: "The point in Word has been deleted." });
                     }
                 });
             });
@@ -1487,8 +1487,8 @@ var point = (function () {
                     }
                 }
             });
-            _that.closest(".point-item").find(".btnSelectFormat").html(_fd.length > 0 ? _fd.join(", ") : window.stringResources["None"]);
-            _that.closest(".point-item").find(".btnSelectFormat").prop("title", _fd.length > 0 ? _fd.join(", ") : window.stringResources["None"]);
+            _that.closest(".point-item").find(".btnSelectFormat").html(_fd.length > 0 ? _fd.join(", ") : "None");
+            _that.closest(".point-item").find(".btnSelectFormat").prop("title", _fd.length > 0 ? _fd.join(", ") : "None");
             _that.closest(".point-item").find(".btnSelectFormat").prop("selected", _fi.join(","));
             _that.closest(".point-item").find(".btnSelectFormat").prop("name", _fn.join(","));
             that.format.preview($(_that).closest(".point-item"));
@@ -1515,7 +1515,7 @@ var point = (function () {
                 }
                 else {
                     that.ui.customFormat({ o: options.o, selected: options.selected ? options.selected : null, selectedPoint: options.selectedPoint ? options.selectedPoint : null, ref: options.ref }, callback);
-                    that.popup.message({ success: false, title: window.stringResources["LoadCustomFormatFailed"] });
+                    that.popup.message({ success: false, title: "Load custom format failed." });
                 }
             });
         },
@@ -1613,11 +1613,11 @@ var point = (function () {
                             });
                         }
                         else {
-                            that.popup.message({ success: false, title: window.stringResources["NoFiles"] });
+                            that.popup.message({ success: false, title: "No files found in source folder." });
                         }
                     }
                     else {
-                        that.popup.message({ success: false, title: window.stringResources["GetSourceFilesFailed"] });
+                        that.popup.message({ success: false, title: "Get files in source folder failed." });
                     }
                 });
             },
@@ -1673,7 +1673,7 @@ var point = (function () {
                             callback({ data: options.data });
                         }
                         else {
-                            that.popup.message({ success: false, title: window.stringResources["GetDestFilesFailed"] });
+                            that.popup.message({ success: false, title: "Get files in destination folder failed." });
                         }
                     });
                 }
@@ -1729,7 +1729,7 @@ var point = (function () {
                             }
                             else {
                                 that.browse.popup.processing(false);
-                                that.action.newFolder.message({ message: window.stringResources["CreateFolderFailed"] });
+                                that.action.newFolder.message({ message: "Create folder failed: A file name can't contain any of the following characters:<br/>\/:*?\"<>|" });
                             }
                         });
                     }
@@ -1742,13 +1742,13 @@ var point = (function () {
                             }
                             else {
                                 that.browse.popup.processing(false);
-                                that.action.newFolder.message({ message: window.stringResources["CreateFolderFailed"] });
+                                that.action.newFolder.message({ message: "Create folder failed: A file name can't contain any of the following characters:<br/>\/:*?\"<>|" });
                             }
                         });
                     }
                 }
                 else {
-                    that.action.newFolder.message({ message: window.stringResources["EnterFolderName"] });
+                    that.action.newFolder.message({ message: "Please enter folder name." });
                 }
             },
             message: function (options, callback) {
@@ -1852,12 +1852,12 @@ var point = (function () {
                             that.browse.siteCollection();
                         }
                         else {
-                            that.document.error({ title: window.stringResources["AccessTokenFailed"] });
+                            that.document.error({ title: "Get sharepoint access token failed." });
                         }
                     });
                 }
                 else {
-                    that.browse.popup.message(window.stringResources["GraphTokenFailed"]);
+                    that.browse.popup.message("Get graph access token failed.");
                 }
             });
         },
@@ -1887,7 +1887,7 @@ var point = (function () {
                     }
                     else {
                         if (result.error.status == 401) {
-                            that.browse.popup.message(window.stringResources["AccessDenied"]);
+                            that.browse.popup.message("Access denied.");
                         }
                         else {
                             options.index++;
@@ -1901,7 +1901,7 @@ var point = (function () {
                     that.browse.sites({ siteId: options.values.shift(), siteUrl: options.webUrls.shift() });
                 }
                 else {
-                    that.browse.popup.message(window.stringResources["SiteCollectionIdFailed"]);
+                    that.browse.popup.message("Get site collection ID failed.");
                 }
             }
         },
@@ -1920,7 +1920,7 @@ var point = (function () {
                         that.browse.sites({ siteId: that.browse.currentSite.values[0], siteUrl: that.browse.currentSite.webUrls[0] });
                     }
                     else {
-                        that.browse.popup.message(window.stringResources["GetSitesFailed"]);
+                        that.browse.popup.message("Get sites failed.");
                     }
                 }
             });
@@ -1936,7 +1936,7 @@ var point = (function () {
                     that.browse.display({ data: _l });
                 }
                 else {
-                    that.browse.popup.message(window.stringResources["GetLibrariesFailed"]);
+                    that.browse.popup.message("Get libraries failed.");
                 }
             });
         },
@@ -1970,7 +1970,7 @@ var point = (function () {
                         that.action.newFolder.toggle(true);
                     }
                     else {
-                        that.browse.popup.message(window.stringResources["GetFilesFailed"]);
+                        that.browse.popup.message("Get files failed.");
                     }
                 });
             }
@@ -2003,7 +2003,7 @@ var point = (function () {
                         that.action.newFolder.toggle(true);
                     }
                     else {
-                        that.browse.popup.message(window.stringResources["GetFilesFailed"]);
+                        that.browse.popup.message("Get files failed.");
                     }
                 });
             }
@@ -2031,17 +2031,17 @@ var point = (function () {
                                 that.files($.extend({}, { documentId: _d }, options));
                             }
                             else {
-                                that.popup.message({ success: false, title: window.stringResources["RecentFilesFailed"] });
+                                that.popup.message({ success: false, title: "Load recent files failed." });
                             }
 
                         });
                     }
                     else {
-                        that.browse.popup.message(window.stringResources["DocumentIdFailed"]);
+                        that.browse.popup.message("Get file Document ID failed.");
                     }
                 }
                 else {
-                    that.browse.popup.message(window.stringResources["DocumentIdFailed"]);
+                    that.browse.popup.message("Get file Document ID failed.");
                 }
             });
         },
@@ -2064,7 +2064,7 @@ var point = (function () {
                 that.controls.popupBrowseList.append(_h);
             });
             if (options.data.length == 0) {
-                that.controls.popupBrowseList.html(window.stringResources["NoFiles"]);
+                that.controls.popupBrowseList.html("No items found.");
             }
             that.browse.popup.processing(false);
         },
@@ -2204,12 +2204,12 @@ var point = (function () {
                             that.document.site(null, callback);
                         }
                         else {
-                            that.document.error({ title: window.stringResources["AccessTokenFailed"] });
+                            that.document.error({ title: "Get sharepoint access token failed." });
                         }
                     });
                 }
                 else {
-                    that.document.error({ title: window.stringResources["GraphTokenFailed"] });
+                    that.document.error({ title: "Get graph access token failed." });
                 }
             });
         },
@@ -2237,7 +2237,7 @@ var point = (function () {
                     that.document.library({ siteId: options.values.shift(), siteUrl: options.webUrls.shift() }, callback);
                 }
                 else {
-                    that.document.error({ title: window.stringResources["SiteUrlFailed"] });
+                    that.document.error({ title: "Get site url failed." });
                 }
             }
         },
@@ -2255,11 +2255,11 @@ var point = (function () {
                         that.document.file({ siteId: options.siteId, siteUrl: options.siteUrl, listName: _l, fileName: that.utility.fileName(that.filePath) }, callback);
                     }
                     else {
-                        that.document.error({ title: window.stringResources["GetLibraryNameFailed"] });
+                        that.document.error({ title: "Get library name failed." });
                     }
                 }
                 else {
-                    that.document.error({ title: window.stringResources["GetLibraryNameFailed"] });
+                    that.document.error({ title: "Get library name failed." });
                 }
             });
         },
@@ -2278,16 +2278,16 @@ var point = (function () {
                         callback();
                     }
                     else {
-                        that.document.error({ title: window.stringResources["DocumentIdFailed"] });
+                        that.document.error({ title: "Get file Document ID failed." });
                     }
                 }
                 else {
-                    that.document.error({ title: window.stringResources["DocumnetIdFailed"] });
+                    that.document.error({ title: "Get file Document ID failed." });
                 }
             });
         },
         error: function (options) {
-            that.controls.documentIdError.html(window.stringResources["ErrorMessage"] + options.title);
+            that.controls.documentIdError.html("Error message: " + options.title);
             that.controls.main.addClass("error");
             that.popup.processing(false);
         }
@@ -2302,10 +2302,7 @@ var point = (function () {
                 _c = true, //that.format.hasComma(_v),
                 _p = that.format.hasPercent(_v),
                 _k = that.format.hasParenthesis(_v),
-                _m = [window.stringResources["January"], window.stringResources["February"], window.stringResources["March"],
-                window.stringResources["April"], window.stringResources["May"], window.stringResources["June"],
-                window.stringResources["July"], window.stringResources["August"], window.stringResources["September"],
-                window.stringResources["October"], window.stringResources["November"], window.stringResources["December"]],
+                _m = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
                 _x = options.decimal;
             $.each(_f, function (_a, _b) {
                 if (!_b.IsDeleted) {
@@ -3014,13 +3011,13 @@ var point = (function () {
                 return;
             }
             var _dsp = options.data[options.index],
-                _sp = _dsp.ReferencedSourcePoint,
-                _cf = _dsp.CustomFormats,
-                _dp = _dsp.DecimalPlace,
-                _tag = _dsp.RangeId,
-                _pvt = _sp.PublishedHistories && _sp.PublishedHistories.length > 0 ? (_sp.PublishedHistories[0].Value ? _sp.PublishedHistories[0].Value : "") : "",
-                _pv = _sp.SourceType == app.sourceTypes.table ? (_dsp.DestinationType == app.destinationTypes.tableImage ? JSON.parse(_pvt).image : JSON.stringify(JSON.parse(_pvt).table)) : _pvt,
-                _index = that.range.index({ data: options.tags, tag: _tag });
+           _sp = _dsp.ReferencedSourcePoint,
+           _cf = _dsp.CustomFormats,
+           _dp = _dsp.DecimalPlace,
+           _tag = _dsp.RangeId,
+           _pvt = _sp.PublishedHistories && _sp.PublishedHistories.length > 0 ? (_sp.PublishedHistories[0].Value ? _sp.PublishedHistories[0].Value : "") : "",
+           _pv = _sp.SourceType == app.sourceTypes.table ? (_dsp.DestinationType == app.destinationTypes.tableImage ? JSON.parse(_pvt).image : JSON.stringify(JSON.parse(_pvt).table)) : _pvt,
+           _index = that.range.index({ data: options.tags, tag: _tag });
             var _cc;
             for (var i = 0; i < controlItems.length; i++) {
                 if (_tag === controlItems[i].tag) {
@@ -3374,11 +3371,8 @@ var point = (function () {
     that.service = {
         common: function (options, callback) {
 
-            if (!that.token)
-                return;
-
-            let apiToken = that.token;
-            let apiHeaders = { "authorization": "Bearer " + apiToken };
+			let apiToken = that.token;
+			let apiHeaders = { "authorization": "Bearer " + apiToken };
 
             $.ajax({
                 url: options.url,
@@ -3392,9 +3386,9 @@ var point = (function () {
                 },
                 error: function (error) {
                     if (error.status == 410) {
-                        that.popup.message({ success: false, title: window.stringResources["LoginExpired"] }, function () {
+                        that.popup.message({ success: false, title: "The current login gets expired and needs re-authenticate. You will be redirected to the login page by click OK." }, function () {
                             //console.log(that.token);
-                            //window.location = "/word/point";
+							//window.location = "/word/point";
                         });
                     }
                     else if (error.status == 202) {
@@ -3627,7 +3621,7 @@ var point = (function () {
             if (options.keyword != undefined && $.trim(options.keyword) != "") {
                 var _sk = app.search.splitKeyword({ keyword: $.trim(options.keyword) });
                 if (_sk.length > 26) {
-                    that.popup.message({ success: false, title: window.stringResources["Only26Chars"] });
+                    that.popup.message({ success: false, title: "Only support less then 26 keywords." });
                 }
                 else {
                     $.each(_d, function (i, d) {
@@ -3745,11 +3739,11 @@ var point = (function () {
                     _h += '</div>';
                 }
                 _h += '<button class="ms-Button ms-Button--small ms-Button--primary i-add">';
-                _h += '<span class="ms-Button-label">' + (d.SourceType == app.sourceTypes.table ? window.stringResources["AddTable"] : window.stringResources["Add"]) + '</span>';
+                _h += '<span class="ms-Button-label">' + (d.SourceType == app.sourceTypes.table ? "Add as Table" : "Add") + '</span>';
                 _h += '</button>';
                 if (d.SourceType == app.sourceTypes.table) {
                     _h += '<button class="ms-Button ms-Button--small ms-Button--primary i-add i-table-image">';
-                    _h += '<span class="ms-Button-label">' + window.stringResources["AddImage"] + '</span>';
+                    _h += '<span class="ms-Button-label">Add as Image</span>';
                     _h += '</button>';
                 }
                 _h += '</div>';
@@ -3771,7 +3765,7 @@ var point = (function () {
                 if (that.sourcePointKeyword != "") {
                     var _sk = app.search.splitKeyword({ keyword: that.sourcePointKeyword });
                     if (_sk.length > 26) {
-                        that.popup.message({ success: false, title: window.stringResources["Only26Chars"] });
+                        that.popup.message({ success: false, title: "Only support less then 26 keywords." });
                     }
                     else {
                         $.each(original, function (i, d) {
@@ -3963,8 +3957,8 @@ var point = (function () {
                     _h += '<span title="' + (_p.sheet ? _p.sheet : "") + ':[' + (_p.cell ? _p.cell : "") + ']">/ ' + (_p.sheet ? _p.sheet : "") + ':[' + (_p.cell ? _p.cell : "") + ']</span>';
                     _h += '</div>';
                     if (_sourceType == app.sourceTypes.point) {
-                        _h += '<span class="item-formatted" title="' + _fv + '">' + (_ff.length > 0 ? window.stringResources["FormattedValue"] : window.stringResources["SourcePointValue"]) + ': <strong>' + _fv + '</strong></span>';
-                        _h += '<span class="item-formats" title="' + (_ff.length > 0 ? _cf : window.stringResources["NoCustomFormatApplied"]) + '">"' + window.stringResources["Format"] + '": <strong>' + (_ff.length > 0 ? _cf : window.stringResources["NoCustomFormatApplied"]) + '</strong></span>';
+                        _h += '<span class="item-formatted" title="' + _fv + '">' + (_ff.length > 0 ? "Formatted value" : "Source point value") + ': <strong>' + _fv + '</strong></span>';
+                        _h += '<span class="item-formats" title="' + (_ff.length > 0 ? _cf : "No custom formatting applied") + '">Format: <strong>' + (_ff.length > 0 ? _cf : "No custom formatting applied") + '</strong></span>';
                     }
                     else {
                         _h += '<span class="item-formatted">&nbsp;</span>';
@@ -3981,7 +3975,7 @@ var point = (function () {
                     }
                     // i5
                     _h += '<div class="i5">';
-                    _h += '<div class="i-menu"><a href="javascript:"><span title="' + window.stringResources["Action"] + '"><i class="ms-Icon ms-Icon--More"></i></span><span class="quick-menu"><span class="i-history" title="' + window.stringResources["History"] + '"><i class="ms-Icon ms-Icon--ChevronRight"></i><i>' + window.stringResources["History"] + '</i></span><span class="i-delete" title="' + window.stringResources["Delete"] + '"><i class="ms-Icon ms-Icon--Cancel"></i><i>' + window.stringResources["Delete"] + '</i></span><span class="i-edit" title="' + window.stringResources["EditCustomFormat"] + '"><i class="ms-Icon ms-Icon--Edit"></i><i>' + window.stringResources["Edit"] + '</i><span></span></a></div>';
+                    _h += '<div class="i-menu"><a href="javascript:"><span title="Action"><i class="ms-Icon ms-Icon--More"></i></span><span class="quick-menu"><span class="i-history" title="History"><i class="ms-Icon ms-Icon--ChevronRight"></i><i>History</i></span><span class="i-delete" title="Delete"><i class="ms-Icon ms-Icon--Cancel"></i><i>Delete</i></span><span class="i-edit" title="Edit Custom Format"><i class="ms-Icon ms-Icon--Edit"></i><i>Edit</i><span></span></a></div>';
                     _h += '</div>';
                     // 
                     _h += '<div class="clear"></div>';
@@ -3990,13 +3984,13 @@ var point = (function () {
                     /* Edit format */
                     _h += '<div class="add-point-customformat">';
                     if (_sourceType == app.sourceTypes.point) {
-                        _h += '<span class="i-preview">' + window.stringResources["Preview"] + ': <strong class="lbPreviewValue"></strong></span>';
+                        _h += '<span class="i-preview">Preview: <strong class="lbPreviewValue"></strong></span>';
                     }
                     _h += '<div class="addCustomFormat add-point-format">';
                     if (_sourceType == app.sourceTypes.point) {
                         _h += '<div class="add-point-place">';
-                        _h += '<span class="i-decimal">' + window.stringResources["DecimalPlace"] + ': ';
-                        _h += '<i class="i-increase" title="' + window.stringResources["IncreaseDecimalPlaces"] + '"></i><i class="i-decrease" title="' + window.stringResources["DecreaseDecimalPlaces"] + '"></i></span>';
+                        _h += '<span class="i-decimal">Decimal place: ';
+                        _h += '<i class="i-increase" title="Increase decimal places"></i><i class="i-decrease" title="Decrease decimal places"></i></span>';
                         _h += '</div>';
                     }
                     _h += '<div class="add-point-box">';
@@ -4009,7 +4003,7 @@ var point = (function () {
                         _h += '</div>';
                     }
                     _h += '<button class="ms-Button ms-Button--small ms-Button--primary i-update">';
-                    _h += '<span class="ms-Button-label">' + window.stringResources["Update"] + '</span>';
+                    _h += '<span class="ms-Button-label">Update</span>';
                     _h += '</button>';
                     _h += '</div>';
                     _h += '</div>';
@@ -4019,9 +4013,9 @@ var point = (function () {
 
                     // History
                     _h += '<div class="item-history"><ul class="history-list">';
-                    _h += '<li class="history-header"><div class="h0"></div><div class="h1"><span>' + window.stringResources["Name"] + '</span></div><div class="h2"><span>' + window.stringResources["DateModified"] + '</span></div><div class="h3"><span>' + window.stringResources["Value"] + '</span></div></li>';
+                    _h += '<li class="history-header"><div class="h0"></div><div class="h1"><span>Name</span></div><div class="h2"><span>Date Modified</span></div><div class="h3"><span>Value</span></div></li>';
                     $.each(_pht, function (m, n) {
-                        var __cv = (n.Value ? n.Value : ""), __pvr = _sourceType == app.sourceTypes.point ? __cv : (__cv == "Cloned" ? window.stringResources["Cloned"] : window.stringResources["Published"]);
+                        var __cv = (n.Value ? n.Value : ""), __pvr = _sourceType == app.sourceTypes.point ? __cv : (__cv == "Cloned" ? "Cloned" : "Published");
                         _h += '<li class="history-item"><div class="h0"></div><div class="h1" title="' + n.PublishedUser + '">' + n.PublishedUser +
                             '</div><div class="h2" title="' + app.date(n.PublishedDate) + '">' + app.date(n.PublishedDate) +
                             '</div><div class="h3" title="' + __pvr + '">' + __pvr + '</div></li>';
@@ -4035,14 +4029,14 @@ var point = (function () {
                     _h += '<div class="e1"><i class="ms-Icon ms-Icon--ErrorBadge"></i></div>';
                     _h += '<div class="e2">';
                     if (!_fd) {
-                        _h += '<p><strong>Error</strong>:' + window.stringResources["SourceFileDeletedMessage"] + '.</p>';
+                        _h += '<p><strong>Error</strong>:The source file used for this destination point has been deleted from the catalog, please delete the destination point and use a valid source point.</p>';
                     }
                     else {
                         if (!_tp) {
-                            _h += '<p><strong>' + window.stringResources["Error"] + '</strong>:' + window.stringResources["DestinationPointRemoved"] + '</p>';
+                            _h += '<p><strong>Error</strong>:The content control that was bound to the source point for this destination point has been removed, please deleted destination point.</p>';
                         }
                         else if (_item.Status == 1) {
-                            _h += '<p><strong>' + window.stringResources["Error"] + '</strong>:' + window.stringResources["SourceFileDeletedMessage"] + '</p>';
+                            _h += '<p><strong>Error</strong>:The source point used for this destination point has been deleted from the catalog, please delete the destination point and use a valid source point.</p>';
                         }
                     }
                     _h += '</div>';
@@ -4058,13 +4052,12 @@ var point = (function () {
             }
             else {
                 if (that.firstLoad && options.notSync) {
-                    that.popup.message({ success: false, title: window.stringResources["NotInSync"], canClose: true }, function () { });
+                    that.popup.message({ success: false, title: "The document is not in sync with the catalog, please click refresh to synchronize.", canClose: true }, function () { });
                 }
                 that.firstLoad = false;
                 if (callback) {
                     callback({ status: app.status.succeeded });
                 }
-
             }
         },
         remove: function (options) {
@@ -4082,15 +4075,15 @@ var point = (function () {
                     _sn.push(_y.Name);
                     _sd.push(_y.DisplayName);
                 });
-                _currentItem.find(".btnSelectFormat").html(_sd.length > 0 ? _sd.join(", ") : window.stringResources["None"]);
-                _currentItem.find(".btnSelectFormat").prop("title", _sd.length > 0 ? _sd.join(", ") : window.stringResources["None"]);
+                _currentItem.find(".btnSelectFormat").html(_sd.length > 0 ? _sd.join(", ") : "None");
+                _currentItem.find(".btnSelectFormat").prop("title", _sd.length > 0 ? _sd.join(", ") : "None");
                 _currentItem.find(".btnSelectFormat").prop("selected", _si.join(","));
                 _currentItem.find(".btnSelectFormat").prop("name", _sn.join(","));
                 _currentItem.find(".btnSelectFormat").prop("place", options.selected.DecimalPlace && options.selected.DecimalPlace != null ? options.selected.DecimalPlace : "");
             }
             else {
-                _currentItem.find(".btnSelectFormat").html(window.stringResources["None"]);
-                _currentItem.find(".btnSelectFormat").prop("title", window.stringResources["None"]);
+                _currentItem.find(".btnSelectFormat").html("None");
+                _currentItem.find(".btnSelectFormat").prop("title", "None");
                 _currentItem.find(".btnSelectFormat").prop("selected", "");
                 _currentItem.find(".btnSelectFormat").prop("name", "");
                 _currentItem.find(".btnSelectFormat").prop("place", "");
@@ -4167,7 +4160,7 @@ var point = (function () {
                 });
             }
             else {
-                that.controls.recentFiles.html(window.stringResources["None"]);
+                that.controls.recentFiles.html("No recent file.");
             }
             if (callback) {
                 callback();
@@ -4201,7 +4194,7 @@ var point = (function () {
                 });
             }
             else {
-                that.controls.listWillNotClone.html(window.stringResources["NoItems"]);
+                that.controls.listWillNotClone.html("No items");
             }
         },
         cloneResult: function (options) {

@@ -34,8 +34,8 @@ namespace Infrastructure.Services
         private readonly IWordParser _wordParser;
 
         public DocumentRepository(
-            ILogger<DocumentRepository> logger,
-            IOptionsMonitor<AppOptions> appOptions,
+            ILogger<DocumentRepository> logger, 
+            IOptions<AppOptions> appOptions,
             GraphSharePointAppService graphSharePointAppService,
             IOpportunityRepository opportunityRepository,
             IRoleMappingRepository roleMappingRepository,
@@ -130,7 +130,7 @@ namespace Infrastructure.Services
 
                 // Start a simple retry
                 var retryGetOpTimes = 1;
-                while ((String.IsNullOrEmpty(opportunity.Id)) && retryGetOpTimes < 7)
+                while ((String.IsNullOrEmpty(opportunity.Id)) && retryGetOpTimes < 4)
                 {
                     _logger.LogInformation($"RequestId: {requestId} - UploadDocumentTeamAsync get opportunity delay started: {retryGetOpTimes} at {DateTime.Now}.");
                     await Task.Delay(4000 + (retryGetOpTimes * 1000));
@@ -202,7 +202,7 @@ namespace Infrastructure.Services
                 string webUrl = respUploadDyn.webUrl.ToString();
                 string docId = respUploadDyn.id.ToString();
 
-                //Todo: Granular Premission
+
                 if (docType == DocumentContext.ProposalTemplate.Name)
                 {
                     // If docType is proposal document template, update sections & documentUri

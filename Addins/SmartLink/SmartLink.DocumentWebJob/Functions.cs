@@ -3,16 +3,18 @@
 //
 // Licensed under the MIT license. See LICENSE file in the solution root folder for full license information.
 
-using Microsoft.Azure.WebJobs;
-using Microsoft.WindowsAzure.Storage.Table;
-using SmartLink.Common;
-using SmartLink.Entity;
-using SmartLink.Service;
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Azure.WebJobs;
+using Microsoft.WindowsAzure.Storage.Table;
+using System;
+using SmartLink.Service;
+using SmartLink.Common;
+using SmartLink.Entity;
+
 
 namespace SmartLink.DocumentWebJob
 {

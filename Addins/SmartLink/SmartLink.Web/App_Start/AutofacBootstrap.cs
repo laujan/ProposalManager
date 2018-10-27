@@ -4,9 +4,14 @@
 // Licensed under the MIT license. See LICENSE file in the solution root folder for full license information.
 
 using Autofac;
+using Autofac.Core;
 using AutoMapper;
 using SmartLink.Service;
 using SmartLink.Web.Mappings;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
 
 namespace SmartLink.Web
 {

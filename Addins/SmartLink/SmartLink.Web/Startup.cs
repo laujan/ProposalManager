@@ -3,14 +3,14 @@
 //
 // Licensed under the MIT license. See LICENSE file in the solution root folder for full license information.
 
+using System;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+using Owin;
+using System.Data.SqlClient;
 using Microsoft.Azure;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Microsoft.SqlServer.Management.AlwaysEncrypted.AzureKeyVaultProvider;
-using Owin;
-using System;
-using System.Collections.Generic;
-using System.Data.SqlClient;
-using System.Threading.Tasks;
 
 namespace SmartLink.Web
 {

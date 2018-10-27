@@ -6,37 +6,29 @@ import React, { Component } from 'react';
 import * as microsoftTeams from '@microsoft/teams-js';
 
 import {
-    Pivot,
-    PivotItem,
-    PivotLinkFormat,
-    PivotLinkSize
+	Pivot,
+	PivotItem,
+	PivotLinkFormat,
+	PivotLinkSize
 } from 'office-ui-fabric-react/lib/Pivot';
 import { Workflow } from '../components-teams/Proposal/Workflow';
 import { TeamUpdate } from '../components-teams/Proposal/TeamUpdate';
 import { TeamsComponentContext } from 'msteams-ui-components-react';
 import { getQueryVariable } from '../common';
 import { GroupEmployeeStatusCard } from '../components/Opportunity/GroupEmployeeStatusCard';
-import { Trans } from "react-i18next";
-import {
-    Spinner,
-    SpinnerSize
-} from 'office-ui-fabric-react/lib/Spinner';
-import { OpportunitySummary } from '../components-teams/general/Opportunity/OpportunitySummary';
-import { OpportunityNotes } from '../components-teams/general/Opportunity/OpportunityNotes';
 
 
 let teamMembers = [];
-let OtherRoleTeamMembers = [];
 
 export class RootTab extends Component {
     displayName = RootTab.name
 
-    constructor(props) {
-        super(props);
+	constructor(props) {
+		super(props);
 
-        this.authHelper = window.authHelper;
-        this.sdkHelper = window.sdkHelper;
-        this.accessGranted = false;
+		this.authHelper = window.authHelper;
+		this.sdkHelper = window.sdkHelper;
+		
 
         try {
             microsoftTeams.initialize();
@@ -53,259 +45,218 @@ export class RootTab extends Component {
                 OppName: "",
                 oppDetails: "",
                 UserRoleList: [],
-                OtherRoleTeamMembers: [],
-                loading: true,
-                haveGranularAccess: false
+                OtherRoleTeamMembers: []
             };
         }
 
-        this.fnGetOpportunityData = this.fnGetOpportunityData.bind(this);
-    }
+		this.fnGetOpportunityData = this.fnGetOpportunityData.bind(this);	        
+	}
 
     componentWillMount() {
-        console.log("Dashboard_componentWillMount isauth: " + this.authHelper.isAuthenticated());
+        //this.authHelper.acquireTokenSilent();
+        this.getUserRoles();
     }
 
-    componentDidMount() {
-        console.log("Dashboard_componentDidMount isauth: " + this.authHelper.isAuthenticated());
-        if (!this.state.isAuthenticated) {
-            this.authHelper.callGetUserProfile()
-                .then(userProfile => {
-                    this.setState({
-                        userProfile: userProfile,
-                        loading: true
-                    });
+	componentDidMount() {
+		
+		let teamName = getQueryVariable('teamName');
+		let channelId = getQueryVariable('channelId');
+		this.setState({
+			teamName: false,
+			channelId: channelId
+			
+		});
+		this.fnGetOpportunityData(teamName);
+    }
+
+
+    fnGetOpportunityData(teamName) {
+        // API - Fetch call
+        this.requestUrl = "api/Opportunity?name='" + teamName + "'";
+        fetch(this.requestUrl, {
+            method: "GET",
+            headers: { 'authorization': 'Bearer ' + window.authHelper.getWebApiToken() }
+
+        })
+            .then(response => response.json())
+            .then(data => {
+                let loanOfficer = {};
+                teamMembers = data.teamMembers;
+                // Get Other role officers list
+                let otherRolesMapping = this.state.UserRoleList.filter(function (k) {
+                    return k.processType.toLowerCase() !== "base" && k.processType.toLowerCase() !== "administration" && k.processType.toLowerCase() !== "customerdecisiontab" && k.processType.toLowerCase() !== "proposalstatustab";
                 });
-        }
-    }
 
-
-    componentDidUpdate() {
-        if (this.authHelper.isAuthenticated() && !this.accessGranted) {
-            console.log("Dashboard_componentDidUpdate callCheckAccess");
-            this.accessGranted = true;
-            this.fnGetOpportunityData();
-        }
-    }
-
-
-
-    fnGetOpportunityData() {
-        return new Promise((resolve, reject) => {
-            // API - Fetch call
-            let teamName = getQueryVariable('teamName');
-            this.requestUrl = `api/Opportunity?name=${teamName}`;
-            fetch(this.requestUrl, {
-                method: "GET",
-                headers: { 'authorization': 'Bearer ' + window.authHelper.getWebApiToken() }
-
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.error && data.error.code.toLowerCase() === "badrequest") {
-                        this.setState({
-                            loading: false,
-                            haveGranularAccess: false
-                        });
-                        resolve(true);
-                    } else {
-                        let loanOfficer = {};
-                        teamMembers = data.teamMembers;
-                        // Getting processtypes from opportunity dealtype object
-                        let processList = data.dealType.processes;
-                        //let oppChannels = new Array();
-                        //oppChannels = processList.filter(x => x.channel.toLowerCase() !== "none");
-                        // Get Other role officers list
-                        let otherRolesMapping = processList.filter(function (k) {
-                            return k.processType.toLowerCase() !== "new opportunity" && k.processType.toLowerCase() !== "start process" && k.processType.toLowerCase() !== "customerdecisiontab" && k.processType.toLowerCase() !== "proposalstatustab";
-                        });
-
-                        let otherRolesArr1 = [];
-                        for (let j = 0; j < otherRolesMapping.length; j++) {
-
-                            let processTeamMember = new Array();
-                            //processTeamMember = data.teamMembers.filter(t => t.processStep.toLowerCase() === otherRolesMapping[j].processStep.toLowerCase());
-                            processTeamMember = data.teamMembers.filter(function (k) {
-                                if (k.processStep.toLowerCase() === otherRolesMapping[j].processStep.toLowerCase()) {
-                                    //ProcessStep
-                                    k.processStep = otherRolesMapping[j].processStep;
-                                    //ProcessStatus
-                                    k.processStatus = otherRolesMapping[j].status;
-                                    k.status = otherRolesMapping[j].status;
-                                    return k.processStep.toLowerCase() === otherRolesMapping[j].processStep.toLowerCase();
+                let otherRolesArr1 = [];
+                for (let j = 0; j < otherRolesMapping.length; j++) {
+                    let teamMember = data.teamMembers.filter(function (k) {
+                        if (k.assignedRole.displayName.toLowerCase() === otherRolesMapping[j].roleName.toLowerCase()) {
+                            //ProcessStep
+                            k.processStep = otherRolesMapping[j].processStep;
+                            //ProcessStatus
+                            let processStatus = [];
+                            processStatus = data.checklists.filter(function (p) {
+                                if (p.id.toLowerCase() === otherRolesMapping[j].processStep.toLowerCase()) {
+                                    return p;
                                 }
                             });
-                            if (processTeamMember.length === 0) {
-                                processTeamMember = [{
-                                    "displayName": "",
-                                    "assignedRole": {
-                                        "displayName": otherRolesMapping[j].roleName,
-                                        "adGroupName": otherRolesMapping[j].adGroupName
-                                    },
-                                    "processStep": otherRolesMapping[j].processStep,
-                                    "processStatus": 0,
-                                    "status": 0
-                                }];
-                            }
-
-                            otherRolesArr1 = otherRolesArr1.concat(processTeamMember);
-                            //otherRolesArr1 = otherRolesArr1.concat(teamMember);
+                            if (processStatus.length > 0)
+                                k.processStatus = processStatus[0].checklistStatus ? processStatus[0].checklistStatus : 0;
+                            else k.processStatus = 0;
+                            return k.assignedRole.displayName.toLowerCase() === otherRolesMapping[j].roleName.toLowerCase();
                         }
-
-                        let otherRolesArr = otherRolesArr1.reduce(function (res, currentValue) {
-                            if (res.indexOf(currentValue.processStep) === -1) {
-                                res.push(currentValue.processStep);
-                            }
-                            return res;
-                        }, []).map(function (group) {
-                            return {
-                                group: group,
-                                users: otherRolesArr1.filter(function (_el) {
-                                    return _el.processStep === group;
-                                }).map(function (_el) { return _el; })
-                            };
-                        });
-                        let otherRolesObj = [];
-                        if (otherRolesArr.length > 1) {
-                            for (let r = 0; r < otherRolesArr.length; r++) {
-                                otherRolesObj.push(otherRolesArr[r].users);
-                            }
-                            OtherRoleTeamMembers = otherRolesObj;
-                        }
-                        this.setState({
-                            loading: false,
-                            teamMembers: teamMembers,
-                            LoanOfficer: loanOfficer,
-                            oppDetails: data,
-                            oppStatus: data.opportunityState,
-                            OppName: data.displayName,
-                            OtherRoleTeamMembers: otherRolesObj,
-                            haveGranularAccess: true
-                        });
-                        resolve(true);
+                    });
+                    if (teamMember.length === 0) {
+                        teamMember = [{
+                            "displayName": "",
+                            "assignedRole": {
+                                "displayName": otherRolesMapping[j].roleName,
+                                "adGroupName": otherRolesMapping[j].adGroupName
+                            },
+                            "processStep": otherRolesMapping[j].processStep,
+                            "processStatus": 0,
+                            "status": 0
+                        }];
                     }
-                })
-                .catch(function (err) {
-                    console.log("Error: OpportunityGetByName--");
-                    reject(err);
+                    otherRolesArr1 = otherRolesArr1.concat(teamMember);
+                }
+
+
+                let UserRolesList = this.state.UserRoleList;
+                let otherRolesArr = otherRolesArr1.reduce(function (res, currentValue) {
+                    if (res.indexOf(currentValue.assignedRole.displayName) === -1) {
+                        res.push(currentValue.assignedRole.displayName);
+                    }
+                    return res;
+                }, []).map(function (group) {
+                    return {
+                        group: group,
+                        users: otherRolesArr1.filter(function (_el) {
+                            return _el.assignedRole.displayName === group;
+                        }).map(function (_el) { return _el; })
+                    };
                 });
-        });
+                let otherRolesObj = [];
+                if (otherRolesArr.length > 1) {
+                    for (let r = 0; r < otherRolesArr.length; r++) {
+                        otherRolesObj.push(otherRolesArr[r].users);
+                    }
+                }
+                this.setState({
+                    loading: false,
+                    teamMembers: teamMembers,
+                    LoanOfficer: loanOfficer,
+                    oppDetails: data,
+                    oppStatus: data.opportunityState,
+                    OppName: data.displayName,
+                    OtherRoleTeamMembers: otherRolesObj
+                });
+            });
     }
 
-
-    render() {
-        const team = this.state.teamMembers;
-        const channelId = this.props.teamsContext.channelId;
-
-        let loanOfficerRealManagerArr = [];
-
-        let loanOfficerRealManagerArr1 = team.filter(x => x.assignedRole.displayName === "LoanOfficer");
-        if (loanOfficerRealManagerArr1.length === 0) {
-            loanOfficerRealManagerArr1 = [{
-                "displayName": "",
-                "assignedRole": {
-                    "displayName": "LoanOfficer"
+    getUserRoles() {
+        // call to API fetch data
+        let requestUrl = 'api/RoleMapping';
+        fetch(requestUrl, {
+            method: "GET",
+            headers: { 'authorization': 'Bearer ' + window.authHelper.getWebApiToken() }
+        })
+            .then(response => response.json())
+            .then(data => {
+                try {
+                    let userRoleList = [];
+                    for (let i = 0; i < data.length; i++) {
+                        let userRole = {};
+                        userRole.id = data[i].id;
+                        userRole.roleName = data[i].roleName;
+                        userRole.adGroupName = data[i].adGroupName;
+                        userRole.processStep = data[i].processStep;
+                        userRole.processType = data[i].processType;
+                        userRoleList.push(userRole);
+                    }
+                    this.setState({ UserRoleList: userRoleList });
                 }
-            }];
-        }
-        let loanOfficerRealManagerArr2 = team.filter(x => x.assignedRole.displayName === "RelationshipManager");
+                catch (err) {
+                    return false;
+                }
 
+            });
+    }
+	
+	render() {
+		const channelId = this.state.channelId;
+
+		let loanOfficerRealManagerArr = [];
+
+        let loanOfficerRealManagerArr1 = teamMembers.filter(x => x.assignedRole.displayName === "LoanOfficer");
+        let loanOfficerRealManagerArr2 = teamMembers.filter(x => x.assignedRole.displayName === "RelationshipManager");
 
 
         loanOfficerRealManagerArr = loanOfficerRealManagerArr1.concat(loanOfficerRealManagerArr2);
 
-        const OpportunitySummaryView = ({ match }) => {
-            return <OpportunitySummary teamsContext={this.props.teamsContext} opportunityData={this.state.oppDetails} opportunityId={this.state.oppDetails.id} />;
-        };
-
-        return (
-
-            <div className='ms-Grid'>
-                <div className='ms-Grid-row'>
+		return (
+			
+			<div className='ms-Grid'>
+				<div className='ms-Grid-row'>
                     <div className='ms-Grid-col ms-sm6 ms-md8 ms-lg12 bgwhite tabviewUpdates' >
-                        {
-                            this.state.loading ?
-                                <div>
-                                    <div className='ms-BasicSpinnersExample pull-center'>
-                                        <br /><br />
-                                        <Spinner size={SpinnerSize.medium} label={<Trans>loading</Trans>} ariaLive='assertive' />
+
+                            <Pivot className='tabcontrols pt35' linkFormat={PivotLinkFormat.tabs} linkSize={PivotLinkSize.large}>
+                            <PivotItem linkText='Workflow' width='100%' >
+                                <Workflow memberslist={teamMembers} oppStaus={this.state.oppStatus} oppDetails={this.state.oppDetails} OtherRoleTeamMembers={this.state.OtherRoleTeamMembers} />
+								</PivotItem>
+                            <PivotItem linkText='Team Update'>
+                                <div className='ms-Grid-row'>
+
+                                    {
+                                        this.state.OtherRoleTeamMembers.map((obj, ind) =>
+                                            obj.length > 1 ?
+                                                <div className=' ms-Grid-col ms-sm12 ms-md8 ms-lg4 p-5' key={ind}>
+                                                    <GroupEmployeeStatusCard members={obj} status={obj[0].status} isDispOppStatus='false' role={obj[0].assignedRole.adGroupName} isTeam='true' />
+                                                </div>
+                                                :
+                                                obj.map((member,j) =>
+                                                <div className=' ms-Grid-col ms-sm12 ms-md8 ms-lg4 p-5' key={j}>
+                                                        <TeamUpdate memberslist={member} channelId={channelId} groupId={this.state.groupId} OppName={this.state.OppName} />
+                                                </div>
+                                                )
+
+                                        )
+
+                                    }
+                                </div>								
+                                <div className='ms-Grid-row'>
+                                    <div className=' ms-Grid-col ms-sm6 ms-md8 ms-lg12' >
+                                        <hr />
                                     </div>
+
                                 </div>
-                                :
-                                this.state.haveGranularAccess
-                                    ?
-                                    <div>
-                                        <Pivot className='tabcontrols ' linkFormat={PivotLinkFormat.tabs} linkSize={PivotLinkSize.large}>
-                                            <PivotItem linkText={<Trans>summary</Trans>} width='100%' itemKey="Summary" >
-                                                <div className='ms-Grid-row'>
-                                                    <OpportunitySummaryView userProfile={[]} />
-                                                </div>
-                                            </PivotItem>
-                                            <PivotItem linkText={<Trans>workflow</Trans>} width='100%' >
-                                                <div className='ms-Grid-row mt20 pl15 bg-white'>
-                                                    <Workflow memberslist={teamMembers} oppStaus={this.state.oppStatus} oppDetails={this.state.oppDetails} OtherRoleTeamMembers={this.state.OtherRoleTeamMembers} />
-                                                </div>
-                                            </PivotItem>
-                                            <PivotItem linkText={<Trans>teamUpdate</Trans>}>
-                                                <div className='ms-Grid-row bg-white'>
-                                                    {
-                                                        this.state.OtherRoleTeamMembers.map((obj, ind) =>
-                                                            obj.length > 1
-                                                                ?
-                                                                <div className=' ms-Grid-col ms-sm12 ms-md8 ms-lg4 p-5' key={ind}>
-                                                                    <GroupEmployeeStatusCard members={obj} status={obj[0].status} isDispOppStatus={false} role={obj[0].assignedRole.adGroupName} isTeam='true' />
-                                                                </div>
-                                                                :
-                                                                obj.map((member, j) => {
-                                                                    return (
-                                                                        <div className=' ms-Grid-col ms-sm12 ms-md8 ms-lg4 p-5' key={j}>
-                                                                            <TeamUpdate memberslist={member} channelId={channelId} groupId={this.state.groupId} OppName={this.state.OppName} />
-                                                                        </div>
-                                                                    );
-                                                                }
-                                                                )
-                                                        )
-                                                    }
 
-                                                </div>
-                                                <div className='ms-Grid-row'>
-                                                    <div className=' ms-Grid-col ms-sm12 ms-md8 ms-lg12' >
-                                                        <hr />
-                                                    </div>
+                                <div className='ms-Grid-row'>
 
-                                                </div>
+                                    {loanOfficerRealManagerArr.map((member, ind) =>
 
-                                                <div className='ms-Grid-row  bg-white'>
-                                                    {loanOfficerRealManagerArr.map((member, ind) => {
-                                                        return (
-                                                            <div className=' ms-Grid-col ms-sm12 ms-md8 ms-lg4 p-5' key={ind} >
-                                                                <TeamUpdate memberslist={member} channelId={channelId} groupId={this.state.groupId} OppName={this.state.OppName} />
-                                                            </div>
-                                                        );
-                                                    }
-                                                    )
-                                                    }
-                                                </div>
+                                        <div className=' ms-Grid-col ms-sm12 ms-md8 ms-lg4 p-5' key={ind} >
+                                            <TeamUpdate memberslist={member} channelId={channelId} groupId={this.state.groupId} OppName={this.state.OppName} />
+                                        </div>
 
-                                            </PivotItem>
-                                            <PivotItem linkText={<Trans>notes</Trans>} width='100%' itemKey="Notes" >
-                                                <div className='ms-Grid-col ms-sm12 ms-md8 ms-lg12' >
-                                                    <OpportunityNotes userProfile={[]} opportunityData={this.state.oppDetails} opportunityId={this.state.oppDetails.id} />
-                                                </div>
-                                            </PivotItem>
-                                        </Pivot>
-                                    </div>
-                                    :
-                                    <div className="ms-Grid-col ms-sm6 ms-md8 ms-lg12 p-10"><h2><Trans>accessDenied</Trans></h2></div>
-                        }
-                    </div>
-                </div>
-                <div className='ms-Grid-row'>
-                    <div className='ms-Grid-col ms-sm6 ms-md8 ms-lg10' />
-                </div>
+                                    )
 
-            </div>
+                                    }
+                                </div>
+                            </PivotItem>
+                        </Pivot>
 
-        );
-    }
+						</div>
+				</div>
+				<div className='ms-Grid-row'>
+					<div className='ms-Grid-col ms-sm6 ms-md8 ms-lg10'>
+
+					
+					
+					</div>
+					</div>
+			</div>
+				
+		);
+	}
 }

@@ -3,16 +3,18 @@
 //
 // Licensed under the MIT license. See LICENSE file in the solution root folder for full license information.
 
-using AutoMapper;
-using Microsoft.WindowsAzure.Storage.Table;
-using Newtonsoft.Json;
-using SmartLink.Common;
-using SmartLink.Entity;
 using System;
 using System.Collections.Generic;
-using System.Data.Entity;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
+using SmartLink.Entity;
+using AutoMapper;
+using System.Data.Entity;
+using Newtonsoft.Json;
+using SmartLink.Common;
+using System.Threading;
+using Microsoft.WindowsAzure.Storage.Table;
 
 namespace SmartLink.Service
 {

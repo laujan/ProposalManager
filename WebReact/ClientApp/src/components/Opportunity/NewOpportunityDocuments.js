@@ -12,7 +12,6 @@ import { Link } from 'office-ui-fabric-react/lib/Link';
 import { FilePicker } from '../FilePicker';
 import Utils from '../../helpers/Utils';
 import '../../Style.css';
-import {  Trans } from "react-i18next";
 
 
 export class NewOpportunityDocuments extends Component {
@@ -27,7 +26,7 @@ export class NewOpportunityDocuments extends Component {
         const columns = [
             {
                 key: 'column1',
-                name: <Trans>file</Trans>,
+                name: 'File',
                 headerClassName: 'ms-List-th browsebutton',
                 className: 'docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg4 browsebutton',
                 fieldName: 'file',
@@ -51,7 +50,7 @@ export class NewOpportunityDocuments extends Component {
             },
             {
                 key: 'column2',
-                name: <Trans>notes</Trans>,
+                name: 'Notes',
                 headerClassName: 'ms-List-th',
                 className: 'docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg3',
                 fieldName: 'notes',
@@ -73,7 +72,7 @@ export class NewOpportunityDocuments extends Component {
             },
             {
                 key: 'column3',
-                name: <Trans>category</Trans>,
+                name: 'Category',
                 headerClassName: 'ms-List-th',
                 className: 'docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg2 categoryResponssive',
                 fieldName: 'category',
@@ -98,7 +97,7 @@ export class NewOpportunityDocuments extends Component {
             },
             {
                 key: 'column4',
-                name: <Trans>tags</Trans>,
+                name: 'Tags',
                 headerClassName: 'ms-List-th',
                 className: 'docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg2 tagsfield',
                 fieldName: 'tags',
@@ -120,7 +119,7 @@ export class NewOpportunityDocuments extends Component {
             },
             {
                 key: 'column5',
-                name: <Trans>action</Trans>,
+                name: 'Action',
                 headerClassName: 'ms-List-th',
                 className: 'DetailsListExample-cell--FileIcon',
                 iconClassName: 'DetailsListExample-Header-FileTypeIcon',
@@ -331,19 +330,19 @@ export class NewOpportunityDocuments extends Component {
             <div className='ms-Grid'>
                 <div className='ms-Grid-row'>
                     <div className='ms-Grid-col ms-sm12 ms-md12 ms-lg6 pageheading'>
-                        <h3><Trans>addDocuments</Trans></h3>
+                        <h3>Add Documents</h3>
                     </div>
                     <div className='ms-Grid-col ms-sm12 ms-md12 ms-lg6 pt15 pr18 '>
-                        <h5><Link href='' className='pull-right' onClick={() => this.onAddRow()} >+ <Trans>addNew</Trans></Link></h5>
+                        <h5><Link href='' className='pull-right' onClick={() => this.onAddRow()} >+ Add New</Link></h5>
                     </div>
                 </div>
                 {documentsList}
                 <div className='ms-grid-row '>
                     <div className='ms-Grid-col ms-sm6 ms-md6 ms-lg6 pl0 pb20'><br />
-                        <PrimaryButton className='backbutton pull-left' onClick={this.props.onClickBack}><Trans>back</Trans></PrimaryButton>
+                        <PrimaryButton className='backbutton pull-left' onClick={this.props.onClickBack}>Back</PrimaryButton>
                     </div>
                     <div className='ms-Grid-col ms-sm6 ms-md6 ms-lg6 pb20'><br />
-                        <PrimaryButton className='pull-right' onClick={this.props.onClickNext}><Trans>next</Trans></PrimaryButton>
+                        <PrimaryButton className='pull-right' onClick={this.props.onClickNext}>Next</PrimaryButton>
                     </div>
                 </div><br /><br />
             </div>

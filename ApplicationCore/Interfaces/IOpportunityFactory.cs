@@ -9,14 +9,16 @@ using System.Text;
 using System.Threading.Tasks;
 using ApplicationCore.Artifacts;
 using ApplicationCore.Entities;
-using ApplicationCore.Authorization;
 using Newtonsoft.Json.Linq;
 
 namespace ApplicationCore.Interfaces
 {
     public interface IOpportunityFactory : IArtifactFactory<Opportunity>
     {
-    
+        Task<bool> CheckAccessAsync(Opportunity oppArtifact, List<Role> roles, string requestId = "");
+
+        Task<bool> CheckAccessAnyAsync(Opportunity oppArtifact, string requestId = "");
+
         Task<Opportunity> CreateWorkflowAsync(Opportunity opportunity, string requestId = "");
 
         Task<Opportunity> UpdateWorkflowAsync(Opportunity opportunity, string requestId = "");

@@ -12,32 +12,24 @@ using ApplicationCore;
 using ApplicationCore.Interfaces;
 using Infrastructure.GraphApi;
 using Microsoft.Extensions.FileProviders;
-using System.Threading.Tasks;
-using Infrastructure.Helpers;
-using ApplicationCore.Entities.GraphServices;
-using System.Net.Http;
-using Microsoft.Graph;
 
 namespace Infrastructure.Services
 {
     public class GraphSharePointAppService : GraphSharePointBaseService
     {
         public GraphSharePointAppService(
-            ILogger<GraphSharePointBaseService> logger,
-            IOptionsMonitor<AppOptions> appOptions,
-            IGraphClientAppContext graphClientContext,
-            SharePointListsSchemaHelper sharePointListsSchemaHelper) : base(logger, appOptions, graphClientContext)
+            ILogger<GraphSharePointBaseService> logger, 
+            IOptions<AppOptions> appOptions,
+            IGraphClientAppContext graphClientContext) : base(logger, appOptions, graphClientContext)
         {
         }
-
-        
     }
 
     public class GraphSharePointUserService : GraphSharePointBaseService
     {
         public GraphSharePointUserService(
             ILogger<GraphSharePointBaseService> logger,
-            IOptionsMonitor<AppOptions> appOptions,
+            IOptions<AppOptions> appOptions,
             IGraphClientUserContext graphClientContext) : base(logger, appOptions, graphClientContext)
         {
         }

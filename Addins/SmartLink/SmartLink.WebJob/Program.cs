@@ -3,20 +3,23 @@
 //
 // Licensed under the MIT license. See LICENSE file in the solution root folder for full license information.
 
-using Autofac;
-using AutoMapper;
-using Microsoft.ApplicationInsights.Extensibility;
-using Microsoft.Azure;
-using Microsoft.Azure.WebJobs;
-using Microsoft.IdentityModel.Clients.ActiveDirectory;
-using Microsoft.SqlServer.Management.AlwaysEncrypted.AzureKeyVaultProvider;
-using Smartlink.WebJob;
-using SmartLink.Service;
 using System;
 using System.Collections.Generic;
-using System.Data.SqlClient;
-using System.Net;
+using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Azure.WebJobs;
+using System.Net;
+using Microsoft.ApplicationInsights.Extensibility;
+using Microsoft.Azure;
+using Autofac;
+using SmartLink.Service;
+using System.Diagnostics;
+using AutoMapper;
+using Smartlink.WebJob;
+using System.Data.SqlClient;
+using Microsoft.IdentityModel.Clients.ActiveDirectory;
+using Microsoft.SqlServer.Management.AlwaysEncrypted.AzureKeyVaultProvider;
 
 namespace SmartLink.WebJob
 {

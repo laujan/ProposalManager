@@ -21,7 +21,6 @@ using Newtonsoft.Json.Linq;
 using Microsoft.Extensions.Caching.Memory;
 using System.Linq;
 using ApplicationCore.Helpers.Exceptions;
-using ApplicationCore.Authorization;
 
 namespace Infrastructure.Services
 {
@@ -29,20 +28,17 @@ namespace Infrastructure.Services
     {
         private readonly GraphSharePointAppService _graphSharePointAppService;
         private IMemoryCache _cache;
-        private readonly GraphUserAppService _graphUserAppService;
 
         public RoleMappingRepository(
             ILogger<RoleMappingRepository> logger,
-            IOptionsMonitor<AppOptions> appOptions,
+            IOptions<AppOptions> appOptions,
             GraphSharePointAppService graphSharePointAppService,
-            GraphUserAppService graphUserAppService,
             IMemoryCache memoryCache) : base(logger, appOptions)
         {
             Guard.Against.Null(graphSharePointAppService, nameof(graphSharePointAppService));
-            Guard.Against.Null(graphUserAppService, nameof(graphUserAppService));
+
             _graphSharePointAppService = graphSharePointAppService;
             _cache = memoryCache;
-            _graphUserAppService = graphUserAppService;
         }
 
         public async Task<StatusCodes> CreateItemAsync(RoleMapping entity, string requestId = "")
@@ -51,26 +47,27 @@ namespace Infrastructure.Services
 
             try
             {
-                if (!(await checkADGroupNameinAADAsync(entity.AdGroupName.Trim()))) return StatusCodes.Status400BadRequest;
-
                 var siteList = new SiteList
                 {
                     SiteId = _appOptions.ProposalManagementRootSiteId,
-                    ListId = _appOptions.RoleMappingsListId
+                    ListId = _appOptions.RolesListId
                 };
 
                 // Create Json object for SharePoint create list item
                 dynamic itemFieldsJson = new JObject();
-                dynamic itemJson = new JObject();
                 itemFieldsJson.Title = entity.Id;
-                itemFieldsJson.ADGroupName = entity.AdGroupName.Trim();
-                itemFieldsJson.Role = entity.Role.DisplayName;
-                itemFieldsJson.Permissions = JsonConvert.SerializeObject(entity.Permissions, Formatting.Indented);
+                itemFieldsJson.AdGroupName = entity.AdGroupName;
+                itemFieldsJson.RoleName = entity.RoleName;
+                itemFieldsJson.AdGroupId = entity.AdGroupId;
+                itemFieldsJson.ProcessStep = entity.ProcessStep;
+                itemFieldsJson.Channel = entity.Channel;
+                itemFieldsJson.ProcessType = entity.ProcessType;
+
+
+                dynamic itemJson = new JObject();
                 itemJson.fields = itemFieldsJson;
 
                 var result = await _graphSharePointAppService.CreateListItemAsync(siteList, itemJson.ToString(), requestId);
-
-                await SetUpdatedRoleMappingListInCacheAsync(requestId);
 
                 _logger.LogInformation($"RequestId: {requestId} - RoleMappingRepo_CreateItemAsync finished creating SharePoint list item.");
 
@@ -84,50 +81,6 @@ namespace Infrastructure.Services
             }
         }
 
-        private async Task<bool> checkADGroupNameinAADAsync(string adGroupName, string requestId="")
-        {
-            bool flag = false;
-            try
-            {
-                var options = new List<QueryParam>();
-                //Granular Permission Change :  Start
-                options.Add(new QueryParam("filter", $"startswith(displayName,'{adGroupName}')"));
-                var groupIdJson = await _graphUserAppService.GetGroupAsync(options, "", requestId);
-                dynamic jsonDyn = groupIdJson;
-                if (jsonDyn.value.HasValues)
-                {
-                    var id = "";
-                    id = jsonDyn.value[0].id.ToString();
-                    if (!string.IsNullOrEmpty(id))
-                        flag = true;
-
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"RequestId: {requestId} - RoleMappingRepo_CreateItemAsync error: {ex}");
-            }
-
-            return flag;
-        }
-
-        private async Task SetUpdatedRoleMappingListInCacheAsync(string requestId)
-        {
-            try
-            {
-                var roleMappingList = new List<RoleMapping>();
-                roleMappingList = (await GetRoleMappingListAsync(requestId)).ToList();
-
-                var cacheEntryOptions = new MemoryCacheEntryOptions()
-                    .SetAbsoluteExpiration(TimeSpan.FromMinutes(_appOptions.UserProfileCacheExpiration));
-                _cache.Set("PM_RoleMappingList", roleMappingList, cacheEntryOptions);
-            }
-            catch(Exception ex)
-            {
-                _logger.LogError($"RequestId: {requestId} - RoleMappingRepo_CreateItemAsync error: {ex}");
-            }
-        }
-
         public async Task<StatusCodes> UpdateItemAsync(RoleMapping entity, string requestId = "")
         {
             _logger.LogInformation($"RequestId: {requestId} - RoleMappingRepo_UpdateItemAsync called.");
@@ -137,21 +90,23 @@ namespace Infrastructure.Services
                 var siteList = new SiteList
                 {
                     SiteId = _appOptions.ProposalManagementRootSiteId,
-                    ListId = _appOptions.RoleMappingsListId
+                    ListId = _appOptions.RolesListId
                 };
 
                 // Create Json object for SharePoint create list item
                 dynamic itemJson = new JObject();
                 itemJson.Title = entity.Id;
-                itemJson.ADGroupName = entity.AdGroupName;
-                itemJson.Role = entity.Role.DisplayName;
-                itemJson.Permissions = JsonConvert.SerializeObject(entity.Permissions, Formatting.Indented);
+                itemJson.AdGroupName = entity.AdGroupName;
+                itemJson.RoleName = entity.RoleName;
+                itemJson.AdGroupId = entity.AdGroupId;
+                itemJson.ProcessStep = entity.ProcessStep;
+                itemJson.Channel = entity.Channel;
+                itemJson.ProcessType = entity.ProcessType;
 
                 var result = await _graphSharePointAppService.UpdateListItemAsync(siteList, entity.Id, itemJson.ToString(), requestId);
 
                 _logger.LogInformation($"RequestId: {requestId} - RoleMappingRepo_UpdateItemAsync finished creating SharePoint list item.");
 
-                await SetUpdatedRoleMappingListInCacheAsync(requestId);
                 return StatusCodes.Status200OK;
 
             }
@@ -173,14 +128,12 @@ namespace Infrastructure.Services
                 var siteList = new SiteList
                 {
                     SiteId = _appOptions.ProposalManagementRootSiteId,
-                    ListId = _appOptions.RoleMappingsListId
+                    ListId = _appOptions.RolesListId
                 };
 
                 var result = await _graphSharePointAppService.DeleteListItemAsync(siteList, id, requestId);
 
                 _logger.LogInformation($"RequestId: {requestId} - RoleMappingRepo_DeleteItemAsync finished creating SharePoint list item.");
-
-                await SetUpdatedRoleMappingListInCacheAsync(requestId);
 
                 return StatusCodes.Status204NoContent;
 
@@ -250,28 +203,19 @@ namespace Infrastructure.Services
                 var siteList = new SiteList
                 {
                     SiteId = _appOptions.ProposalManagementRootSiteId,
-                    ListId = _appOptions.RoleMappingsListId
+                    ListId = _appOptions.RolesListId
                 };
 
                 var json = await _graphSharePointAppService.GetListItemsAsync(siteList, "all", requestId);
                 JArray jsonArray = JArray.Parse(json["value"].ToString());
+
                 var itemsList = new List<RoleMapping>();
                 foreach (var item in jsonArray)
                 {
-                    var rolemapping = RoleMapping.Empty;
-                    rolemapping.Id = item["fields"]["id"].ToString() ?? String.Empty;
-                    //Bug Fix
-                    if(item["fields"]["ADGroupName"] != null)
+                    itemsList.Add(JsonConvert.DeserializeObject<RoleMapping>(item["fields"].ToString(), new JsonSerializerSettings
                     {
-                        rolemapping.AdGroupName = item["fields"]["ADGroupName"].ToString();
-                        rolemapping.Role.DisplayName = item["fields"]["Role"].ToString();
-                        JArray jsonAr = JArray.Parse(item["fields"]["Permissions"].ToString());
-                        foreach (var p in jsonAr)
-                        {
-                            rolemapping.Permissions.Add(JsonConvert.DeserializeObject<Permission>(p.ToString()));
-                        }
-                        itemsList.Add(rolemapping);
-                    }
+                        MissingMemberHandling = MissingMemberHandling.Ignore
+                    }));
                 }
 
                 return itemsList;

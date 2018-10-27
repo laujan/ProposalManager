@@ -5,13 +5,14 @@
 
 import React, { Component } from 'react';
 import { oppStatusText, oppStatusClassName } from '../../common';
-import { IconButton } from 'office-ui-fabric-react/lib/Button';
-import { DetailsList, DetailsListLayoutMode, SelectionMode } from 'office-ui-fabric-react/lib/DetailsList';
+import {  IconButton } from 'office-ui-fabric-react/lib/Button';
+import { DetailsList, DetailsListLayoutMode, Selection, SelectionMode, IColumn } from 'office-ui-fabric-react/lib/DetailsList';
+import { Toggle } from 'office-ui-fabric-react/lib/Toggle';
+import { Icon } from 'office-ui-fabric-react/lib/Icon';
+import { Link } from 'office-ui-fabric-react/lib/Link';
 import {
     TooltipHost
 } from 'office-ui-fabric-react/lib/Tooltip';
-import { Trans } from "react-i18next";
-import i18n from '../../i18n';
 
 
 
@@ -24,7 +25,7 @@ export class OpportunityListCompact extends Component {
         const columns = [
             {
                 key: 'column1',
-                name: <Trans>name</Trans>,
+                name: 'Name',
                 headerClassName: 'DetailsListExample-header',
                 className: 'docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg3',
                 fieldName: 'name',
@@ -41,7 +42,7 @@ export class OpportunityListCompact extends Component {
             },
             {
                 key: 'column2',
-                name: <Trans>client</Trans>,
+                name: 'Client',
                 headerClassName: 'DetailsListExample-header',
                 className: 'docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg3 clientcolum',
                 fieldName: 'client',
@@ -59,7 +60,7 @@ export class OpportunityListCompact extends Component {
             },
             {
                 key: 'column3',
-                name: <Trans>openedDate</Trans>,
+                name: 'Opened Date',
                 headerClassName: 'DetailsListExample-header',
                 className: 'docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg3',
                 fieldName: 'openedDate',
@@ -70,14 +71,14 @@ export class OpportunityListCompact extends Component {
                 onColumnClick: this.onColumnClick,
                 onRender: (item) => {
                     return (
-                        <div className='ms-List-itemDate AdminDate'>{new Date(item.openedDate).toLocaleDateString(i18n.language)}</div>
+                        <div className='ms-List-itemDate AdminDate'>{item.openedDate}</div>
                     );
                 },
                 isPadded: true
             },
             {
                 key: 'column4',
-                name: <Trans>status</Trans>,
+                name: 'Status',
                 headerClassName: 'DetailsListExample-header',
                 className: 'docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg2',
                 fieldName: 'staus',
@@ -88,18 +89,18 @@ export class OpportunityListCompact extends Component {
                 onColumnClick: this.onColumnClick,
                 onRender: (item) => {
                     return (
-                        <div className={"ms-List-itemState" + oppStatusClassName[item.statusValue].toLowerCase()}><Trans>{oppStatusText[item.statusValue]}</Trans></div>
+                        <div className={"ms-List-itemState" + oppStatusClassName[item.stausValue].toLowerCase()}>{oppStatusText[item.stausValue]}</div>
                     );
                 },
                 isPadded: true
             },
             {
                 key: 'column5',
-                name: <Trans>action</Trans>,
+                name: 'Action',
                 headerClassName: 'DetailsListExample-header--FileIcon actioniconAlign',
                 className: 'DetailsListExample-cell--FileIcon actioniconAlign',
                 //iconClassName: 'DetailsListExample-Header-FileTypeIcon',
-                // iconName: 'Page',
+               // iconName: 'Page',
                 //isIconOnly: true,
                 //fieldName: 'name',
                 minWidth: 30,
@@ -107,10 +108,9 @@ export class OpportunityListCompact extends Component {
                 onColumnClick: this.onColumnClick,
                 onRender: (item) => {
                     return (
-                        <div onMouseEnter={e => this.mouseEnter(item.createTeamDisable)}
-                            onMouseLeave={e => this.mouseLeave(item.createTeamDisable)}>
-                            <TooltipHost content={<Trans>addAddin</Trans>} calloutProps={{ gapSpace: 0 }} closeDelay={500}>
-                                <IconButton iconProps={{ iconName: 'PeopleAdd' }} onClick={e => this.onActionItemClick(item)} disabled={item.createTeamDisable} />
+                        <div>
+                            <TooltipHost content='Create Team' calloutProps={{ gapSpace: 0 }} closeDelay={500}>
+                                <IconButton iconProps={{ iconName: 'PeopleAdd' }} onClick={e => this.onActionItemClick(item)}>Cancel</IconButton>
                             </TooltipHost>
                         </div>
                     );
@@ -140,15 +140,6 @@ export class OpportunityListCompact extends Component {
     onActionItemClick(item) {
         this.props.onActionItemClick(item);
     }
-
-    mouseEnter(flag) {
-        this.props.mouseEnter(flag);
-    }
-
-    mouseLeave(flag) {
-        this.props.mouseLeave(flag);
-    }
-
 
     onColumnClick = (ev, column) => {
         const { columns, items } = this.state;
@@ -214,21 +205,19 @@ export class OpportunityListCompact extends Component {
     }
 
     render() {
-        const { columns, isCompactMode } = this.state;
+        const { columns, isCompactMode, items, selectionDetails } = this.state;
 
         return (
             <div className='ms-Grid-row'>
-                <div className='ms-Grid-col ms-sm12 ms-md12 ms-lg12'>
-                    <DetailsList
-                        items={this.props.opportunityIndex}
-                        compact={isCompactMode}
-                        columns={columns}
-                        selectionMode={SelectionMode.none}
-                        setKey='key'
-                        layoutMode={DetailsListLayoutMode.justified}
-                        enterModalSelectionOnTouch='false'
-                    />
-                </div>
+                <DetailsList
+                    items={this.props.opportunityIndex}
+                    compact={isCompactMode}
+                    columns={columns}
+                    selectionMode={SelectionMode.none}
+                    setKey='key'
+                    layoutMode={DetailsListLayoutMode.justified}
+                    enterModalSelectionOnTouch='false'
+                />
             </div>
         );
     }

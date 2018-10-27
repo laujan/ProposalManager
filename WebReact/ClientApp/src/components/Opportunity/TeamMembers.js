@@ -14,7 +14,6 @@ import {
     PersonaSize
 } from 'office-ui-fabric-react/lib/Persona';
 import { oppStatus } from '../../common';
-import { Trans } from "react-i18next";
 
 export class TeamMembers extends Component {
     displayName = TeamMembers.name
@@ -72,7 +71,7 @@ export class TeamMembers extends Component {
                                         text={member.displayName}
                                         secondaryText={member.assignedRole.displayName}
                                     />
-                                    <span>
+                                    <span>Status: {oppStatus[member.status]}
                                         <p className="pull-right">
                                             <Link href={"mailto:" + member.userPrincipalName}> <Glyphicon glyph='envelope' /></Link>&nbsp;&nbsp;&nbsp;
                                            
@@ -91,10 +90,10 @@ export class TeamMembers extends Component {
 							enableEditTeam
 								?
 								<LinkContainer to={'/OpportunityChooseTeam?opportunityId=' + this.props.createTeamId} >
-									<PrimaryButton className='ModifyButton'><Trans>editTeamCollaboration</Trans> </PrimaryButton>
+									<PrimaryButton className='ModifyButton'>Edit Team Collaboration </PrimaryButton>
 								</LinkContainer>
 								:
-								<PrimaryButton className='ModifyButton' disabled><Trans>editTeamCollaboration</Trans></PrimaryButton>
+								<PrimaryButton className='ModifyButton' disabled>Edit Team Collaboration</PrimaryButton>
 
 							}
 							<br />
@@ -103,7 +102,7 @@ export class TeamMembers extends Component {
 						<div className='ms-Grid ms-sm12 ms-md12 ms-lg12'>
 							{this.props.opportunityState === 1
 								?
-                                <Label><Trans>editTeamSetupMessage</Trans> </Label>
+								<Label>Team is being setup, please contact the admin. </Label>
 
 								:
 								""

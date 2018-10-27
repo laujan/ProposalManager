@@ -28,7 +28,7 @@
                     if ((Office.context.requirements.isSetSupported('ExcelApi', 1.3) && mode.excel) || (Office.context.requirements.isSetSupported("WordApi", 1.2) && mode.word) || mode.powerPoint) {
                         $(".sign-in").show();
                         $("#btnSignIn").click(function () {
-                            
+
                             $(".loading-login").show();
 
                             var location;

@@ -7,31 +7,46 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Newtonsoft.Json;
-using ApplicationCore.Authorization;
-using ApplicationCore.Serialization;
 
 namespace ApplicationCore.Entities
 {
     public class RoleMapping : BaseEntity<RoleMapping>
     {
+        /// <summary>
+        /// Role name
+        /// </summary>
+        [JsonProperty("roleName", Order = 2)]
+        public string RoleName { get; set; }
 
         /// <summary>
         /// AD Group display name
         /// </summary>
-        [JsonProperty("adGroupName", Order = 2)]
+        [JsonProperty("adGroupName", Order = 3)]
         public string AdGroupName { get; set; }
 
         /// <summary>
-        /// Role name 
+        /// AD Group Id 
         /// </summary>
-        [JsonProperty("role", Order = 3)]
-        public Role Role { get; set; }
+        [JsonProperty("adGroupId", Order = 4)]
+        public string AdGroupId { get; set; }
 
         /// <summary>
-        /// Permissions 
+        /// Process Step 
         /// </summary>
-        [JsonProperty("permissions", Order = 4)]
-        public IList<Permission> Permissions { get; set; }
+        [JsonProperty("processStep", Order = 5)]
+        public string ProcessStep { get; set; }
+
+        /// <summary>
+        /// Process Type 
+        /// </summary>
+        [JsonProperty("processType", Order = 6)]
+        public string ProcessType { get; set; }
+
+        /// <summary>
+        /// Channel 
+        /// </summary>
+        [JsonProperty("channel", Order = 7)]
+        public string Channel { get; set; }
 
 
         /// <summary>
@@ -42,9 +57,12 @@ namespace ApplicationCore.Entities
             get => new RoleMapping
             {
                 Id = String.Empty,
+                RoleName = String.Empty,
                 AdGroupName = String.Empty,
-                Role = Role.Empty,
-                Permissions = new List<Permission>()
+                AdGroupId = String.Empty,
+                ProcessStep = String.Empty,
+                ProcessType = String.Empty,
+                Channel = String.Empty
             };
         }
     }

@@ -9,7 +9,7 @@ using System.Web.Mvc;
 
 namespace SmartLink.Web.Controllers
 {
-    public class AuthController : Controller
+	public class AuthController : Controller
     {
         public ActionResult Index()
         {

@@ -12,22 +12,22 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using ApplicationCore.Interfaces;
+using WebReact.Interfaces;
 using ApplicationCore.Helpers;
 using ApplicationCore.Artifacts;
 using Newtonsoft.Json.Linq;
-using ApplicationCore.ViewModels;
+using WebReact.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using System.IO;
-using Microsoft.Extensions.Configuration;
+using ApplicationCore.Interfaces;
 
 namespace WebReact.Api
 {
-	[Authorize(AuthenticationSchemes = "AzureAdBearer")]
-	public class ContextController : BaseApiController<ContextController>
+    public class ContextController : BaseApiController<ContextController>
     {
         private readonly IContextService _contextService;
         private readonly IOpportunityService _opportunityService;
+
 
         public ContextController(
             ILogger<ContextController> logger, 
@@ -41,26 +41,6 @@ namespace WebReact.Api
             _opportunityService = opportunityService;
         }
 
-        [HttpGet("GetClientSettings", Name = "GetClientSettings")]
-        public async Task<IActionResult> GetClientSettings()
-        {
-            var requestId = Guid.NewGuid().ToString();
-            _logger.LogInformation($"RequestID:{requestId} GetClientSettings called.");
-
-            try
-            {
-                var response = await _contextService.GetClientSetingsAsync();
-                var responseJObject = JObject.FromObject(response);
-                return Ok(responseJObject);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"RequestID:{requestId} GetClientSettings error: {ex.Message}");
-                var errorResponse = JsonErrorResponse.BadRequest($"GetClientSettings error: {ex.Message}", requestId);
-
-                return BadRequest(errorResponse);
-            }
-        }
         // Get: /Context/GetSiteDrive
         [HttpGet("GetSiteDrive/{siteName}", Name = "GetSiteDrive")]
         public async Task<IActionResult> GetSiteDrive(string siteName)
@@ -120,69 +100,5 @@ namespace WebReact.Api
                 return BadRequest(errorResponse);
             }
         }
-
-
-		[HttpGet("GetOpportunityStatusAll", Name = "GetOpportunityStatusAll")]
-		public async Task<IActionResult> GetOpportunityStatusAll()
-		{
-			var requestId = Guid.NewGuid().ToString();
-			_logger.LogInformation($"RequestID:{requestId} GetOpportunityStatusAll called.");
-
-			try
-			{
-				var response = await _contextService.GetOpportunityStatusAllAsync();
-
-				return Ok(response);
-			}
-			catch (Exception ex)
-			{
-				_logger.LogError($"RequestID:{requestId} GetOpportunityStatusAll error: {ex.Message}");
-				var errorResponse = JsonErrorResponse.BadRequest($"GetOpportunityStatusAll error: {ex.Message}", requestId);
-
-				return BadRequest(errorResponse);
-			}
-		}
-
-		[HttpGet("GetActionStatusAll", Name = "GetActionStatusAll")]
-		public async Task<IActionResult> GetActionStatusAll()
-		{
-			var requestId = Guid.NewGuid().ToString();
-			_logger.LogInformation($"RequestID:{requestId} GetActionStatusAll called.");
-
-			try
-			{
-				var response = await _contextService.GetActionStatusAllAsync();
-
-				return Ok(response);
-			}
-			catch (Exception ex)
-			{
-				_logger.LogError($"RequestID:{requestId} GetActionStatusAll error: {ex.Message}");
-				var errorResponse = JsonErrorResponse.BadRequest($"GetActionStatusAll error: {ex.Message}", requestId);
-
-				return BadRequest(errorResponse);
-			}
-		}
-
-        //[HttpGet("GetPermissionsAll", Name = "GetPermissionsAll")]
-        //public async Task<IActionResult> GetPermissionsAll()
-        //{
-        //    var requestId = Guid.NewGuid().ToString();
-        //    _logger.LogInformation($"RequestID:{requestId} GetPermissionsAll called.");
-
-        //    try
-        //    {
-        //        var response = await _contextService.GetPermissionsAllAsync(requestId);
-
-        //        return Ok(response);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        _logger.LogError($"RequestID:{requestId} GetPermissionsAll error: {ex.Message}");
-        //        var errorResponse = JsonErrorResponse.BadRequest($"GetPermissionsAll error: {ex.Message}", requestId);
-
-        //        return BadRequest(errorResponse);
-        //    }
-        //}
     }
 }

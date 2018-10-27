@@ -1,20 +1,21 @@
 ﻿$(function () {
-	Office.initialize = function (reason) {
-		$(document).ready(function () {
+    Office.initialize = function (reason) {
 
-			let token = sessionStorage["token"];
+        $(document).ready(function () {
 
-			if (!token)
-				window.location.replace("/");
+            let token = sessionStorage["token"];
 
-			point.init(token);
-			$("#dvLogin").hide();
-			$("#excel-addin").show();
+            if (!token)
+                window.location.replace("/");
+
+            point.init(token);
+            $("#dvLogin").hide();
+            $("#excel-addin").show();
 
 
-		});
+        });
 
-	};
+    };
 });
 
 var point = (function () {
@@ -57,9 +58,10 @@ var point = (function () {
         }
     }, that = point;
 
-    that.init = function (accessToken) {
-        that.token = accessToken;
-        that.filePath = Office.context.document.url;
+	that.init = function (accessToken)
+	{
+		that.token = accessToken;
+		that.filePath = Office.context.document.url;
         that.controls = {
             body: $("body"),
             main: $(".main"),
@@ -356,15 +358,15 @@ var point = (function () {
             if ($(this).data("content") != "Points") {
                 if (!_t) {
                     that.controls.headerListPoints.find(".point-header").removeClass("type-point type-table type-chart only").addClass("type-table only");
-                    that.controls.headerListPoints.find(".i2 span")[0].innerText = window.stringResources["Name"];
+                    that.controls.headerListPoints.find(".i2 span")[0].innerText = "Name";
                 }
                 else {
-                    that.controls.headerListPoints.find(".i2 span")[0].innerText = window.stringResources["SourcePoint"];
+                    that.controls.headerListPoints.find(".i2 span")[0].innerText = "Source Point";
                     that.controls.headerListPoints.find(".point-header").removeClass("type-point type-table type-chart only").addClass("type-table");
                 }
             }
             else {
-                that.controls.headerListPoints.find(".i2 span")[0].innerText = window.stringResources["SourcePoint"];
+                that.controls.headerListPoints.find(".i2 span")[0].innerText = "Source Point";
                 if (!_t) {
                     that.controls.headerListPoints.find(".point-header").removeClass("type-point type-table type-chart only").addClass("type-point only");
                 }
@@ -387,28 +389,28 @@ var point = (function () {
             if ($(this).index() == 0) {
                 that.controls.main.removeClass("table chart").addClass("single");
                 if (that.controls.main.hasClass("edit")) {
-                    $(that.controls.back.find(".n-name-edit")[0]).text(window.stringResources["EditSourcePoint"]);
+                    $(that.controls.back.find(".n-name-edit")[0]).text("Edit Source Point");
                 }
                 else {
-                    $(that.controls.back.find(".n-name-add")[0]).text(window.stringResources["AddSourcePoint"]);
+                    $(that.controls.back.find(".n-name-add")[0]).text("Add Source Point");
                 }
             }
             else if ($(this).index() == 1) {
                 that.controls.main.removeClass("single table").addClass("chart");
                 if (that.controls.main.hasClass("edit")) {
-                    $(that.controls.back.find(".n-name-edit")[0]).text(window.stringResources["EditSourceChart"]);
+                    $(that.controls.back.find(".n-name-edit")[0]).text("Edit Source Chart");
                 }
                 else {
-                    $(that.controls.back.find(".n-name-add")[0]).text(window.stringResources["AddSourceChart"]);
+                    $(that.controls.back.find(".n-name-add")[0]).text("Add Source Chart");
                 }
             }
             else if ($(this).index() == 2) {
                 that.controls.main.removeClass("single chart").addClass("table");
                 if (that.controls.main.hasClass("edit")) {
-                    $(that.controls.back.find(".n-name-edit")[0]).text(window.stringResources["EditSourceTable"]);
+                    $(that.controls.back.find(".n-name-edit")[0]).text("Edit Source Table");
                 }
                 else {
-                    $(that.controls.back.find(".n-name-add")[0]).text(window.stringResources["AddSourceTable"]);
+                    $(that.controls.back.find(".n-name-add")[0]).text("Add Source Table");
                 }
             }
         });
@@ -502,7 +504,7 @@ var point = (function () {
         that.controls.pagerGo.on("click", function () {
             var _v = $.trim(that.controls.pagerValue.val());
             if (isNaN(_v)) {
-                that.popup.message({ success: false, title: window.stringResources["OnlyNumbers"] });
+                that.popup.message({ success: false, title: "Only numbers are a valid input." });
             }
             else {
                 _n = parseInt(_v);
@@ -510,7 +512,7 @@ var point = (function () {
                     that.utility.pager.init({ index: _n, refresh: false });
                 }
                 else {
-                    that.popup.message({ success: false, title: window.stringResources["InvalidNumber"] });
+                    that.popup.message({ success: false, title: "Invalid number." });
                 }
             }
         });
@@ -638,7 +640,7 @@ var point = (function () {
         if (that.controls.main.hasClass("single")) {
             that.controls.sourceTypeNav.removeClass("is-selected");
             $(that.controls.sourceTypeNav[0]).addClass("is-selected");
-            $(that.controls.back.find(".n-name-add")[0]).text(window.stringResources["AddSourcePoint"]);
+            $(that.controls.back.find(".n-name-add")[0]).text("Add Source Point");
         }
         if (callback) {
             callback();
@@ -661,9 +663,7 @@ var point = (function () {
         },
         mode: function (callback) {
             if (Office.context.document.mode == Office.DocumentMode.ReadOnly) {
-                that.popup.message({
-                    success: false, title: window.stringResources["EditWorkbookButton"]
-                });
+                that.popup.message({ success: false, title: "Please click \"edit workbook\" button under the excel ribbon." });
             }
             else {
                 callback();
@@ -714,7 +714,7 @@ var point = (function () {
                             callback({ status: app.status.succeeded, data: _image.value });
                         });
                     }).catch(function (error) {
-                        callback({ status: app.status.failed, message: window.string["TheSelected"] + " " + options.title + " " + window.stringResources["IsInvalid"] });
+                        callback({ status: app.status.failed, message: "The selected " + options.title + " is invalid." });
                     });
                 }
                 else {
@@ -737,17 +737,17 @@ var point = (function () {
                                                         callback({ status: app.status.succeeded, data: JSON.stringify({ image: _imageSrc, table: result.data }) });
                                                     }
                                                     else {
-                                                        callback({ status: app.status.failed, message: window.stringResources["GetSourceTableStylesFailed"] });
+                                                        callback({ status: app.status.failed, message: "Get source table styles failed." });
                                                     }
                                                 });
                                             });
                                         }
                                         else {
-                                            callback({ status: app.status.failed, message: window.stringResources["SourceTableCannotBeBlank"] });
+                                            callback({ status: app.status.failed, message: "The source table cannot be blank." });
                                         }
                                     }
                                     else {
-                                        callback({ status: app.status.failed, message: window.stringResources["TableMustHave2Rows"] });
+                                        callback({ status: app.status.failed, message: "A table must contain at least 2 rows and 2 columns, please try again." });
                                     }
                                 }
                             }
@@ -757,23 +757,21 @@ var point = (function () {
                                         callback({ status: app.status.succeeded, data: r.text });
                                     }
                                     else {
-                                        callback({
-                                            status: app.status.failed, message: window.stringResources["Only2AdjacentColumns"]
-                                        });
+                                        callback({ status: app.status.failed, message: "Only 2 adjacent columns can be selected." });
                                     }
                                 }
                                 else {
-                                    callback({ status: app.status.failed, message: window.stringResources["SelectedRangeCannotBeBlank"] });
+                                    callback({ status: app.status.failed, message: "The selected range cannot be blank." });
                                 }
                             }
                         });
                     }).catch(function (error) {
-                        callback({ status: app.status.failed, message: window.stringResources["TheSelected"] + " " + options.title + " " + window.stringResources["PositionIsInvalid"] });
+                        callback({ status: app.status.failed, message: "The selected " + options.title + " position is invalid." });
                     });
                 }
             }
             else {
-                callback({ status: app.status.failed, message: window.stringResources["Only1CellCanBeSelected"] + " " + options.title + "." });
+                callback({ status: app.status.failed, message: "Only 1 cell can be selected for " + options.title + "." });
             }
         },
         exist: function (options, callback) {
@@ -789,9 +787,7 @@ var point = (function () {
                     existed = $.inArray(options.name, a) > -1;
                 }
             }
-            callback({
-                status: existed ? app.status.failed : app.status.succeeded, message: existed ? (options.name + " " + window.stringResources["SelectDifferentName"]) : ""
-            });
+            callback({ status: existed ? app.status.failed : app.status.succeeded, message: existed ? (options.name + " already exists, please select a different name.") : "" });
         },
         validation: function (callback) {
             var entered = that.utility.entered(),
@@ -810,11 +806,7 @@ var point = (function () {
                 values.push([(that.isPoint() || that.isBulk() || that.isTable()) ? "Select range" : "Select Chart"]);
             }
             if (!success) {
-                callback({
-                    status: app.status.failed, message: {
-                        success: success, title: window.stringResources["EnterRequiredFields"], values: values
-                    }
-                });
+                callback({ status: app.status.failed, message: { success: success, title: "Please enter the following required fields:", values: values } });
             }
             else {
                 if (!that.bulk) {
@@ -854,7 +846,7 @@ var point = (function () {
                                     });
                                 }
                                 else {
-                                    callback({ status: app.status.failed, message: { success: false, title: name.length > 0 ? window.stringResources["SourcePoint255Chars"] : window.stringResources["SourcePointCannotBeBlank"] } });
+                                    callback({ status: app.status.failed, message: { success: false, title: name.length > 0 ? "The source point name cannot exceed 255 characters." : "The source point name cannot be blank." } });
                                 }
                             }
                             else {
@@ -896,11 +888,7 @@ var point = (function () {
                             });
                         }
                         else {
-                            callback({
-                                status: app.status.failed, message: {
-                                    success: false, title: name.length > 0 ? window.stringResources["SourceTable255Chars"] : window.stringResources["SourceTableTitleCannotBeBlank"]
-                                }
-                            });
+                            callback({ status: app.status.failed, message: { success: false, title: name.length > 0 ? "The source table title cannot exceed 255 characters." : "The source table title cannot be blank." } });
                         }
                     }
                 }
@@ -1274,13 +1262,13 @@ var point = (function () {
                         that.popup.confirm({
                             title: "Do you want to save your changes?"
                         },
-                            function () {
-                                that.controls.popupMain.removeClass("message process confirm browse active");
-                                that.controls.save.click();
-                            }, function () {
-                                that.controls.popupMain.removeClass("message process confirm browse active");
-                                that.action.backToList();
-                            });
+                        function () {
+                            that.controls.popupMain.removeClass("message process confirm browse active");
+                            that.controls.save.click();
+                        }, function () {
+                            that.controls.popupMain.removeClass("message process confirm browse active");
+                            that.action.backToList();
+                        });
                     }
                     else {
                         that.action.backToList();
@@ -1300,9 +1288,7 @@ var point = (function () {
                         that.popup.message({ success: false, title: result.error.statusText });
                     }
                     else {
-                        that.popup.message({
-                            success: true, title: window.stringResources["RefreshSourcePoints"]
-                        }, function () { that.popup.hide(3000); });
+                        that.popup.message({ success: true, title: "Refresh all source points succeeded." }, function () { that.popup.hide(3000); });
                     }
                 });
             });
@@ -1340,32 +1326,30 @@ var point = (function () {
                                                                     if (result.status == app.status.succeeded) {
                                                                         that.utility.update(result.data);
                                                                         that.utility.pager.init({ refresh: false, index: that.pagerIndex });
-                                                                        that.popup.message({
-                                                                            success: true, title: window.stringResources["SourcePointUpdateComplete"]
-                                                                        }, function () { that.popup.hide(3000); });
+                                                                        that.popup.message({ success: true, title: "Source point update complete." }, function () { that.popup.hide(3000); });
                                                                     }
                                                                     else {
-                                                                        that.popup.message({ success: false, title: window.stringResources["EditSourcePointFailed"] });
+                                                                        that.popup.message({ success: false, title: "Edit source point failed." });
                                                                     }
                                                                 });
                                                             }
                                                             else {
-                                                                that.popup.message({ success: false, title: window.stringResources["CreateRangeExcelFailed"] });
+                                                                that.popup.message({ success: false, title: "Create range in Excel failed." });
                                                             }
                                                         });
                                                     }
                                                     else {
-                                                        that.popup.message({ success: false, title: window.stringResources["DeletePreviousRangeFailed"] });
+                                                        that.popup.message({ success: false, title: "Delete the previous range failed." });
                                                     }
                                                 });
                                             }
                                             else {
-                                                that.popup.message({ success: false, title: window.stringResources["CreateSourcePointNameExcelFailed"] });
+                                                that.popup.message({ success: false, title: "Create source point name range in Excel failed." });
                                             }
                                         });
                                     }
                                     else {
-                                        that.popup.message({ success: false, title: window.stringResources["DeletePreviousSourcePointNameRangeFailed"] });
+                                        that.popup.message({ success: false, title: "Delete the previous source point name range failed." });
                                     }
                                 });
                             }
@@ -1378,22 +1362,20 @@ var point = (function () {
                                                     if (result.status == app.status.succeeded) {
                                                         that.utility.update(result.data);
                                                         that.utility.pager.init({ refresh: false, index: that.pagerIndex });
-                                                        that.popup.message({
-                                                            success: true, title: window.stringResources["SourceTableUpdateComplete"]
-                                                        }, function () { that.popup.hide(3000); });
+                                                        that.popup.message({ success: true, title: "Source table update complete." }, function () { that.popup.hide(3000); });
                                                     }
                                                     else {
-                                                        that.popup.message({ success: false, title: window.stringResources["EditSourceTableFailed"] });
+                                                        that.popup.message({ success: false, title: "Edit source table failed." });
                                                     }
                                                 });
                                             }
                                             else {
-                                                that.popup.message({ success: false, title: window.stringResources["CreateTableRangeExcelFailed"] });
+                                                that.popup.message({ success: false, title: "Create table range in Excel failed." });
                                             }
                                         });
                                     }
                                     else {
-                                        that.popup.message({ success: false, title: window.stringResources["DeletePreviousTableRangeFailed"] });
+                                        that.popup.message({ success: false, title: "Delete the previous table range failed." });
                                     }
                                 });
                             }
@@ -1402,10 +1384,10 @@ var point = (function () {
                                     if (result.status == app.status.succeeded) {
                                         that.utility.update(result.data);
                                         that.utility.pager.init({ refresh: false, index: that.pagerIndex });
-                                        that.popup.message({ success: true, title: window.stringResources["SourceChartUpdateComplete"] }, function () { that.popup.hide(3000); });
+                                        that.popup.message({ success: true, title: "Source chart update complete." }, function () { that.popup.hide(3000); });
                                     }
                                     else {
-                                        that.popup.message({ success: false, title: window.stringResources["EditSourceChartFailed"] });
+                                        that.popup.message({ success: false, title: "Edit source chart failed." });
                                     }
                                 });
                             }
@@ -1429,22 +1411,20 @@ var point = (function () {
                                                         if (result.status == app.status.succeeded) {
                                                             that.utility.add(result.data);
                                                             that.utility.pager.init({ refresh: false, index: that.pagerIndex });
-                                                            that.popup.message({ success: true, title: window.stringResources["AddNewSourcePointOK"] }, function () { that.popup.hide(3000); });
+                                                            that.popup.message({ success: true, title: "Add new source point succeeded." }, function () { that.popup.hide(3000); });
                                                         }
                                                         else {
-                                                            that.popup.message({ success: false, title: window.stringResources["AddNewSourcePointFailed"] });
+                                                            that.popup.message({ success: false, title: "Add source point failed." });
                                                         }
                                                     });
                                                 }
                                                 else {
-                                                    that.popup.message({
-                                                        success: false, title: window.stringResources["CreateRangeExcelFailed"]
-                                                    });
+                                                    that.popup.message({ success: false, title: "Create range in Excel failed." });
                                                 }
                                             });
                                         }
                                         else {
-                                            that.popup.message({ success: false, title: window.stringResources["CreateSourcePointRangeExcelFailed"] });
+                                            that.popup.message({ success: false, title: "Create source point name range in Excel failed." });
                                         }
                                     });
                                 }
@@ -1455,18 +1435,16 @@ var point = (function () {
                                                 if (result.status == app.status.succeeded) {
                                                     that.utility.add(result.data);
                                                     that.utility.pager.init({ refresh: false, index: that.pagerIndex });
-                                                    that.popup.message({ success: true, title: window.stringResources["AddNewSourceTableOK"] }, function () { that.popup.hide(3000); });
+                                                    that.popup.message({ success: true, title: "Add new source table succeeded." }, function () { that.popup.hide(3000); });
                                                 }
                                                 else {
-                                                    that.popup.message({ success: false, title: window.stringResources["AddSourceTableFailed"] });
+                                                    that.popup.message({ success: false, title: "Add source table failed." });
                                                 }
                                             });
 
                                         }
                                         else {
-                                            that.popup.message({
-                                                success: false, title: window.stringResources["CreateTableRangeExcelFailed"]
-                                            });
+                                            that.popup.message({ success: false, title: "Create table range in Excel failed." });
                                         }
                                     });
                                 }
@@ -1475,12 +1453,10 @@ var point = (function () {
                                         if (result.status == app.status.succeeded) {
                                             that.utility.add(result.data);
                                             that.utility.pager.init({ refresh: false, index: that.pagerIndex });
-                                            that.popup.message({
-                                                success: true, title: window.stringResources["AddSourceChartOK"]
-                                            }, function () { that.popup.hide(3000); });
+                                            that.popup.message({ success: true, title: "Add new source chart succeeded." }, function () { that.popup.hide(3000); });
                                         }
                                         else {
-                                            that.popup.message({ success: false, title: window.stringResources["AddSourceChartFailed"] });
+                                            that.popup.message({ success: false, title: "Add source chart failed." });
                                         }
                                     });
                                 }
@@ -1497,12 +1473,10 @@ var point = (function () {
                                                 $.each(rst.existed, function (_i, _d) {
                                                     _v.push([_d]);
                                                 });
-                                                that.popup.message({ success: false, title: window.stringResources["SourcePointExists"], values: _v }, function () { that.popup.back(); });
+                                                that.popup.message({ success: false, title: "The following Source Points already exist, please input a unique name:", values: _v }, function () { that.popup.back(); });
                                             }
                                             else {
-                                                that.popup.message({
-                                                    success: true, title: rt.success + " " + window.stringResources["SourcePointAddedCatalog"]
-                                                }, function () {
+                                                that.popup.message({ success: true, title: rt.success + " Source Point(s) have been added to the catalog." }, function () {
                                                     that.popup.hide(3000);
                                                     that.action.back();
                                                     ifBackToList = true;
@@ -1510,9 +1484,7 @@ var point = (function () {
                                             }
                                         }
                                         else {
-                                            that.popup.message({
-                                                success: false, title: window.stringResources["Add"] + " " + rt.success + " " + window.stringResources["SourcePointsSucceeded"] + " " + rt.error + window.stringResources["SourcePointFailedExcel"]
-                                            }, function () { that.popup.back(); });
+                                            that.popup.message({ success: false, title: "Add " + rt.success + " source points succeeded, add " + rt.error + "source point failed." }, function () { that.popup.back(); });
                                         }
                                         if (ifBackToList === false) {
                                             that.utility.mode(function () {
@@ -1588,20 +1560,20 @@ var point = (function () {
             that.utility.mode(function () {
                 var _sourceType = o.data("sourcetype"), _titleType = _sourceType == app.sourceTypes.point ? "point" : (_sourceType == app.sourceTypes.table ? "table" : "chart");
                 that.popup.confirm({
-                    title: window.stringResources["DeleteSourcePoint"] + " " + _titleType + "?"
+                    title: "Do you want to delete the source " + _titleType + "?"
                 }, function () {
                     that.popup.processing(true);
                     that.service.del({
                         Id: i
                     }, function (result) {
                         if (result.status == app.status.succeeded) {
-                            that.popup.message({ success: true, title: window.stringResources["DeleteSource"] + " " + _titleType + " " + window.stringResources["Succeeded"] + "." }, function () { that.popup.hide(3000); });
+                            that.popup.message({ success: true, title: "Delete source " + _titleType + " succeeded." }, function () { that.popup.hide(3000); });
                             that.utility.remove({ Id: i });
                             that.ui.remove({ Id: i });
                             that.utility.pager.init({ refresh: false, index: that.controls.list.find(".point-item").length > 0 ? that.pagerIndex : that.pagerIndex - 1 });
                         }
                         else {
-                            that.popup.message({ success: false, title: window.stringResources["DeleteSource"] + " " + _titleType + " " + window.stringResources["DeleteSource"] + "." });
+                            that.popup.message({ success: false, title: "Delete source " + _titleType + " failed." });
                         }
                     });
                 }, function () {
@@ -1622,12 +1594,12 @@ var point = (function () {
                 _stp = _st.join(",").replace(app.sourceTypes.point, "point").replace(app.sourceTypes.table, "table").replace(app.sourceTypes.chart, "chart");
                 that.utility.mode(function () {
                     that.popup.confirm({
-                        title: window.stringResources["DeleteSelectedSourcePoint"] + _stp + "?"
+                        title: "Do you want to delete the selected source " + _stp + "?"
                     }, function () {
                         that.popup.processing(true);
                         that.service.deleteSelected({ data: { "": _ss } }, function (result) {
                             if (result.status == app.status.succeeded) {
-                                that.popup.message({ success: true, title: window.stringResources["DeleteSource"] + " " + _stp + " " + window.stringResources["Succeeded"] + "." }, function () { that.popup.hide(3000); });
+                                that.popup.message({ success: true, title: "Delete source " + _stp + " succeeded." }, function () { that.popup.hide(3000); });
                                 $.each(_ss, function (_m, _n) {
                                     that.utility.remove({ Id: _n });
                                     that.ui.remove({ Id: _n });
@@ -1636,7 +1608,7 @@ var point = (function () {
                                 that.utility.pager.init({ refresh: false, index: that.controls.list.find(".point-item").length > 0 ? that.pagerIndex : that.pagerIndex - 1 });
                             }
                             else {
-                                that.popup.message({ success: false, title: window.stringResources["DeleteSource"] + " " + _stp + " " + window.stringResources["Failed"] + "." });
+                                that.popup.message({ success: false, title: "Delete source " + _stp + " failed." });
                             }
                         });
                     }, function () {
@@ -1645,9 +1617,7 @@ var point = (function () {
                 });
             }
             else {
-                that.popup.message({
-                    success: false, title: window.stringResources["SelectPointTableChart"]
-                });
+                that.popup.message({ success: false, title: "Please select source point, table or chart." });
             }
         },
         edit: function (i, o) {
@@ -1656,7 +1626,7 @@ var point = (function () {
                 that.model = that.utility.model(i);
                 if (that.model) {
                     if (that.model.SourceType == app.sourceTypes.point) {
-                        $(that.controls.back.find(".n-name-edit")[0]).text(window.stringResources["EditSourcePoint"]);
+                        $(that.controls.back.find(".n-name-edit")[0]).text("Edit Source Point");
                         that.model.NameRangeId = that.model.NameRangeId && that.model.NameRangeId != null ? that.model.NameRangeId : "";
                         that.model.NamePosition = that.model.NamePosition && that.model.NamePosition != null ? that.model.NamePosition : "";
                         that.range.goto({ RangeId: that.model.NameRangeId }, function (result) {
@@ -1668,38 +1638,34 @@ var point = (function () {
                                         that.default(function () { that.action.associated(); });
                                     }
                                     else {
-                                        that.popup.message({
-                                            success: false, title: window.stringResources["RangeInExcelDeleted"]
-                                        });
+                                        that.popup.message({ success: false, title: "The range in the Excel has been deleted." });
                                     }
                                 });
                             }
                             else {
-                                that.popup.message({
-                                    success: false, title: window.stringResources["SourcePointRangeExcelDeleted"]
-                                });
+                                that.popup.message({ success: false, title: "The source point name range in the Excel has been deleted." });
                             }
                         });
                     }
                     else if (that.model.SourceType == app.sourceTypes.table) {
-                        $(that.controls.back.find(".n-name-edit")[0]).text(window.stringResources["EditSourceTable"]);
+                        $(that.controls.back.find(".n-name-edit")[0]).text("Edit Source Table");
                         that.range.goto({ RangeId: that.model.RangeId }, function (result) {
                             if (result.status == app.status.succeeded) {
                                 that.model.Position = result.data.address;
                                 that.default(function () { that.action.associated(); });
                             }
                             else {
-                                that.popup.message({ success: false, title: window.stringResources["TableRangeExcelDeleted"] });
+                                that.popup.message({ success: false, title: "The table range in the Excel has been deleted." });
                             }
                         });
                     }
                     else if (that.model.SourceType == app.sourceTypes.chart) {
-                        $(that.controls.back.find(".n-name-edit")[0]).text(window.stringResources["EditSourceChart"]);
+                        $(that.controls.back.find(".n-name-edit")[0]).text("Edit Source Chart");
                         that.default(function () { that.action.associated(); });
                     }
                 }
                 else {
-                    that.popup.message({ success: false, title: window.stringResources["TheSource"] + " " + app.sourceTitle(o.data("sourcetype")) + " " + window.stringResources["HasBeenDeleted"] });
+                    that.popup.message({ success: false, title: "The source " + app.sourceTitle(o.data("sourcetype")) + " has been deleted." });
                 }
             });
         },
@@ -1753,10 +1719,10 @@ var point = (function () {
                         that.utility.dirty({ data: _ss }, function (f) {
                             if (f) {
                                 that.popup.confirm({
-                                    title: window.stringResources["LocationNotTheSame"]
+                                    title: "The cell value or location is not the same with the one in Add-in. Please click 'No' to cancel it and click 'refresh' to manually sync the value or location from excel to Add-in. Are you sure to publish the selected source point still?"
                                 },
                                     function () {
-                                        that.popup.message({ success: false, title: window.stringResources["PublishCancelled"] });
+                                        that.popup.message({ success: false, title: "Publish Cancelled: No changes detected, click the refresh button and try again." });
                                         /*that.popup.processing(true);
                                         that.service.publish({ data: { "": _ss } }, function (result) {
                                             if (result.status == app.status.succeeded) {
@@ -1772,9 +1738,9 @@ var point = (function () {
                                             }
                                         });*/
                                     },
-                                    function () {
-                                        that.controls.popupMain.removeClass("message process confirm active");
-                                    });
+                                function () {
+                                    that.controls.popupMain.removeClass("message process confirm active");
+                                });
                             }
                             else {
                                 that.service.publish({ data: { "": _ss } }, function (result) {
@@ -1783,17 +1749,13 @@ var point = (function () {
                                             that.utility.updateAndAppendPublishHisotry(_d);
                                         });
                                         that.ui.publish(result.data, function () {
-                                            that.popup.message({
-                                                success: _sf ? false : true, title: _sf ? window.stringResources["SourcePointsPublishedFailed"] : window.stringResources["SourcePointsPublishedOK"]
-                                            }, function () {
+                                            that.popup.message({ success: _sf ? false : true, title: _sf ? "Not all Source Points were published, please check Source Point list for errors." : "Publish source point succeeded." }, function () {
                                                 that.popup.hide(3000);
                                             });
                                         });
                                     }
                                     else {
-                                        that.popup.message({
-                                            success: false, title: window.stringResources["PublishSourcePointFailed"]
-                                        });
+                                        that.popup.message({ success: false, title: "Publish source point failed." });
                                     }
                                 });
                             }
@@ -1801,22 +1763,16 @@ var point = (function () {
                     }
                     else {
                         if (_countNoChange > 0) {
-                            that.popup.message({
-                                success: false, title: window.stringResources["PublishCancelled"]
-                            });
+                            that.popup.message({ success: false, title: "Publish Cancelled: No changes detected, click the refresh button and try again." });
                         }
                         else {
-                            that.popup.message({
-                                success: false, title: window.stringResources["SelectedSourcePointsDeleted"]
-                            });
+                            that.popup.message({ success: false, title: "The source points you selected have been deleted." });
                         }
                     }
                 });
             }
             else {
-                that.popup.message({
-                    success: false, title: window.stringResources["SelectPointTableChart"]
-                });
+                that.popup.message({ success: false, title: "Please select source point, table or chart." });
             }
         },
         publishAll: function () {
@@ -1844,10 +1800,10 @@ var point = (function () {
                         that.utility.dirty({ data: _ss }, function (f) {
                             if (f) {
                                 that.popup.confirm({
-                                    title: window.stringResources["LocationNotTheSame"]
+                                    title: "The cell value or location is not the same with the one in Add-in. Please click 'No' to cancel it and click 'refresh' to manually sync the value or location from excel to Add-in. Are you sure to publish the selected source point still?"
                                 },
                                     function () {
-                                        that.popup.message({ success: false, title: window.stringResources["PublishCancelled"] });
+                                        that.popup.message({ success: false, title: "Publish Cancelled: No changes detected, click the refresh button and try again." });
                                         /*that.popup.processing(true);
                                         that.service.publish({ data: { "": _ss } }, function (result) {
                                             if (result.status == app.status.succeeded) {
@@ -1865,9 +1821,9 @@ var point = (function () {
                                             }
                                         });*/
                                     },
-                                    function () {
-                                        that.controls.popupMain.removeClass("message process confirm active");
-                                    });
+                                function () {
+                                    that.controls.popupMain.removeClass("message process confirm active");
+                                });
                             }
                             else {
                                 that.service.publish({ data: { "": _ss } }, function (result) {
@@ -1876,15 +1832,13 @@ var point = (function () {
                                             that.utility.updateAndAppendPublishHisotry(_d);
                                         });
                                         that.ui.publish(result.data, function () {
-                                            that.popup.message({
-                                                success: _sf ? false : true, title: _sf ? window.stringResources["SourcePointsPublishedFailed"] : window.stringResources["SourcePointsPublishedOK"]
-                                            }, function () {
+                                            that.popup.message({ success: _sf ? false : true, title: _sf ? "Not all Source Points were published, please check Source Point list for errors." : "Publish source point succeeded." }, function () {
                                                 that.popup.hide(3000);
                                             });
                                         });
                                     }
                                     else {
-                                        that.popup.message({ success: false, title: window.stringResources["PublishSourcePointFailed"] });
+                                        that.popup.message({ success: false, title: "Publish source point failed." });
                                     }
                                 });
                             }
@@ -1892,16 +1846,16 @@ var point = (function () {
                     }
                     else {
                         if (_countNoChange > 0) {
-                            that.popup.message({ success: false, title: window.stringResources["PublishCancelled"] });
+                            that.popup.message({ success: false, title: "Publish Cancelled: No changes detected, click the refresh button and try again." });
                         }
                         else {
-                            that.popup.message({ success: false, title: window.stringResources["ALlSourcePointsDeleted"] });
+                            that.popup.message({ success: false, title: "All source points have been deleted." });
                         }
                     }
                 });
             }
             else {
-                that.popup.message({ success: false, title: window.stringResources["NoSourcePoint"] });
+                that.popup.message({ success: false, title: "There is no source point." });
             }
         },
         goto: function (i, o) {
@@ -1914,12 +1868,12 @@ var point = (function () {
                     if (_m.SourceType == app.sourceTypes.point || _m.SourceType == app.sourceTypes.table) {
                         that.range.exist({ Data: _m, IsNameRange: true }, function (result) {
                             if (result.status == app.status.failed) {
-                                that.popup.message({ success: false, title: window.stringResources["SourcePointRangeExcelDeleted"] });
+                                that.popup.message({ success: false, title: "The source point name range in the Excel has been deleted." });
                             }
                             else {
                                 that.range.goto({ RangeId: _m.RangeId }, function (result) {
                                     if (result.status == app.status.failed) {
-                                        that.popup.message({ success: false, title: window.stringResources["RangeInExcelDeleted"] });
+                                        that.popup.message({ success: false, title: "The range in the Excel has been deleted." });
                                     }
                                 });
                             }
@@ -1928,12 +1882,12 @@ var point = (function () {
                     else {
                         that.range.exist({ Data: _m, IsNameRange: false }, function (result) {
                             if (result.status == app.status.failed) {
-                                that.popup.message({ success: false, title: window.stringResources["SourceChartExcelDeleted"] });
+                                that.popup.message({ success: false, title: "The source chart in the Excel has been deleted." });
                             }
                             else {
                                 that.range.gotoWorkSheet({ Sheet: that.utility.position(result.data.address).sheet }, function (result) {
                                     if (result.status == app.status.failed) {
-                                        that.popup.message({ success: false, title: window.stringResources["WorksheetExcelDeleted"] });
+                                        that.popup.message({ success: false, title: "The worksheet in the Excel has been deleted." });
                                     }
                                 });
                             }
@@ -1941,9 +1895,7 @@ var point = (function () {
                     }
                 }
                 else {
-                    that.popup.message({
-                        success: false, title: window.stringResources["TheSource"] + " " + app.sourceTitle(o.data("sourcetype")) + " " + window.stringResources["HasBeenDeleted"]
-                    });
+                    that.popup.message({ success: false, title: "The source " + app.sourceTitle(o.data("sourcetype")) + " has been deleted." });
                 }
             });
         },
@@ -1991,9 +1943,7 @@ var point = (function () {
                     that.ui.associated({ data: result.data });
                 }
                 else {
-                    that.popup.message({
-                        success: false, title: window.stringResources["GetAssociatedFilesFailed"]
-                    });
+                    that.popup.message({ success: false, title: "Get associated files failed." });
                 }
             });
         },
@@ -2119,16 +2069,16 @@ var point = (function () {
                                     that.popup.processing(false);
                                 }
                                 else {
-                                    that.popup.message({ success: false, title: window.stringResources["CheckCloneStatusFailed"] });
+                                    that.popup.message({ success: false, title: "Check the clone file status failed." });
                                 }
                             });
                         }
                         else {
-                            that.popup.message({ success: false, title: window.stringResources["NoFilesInSourceFolder"] });
+                            that.popup.message({ success: false, title: "No files found in source folder." });
                         }
                     }
                     else {
-                        that.popup.message({ success: false, title: window.stringResources["GetFilesSourceFolderFailed"] });
+                        that.popup.message({ success: false, title: "Get files in source folder failed." });
                     }
                 });
             },
@@ -2184,9 +2134,7 @@ var point = (function () {
                             callback({ data: options.data });
                         }
                         else {
-                            that.popup.message({
-                                success: false, title: window.stringResources["GetDestFilesFailed"]
-                            });
+                            that.popup.message({ success: false, title: "Get files in destination folder failed." });
                         }
                     });
                 }
@@ -2199,7 +2147,7 @@ var point = (function () {
                             that.popup.processing(false);
                         }
                         else {
-                            that.popup.message({ success: false, title: window.stringResources["CloneFolderFailed"] });
+                            that.popup.message({ success: false, title: "Clone folder failed." });
                         }
                     });
                 });
@@ -2242,9 +2190,7 @@ var point = (function () {
                             }
                             else {
                                 that.browse.popup.processing(false);
-                                that.action.newFolder.message({
-                                    message: window.stringResources["CreateFolderFailed"]
-                                });
+                                that.action.newFolder.message({ message: "Create folder failed: A file name can't contain any of the following characters:<br/>\/:*?\"<>|" });
                             }
                         });
                     }
@@ -2257,13 +2203,13 @@ var point = (function () {
                             }
                             else {
                                 that.browse.popup.processing(false);
-                                that.action.newFolder.message({ message: window.stringResources["CreateFolderFailed"] });
+                                that.action.newFolder.message({ message: "Create folder failed: A file name can't contain any of the following characters:<br/>\/:*?\"<>|" });
                             }
                         });
                     }
                 }
                 else {
-                    that.action.newFolder.message({ message: window.stringResources["EnterFolderName"] });
+                    that.action.newFolder.message({ message: "Please enter folder name." });
                 }
             },
             message: function (options, callback) {
@@ -2398,12 +2344,12 @@ var point = (function () {
                             that.browse.siteCollection();
                         }
                         else {
-                            that.document.error({ title: window.stringResources["AccessTokenFailed"] });
+                            that.document.error({ title: "Get sharepoint access token failed." });
                         }
                     });
                 }
                 else {
-                    that.browse.popup.message(window.stringResources["GraphTokenFailed"]);
+                    that.browse.popup.message("Get graph access token failed.");
                 }
             });
         },
@@ -2433,7 +2379,7 @@ var point = (function () {
                     }
                     else {
                         if (result.error.status == 401) {
-                            that.browse.popup.message(window.stringResources["AccessDenied"]);
+                            that.browse.popup.message("Access denied.");
                         }
                         else {
                             options.index++;
@@ -2447,7 +2393,7 @@ var point = (function () {
                     that.browse.sites({ siteId: options.values.shift(), siteUrl: options.webUrls.shift() });
                 }
                 else {
-                    that.browse.popup.message(window.stringResources["SiteCollectionIdFailed"]);
+                    that.browse.popup.message("Get site collection ID failed.");
                 }
             }
         },
@@ -2466,7 +2412,7 @@ var point = (function () {
                         that.browse.sites({ siteId: that.browse.currentSite.values[0], siteUrl: that.browse.currentSite.webUrls[0] });
                     }
                     else {
-                        that.browse.popup.message(window.stringResources["GetSitesFailed"]);
+                        that.browse.popup.message("Get sites failed.");
                     }
                 }
             });
@@ -2482,7 +2428,7 @@ var point = (function () {
                     that.browse.display({ data: _l });
                 }
                 else {
-                    that.browse.popup.message(window.stringResources["GetLibrariesFailed"]);
+                    that.browse.popup.message("Get libraries failed.");
                 }
             });
         },
@@ -2516,7 +2462,7 @@ var point = (function () {
                         that.action.newFolder.toggle(true);
                     }
                     else {
-                        that.browse.popup.message(window.stringResources["GetFilesFailed"]);
+                        that.browse.popup.message("Get files failed.");
                     }
                 });
             }
@@ -2549,7 +2495,7 @@ var point = (function () {
                         that.action.newFolder.toggle(true);
                     }
                     else {
-                        that.browse.popup.message(window.stringResources["GetFilesFailed"]);
+                        that.browse.popup.message("Get files failed.");
                     }
                 });
             }
@@ -2596,7 +2542,7 @@ var point = (function () {
                 that.controls.popupBrowseList.append(_h);
             });
             if (options.data.length == 0) {
-                that.controls.popupBrowseList.html(window.stringResources["NoFiles"]);
+                that.controls.popupBrowseList.html("No items found.");
             }
             that.browse.popup.processing(false);
         },
@@ -2736,12 +2682,12 @@ var point = (function () {
                             that.document.site(null, callback);
                         }
                         else {
-                            that.document.error({ title: window.stringResources["AccessTokenFailed"] });
+                            that.document.error({ title: "Get sharepoint access token failed." });
                         }
                     });
                 }
                 else {
-                    that.document.error({ title: window.stringResources["GraphTokenFailed"] });
+                    that.document.error({ title: "Get graph access token failed." });
                 }
             });
         },
@@ -2769,9 +2715,7 @@ var point = (function () {
                     that.document.library({ siteId: options.values.shift(), siteUrl: options.webUrls.shift() }, callback);
                 }
                 else {
-                    that.document.error({
-                        title: window.stringResources["SiteUrlFailed"]
-                    });
+                    that.document.error({ title: "Get site url failed." });
                 }
             }
         },
@@ -2789,13 +2733,11 @@ var point = (function () {
                         that.document.file({ siteId: options.siteId, siteUrl: options.siteUrl, listName: _l, fileName: that.utility.fileName(that.filePath) }, callback);
                     }
                     else {
-                        that.document.error({
-                            title: window.stringResources["GetLibraryNameFailed"]
-                        });
+                        that.document.error({ title: "Get library name failed." });
                     }
                 }
                 else {
-                    that.document.error({ title: window.stringResources["GetLibraryNameFailed"] });
+                    that.document.error({ title: "Get library name failed." });
                 }
             });
         },
@@ -2815,18 +2757,16 @@ var point = (function () {
                         callback();
                     }
                     else {
-                        that.document.error({
-                            title: window.stringResources["DocumentIdFailed"]
-                        });
+                        that.document.error({ title: "Get file Document ID failed." });
                     }
                 }
                 else {
-                    that.document.error({ title: window.stringResources["DocumentIdFailed"] });
+                    that.document.error({ title: "Get file Document ID failed." });
                 }
             });
         },
         error: function (options) {
-            that.controls.documentIdError.html(window.stringResources["ErrorMessage"] + " " + options.title);
+            that.controls.documentIdError.html("Error message: " + options.title);
             that.controls.main.addClass("error");
             that.popup.processing(false);
         }
@@ -2988,9 +2928,7 @@ var point = (function () {
                     callback({ status: app.status.succeeded, data: r.address });
                 });
             }).catch(function (error) {
-                callback({
-                    status: app.status.failed, message: window.stringResources["GetSelectedCellFailed"]
-                });
+                callback({ status: app.status.failed, message: "Get selected cell failed." });
             });
         },
         exist: function (options, callback) {
@@ -3017,9 +2955,7 @@ var point = (function () {
                                             callback({ status: app.status.succeeded, data: { text: JSON.stringify({ image: _imageSrc, table: result.data }), address: r.address } });
                                         }
                                         else {
-                                            callback({
-                                                status: app.status.failed, message: window.stringResources["GetSourceTableStylesFailed"]
-                                            });
+                                            callback({ status: app.status.failed, message: "Get source table styles failed." });
                                         }
                                     });
                                 });
@@ -3087,9 +3023,7 @@ var point = (function () {
                     callback({ status: app.status.succeeded, data: _s });
                 });
             }).catch(function (error) {
-                callback({
-                    status: app.status.succeeded, message: window.stringResources["LoadWorksheetFailed"]
-                });
+                callback({ status: app.status.succeeded, message: "Load worksheets failed." });
             });
         },
         charts: function (options, callback) {
@@ -3109,7 +3043,7 @@ var point = (function () {
                         that.range.charts(options, callback);
                     });
                 }).catch(function (error) {
-                    callback({ status: app.status.failed, message: window.stringResources["LoadChartsWorksheetFailed"] });
+                    callback({ status: app.status.failed, message: "Load charts in worksheet failed." });
                 });
             }
             else {
@@ -3184,7 +3118,7 @@ var point = (function () {
                                 _n = _st ? (_sourceType == app.sourceTypes.point ? ret.data.text : _item.Name) : "",
                                 _pv = _item.PublishedHistories && _item.PublishedHistories.length > 0 ? (_item.PublishedHistories[0].Value ? _item.PublishedHistories[0].Value : "") : ""
                             _p = _s ? result.data.address : "",
-                                _np = _st ? ret.data.address : "";
+                            _np = _st ? ret.data.address : "";
                             options.data[options.index].Value = _v;
                             options.data[options.index].Position = _p;
                             options.data[options.index].Name = _n;
@@ -3209,9 +3143,10 @@ var point = (function () {
     };
 
     that.service = {
-        common: function (options, callback) {
-            let apiToken = that.token;
-            let apiHeaders = { "authorization": "Bearer " + apiToken };
+		common: function (options, callback)
+		{
+			let apiToken = that.token;
+			let apiHeaders = { "authorization": "Bearer " + apiToken };
 
             $.ajax({
                 url: options.url,
@@ -3219,13 +3154,13 @@ var point = (function () {
                 cache: false,
                 data: options.data ? options.data : "",
                 dataType: options.dataType,
-                headers: options.headers ? options.headers : apiHeaders,
+				headers: options.headers ? options.headers : apiHeaders,
                 success: function (data) {
                     callback({ status: app.status.succeeded, data: data });
                 },
                 error: function (error) {
                     if (error.status == 410) {
-                        that.popup.message({ success: false, title: window.stringResources["LoginExpired"] }, function () {
+                        that.popup.message({ success: false, title: "The current login gets expired and needs re-authenticate. You will be redirected to the login page by click OK." }, function () {
                             //window.location = "";
                         });
                     }
@@ -3362,7 +3297,7 @@ var point = (function () {
                 if (that.sourcePointKeyword != "") {
                     var _sk = app.search.splitKeyword({ keyword: that.sourcePointKeyword });
                     if (_sk.length > 26) {
-                        that.popup.message({ success: false, title: window.stringResources["Only26Chars"] });
+                        that.popup.message({ success: false, title: "Only support less then 26 keywords." });
                     }
                     else {
                         $.each(original, function (i, d) {
@@ -3485,7 +3420,7 @@ var point = (function () {
                     }
                 } catch (err) {
                     that.popup.message({
-                        success: false, title: window.stringResources["ErrorOccurred"] + " " + err.message
+                        success: false, title: "Error occurred: " + err.message
                     });
                 }
             });
@@ -3546,15 +3481,15 @@ var point = (function () {
                     }
                     // i5
                     _h += '<div class="i5">';
-                    _h += '<div class="i-menu"><a href="javascript:"><span title="' + window.stringResources["Action"] + '"><i class="ms-Icon ms-Icon--More"></i></span><span class="quick-menu"><span class="i-history" title="' + window.stringResources["History"] + '"><i class="ms-Icon ms-Icon--Clock"></i><i>' + window.stringResources["History"] + '</i></span><span class="i-edit" title="' + window.stringResources["EditCustomFormat"] + '"><i class="ms-Icon ms-Icon--Edit"></i><i>' + window.stringResources["Edit"] + '</i></span><span class="i-delete" title="' + window.stringResources["Delete"] + '"><i class="ms-Icon ms-Icon--Cancel"></i><i>' + window.stringResources["Delete"] + '</i></span></span></a></div>';
+                    _h += '<div class="i-menu"><a href="javascript:"><span title="Action"><i class="ms-Icon ms-Icon--More"></i></span><span class="quick-menu"><span class="i-history" title="History"><i class="ms-Icon ms-Icon--Clock"></i><i>History</i></span><span class="i-edit" title="Edit Custom Format"><i class="ms-Icon ms-Icon--Edit"></i><i>Edit</i></span><span class="i-delete" title="Delete"><i class="ms-Icon ms-Icon--Cancel"></i><i>Delete</i></span></span></a></div>';
                     _h += '</div>';
                     _h += '<div class="clear"></div>';
                     _h += '</div>';
                     // History
                     _h += '<div class="item-history"><ul class="history-list">';
-                    _h += '<li class="history-header"><div class="h1"><span>' + window.stringResources["Name"] + '</span></div><div class="h2"><span>' + window.stringResources["DateModified"] + '</span></div><div class="h3"><span>' + window.stringResources["Value"] + '</span></div></li>';
+                    _h += '<li class="history-header"><div class="h1"><span>Name</span></div><div class="h2"><span>Date Modified</span></div><div class="h3"><span>Value</span></div></li>';
                     $.each(_pht, function (m, n) {
-                        var __cv = (n.Value ? n.Value : ""), __pvr = _sourceType == app.sourceTypes.point ? __cv : (__cv == "Cloned" ? window.stringResources["Cloned"] : window.stringResources["Published"]);
+                        var __cv = (n.Value ? n.Value : ""), __pvr = _sourceType == app.sourceTypes.point ? __cv : (__cv == "Cloned" ? "Cloned" : "Published");
                         _h += '<li class="history-item"><div class="h1" title="' + n.PublishedUser + '">' + n.PublishedUser +
                             '</div><div class="h2" title="' + app.date(n.PublishedDate) + '">' + app.date(n.PublishedDate) +
                             '</div><div class="h3" title="' + __pvr + '">' + __pvr + '</div></li>';
@@ -3566,7 +3501,7 @@ var point = (function () {
                     _h += '<div class="error-info">';
                     _h += '<div class="e1"><i class="ms-Icon ms-Icon--ErrorBadge"></i></div>';
                     _h += '<div class="e2">';
-                    _h += '<p><strong>Error</strong>: ' + window.stringResources["TheSource"] + ' ' + _ttp + ' ' + window.stringResources["InvalidNotSavingExcel"] + ' ' + _ttp + ' ' + window.stringResources["RecreateIt"] + '</p>';
+                    _h += '<p><strong>Error</strong>: The source ' + _ttp + ' is invalid. This could be caused by not saving the excel file after creating the source point. Please delete the source ' + _ttp + ' and recreate it.</p>';
                     _h += '</div>';
                     _h += '</div>';
                     _h += '<div class="clear"></div>';
@@ -3591,11 +3526,11 @@ var point = (function () {
                 var _e = that.controls.list.find("[data-id=" + d.Id + "]"),
                     _sourceType = d.SourceType
                 _pv = (d.PublishedHistories && d.PublishedHistories.length > 0 ? (d.PublishedHistories[0].Value ? d.PublishedHistories[0].Value : "") : ""),
-                    _pht = that.utility.publishHistory({ data: d.PublishedHistories });
+                _pht = that.utility.publishHistory({ data: d.PublishedHistories });
                 _e.find(".history-list").find(".history-item").remove();
                 _e.removeClass("status-notpublished").addClass("status-published");
                 $.each(_pht, function (m, n) {
-                    var __cv = (n.Value ? n.Value : ""), __pvr = _sourceType == app.sourceTypes.point ? __cv : (__cv == "Cloned" ? window.stringResources["Cloned"] : window.stringResources["Published"]);
+                    var __cv = (n.Value ? n.Value : ""), __pvr = _sourceType == app.sourceTypes.point ? __cv : (__cv == "Cloned" ? "Cloned" : "Published");
                     _e.find(".history-list").append('<li class="history-item"><div class="h1" title="' + n.PublishedUser + '">' + n.PublishedUser + '</div><div class="h2" title="' + __pvr + '">' + __pvr + '</div><div class="h3" title="' + app.date(n.PublishedDate) + '">' + app.date(n.PublishedDate) + '</div></li>');
                 });
                 if (d.SourceType == app.sourceTypes.point) {

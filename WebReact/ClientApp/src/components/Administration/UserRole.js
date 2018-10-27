@@ -15,7 +15,6 @@ import {
 } from 'office-ui-fabric-react/lib/Spinner';
 import { MessageBar, MessageBarType } from 'office-ui-fabric-react/lib/MessageBar';
 import { Dropdown } from 'office-ui-fabric-react/lib/Dropdown';
-import { Trans } from "react-i18next";
 
 
 export class UserRole extends Component {
@@ -55,10 +54,10 @@ export class UserRole extends Component {
 		this.utils = new Utils();
 		const columns = [
 			{
-                key: 'column1',
-                name: <Trans>ADGroupName</Trans>,
-                headerClassName: 'ms-List-th  ADGroupNameCol',
-                className: 'docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg8 ADGroupNameCol',
+				key: 'column1',
+				name: 'ADGroupName',
+				headerClassName: 'ms-List-th browsebutton',
+				className: 'docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg8',
 				fieldName: 'ADGroup',
 				minWidth: 150,
 				maxWidth: 200,
@@ -75,10 +74,10 @@ export class UserRole extends Component {
 				}
 			},
 			{
-                key: 'column2',
-                name: <Trans>RoleName</Trans>,
-                headerClassName: 'ms-List-th  RoleNameCol',
-                className: 'docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg8 RoleNameCol',
+				key: 'column2',
+				name: 'RoleName',
+				headerClassName: 'ms-List-th browsebutton',
+				className: 'docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg8',
 				fieldName: 'Role',
 				minWidth: 150,
 				maxWidth: 150,
@@ -95,10 +94,10 @@ export class UserRole extends Component {
 				}
 			},
 			{
-                key: 'column3',
-                name: <Trans>processStep</Trans>,
-                headerClassName: 'ms-List-th  processStepCol',
-                className: 'docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg8 processStepCol',
+				key: 'column3',
+				name: 'ProcessStep',
+				headerClassName: 'ms-List-th browsebutton',
+				className: 'docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg8',
 				fieldName: 'Process',
 				minWidth: 150,
 				maxWidth: 150,
@@ -115,10 +114,10 @@ export class UserRole extends Component {
 				}
 			},
 			{
-                key: 'column4',
-                name: <Trans>processType</Trans>,
-                headerClassName: 'ms-List-th  processTypeCol',
-                className: 'docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg8 processTypeCol',
+				key: 'column4',
+				name: 'Process Type',
+				headerClassName: 'ms-List-th browsebutton',
+				className: 'docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg8',
                 fieldName: 'processType',
 				minWidth: 150,
 				maxWidth: 200,
@@ -137,10 +136,10 @@ export class UserRole extends Component {
 				}
 			},
 			{
-                key: 'column5',
-                name: <Trans>channel</Trans>,
-                headerClassName: 'ms-List-th  chanelheading channelCol',
-                className: 'docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg8 chanelheading-Column channelCol',
+				key: 'column5',
+				name: 'Channel',
+				headerClassName: 'ms-List-th browsebutton chanelheading',
+                className: 'docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg8 chanelheading-Column',
 				fieldName: 'Channel',
 				minWidth: 150,
 				maxWidth: 300,
@@ -158,9 +157,9 @@ export class UserRole extends Component {
 			},
 			{
 				key: 'column6',
-				name: <Trans>action</Trans>,
-				headerClassName: 'ms-List-th ActionHeading RoleMappingActiion',
-                className: 'ms-Grid-col ms-sm12 ms-md12 ms-lg4 ActionDelete RoleMappingActiion',
+				name: 'Action',
+				headerClassName: 'ms-List-th ActionHeading',
+				className: 'ms-Grid-col ms-sm12 ms-md12 ms-lg4 ActionDelete',
 				minWidth: 10,
 				maxWidth: 10,
 				onRender: (item) => {
@@ -302,8 +301,8 @@ export class UserRole extends Component {
 		
 		this.deleteItem(item.id);
 		this.setState({
-            items: currentItems,
-            MessagebarText: <Trans>userRoleMappingDeletedSuccess</Trans>,
+			items: currentItems,
+			MessagebarText: "User Role Mapping deleted successfully.",
 			isUpdate: false,
 			isUpdateMsg: true
 		});
@@ -341,7 +340,7 @@ export class UserRole extends Component {
 				.catch(err => {
 					//this.errorHandler(err, "");
 					this.setState({
-                        MessagebarText: <Trans>errorOoccuredPleaseTryAgain</Trans>,
+						MessagebarText: "Error occured. Please try again!",
 						isUpdate: false,
 						isUpdateMsg: true
 					});
@@ -406,12 +405,12 @@ export class UserRole extends Component {
 			//isUpdateMsg: true
 		});
 		if (item.type === "new") {
-            this.createNewItem(currentuserRole);
-            messagebarText = <Trans>userRoleMappingAddedSuccess</Trans>;
+			this.createNewItem(currentuserRole);
+			messagebarText = "Role Mapping added successfully.";
 		}
 		else {
-            this.updateItem(currentuserRole);
-            messagebarText = <Trans>userRoleMappingUpdatedSuccess</Trans>;
+			this.updateItem(currentuserRole);
+			messagebarText = "Role Mapping updated successfully.";
 		}
 		updatedItems[itemIdx].type = "old";
 		this.setState({
@@ -457,7 +456,7 @@ export class UserRole extends Component {
 				.catch(err => {
 					//this.errorHandler(err, "");
 					this.setState({
-                        MessagebarText: <Trans>errorOoccuredPleaseTryAgain</Trans>,
+						MessagebarText: "Error occured. Please try again!",
 						isUpdate: false,
 						isUpdateMsg: true
 					});
@@ -500,7 +499,7 @@ export class UserRole extends Component {
 					//this.errorHandler(err, "");
 					this.setState({
 						updateStatus: true,
-                        MessagebarText: <Trans>errorOoccuredPleaseTryAgain</Trans>
+						MessagebarText: "Error while updating user Role Mapping, please try again."
 					});
 					this.hideMessagebar();
 					reject(err);
@@ -536,7 +535,7 @@ export class UserRole extends Component {
 		if (this.state.loading) {
 			return (
 				<div className='ms-BasicSpinnersExample ibox-content pt15 '>
-                    <Spinner size={SpinnerSize.large} label={<Trans>loading</Trans>} ariaLive='assertive' />
+					<Spinner size={SpinnerSize.large} label='loading...' ariaLive='assertive' />
 				</div>
 			);
 		} else {
@@ -548,12 +547,12 @@ export class UserRole extends Component {
 					<div className='ms-Grid-row'>
 						<div className='ms-Grid-col ms-sm12 ms-md12 ms-lg12'>
                             <div className='ms-Grid-col ms-sm12 ms-md12 ms-lg12 pt10'>
-                                <Link href='' className='pull-left' onClick={() => this.onAddRow()} >+ <Trans>addNew</Trans></Link>
+                                <Link href='' className='pull-left' onClick={() => this.onAddRow()} >+ Add New</Link>
                             </div>
 							{itemCount === 0 ?
 								<div>
-                                    <br />
-                                    <h5><Trans>noRecordsToDisplayPleaseAddNewRecords</Trans></h5>
+									<br />
+									<h5>No records to display. Please 'Add New' records.</h5>
 								</div>
 
 								:

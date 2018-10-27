@@ -3,13 +3,11 @@ import { DefaultButton } from 'office-ui-fabric-react';
 import {Main} from './Main';
 import * as microsoftTeams from '@microsoft/teams-js';
 import { AppConfig } from '../config/appconfig';
-import { LocalizationService } from '../services/LocalizationService';
 
 export interface IProgressProps {
     logo: string;
     message: string;
     title: string;
-    localizationService: LocalizationService;
 }
 
 export interface IProgressState
@@ -93,7 +91,6 @@ export class SignIn extends React.Component<IProgressProps, IProgressState>
         const {
             logo,
             title,
-            localizationService
         } = this.props;
 
         const { token, loginDisabled, error } = this.state;
@@ -105,7 +102,7 @@ export class SignIn extends React.Component<IProgressProps, IProgressState>
                 if(error)
                 {
                     return <div className='ms-fontSize-m' style={{paddingBottom:'10px'}}>
-                            <span>{localizationService.getString("LoginError")}</span> <br/>
+                            <span>An error occurred during the user sign in:</span> <br/>
                             <span>{error}</span>
                         </div>;
                 }
@@ -120,7 +117,7 @@ export class SignIn extends React.Component<IProgressProps, IProgressState>
                         <h1 className='ms-fontSize-xxl ms-fontWeight-light ms-fontColor-neutralPrimary'>{title}</h1>
                         {errorMessage()}
                         <DefaultButton onClick={this.login} disabled={loginDisabled}>
-                            {localizationService.getString("Login")}
+                            Log in
                         </DefaultButton>
                     </section>
                 </div>
@@ -129,7 +126,7 @@ export class SignIn extends React.Component<IProgressProps, IProgressState>
         else
         {
             return (
-                <Main token={token} localizationService={localizationService}/>
+                <Main token={token} />
             )
         }
     }

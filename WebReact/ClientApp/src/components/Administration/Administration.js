@@ -10,9 +10,6 @@ import { Spinner, SpinnerSize } from 'office-ui-fabric-react/lib/Spinner';
 import { MessageBar, MessageBarType } from 'office-ui-fabric-react/lib/MessageBar';
 import Utils from '../../helpers/Utils';
 import '../../Style.css';
-import {  Trans } from "react-i18next";
-import i18n from '../../i18n';
-import { ProposalManagerTeam } from './ProposalManagerTeam';
 
 export class Administration extends Component {
     displayName = Administration.name
@@ -31,8 +28,7 @@ export class Administration extends Component {
             items: [],
             itemsOriginal: [],
             userRoleList: [],
-            channelCounter: 0,
-            showMessageOnHover:false
+            channelCounter: 0
         };
     }
 
@@ -74,9 +70,7 @@ export class Administration extends Component {
     }
 
     acquireGraphAdminTokenSilent() {
-        if (this.utils.getQueryVariable("admin_consent")) {
-            console.log("Administration_acquireGraphAdminTokenSilent getQueryVariable:adminconsent");
-
+        if (this.utils.getQueryVariable("adminconsent")) {
             let isAdmin = this.state.userProfile.roles.filter(x => x.displayName === "Administrator");
             if (isAdmin) {
                 this.authHelper.loginPopupGraphAdmin()
@@ -89,9 +83,7 @@ export class Administration extends Component {
                     });
             }
         } else {
-            console.log("Administration_acquireGraphAdminTokenSilent getQueryVariable:none");
             let isAdmin = this.state.userProfile.roles.filter(x => x.displayName === "Administrator");
-            console.log("Administration_acquireGraphAdminTokenSilent getQueryVariable:adminconsent 3:",isAdmin);
             if (isAdmin) {
                 this.authHelper.acquireGraphAdminTokenSilent()
                     .then(access_token => {
@@ -138,14 +130,13 @@ export class Administration extends Component {
                             newItem.client = item.customer.displayName;
                             newItem.dealsize = item.dealSize;
                             newItem.openedDate = new Date(item.openedDate).toLocaleDateString();
-                            newItem.statusValue = item.opportunityState;
+                            newItem.stausValue = item.opportunityState;
                             newItem.status = oppStatusClassName[item.opportunityState];
-                            newItem.createTeamDisable = item.dealType !== null && item.dealType.id !== null ? false : true;
                             itemslist.push(newItem);
                         }
                     }
 
-                    let filteredItems = itemslist.filter(itm => itm.statusValue < 2);
+                    let filteredItems = itemslist.filter(itm => itm.stausValue < 2);
 
 
                     this.setState({
@@ -207,6 +198,7 @@ export class Administration extends Component {
                 .then(data => {
                     try {
                         let userRoleList = [];
+                        //console.log(data);
                         for (let i = 0; i < data.length; i++) {
                             let userRole = {};
                             userRole.id = data[i].id;
@@ -292,11 +284,10 @@ export class Administration extends Component {
         });
     }
 
-    createNextChannel(teamId, item, channelsList) {
+    createNextChannel(teamId, item) {
         let channelCounter = this.state.channelCounter;
-        const roleMappings = channelsList; //this.state.userRoleList;
+        const roleMappings = this.state.userRoleList;
         console.log("Administration_createNextChannel start channelCounter: " + channelCounter);
-
         if (roleMappings.length > channelCounter) {
             let channelName = roleMappings[channelCounter].channel;
 
@@ -305,19 +296,19 @@ export class Administration extends Component {
                     .then((res, err) => {
                         console.log("Administration_createNextChannel channelCounter: " + channelCounter + " lenght: " + roleMappings.length);
                         this.setState({ channelCounter: channelCounter + 1 });
-                        this.createNextChannel(teamId, item, channelsList);
+                        this.createNextChannel(teamId, item);
                     })
                     .catch(err => {
                         this.errorHandler(err, "createNextChannel_createChannel: " + channelName);
                     });
             } else {
                 this.setState({ channelCounter: channelCounter + 1 });
-                this.createNextChannel(teamId, item, channelsList);
+                this.createNextChannel(teamId, item);
             }
         } else {
             //this.setState({ channelCounter: 0 });
             console.log("Administration_createNextChannel finished channelCounter: " + channelCounter);
-            this.showMessageBar(i18n.t('updatingOpportunityStateAndMovingFilesToTeam') + item.opportunity + "," + i18n.t('pleaseDoNotCloseOeBrowseToOtherItemsUntilCreationProcessIsComplete'), MessageBarType.warning);
+            this.showMessageBar("Updating opportunity state and moving files to team for " + item.opportunity + ", please do not close or browse to other items until creation process is complete.", MessageBarType.warning);
             setTimeout(this.chngeOpportunityState, 4000, item.id);
             this.getOpportunity(item.id)
                 .then(res => {
@@ -351,12 +342,12 @@ export class Administration extends Component {
                                 });
                         })
                         .catch(err => {
-                            this.showMessageBar(i18n.t('thereWasaProblemTryingToUpdateOpportunityPleaseTryAgain'), MessageBarType.error);
+                            this.showMessageBar("There was a problem trying to update the opportunity, please try again in a few minutes.", MessageBarType.error);
                             this.errorHandler(err, "createNextChannel_updateOpportunity");
                         });
                 })
                 .catch(err => {
-                    this.showMessageBar(i18n.t('thereWasaProblemTryingToUpdateOpportunityPleaseTryAgain'), MessageBarType.error);
+                    this.showMessageBar("There was a problem trying to get the opportunity, please try again.", MessageBarType.error);
                     this.errorHandler(err, "createNextChannel_getOpportunity");
                 });
         }
@@ -386,31 +377,78 @@ export class Administration extends Component {
 
     //Event handlers
 
-    onActionItemClick(item) {
+    onActionItemClickOld(item) {
         if (this.state.items.length > 0) {
-            this.showMessageBar(i18n.t('creatingTeamAndChannelsFor') + item.opportunity + ", " + i18n.t('pleaseDoNotCloseOeBrowseToOtherItemsUntilCreationProcessIsComplete'), MessageBarType.warning);
+            this.showMessageBar("Creating team and channels for " + item.opportunity + ", please do not close or browse to other items until creation process is complete.", MessageBarType.warning);
             this.createTeam(item.opportunity)
                 .then((res, err) => {
                     let teamId = res;
                     if (err) {
                         // Try to get teamId if error is due to existing team
                     }
-                    console.log("onActionItemClick_createTeam start channel creation");
-                    // From Opportunity data - pass processtypes to create channels
-                    this.getOpportunity(item.id)
-                        .then(res => {
-                            let processList = res.dealType.processes;
-                            let oppChannels = processList.filter(x => x.channel.toLowerCase() !== "none")
-                            if (oppChannels.length > 0) {
-                                console.log(oppChannels);
-                                this.createNextChannel(teamId, item, oppChannels);
-                            }
-                            
+
+                    this.createChannel(teamId, "Risk Assessment", "Risk Assessment channel")
+                        .then((res, err) => {
+                            this.createChannel(teamId, "Credit Check", "Credit Check channel")
+                                .then((res, err) => {
+                                    this.createChannel(teamId, "Compliance", "Compliance channel")
+                                        .then((res, err) => {
+                                            this.createChannel(teamId, "Formal Proposal", "Formal Proposal channel")
+                                                .then((res, err) => {
+                                                    this.createChannel(teamId, "Customer Decision", "Customer Decision channel")
+                                                        .then((res, err) => {
+                                                            this.showMessageBar("Updating opportunity state and moving files to team for " + item.opportunity + ", please do not close or browse to other items until creation process is complete.", MessageBarType.warning);
+                                                            setTimeout(this.chngeOpportunityState, 4000, item.id);
+                                                            this.getOpportunity(item.id)
+                                                                .then(res => {
+                                                                    res.opportunityState = 2;
+                                                                    this.updateOpportunity(res)
+                                                                        .then(res => {
+                                                                            this.hideMessageBar();
+                                                                            this.setState({
+                                                                                loading: true
+                                                                            });
+                                                                            setTimeout(this.chngeOpportunityState, 2000, item.id);
+                                                                            this.getOpportunityIndex()
+                                                                                .then(data => {
+                                                                                    this.setState({
+                                                                                        loading: false
+                                                                                    });
+                                                                                })
+                                                                                .catch(err => {
+                                                                                    // TODO: Add error message
+                                                                                    this.errorHandler(err, "Administration_chngeOpportunityState_getOpportunityIndex");
+                                                                                });
+                                                                        })
+                                                                        .catch(err => {
+                                                                            this.showMessageBar("There was a problem trying to update the opportunity, please try again in a few minutes.", MessageBarType.error);
+                                                                            this.errorHandler(err, "onActionItemClick_updateOpportunity");
+                                                                        });
+                                                                })
+                                                                .catch(err => {
+                                                                    this.showMessageBar("There was a problem trying to get the opportunity, please try again.", MessageBarType.error);
+                                                                    this.errorHandler(err, "onActionItemClick_getOpportunity");
+                                                                });
+                                                        })
+                                                        .catch(err => {
+                                                            this.errorHandler(err, "onActionItemClick_createChannel: Customer Decision");
+                                                        });
+                                                })
+                                                .catch(err => {
+                                                    this.errorHandler(err, "onActionItemClick_createChannel: Formal Proposal");
+                                                });
+                                        })
+                                        .catch(err => {
+                                            this.errorHandler(err, "onActionItemClick_createChannel: Compliance");
+                                        });
+                                })
+                                .catch(err => {
+                                    this.errorHandler(err, "onActionItemClick_createChannel: Credit Check");
+                                });
                         })
                         .catch(err => {
-                            this.errorHandler(err, "onActionItemClick_createTeam - Get Processtypes");
+                            this.errorHandler(err, "onActionItemClick_createChannel:Risk Assessment ");
                         });
-                    
                 })
                 .catch(err => {
                     this.errorHandler(err, "onActionItemClick_createTeam");
@@ -418,16 +456,23 @@ export class Administration extends Component {
         }
     }
 
-    onMouseEnter(flag) {
-       let showMessageOnHover = flag;
-       this.setState({showMessageOnHover});
+    onActionItemClick(item) {
+        if (this.state.items.length > 0) {
+            this.showMessageBar("Creating team and channels for " + item.opportunity + ", please do not close or browse to other items until creation process is complete.", MessageBarType.warning);
+            this.createTeam(item.opportunity)
+                .then((res, err) => {
+                    let teamId = res;
+                    if (err) {
+                        // Try to get teamId if error is due to existing team
+                    }
+                    console.log("onActionItemClick_createTeam start channel creation");
+                    this.createNextChannel(teamId, item);
+                })
+                .catch(err => {
+                    this.errorHandler(err, "onActionItemClick_createTeam");
+                });
+        }
     }
-
-    onMouseLeave(flag) {
-        let showMessageOnHover = false;
-        this.setState({showMessageOnHover});
-    }
-
 
     render() {
         const items = this.state.items;
@@ -438,18 +483,12 @@ export class Administration extends Component {
         }
 
         return (
-			<div className='ms-Grid bg-white ibox-content'>
-				
+            <div className='ms-Grid'>
                 <div className='ms-Grid-row'>
                     <div className='ms-Grid-col ms-sm12 ms-md12 ms-lg6 pageheading'>
-                        <h3><Trans>manageTeamCreation</Trans></h3>
+                        <h3>Manage Team Creation</h3>
                     </div>
                 </div>
-
-				<div className='ms-Grid-row'>
-
-				</div>
-
                 {
                     this.state.result &&
                     <MessageBar
@@ -467,27 +506,17 @@ export class Administration extends Component {
                         this.state.loading ?
                             <div>
                                 <br /><br /><br />
-                                <Spinner size={SpinnerSize.medium} label={<Trans>loadingOpportunities</Trans>} ariaLive='assertive' />
+                                <Spinner size={SpinnerSize.medium} label='Loading opportunities...' ariaLive='assertive' />
                             </div>
                             :
                             items.length > 0 ?
-                                <div>
-                                    <OpportunityListCompact opportunityIndex={items} onActionItemClick={this.onActionItemClick.bind(this)} 
-                                    mouseEnter={this.onMouseEnter.bind(this)}
-                                    mouseLeave={this.onMouseLeave.bind(this)}/>
-                                    <br />
-                                    { this.state.showMessageOnHover?
-                                        (<span className="font12">
-                                            <i className="ms-Icon ms-Icon--InfoSolid" aria-hidden="true"></i>&nbsp; <Trans>teamIconDisableMessageNew</Trans>
-                                        </span>):null
-                                    }
-                                </div>
+                                <OpportunityListCompact opportunityIndex={items} onActionItemClick={this.onActionItemClick.bind(this)} />
                                 :
-                                <div>{<Trans>noOpportunitiesWithStatusCreating</Trans>}</div>
+                                <div>There are no opportunities with status 'Creating'.</div>
                         :
                         <div>
                             <br /><br /><br />
-                            <h3><Trans>mustBeAnAdministratorToAccessThisFunctionality</Trans></h3>
+                            <h3>You must be an administrator to access this functionality</h3>
                         </div>
                 }
 
@@ -499,7 +528,7 @@ export class Administration extends Component {
                         {
                             this.state.refreshing ?
                                 <div className='ms-Grid-col ms-sm12 ms-md3 ms-lg6 pull-right'>
-                                    <Spinner size={SpinnerSize.small} label={<Trans>loadingOpportunities</Trans>} ariaLive='assertive' />
+                                    <Spinner size={SpinnerSize.small} label='Loading opportunities...' ariaLive='assertive' />
                                 </div>
                                 :
                                 <br />
@@ -507,8 +536,7 @@ export class Administration extends Component {
                         <br /><br /><br />
                     </div>
                 </div>
-			</div>
-			
+            </div>
         );
     }
 }

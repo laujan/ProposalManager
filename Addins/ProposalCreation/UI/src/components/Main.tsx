@@ -6,19 +6,17 @@ import {
     PivotLinkFormat
 } from 'office-ui-fabric-react/lib/Pivot';
 import { MessageBar, MessageBarType } from 'office-ui-fabric-react/lib/MessageBar';
+import {Link} from 'office-ui-fabric-react/lib/Link';
 import { Home } from './Home';
 import { Documents } from './Documents';
 import { Notes } from './Notes';
-import { ErrorBoundary } from './ErrorBoundary';
-import { LocalizationService } from '../services/LocalizationService';
 
 export interface IMainProps
 {
     token: string
-    localizationService: LocalizationService;
 }
 
-export class Main extends React.Component<IMainProps> {
+export class Main extends React.Component<IMainProps, any> {
     constructor(props, context) {
         super(props, context);
     }
@@ -30,8 +28,6 @@ export class Main extends React.Component<IMainProps> {
     }
 
     public render() {
-        const { localizationService, token } = this.props;
-
         const paddingLeft = {
             paddingLeft: "5px"
         };
@@ -41,34 +37,34 @@ export class Main extends React.Component<IMainProps> {
 
         return (
             <div className='ms-welcome'>
-                <MessageBar
+                 <MessageBar
                     messageBarType={ MessageBarType.info }
                     isMultiline={ false }
                     onDismiss={ log('test') }
                     dismissButtonAriaLabel='Close'
-                    truncated={ false }
+                    truncated={ true }
                     overflowButtonAriaLabel='Overflow'
                     >
-                    Opportunity description
+                    Fabrikam / Opportunity 01 <br/>
+                    Description of the Opportunity 1 by Fabrikam. <Link href='www.bing.com'>View details in the portal.</Link>
                 </MessageBar>
                 <div className='ms-welcome__pivot' style={paddingLeft}>
-                    <ErrorBoundary>
-                        <Pivot linkFormat={PivotLinkFormat.links}>
-                            <PivotItem linkText={localizationService.getString("Home")} >
-                                <Home token={token} localizationService={localizationService}/>
-                            </PivotItem>
+                    <Pivot linkFormat={PivotLinkFormat.links}>
+                        <PivotItem linkText='Home' >
+                            <Home token={this.props.token}/>
+                        </PivotItem>
 
-                            <PivotItem linkText={localizationService.getString("Documents")}>
-                            <Documents token={token} localizationService={localizationService}/>
-                            </PivotItem>
+                        <PivotItem linkText='Documents'>
+                           <Documents token={this.props.token}/>
+                        </PivotItem>
 
-                            <PivotItem linkText={localizationService.getString("CallReports")}>
-                                <Notes token={token} localizationService={localizationService}/>
-                            </PivotItem>
-                        </Pivot>
-                    </ErrorBoundary>
+                        <PivotItem linkText='Call Reports'>
+                            <Notes token={this.props.token}/>
+                        </PivotItem>
+                    </Pivot>
                 </div>
             </div>
+            
         );
     };
 };

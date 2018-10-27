@@ -15,8 +15,6 @@ using System.Configuration;
 using SmartLink.Service;
 using Microsoft.Azure;
 using System.Data.Entity;
-using System.Globalization;
-using System.Threading;
 
 namespace SmartLink.Web
 {
@@ -36,26 +34,6 @@ namespace SmartLink.Web
             RegisterIoC();
 
             Database.SetInitializer(new MigrateDatabaseToLatestVersion<SmartlinkDbContext, SmartLink.Service.Migrations.Configuration>());
-        }
-
-        protected void Application_BeginRequest(object sender, EventArgs e)
-        {
-            var userLanguages = Request.UserLanguages;
-            var browserLanguage = userLanguages.FirstOrDefault();
-
-            if (browserLanguage != null)
-            {
-                CultureInfo browserCulture = CultureInfo.DefaultThreadCurrentCulture;
-                try
-                {
-                    browserCulture = new CultureInfo(browserLanguage);
-                }
-                finally
-                {
-                    Thread.CurrentThread.CurrentCulture = browserCulture;
-                    Thread.CurrentThread.CurrentUICulture = browserCulture;
-                }
-            }
         }
 
         private void RegisterIoC()

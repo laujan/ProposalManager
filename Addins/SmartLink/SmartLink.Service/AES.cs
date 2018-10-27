@@ -3,12 +3,13 @@
 //
 // Licensed under the MIT license. See LICENSE file in the solution root folder for full license information.
 
-using Microsoft.Azure;
 using System;
-using System.IO;
+using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Text;
+using System.Security.Cryptography;
+using System.IO;
+using Microsoft.Azure;
 
 namespace SmartLink.Service
 {

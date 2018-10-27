@@ -11,7 +11,7 @@ class WordMockService implements IDocumentService
                   content: [ "hello", "world" ],
                   task: "Content",
                   name: "Section 1",
-                  status: "Done",
+                  status: 2,
                   owner: "Bar"
             }
       ];
