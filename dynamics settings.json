@@ -1,0 +1,55 @@
+{
+  // USE ALL EXISTING CONFIGURATION WHEN POSSIBLE
+  "WebHooks:DynamicsCrm:SecretKey": { // Secrets used for receiving Dynamics 365 webhook calls REFER TO DOCS
+    "opportunity": "01234567890123456789012345678901",
+    "connection": "01234567890123456789012345678901"
+  },
+  "Dynamics365": {
+    "ClientId": "b07fe809-6814-4288-9b78-6ff84a6e7b0a", // Client ID of the integration engine
+    "ClientSecret": "ezqdXFG48{?ckjDNHN678([", // Client secret of the integration engine
+    "OrganizationUri": "https://terawelabs.api.crm.dynamics.com/", // URL of the Dynamics 365 instance to integrate
+    "ProposalManagerCategoryId": 741530000, // Constant. Provided alongside the solution installed in the Dynamics 365 instance EXPLAIN MORE
+    "ProposalManagerSite": "https://terawelabs.sharepoint.com", // Tenant sharepoint site
+    "ProposalManagerBaseSite": "sites/proposalmanager", // Proposal manager sharepoint site REMOVE
+    "RootDrive": "Shared Documents", // Name of the root drive of the proposal manager sharepoint site
+    "TemporaryFolder": "TempFolder", // Name of the proposal manager temporary folder
+    "OpportunityMapping": { // Custom mapping FROM Dynamics 365 for Sales TO Proposal Manager
+      "DisplayName": "name", // This means the value of the property "name" from dynamics will be used as the value for the property "DisplayName" in Proposal Manager
+      "Status": [ // Status can also have custom mappings
+        {
+          "From": 1, // 'From' represents the Dynamics 365 status reason id
+          "To": 2 // 'To' represents the Proposal Manager status id
+        },
+        {
+          "From": 2, //EXPLAIN EACH OF THESE
+          "To": 7
+        },
+        {
+          "From": 3,
+          "To": 10
+        }
+      ]
+    }
+  },
+  "OneDrive": {
+    "WebhookSecret": "8E0836F5524D4307893D929B8EBE98CF", // Secret used for receiving OneDrive for Business webhook calls
+    "FormalProposalCallbackUrl": "https://proposalmanagement.azurewebsites.net/api/dynamics/FormalProposal", // Url where Graph Api subscriptions should notify any change in Formal Proposal documents USE EXISTING CONFIG WHEN POSSIBLE
+    "ProposalManagerBaseSiteId": "terawelabs.sharepoint.com,eee28a7e-9222-4bca-a19e-8ac88d10bb97,ac421ad6-dfb7-41b8-ba18-46bbccf5e716", // Id of the Proposal Manager SharePoint site
+    "RootTempFolderName": "/TempFolder", // Path to the temporary folder from the root of the drive (in the Proposal Manager SharePoint site)
+    "AttachmentCallbackUrl": "https://proposalmanagement.azurewebsites.net/api/dynamics/Attachment" // Url where Graph Api subscriptions should notify any change in Attachments
+  },
+  "ProposalManager": { // USE EXISTING CONFIGURATION WHEN POSSIBLE
+    "AppUrl": "https://proposalmanagement.azurewebsites.net/", // Url of the Proposal Manager application the integration engine must be pointed to
+    "ApiUrl": "https://proposalmanagement.azurewebsites.net/api", // Url of the Proposal Manager API the integration engine must be pointed to
+    "CreatorRole": { // Data about the role designated to create opportunities in Proposal Manager (needed for the integration engine to create opportunities)
+      "Id": "f9f27e81-93d2-4b82-b40d-1b0e86f802c2", // ID of the role's AzureAD group
+      "AdGroupName": "Relationship Managers", // Name of the role's AzureAD group
+      "DisplayName": "RelationshipManager" // Display name of the role in Proposal Manager
+    }
+  },
+  "DocumentIdActivator": { // Data to invoke the DocumentId activator webjob using a webjob webhook RECOMMEND USING KEYVAULT
+    "WebhookAddress": "https://proposalmanagement.scm.azurewebsites.net/api/triggeredwebjobs/DocumentIdActivator/run", // Location of the webjob that activates DocumentID
+    "WebhookUsername": "$ProposalManagement", // Username to invoke the webjob
+    "WebhookPassword": "W2y5Jg0xcw8Q6FM9CWgcQwaHMpmyifWmxA0w2LyuhPftofww7lKXsmpcSTpo" // Password to invoke the webjob
+  }
+}
