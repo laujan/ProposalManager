@@ -3,25 +3,28 @@ The Proposal Management process is built around three main entities – the Oppo
 
 An Opportunity is a potential deal identified by the Relationship Manager for one of his/her own clients based on knowledge gathered from customer discussions and market analysis. He then uses the Proposal Management process to convert the opportunity, by means of well-defined corporate lending processes and a hand-picked team of experts brought together to execute the process, to a proposal document that can then be presented to the customer, offering a loan or line of credit that they can use in line with the terms and conditions.
 
-The Proposal Manager solution leverages the collaborative capabilities of Microsoft Teams to enable an end-to-end proposal management experience. The solution consists of three key add-in components:
-  - Proposal Manager for Teams
-  - Smart Link for Office
-  - Proposal Creation for Office
+The Proposal Manager solution leverages the collaborative capabilities of Microsoft Teams to enable an end-to-end proposal management experience. 
+
+# Components
+Proposal Manager consists of four key components:
+  - Teams add-in to enable the core capabilities of Proposal Manager, including centralized administration, analytics capabilities and collaborative handling of opportunities
+  - Office add-in [Project Smart Link] to enable specific content in a proposal document to be dynamically linked to another office document such as a spreadsheet
+  - Office add-in [Proposal Creation] to enable different sections of a proposal document to be assigned to specific owners along with associated tasks and status
+  - Dynamics 365 web-hook to enable an opportunity to be created from Dynamics 365 which can then be managed further from Microsoft Teams
 
 # Before you start
 Make sure that you have the following handy before starting the deployment process:
   - Admin access on an Office 365 tenant to register the app and manage content in SharePoint
-  - Owner access on an Azure Subscription to provision the web app
+  - Owner or contributor access on an Azure Subscription to provision the web app
 
 # Getting Started
-This repository has two branches – main and officeaddin. Please refer to the [Getting Started Guide](https://github.com/OfficeDev/ProposalManager/blob/master/Proposal_Manager_Getting_Started_Guide.docx) to get started.
+This repository consists of the source code for the Proposal Manager solution and all associated add-in components. The most recent release version is published at 'master'. Please refer to the [Getting Started Guide](https://github.com/OfficeDev/ProposalManager/blob/master/Documents/Proposal_Manager_Getting_Started_Guide.docx) to get started.
 
 # Roadmap
-The next version of Proposal Manager, currently planned for October 2018, is set to have several value-added features, including:
-  - Dynamics Integration
-  - Dynamic Opportunity Workflow to support different types of processes
-  - Analytics Dashboard
-  - Granular Access Control
+The upcoming versions of Proposal Manager are set to incrementally add several value-added features, including:
+  - Q & A Bot
+  - Advanced Predictive Analytics
+  - Support for more scenarios such as Pitchbook
  
 Please use the Issues tab in GitHub to ask any questions, request help with troubleshooting or for new feature requests. 
 # Contributing
