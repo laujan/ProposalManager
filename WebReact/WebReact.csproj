@@ -58,6 +58,7 @@
   <ItemGroup>
     <None Remove="app_data\jobs\triggered\DocumentIdActivator\DocumentIdActivator.exe" />
     <None Remove="app_data\jobs\triggered\DocumentIdActivator\DocumentIdActivator.pdb" />
+    <None Remove="app_data\jobs\triggered\DocumentIdActivator\git-placeholder" />
     <None Remove="app_data\jobs\triggered\DocumentIdActivator\Microsoft.Office.Client.Policy.dll" />
     <None Remove="app_data\jobs\triggered\DocumentIdActivator\Microsoft.Office.Client.TranslationServices.dll" />
     <None Remove="app_data\jobs\triggered\DocumentIdActivator\Microsoft.Office.SharePoint.Tools.dll" />
@@ -85,23 +86,57 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="app_data\jobs\triggered\DocumentIdActivator\DocumentIdActivator.exe" />
-    <Content Include="app_data\jobs\triggered\DocumentIdActivator\DocumentIdActivator.pdb" />
-    <Content Include="app_data\jobs\triggered\DocumentIdActivator\Microsoft.Office.Client.Policy.dll" />
-    <Content Include="app_data\jobs\triggered\DocumentIdActivator\Microsoft.Office.Client.TranslationServices.dll" />
-    <Content Include="app_data\jobs\triggered\DocumentIdActivator\Microsoft.Office.SharePoint.Tools.dll" />
-    <Content Include="app_data\jobs\triggered\DocumentIdActivator\Microsoft.Online.SharePoint.Client.Tenant.dll" />
-    <Content Include="app_data\jobs\triggered\DocumentIdActivator\Microsoft.ProjectServer.Client.dll" />
-    <Content Include="app_data\jobs\triggered\DocumentIdActivator\Microsoft.SharePoint.Client.dll" />
-    <Content Include="app_data\jobs\triggered\DocumentIdActivator\Microsoft.SharePoint.Client.DocumentManagement.dll" />
-    <Content Include="app_data\jobs\triggered\DocumentIdActivator\Microsoft.SharePoint.Client.Publishing.dll" />
-    <Content Include="app_data\jobs\triggered\DocumentIdActivator\Microsoft.SharePoint.Client.Runtime.dll" />
-    <Content Include="app_data\jobs\triggered\DocumentIdActivator\Microsoft.SharePoint.Client.Runtime.Windows.dll" />
-    <Content Include="app_data\jobs\triggered\DocumentIdActivator\Microsoft.SharePoint.Client.Search.Applications.dll" />
-    <Content Include="app_data\jobs\triggered\DocumentIdActivator\Microsoft.SharePoint.Client.Search.dll" />
-    <Content Include="app_data\jobs\triggered\DocumentIdActivator\Microsoft.SharePoint.Client.Taxonomy.dll" />
-    <Content Include="app_data\jobs\triggered\DocumentIdActivator\Microsoft.SharePoint.Client.UserProfiles.dll" />
-    <Content Include="app_data\jobs\triggered\DocumentIdActivator\Microsoft.SharePoint.Client.WorkflowServices.dll" />
+    <Content Include="app_data\jobs\triggered\DocumentIdActivator\DocumentIdActivator.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\DocumentIdActivator\DocumentIdActivator.pdb">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\DocumentIdActivator\Microsoft.Office.Client.Policy.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\DocumentIdActivator\Microsoft.Office.Client.TranslationServices.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\DocumentIdActivator\Microsoft.Office.SharePoint.Tools.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\DocumentIdActivator\Microsoft.Online.SharePoint.Client.Tenant.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\DocumentIdActivator\Microsoft.ProjectServer.Client.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\DocumentIdActivator\Microsoft.SharePoint.Client.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\DocumentIdActivator\Microsoft.SharePoint.Client.DocumentManagement.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\DocumentIdActivator\Microsoft.SharePoint.Client.Publishing.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\DocumentIdActivator\Microsoft.SharePoint.Client.Runtime.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\DocumentIdActivator\Microsoft.SharePoint.Client.Runtime.Windows.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\DocumentIdActivator\Microsoft.SharePoint.Client.Search.Applications.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\DocumentIdActivator\Microsoft.SharePoint.Client.Search.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\DocumentIdActivator\Microsoft.SharePoint.Client.Taxonomy.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\DocumentIdActivator\Microsoft.SharePoint.Client.UserProfiles.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\DocumentIdActivator\Microsoft.SharePoint.Client.WorkflowServices.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="app_data\jobs\triggered\OneDriveSubscriptionsRenewer\ApplicationCore.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

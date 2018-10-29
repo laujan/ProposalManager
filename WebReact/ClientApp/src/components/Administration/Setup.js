@@ -218,7 +218,7 @@ export class Setup extends Component {
 
     placeholderForProposalManager() {
         let obj = {
-            "SharePointHostName": "onterawe.sharepoint.com",
+            "SharePointHostName": "<tenant>.sharepoint.com",
             "SharePointSiteRelativeName": "Give Sharepoint relative web address (eg: proposalmanager)",
             "SharePointListsPrefix": "e3_",
             "CategoriesListId": "Categories",
@@ -688,6 +688,7 @@ export class Setup extends Component {
                 break;
             case "DocumentIdActivator":
                 this.setState({ documentid: flag });
+                break;
             default:
                 break;
         }

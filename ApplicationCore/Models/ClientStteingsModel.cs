@@ -86,6 +86,8 @@ namespace ApplicationCore.Models
         public string ProposalManagerAddInName { get; set; }
         [JsonProperty("ProposalManagerGroupID", Order = 32)]
         public string ProposalManagerGroupID { get; set; }
+        [JsonProperty("ServiceEmail", Order = 33)]
+        public string ServiceEmail { get; set; }
         [JsonProperty("UserProfileCacheExpiration", Order = 34)]
         public int UserProfileCacheExpiration { get; set; }
         [JsonProperty("GraphRequestUrl", Order = 35)]

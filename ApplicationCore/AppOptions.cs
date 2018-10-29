@@ -31,15 +31,21 @@ namespace ApplicationCore
 
         public string RegionsListId { get; set; }
 
+        public string NotificationsListId { get; set; }
+
         public string RoleMappingsListId { get; set; }
 
         public string OpportunitiesListId { get; set; }
+
+        public string PublicOpportunitiesListId { get; set; }
 
         public string SetupPage { get; set; }
 
         public string GraphRequestUrl { get; set; }
 
         public string GraphBetaRequestUrl { get; set; }
+
+        public string ServiceEmail { get; set; }
 
         public int UserProfileCacheExpiration { get; set; }
 
