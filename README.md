@@ -20,6 +20,12 @@ Make sure that you have the following handy before starting the deployment proce
 # Getting Started
 This repository consists of the source code for the Proposal Manager solution and all associated add-in components. The most recent release version is published at 'master'. Please refer to the [Getting Started Guide](https://github.com/OfficeDev/ProposalManager/blob/master/Documents/Proposal_Manager_Getting_Started_Guide.docx) to get started.
 
+We have also published the following high level **walk-through videos** to help with the deployment process and to get a functional understanding:
+  - [Proposal Manager Deployment Overview](https://youtu.be/mlmzLMFDxcQ)
+  - [Proposal Manager Functional Overview](https://youtu.be/lNjG9e9U0p0)
+
+Videos for Dynamics 365 Web Hook and the Office add-ins are in progress and will be published soon.
+
 # Roadmap
 The upcoming versions of Proposal Manager are set to incrementally add several value-added features, including:
   - Q & A Bot
