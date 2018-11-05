@@ -31,8 +31,8 @@ We have also published the following high level **walk-through videos** to help 
   - [Proposal Manager: Functional Overview](https://youtu.be/lNjG9e9U0p0)
   - [Dynamics 365 Integration - Deployment](https://youtu.be/hblz_GK8VNs)
   - [Dynamics 365 and Office add-ins: Functional Overview](https://youtu.be/cQfYfxT5a-I)
-  - [Project Smart Link Deployment](https://youtu.be/qNlUlCwKcto)
-  - [Office Add-in Functional Overview](https://youtu.be/hy5TLFVum1E)
+  - [Project Smart Link - Deployment](https://youtu.be/qNlUlCwKcto)
+  - [Office Add-ins: Functional Overview](https://youtu.be/hy5TLFVum1E)
 
 Videos for deployment of Proposal Creation Office add-in is in progress and will be published soon.
 
