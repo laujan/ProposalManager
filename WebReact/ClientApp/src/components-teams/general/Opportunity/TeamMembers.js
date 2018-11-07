@@ -13,7 +13,6 @@ import {
     Persona,
     PersonaSize
 } from 'office-ui-fabric-react/lib/Persona';
-import { oppStatus } from '../../../common';
 import { Trans } from "react-i18next";
 
 export class TeamMembers extends Component {
@@ -28,31 +27,20 @@ export class TeamMembers extends Component {
             teamName: this.props.opportunityName,
             channelId: "",
 			teamWebUrl: "",
-			isAdmin: this.props.isAdmin,
-			useRole: this.props.useRole
+			isAdmin: this.props.isAdmin
         };
 	}
 
 	componentWillMount() {
-	/*
-		this.sdkHelper.getTeamByName(this.state.teamName)
-			.then(data => {
 
-				this.sdkHelper.getTeamById(data.value[0].id)
-					.then(teamdata => {
-				
-						this.setState({ teamWebUrl: teamdata.webUrl });
-					});
-			});
-			*/
 	}
 
 
     render() {
 	
 		let enableEditTeam;
-		console.log("TeamMembers_render props :", this.props)
-		if (this.props.opportunityState !== 1 && this.props.userRole.toLowerCase() === "loanofficer" ) {
+        console.log("TeamMembers_render props :", this.props);
+        if (this.props.opportunityState !== 1 && this.props.haveAccessToEditTeam ) {
 			enableEditTeam = true;
 		}
 		else {
@@ -67,10 +55,10 @@ export class TeamMembers extends Component {
                             <div className='ms-Grid-row bg-grey p-5 mr5A' key={index}>
                                 <div className=' ms-Grid-col ms-sm12 ms-md8 ms-lg12'>
                                     <Persona
-                                        { ...{ imageUrl: member.UserPicture, imageInitials: member.displayName ? member.displayName.match(/\b(\w)/g) ? member.displayName.match(/\b(\w)/g).join('') : "" : "" } }
+                                        {...{ imageUrl: member.UserPicture, imageInitials: member.displayName ? member.displayName.match(/\b(\w)/g) ? member.displayName.match(/\b(\w)/g).join('') : "" : "" }}
                                         size={PersonaSize.size40}
                                         text={member.displayName}
-                                        secondaryText={member.assignedRole.displayName}
+                                        secondaryText={member.assignedRole.adGroupName}
                                     />
                                     <span>
                                         <p className="pull-right">
@@ -110,7 +98,6 @@ export class TeamMembers extends Component {
 							}
 							</div>
                         </div>
-                       // : ""
                 }
             </div>
         );

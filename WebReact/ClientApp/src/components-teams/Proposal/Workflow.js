@@ -117,7 +117,7 @@ export class Workflow extends Component {
                                                     id: officer.id,
                                                     name: officer.displayName,
                                                     image: "",
-                                                    role: officer.assignedRole.displayName,
+                                                    role: officer.assignedRole.adGroupName,
                                                     status: processStatus,
                                                     isDispOppStatus: isDispOppStatus
                                                 }
@@ -255,7 +255,7 @@ export class Workflow extends Component {
                                                                 {
                                                                     groupsArry.map((k, i) => {
                                                                         return (
-                                                                            <div className={i === (groupsArry.length - 1) ? 'ms-Grid-col ms-sm3 ms-md3 ms-lg3 columnwidth' : 'ms-Grid-col ms-sm3 ms-md3 ms-lg3 divUserRolegroup-arrow columnwidth'} key={i} >
+                                                                            <div className={i === groupsArry.length - 1 ? 'ms-Grid-col ms-sm3 ms-md3 ms-lg3 columnwidth' : 'ms-Grid-col ms-sm3 ms-md3 ms-lg3 divUserRolegroup-arrow columnwidth'} key={i} >
                                                                                 <div className="ms-Grid-row bg-white">
                                                                                     <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg12 GreyBorder">
                                                                                         {k.map((m, n) => <div className="ms-Grid-col ms-sm12 ms-md12 ms-lg12" key={n}>{this.displayPersonaCard(m)}</div>)}

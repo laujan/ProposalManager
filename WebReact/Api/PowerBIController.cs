@@ -47,7 +47,14 @@ namespace WebReact.Api
 
             try
             {
-                String pbiToken = await _pbiService.GenerateTokenAsync(requestId);
+                var pbiToken = await _pbiService.GenerateTokenAsync(requestId);
+
+                if (String.IsNullOrEmpty(pbiToken))
+                {
+                    _logger.LogError($"RequestID:{requestId} PowerBIController_GetPBIToken error: could not get on behalf access token");
+                    var errorResponse = JsonErrorResponse.BadRequest($"RequestID:{requestId} PowerBIController_GetPBIToken error: could not get on behalf access token", requestId);
+                    return BadRequest(errorResponse);
+                }
 
                 return Ok(pbiToken);
             }

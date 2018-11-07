@@ -64,6 +64,8 @@ namespace Infrastructure.Services
 
                 _logger.LogInformation($"RequestId: {requestId} - PermissionRepo_CreateItemAsync finished creating SharePoint list item.");
 
+                await SetCacheAsync(requestId);
+
                 return StatusCodes.Status201Created;
 
             }
@@ -91,6 +93,8 @@ namespace Infrastructure.Services
                 var result = await _graphSharePointAppService.DeleteListItemAsync(siteList, id, requestId);
 
                 _logger.LogInformation($"RequestId: {requestId} - PermissionRepoo_DeleteItemAsync finished creating SharePoint list item.");
+
+                await SetCacheAsync(requestId);
 
                 return StatusCodes.Status204NoContent;
 
@@ -181,6 +185,23 @@ namespace Infrastructure.Services
             {
                 _logger.LogError($"RequestId: {requestId} - PermissionRepo_GetPermissionListAsync error: {ex}");
                 throw;
+            }
+        }
+
+        private async Task SetCacheAsync(string requestId)
+        {
+            try
+            {
+                var permissionList = new List<Permission>();
+                permissionList = (await GetPermissionListAsync(requestId)).ToList();
+
+                var cacheEntryOptions = new MemoryCacheEntryOptions()
+                    .SetAbsoluteExpiration(TimeSpan.FromMinutes(_appOptions.UserProfileCacheExpiration));
+                _cache.Set("PM_PermissionList", permissionList, cacheEntryOptions);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"RequestId: {requestId} - Role_SetCahceAsync error: {ex}");
             }
         }
     }

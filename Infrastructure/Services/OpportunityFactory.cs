@@ -49,7 +49,9 @@ namespace Infrastructure.Services
         private readonly IPermissionRepository _permissionRepository;
         private readonly IDashboardAnalysis _dashboardAnalysis;
         protected readonly GraphTeamsAppService _graphTeamsAppService;
+        protected readonly GraphTeamsOnBehalfService _graphTeamsOnBehalfService ;
         private readonly IAddInHelper _addInHelper;
+        protected readonly IAzureKeyVaultService _azureKeyVaultService;
 
 
         public OpportunityFactory(
@@ -71,7 +73,9 @@ namespace Infrastructure.Services
             StartProcessService startProcessService,
             IDashboardAnalysis dashboardAnalysis,
             GraphTeamsAppService graphTeamsAppService,
-            IAddInHelper addInHelper) : base(logger, appOptions)
+            IAddInHelper addInHelper,
+            GraphTeamsOnBehalfService graphTeamsOnBeahalfService,
+            IAzureKeyVaultService azureKeyVaultService) : base(logger, appOptions)
 		{
 			Guard.Against.Null(graphSharePointAppService, nameof(graphSharePointAppService));
 			Guard.Against.Null(graphUserAppService, nameof(graphUserAppService));
@@ -108,6 +112,8 @@ namespace Infrastructure.Services
             _graphTeamsAppService = graphTeamsAppService;
             _dashboardAnalysis = dashboardAnalysis;
             _addInHelper = addInHelper;
+            _graphTeamsOnBehalfService = graphTeamsOnBeahalfService;
+            _azureKeyVaultService = azureKeyVaultService;
         }
 
         public async Task<Opportunity> CreateWorkflowAsync(Opportunity opportunity, string requestId = "")
@@ -666,13 +672,26 @@ namespace Infrastructure.Services
                 //graph api supports usercontext for this functionality
                 try
                 {
-                    await _graphTeamsAppService.AddAppToTeamAsync(groupID);
+                    //Vault is no longer using so we will comment out this in the near future
+                    Guard.Against.NullOrEmpty(await _azureKeyVaultService.GetValueFromVaultAsync(VaultKeys.Upn), "CreateWorkflowAsync_Admin_Ups Null or empty", requestId);
+                    var responseJson = await _graphUserAppService.AddGroupOwnerAsync(await _azureKeyVaultService.GetValueFromVaultAsync(VaultKeys.Upn), groupID);
+                    var response = await _graphUserAppService.AddGroupMemberAsync(await _azureKeyVaultService.GetValueFromVaultAsync(VaultKeys.Upn), groupID);
                 }
                 catch(Exception ex)
                 {
                     _logger.LogError($"RequestId: {requestId} - CreateTeamAndChannels_AddAppToTeamAsync Service Exception: {ex}");
                 }
-                
+
+                //adding addin to the app
+                try
+                {
+                    await _graphTeamsOnBehalfService.AddAppToTeamAsync(groupID);
+                }
+                catch(Exception ex)
+                {
+                    _logger.LogError($"RequestId: {requestId} - CreateTeamAndChannels_AddAppToTeamAsync Service Exception: {ex}");
+                }
+
                 try
                 {
                     // Call to AddIn helper once team has been created

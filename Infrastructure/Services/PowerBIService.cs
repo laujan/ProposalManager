@@ -24,13 +24,14 @@ namespace Infrastructure.Services
 {
     public class PowerBIService : BaseService<PowerBIService>, IPowerBIService
     {
+        private readonly IWebApiAuthProvider _webApiAuthProvider;
 
         public PowerBIService(
            ILogger<PowerBIService> logger,
-           IOptionsMonitor<AppOptions> appOptions
-
-           ) : base(logger, appOptions)
+           IOptionsMonitor<AppOptions> appOptions,
+           IWebApiAuthProvider webApiAuthProvider) : base(logger, appOptions)
         {
+            _webApiAuthProvider = webApiAuthProvider;
         }
 
         public async Task<String> GenerateTokenAsync(string requestId = "")
@@ -60,6 +61,8 @@ namespace Infrastructure.Services
                 JObject jobject = JObject.Parse(result1);
 
                 var token = jobject["access_token"].Value<string>();
+
+                //var (token, expiration) = await _webApiAuthProvider.GetUserAccessTokenWithUsernamePasswordAsync();
 
                 return token;
             }

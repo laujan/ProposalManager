@@ -62,7 +62,7 @@ namespace OneDriveSubscriptionRenewal
 			serviceCollection.AddScoped<ProposalStatusProcessService>();
 			serviceCollection.AddScoped<NewOpportunityProcessService>();
 			serviceCollection.AddScoped<StartProcessService>();
-			serviceCollection.AddScoped<Infrastructure.Authorization.IAuthorizationService, AuthorizationService>();
+			serviceCollection.AddScoped<IAuthorizationService, AuthorizationService>();
 			serviceCollection.AddScoped<IDashboardService, DashboardService>();
 			serviceCollection.AddScoped<IPermissionRepository, PermissionRepository>();
 			serviceCollection.AddScoped<UserProfileHelpers>();

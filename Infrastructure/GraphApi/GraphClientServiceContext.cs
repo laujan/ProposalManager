@@ -56,6 +56,47 @@ namespace Infrastructure.GraphApi
         public GraphServiceClient GraphClient => _graphServiceClient;
     }
 
+    public class GraphClientOnBehalfContext : IGraphClientOnBehalfContext
+    {
+        private readonly IGraphAuthProvider _authProvider;
+        private readonly IUserContext _userContext;
+        private readonly GraphServiceClient _graphServiceClient;
+
+        public GraphClientOnBehalfContext(
+            IGraphAuthProvider authProvider,
+            IUserContext userContext)
+        {
+            Guard.Against.Null(authProvider, nameof(authProvider));
+            Guard.Against.Null(userContext, nameof(userContext));
+            _authProvider = authProvider;
+            _userContext = userContext;
+
+            // Initialize the graph client given the chosen context
+            if (_graphServiceClient == null)
+            {
+                _graphServiceClient = new GraphServiceClient(new DelegateAuthenticationProvider(
+                async requestMessage =>
+                {
+                    // Passing tenant ID to the auth provider to use as a cache key
+                    var accessToken = await _authProvider.GetUserAccessTokenAsync(User.FindFirst(AzureAdConstants.ObjectIdClaimType)?.Value, true);
+
+                    // Append the access token to the request
+                    requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+                }));
+            }
+        }
+
+        /// <summary>
+        /// Gets the <see cref="ClaimsPrincipal"/> for user associated with the executing action.
+        /// </summary>
+        public ClaimsPrincipal User => _userContext?.User;
+
+        /// <summary>
+        /// Graph Service client using the user context
+        /// </summary>
+        public GraphServiceClient GraphClient => _graphServiceClient;
+    }
+
     public class GraphClientAppContext : IGraphClientAppContext
     {
         private readonly IGraphAuthProvider _authProvider;

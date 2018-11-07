@@ -26,19 +26,19 @@ namespace WebReact.Api
     public class SetupController : BaseApiController<SetupController>
     {
         private readonly ISetupService _setupService;
-        private readonly IWebApiAuthProvider _authProvider;
-
+        private readonly IGraphAuthProvider _graphAuthProvider;
 
         public SetupController(
             ILogger<SetupController> logger,
             IOptions<AppOptions> appOptions,
             ISetupService setupService,
-            IWebApiAuthProvider authProvider) : base(logger, appOptions)
+            IGraphAuthProvider graphAuthProvider) : base(logger, appOptions)
         {
-            Guard.Against.Null(setupService, nameof(setupService));
-            Guard.Against.Null(authProvider, nameof(authProvider));
+            Guard.Against.Null(setupService, "SetupController_Constructor" + nameof(setupService));
+            Guard.Against.Null(graphAuthProvider, "SetupController_Constructor" + nameof(graphAuthProvider));
+
             _setupService = setupService;
-            _authProvider = authProvider;
+            _graphAuthProvider = graphAuthProvider;
         }
 
         [HttpPost("{key}/{value}")]
@@ -272,28 +272,31 @@ namespace WebReact.Api
             return NoContent();
         }
 
-        // Get: /Setup/GetTestToken TODO: Test method that needs to be removed befoe release
-        [AllowAnonymous]
-        [HttpGet("GetTestToken", Name = "GetTestToken")]
-        public async Task<IActionResult> GetTestToken()
+        /// <summary>
+        /// This method is used to test the on behalf flow
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("SetOnBehalfToken", Name = "SetOnBehalfToken")]
+        public async Task<IActionResult> SetOnBehalfToken()
         {
             var requestId = Guid.NewGuid().ToString();
-            _logger.LogInformation($"RequestID:{requestId} SetupController_GetTestToken called.");
-
-            // Check to see if setup is enabled and if not respond with bad request
-            var checkSetupState = await CheckSetupState();
-            if (checkSetupState != null) return BadRequest(checkSetupState);
+            _logger.LogInformation($"RequestID:{requestId} SetupController_SetOnBehalfToken called.");
 
             try
             {
-                var accessToken = await _authProvider.GetAppAccessTokenAsync();
+                var userId = User.FindFirst(AzureAdConstants.ObjectIdClaimType)?.Value;
 
-                return Ok(accessToken);
+                var testToken = await _graphAuthProvider.GetUserAccessTokenAsync(userId, true);
+
+                Guard.Against.NullOrEmpty(testToken, $"RequestID:{requestId} SetupController_SetOnBehalfToken token is empty.");
+
+                return NoContent();
+                //return Ok(testToken); // TODO: For testing only, remove this line and uncomment the previous line before relese
             }
             catch (Exception ex)
             {
-                _logger.LogError($"RequestID:{requestId} SetupController_GetTestToken error: {ex.Message}");
-                var errorResponse = JsonErrorResponse.BadRequest($"RequestID:{requestId} SetupController_GetTestToken error: {ex.Message}", requestId);
+                _logger.LogError($"RequestID:{requestId} SetupController_SetOnBehalfToken error: {ex.Message}");
+                var errorResponse = JsonErrorResponse.BadRequest($"RequestID:{requestId} SetupController_SetOnBehalfToken error: {ex.Message}", requestId);
 
                 return BadRequest(errorResponse);
             }

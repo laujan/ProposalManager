@@ -57,7 +57,7 @@ export class AdminAllOpportunities extends Component {
                 className: 'docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg3 clientcolum',
                 fieldName: 'client',
                 minWidth: 150,
-                maxWidth: 350,
+                maxWidth: 150,
                 isRowHeader: true,
                 isResizable: true,
                 onColumnClick: this.onColumnClick,
@@ -75,7 +75,7 @@ export class AdminAllOpportunities extends Component {
                 className: 'docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg3',
                 fieldName: 'openedDate',
                 minWidth: 150,
-                maxWidth: 350,
+                maxWidth: 150,
                 isRowHeader: true,
                 isResizable: true,
                 onColumnClick: this.onColumnClick,
@@ -103,31 +103,6 @@ export class AdminAllOpportunities extends Component {
                     );
                 },
                 isPadded: true
-            },
-            {
-                key: 'column45',
-                name: '',
-                headerClassName: 'DetailsListExample-header',
-                className: 'docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg2',
-                fieldName: 'progress',
-                minWidth: 100,
-                maxWidth: 100,
-                isRowHeader: true,
-                isResizable: true,
-                onColumnClick: this.onColumnClick,
-                onRender: (item) => {
-                    return (
-
-                        <div>
-                            <Spinner size={SpinnerSize.small} label={<Trans>saving</Trans>} ariaLive='assertive'
-                                hidden={item.saved}
-                            />
-
-                        </div >
-
-                    );
-                },
-                isPadded: true
             }
         ];
 
@@ -135,10 +110,10 @@ export class AdminAllOpportunities extends Component {
 
         this.state = {
             userProfile: userProfile,
-            loading: false,
+            loading: true,
             refreshing: false,
-            items: filteredItems,
-            itemsOriginal: itemsOriginal,
+            items: [],
+            itemsOriginal: [],
             userRoleList: userRoleList,
             channelCounter: 0,
             isCompactMode: false,
@@ -270,12 +245,12 @@ export class AdminAllOpportunities extends Component {
                         }
                     }
 
-                    //let filteredItems = itemslist.filter(itm => itm.stausValue < 2);
-
+                    let filteredItems = itemslist.filter(item => item.status.toLowerCase() !== "archived");
 
                     this.setState({
-                        items: itemslist,
-                        itemsOriginal: itemslist
+                        items: filteredItems,
+                        itemsOriginal: itemslist,
+                        loading: false
                     });
 
                     resolve(true);
@@ -364,13 +339,24 @@ export class AdminAllOpportunities extends Component {
                 body: JSON.stringify(opportunity)
             };
 
+            this.setState({
+                refreshing: true
+            });
+
             fetch(requestUrl, options)
                 .then(response => this.fetchResponseHandler(response, "Administration_updateOpportunity_fetch"))
                 .then(data => {
+                    this.setState({
+                        refreshing: false
+                    });
+                    this.getOpportunityIndex();
                     resolve(true);
                 })
                 .catch(err => {
                     this.errorHandler(err, "Administration_updateOpportunity");
+                    this.setState({
+                        refreshing: false
+                    });
                     reject(false);
                 });
         });
@@ -473,7 +459,7 @@ export class AdminAllOpportunities extends Component {
 
 
         return (
-            <div className='ms-Grid bg-white ibox-content'>
+            <div className='ms-Grid'>
 
                 <div className='ms-Grid-row p-10'>
                     <div className='ms-Grid-col ms-sm6 ms-md6 ms-lg9'>
@@ -482,15 +468,31 @@ export class AdminAllOpportunities extends Component {
                     <div className='ms-Grid-col ms-sm6 ms-md6 ms-lg3'>
                         <I18n>
                             {
-                                t => <SearchBox
-                                    placeholder={t('search')}
-                                    onChange={this._onFilterByOpportunityName}
-                                    />
+                                t => {
+                                    return (
+                                        <SearchBox
+                                            placeholder={t('search')}
+                                            onChange={this._onFilterByOpportunityName}
+                                        />
+                                    );
+                                }
                             }
                         </I18n>
                     </div>
                 </div>
-                <div className='ms-Grid-row LsitBoxAlign p20ALL'>
+                <div className='ms-grid-row'>
+                    <div className='ms-Grid-col ms-sm12 ms-md6 ms-lg12'>
+                        {
+                            this.state.refreshing ?
+                                <div className='ms-Grid-col ms-sm12 ms-md3 ms-lg6 pull-left'>
+                                    <Spinner size={SpinnerSize.small} ariaLive='assertive' />
+                                </div>
+                                :
+                                <br />
+                        }
+                    </div>
+                </div>
+                <div className='ms-Grid-row LsitBoxAlign'>
                     <div className='ms-Grid-col ms-sm12 ms-md12 ms-lg12'>
                         {
                             this.state.result &&
@@ -512,22 +514,25 @@ export class AdminAllOpportunities extends Component {
                                 </div>
                                 :
                                 items.length > 0 ?
+                                    <div className='ms-Grid-row'>
+                                        <div className='ms-Grid-col ms-sm12 ms-md12 ms-lg12'>
 
-
-                                    <MarqueeSelection selection={this._selection}>
-                                        <DetailsList
-                                            items={this.state.items}
-                                            compact={isCompactMode}
-                                            columns={columns}
-                                            setKey='key'
-                                            enterModalSelectionOnTouch='false'
-                                            layoutMode={DetailsListLayoutMode.fixedColumns}
-                                            selection={this._selection}
-                                            selectionPreservedOnEmptyClick={true}
-                                            ariaLabelForSelectionColumn="Toggle selection"
-                                            ariaLabelForSelectAllCheckbox="Toggle selection for all items"
-                                        />
-                                    </MarqueeSelection>
+                                            <MarqueeSelection selection={this._selection}>
+                                                <DetailsList
+                                                    items={this.state.items}
+                                                    compact={isCompactMode}
+                                                    columns={columns}
+                                                    setKey='key'
+                                                    enterModalSelectionOnTouch='false'
+                                                    layoutMode={DetailsListLayoutMode.fixedColumns}
+                                                    selection={this._selection}
+                                                    selectionPreservedOnEmptyClick='true'
+                                                    ariaLabelForSelectionColumn="Toggle selection"
+                                                    ariaLabelForSelectAllCheckbox="Toggle selection for all items"
+                                                />
+                                            </MarqueeSelection>
+                                        </div>
+                                    </div>
                                     :
                                     <div><Trans>noOpportunities</Trans></div>
 
@@ -535,22 +540,7 @@ export class AdminAllOpportunities extends Component {
                     </div>
 
                 </div>
-                <div className='ms-grid-row'>
-                    <div className='ms-Grid-col ms-sm6 ms-md6 ms-lg6 pl0'><br />
 
-                    </div>
-                    <div className='ms-Grid-col ms-sm12 ms-md6 ms-lg6'><br />
-                        {
-                            this.state.refreshing ?
-                                <div className='ms-Grid-col ms-sm12 ms-md3 ms-lg6 pull-right'>
-                                    <Spinner size={SpinnerSize.small} label={<Trans>loadingOpportunities</Trans>} ariaLive='assertive' />
-                                </div>
-                                :
-                                <br />
-                        }
-                        <br /><br /><br />
-                    </div>
-                </div>
             </div>
         );
     }

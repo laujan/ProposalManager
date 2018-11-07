@@ -10,7 +10,7 @@ using ApplicationCore.Artifacts;
 using ApplicationCore.Entities;
 using ApplicationCore.Authorization;
 
-namespace Infrastructure.Authorization
+namespace ApplicationCore.Interfaces
 {
     public interface IAuthorizationService
     {

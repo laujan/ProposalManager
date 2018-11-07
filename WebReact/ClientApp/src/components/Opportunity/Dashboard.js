@@ -18,137 +18,136 @@ import { DetailsList, DetailsListLayoutMode, SelectionMode } from 'office-ui-fab
 import { TooltipHost } from 'office-ui-fabric-react/lib/Tooltip';
 import { I18n, Trans } from "react-i18next";
 import i18n from '../../i18n';
-import AccessDenied from '../../helpers/AccessDenied'
 
 export class Dashboard extends Component {
-	displayName = Dashboard.name
+    displayName = Dashboard.name
 
-	constructor(props) {
-		super(props);
-		this.sdkHelper = window.sdkHelper;
-		this.authHelper = window.authHelper;
+    constructor(props) {
+        super(props);
+        this.sdkHelper = window.sdkHelper;
+        this.authHelper = window.authHelper;
 
-		//const userProfile = this.props.userProfile;
-		const dashboardList = this.props.dashboardList;
+        //const userProfile = this.props.userProfile;
+        const dashboardList = this.props.dashboardList;
 
-		let columns = [
-			{
-				key: 'column1',
-				name: <Trans>opportunity</Trans>,
-				headerClassName: 'ms-List-th',
-				className: 'docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg3',
-				fieldName: 'name',
-				minWidth: 150,
-				maxWidth: 350,
-				isRowHeader: true,
-				isResizable: true,
-				onColumnClick: this.onColumnClick,
-				onRender: (item) => {
-					return (
-						<div className='ms-List-itemName'>
-							<Link to={'/OpportunityDetails?opportunityId=' + item.id} >
-								{item.opportunity}
-							</Link>
-						</div>
-					);
-				}
-			},
-			{
-				key: 'column2',
-				name: <Trans>client</Trans>,
-				headerClassName: 'ms-List-th',
-				className: 'docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg3 clientcolum',
-				fieldName: 'client',
-				minWidth: 150,
-				maxWidth: 350,
-				isRowHeader: true,
-				isResizable: true,
-				onColumnClick: this.onColumnClick,
-				onRender: (item) => {
-					return (
-						<div className='ms-List-itemClient'>{item.client}</div>
-					);
-				},
-				isPadded: true
-			},
-			{
-				key: 'column3',
-				name: <Trans>dealSize</Trans>,
-				headerClassName: 'ms-List-th',
-				className: 'docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg3 clientcolum',
-				fieldName: 'client',
-				minWidth: 150,
-				maxWidth: 350,
-				isRowHeader: true,
-				isResizable: true,
-				onColumnClick: this.onColumnClick,
-				onRender: (item) => {
-					return (
-						<div className='ms-List-itemClient'>{item.dealsize}</div>
-					);
-				},
-				isPadded: true
-			},
-			{
-				key: 'column4',
-				name: <Trans>openedDate</Trans>,
-				headerClassName: 'ms-List-th',
-				className: 'docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg3',
-				fieldName: 'openedDate',
-				minWidth: 150,
-				maxWidth: 350,
-				isRowHeader: true,
-				isResizable: true,
-				onColumnClick: this.onColumnClick,
-				onRender: (item) => {
-					return (
-						<div className='ms-List-itemDate AdminDate'>{new Date(item.openedDate).toLocaleDateString(i18n.language)}</div>
-					);
-				},
-				isPadded: true
-			},
-			{
-				key: 'column5',
-				name: <Trans>status</Trans>,
-				headerClassName: 'ms-List-th',
-				className: 'docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg2',
-				fieldName: 'staus',
-				minWidth: 150,
-				maxWidth: 350,
-				isRowHeader: true,
-				isResizable: true,
-				onColumnClick: this.onColumnClick,
-				onRender: (item) => {
-					return (
-						<div className={oppStatusClassName[item.stausValue].toLowerCase()}><Trans>{oppStatusText[item.stausValue]}</Trans></div>
-					);
-				},
-				isPadded: true
-			}
-		];
+        let columns = [
+            {
+                key: 'column1',
+                name: <Trans>opportunity</Trans>,
+                headerClassName: 'ms-List-th',
+                className: 'docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg3',
+                fieldName: 'name',
+                minWidth: 150,
+                maxWidth: 350,
+                isRowHeader: true,
+                isResizable: true,
+                onColumnClick: this.onColumnClick,
+                onRender: (item) => {
+                    return (
+                        <div className='ms-List-itemName'>
+                            <Link to={'/OpportunityDetails?opportunityId=' + item.id} >
+                                {item.opportunity}
+                            </Link>
+                        </div>
+                    );
+                }
+            },
+            {
+                key: 'column2',
+                name: <Trans>client</Trans>,
+                headerClassName: 'ms-List-th',
+                className: 'docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg3 clientcolum',
+                fieldName: 'client',
+                minWidth: 150,
+                maxWidth: 350,
+                isRowHeader: true,
+                isResizable: true,
+                onColumnClick: this.onColumnClick,
+                onRender: (item) => {
+                    return (
+                        <div className='ms-List-itemClient'>{item.client}</div>
+                    );
+                },
+                isPadded: true
+            },
+            {
+                key: 'column3',
+                name: <Trans>dealSize</Trans>,
+                headerClassName: 'ms-List-th',
+                className: 'docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg3 clientcolum',
+                fieldName: 'client',
+                minWidth: 150,
+                maxWidth: 350,
+                isRowHeader: true,
+                isResizable: true,
+                onColumnClick: this.onColumnClick,
+                onRender: (item) => {
+                    return (
+                        <div className='ms-List-itemClient'>{item.dealsize}</div>
+                    );
+                },
+                isPadded: true
+            },
+            {
+                key: 'column4',
+                name: <Trans>openedDate</Trans>,
+                headerClassName: 'ms-List-th',
+                className: 'docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg3',
+                fieldName: 'openedDate',
+                minWidth: 150,
+                maxWidth: 350,
+                isRowHeader: true,
+                isResizable: true,
+                onColumnClick: this.onColumnClick,
+                onRender: (item) => {
+                    return (
+                        <div className='ms-List-itemDate AdminDate'>{new Date(item.openedDate).toLocaleDateString(i18n.language)}</div>
+                    );
+                },
+                isPadded: true
+            },
+            {
+                key: 'column5',
+                name: <Trans>status</Trans>,
+                headerClassName: 'ms-List-th',
+                className: 'docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg2',
+                fieldName: 'staus',
+                minWidth: 150,
+                maxWidth: 350,
+                isRowHeader: true,
+                isResizable: true,
+                onColumnClick: this.onColumnClick,
+                onRender: (item) => {
+                    return (
+                        <div className={oppStatusClassName[item.stausValue].toLowerCase()}><Trans>{oppStatusText[item.stausValue]}</Trans></div>
+                    );
+                },
+                isPadded: true
+            }
+        ];
 
-		const actionColumn = {
-			key: 'column6',
-			name: <Trans>action</Trans>,
-			headerClassName: 'ms-List-th delectBTNwidth',
-			className: 'DetailsListExample-cell--FileIcon actioniconAlign ',
-			minWidth: 30,
-			maxWidth: 30,
-			onColumnClick: this.onColumnClick,
-			onRender: (item) => {
-				return (
-					<div className='OpportunityDelete'>
-						<TooltipHost content={<Trans>delete</Trans>} calloutProps={{ gapSpace: 0 }} closeDelay={200}>
-							<IconButton iconProps={{ iconName: 'Delete' }} onClick={e => this.deleteRow(item)} />
-						</TooltipHost>
-					</div>
-				);
-			}
-		};
+        const actionColumn = {
+            key: 'column6',
+            name: <Trans>action</Trans>,
+            headerClassName: 'ms-List-th delectBTNwidth',
+            className: 'DetailsListExample-cell--FileIcon actioniconAlign ',
+            minWidth: 30,
+            maxWidth: 30,
+            onColumnClick: this.onColumnClick,
+            onRender: (item) => {
+                return (
+                    <div className='OpportunityDelete'>
+                        <TooltipHost content={<Trans>delete</Trans>} calloutProps={{ gapSpace: 0 }} closeDelay={200}>
+                            <IconButton iconProps={{ iconName: 'Delete' }} onClick={e => this.deleteRow(item)} />
+                        </TooltipHost>
+                    </div>
+                );
+            }
+        };
 
-		if (this.props.userProfile.roles.filter(x => x.displayName === "RelationshipManager").length > 0) {
-			columns.push(actionColumn);
-		}
+        if (this.props.userProfile.roles.filter(x => x.displayName === "RelationshipManager").length > 0) {
+            columns.push(actionColumn);
+        }
 
 
         this.state = {
@@ -176,235 +175,237 @@ export class Dashboard extends Component {
             isCompactMode: false,
             isDelteOpp: false,
             MessageDeleteOpp: "",
-			MessageBarTypeDeleteOpp: "",
-			haveGranularAccess:false
+            MessageBarTypeDeleteOpp: "",
+            haveGranularAccess: false
         };
 
-		this._onFilterByNameChanged = this._onFilterByNameChanged.bind(this);
-		this._onFilterByDealChanged = this._onFilterByDealChanged.bind(this);
+        this._onFilterByNameChanged = this._onFilterByNameChanged.bind(this);
+        this._onFilterByDealChanged = this._onFilterByDealChanged.bind(this);
     }
 
-	fetchResponseHandler(response, referenceCall) {
-		if (response.status === 401) {
-			// TODO: This has been deprecated with the new token refresh functionality leaving the code for future expansion
-		}
-	}
+    //Granular Access start:
+    //Oppportunity create access
+    componentWillMount() {
+        this.authHelper.callCheckAccess(["Opportunity_Create"]).then((data) => {
+            console.log("Granular Dashboard: ", data);
+            let haveGranularAccess = data;
+            this.setState({ haveGranularAccess });
+        });
+    }
+    //Granular Access end:
 
-	errorHandler(err, referenceCall) {
-		console.log("Dashboard Ref: " + referenceCall + " error: " + JSON.stringify(err));
-	}
+    fetchResponseHandler(response, referenceCall) {
+        if (response.status === 401) {
+            // TODO: This has been deprecated with the new token refresh functionality leaving the code for future expansion
+        }
+    }
 
-	getOpportunityIndex() {
-		return new Promise((resolve, reject) => {
-			// To get the List of Opportunities to Display on Dashboard page
-			let requestUrl = 'api/Opportunity?page=1';
+    errorHandler(err, referenceCall) {
+        console.log("Dashboard Ref: " + referenceCall + " error: " + JSON.stringify(err));
+    }
 
-			fetch(requestUrl, {
-				method: "GET",
-				headers: { 'authorization': 'Bearer ' + window.authHelper.getWebApiToken() }
-			})
-				.then(response => {
-					if (response.ok) {
-						return response.json();
-					} else {
-						this.fetchResponseHandler(response, "getOpportunityIndex");
-						reject(response);
-					}
-				})
-				.then(data => {
-					let itemslist = [];
-					if (data.ItemsList.length > 0) {
-						for (let i = 0; i < data.ItemsList.length; i++) {
+    getOpportunityIndex() {
+        return new Promise((resolve, reject) => {
+            // To get the List of Opportunities to Display on Dashboard page
+            let requestUrl = 'api/Opportunity?page=1';
 
-							let item = data.ItemsList[i];
+            fetch(requestUrl, {
+                method: "GET",
+                headers: { 'authorization': 'Bearer ' + window.authHelper.getWebApiToken() }
+            })
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    } else {
+                        this.fetchResponseHandler(response, "getOpportunityIndex");
+                        reject(response);
+                    }
+                })
+                .then(data => {
+                    let itemslist = [];
+                    if (data.ItemsList.length > 0) {
+                        for (let i = 0; i < data.ItemsList.length; i++) {
 
-							let newItem = {};
+                            let item = data.ItemsList[i];
 
-							newItem.id = item.id;
-							newItem.opportunity = item.displayName;
-							newItem.client = item.customer.displayName;
-							newItem.dealsize = item.dealSize;
-							newItem.openedDate = new Date(item.openedDate).toLocaleDateString();
-							newItem.stausValue = item.opportunityState;
-							newItem.status = oppStatusClassName[item.opportunityState];
-							itemslist.push(newItem);
-						}
-					}
+                            let newItem = {};
 
-					let sortedList = this.state.reverseList ? itemslist.reverse() : itemslist;
-					this.setState({
-						loading: false,
-						items: sortedList,
-						itemsOriginal: sortedList
-					});
+                            newItem.id = item.id;
+                            newItem.opportunity = item.displayName;
+                            newItem.client = item.customer.displayName;
+                            newItem.dealsize = item.dealSize;
+                            newItem.openedDate = new Date(item.openedDate).toLocaleDateString();
+                            newItem.stausValue = item.opportunityState;
+                            newItem.status = oppStatusClassName[item.opportunityState];
+                            itemslist.push(newItem);
+                        }
+                    }
 
-					resolve(true);
-				})
-				.catch(err => {
-					this.errorHandler(err, "getOpportunityIndex");
-					this.setState({
-						loading: false,
-						items: [],
-						itemsOriginal: []
-					});
-					reject(err);
-				});
+                    let sortedList = this.state.reverseList ? itemslist.reverse() : itemslist;
+                    this.setState({
+                        loading: false,
+                        items: sortedList,
+                        itemsOriginal: sortedList
+                    });
 
-		});
-	}
+                    resolve(true);
+                })
+                .catch(err => {
+                    this.errorHandler(err, "getOpportunityIndex");
+                    this.setState({
+                        loading: false,
+                        items: [],
+                        itemsOriginal: []
+                    });
+                    reject(err);
+                });
 
-	opportunitiesListHeading() {
-		return (
-			<div className='ms-List-th'>
-				<div className='ms-List-th-itemName'>Opportunity</div>
-				<div className='ms-List-th-itemClient'>Client</div>
-				<div className='ms-List-th-itemDealsize'>Deal Size</div>
-				<div className='ms-List-th-itemDate'>Opened Date</div>
-				<div className='ms-List-th-itemState'>Status</div>
-			</div>
-		);
-	}
+        });
+    }
 
-	deleteRow(item) {
-		let fetchData = {
-			method: 'delete',
-			//body: JSON.stringify(item.id),
-			headers: {
-				'authorization': 'Bearer ' + window.authHelper.getWebApiToken()
-			}
-		};
-		this.requestUrl = 'api/opportunity/' + item.id;
-		this.setState({ isDelteOpp: true, MessageDeleteOpp: " Deleting Opportunity - " + item.opportunity, MessageBarTypeDeleteOpp: MessageBarType.success });
+    opportunitiesListHeading() {
+        return (
+            <div className='ms-List-th'>
+                <div className='ms-List-th-itemName'>Opportunity</div>
+                <div className='ms-List-th-itemClient'>Client</div>
+                <div className='ms-List-th-itemDealsize'>Deal Size</div>
+                <div className='ms-List-th-itemDate'>Opened Date</div>
+                <div className='ms-List-th-itemState'>Status</div>
+            </div>
+        );
+    }
 
-		fetch(this.requestUrl, fetchData)
-			.catch(error => console.error('Error:', error))
-			.then(response => {
-				if (response.ok) {
-					return response.json;
-				} else {
-					//console.log('Error...: ');
-				}
-			}).then(json => {
-				let currentItems = this.state.items.filter(x => x.id !== item.id);
+    deleteRow(item) {
+        let fetchData = {
+            method: 'delete',
+            //body: JSON.stringify(item.id),
+            headers: {
+                'authorization': 'Bearer ' + window.authHelper.getWebApiToken()
+            }
+        };
+        this.requestUrl = 'api/opportunity/' + item.id;
+        this.setState({ isDelteOpp: true, MessageDeleteOpp: " Deleting Opportunity - " + item.opportunity, MessageBarTypeDeleteOpp: MessageBarType.success });
 
-				this.setState({
-					items: currentItems
-				});
-				this.setState({ MessageDeleteOpp: " Deleted Opportunity - " + item.opportunity });
-				setTimeout(function () {
-					this.setState({ isDelteOpp: false, MessageDeleteOpp: "", MessageBarTypeDeleteOpp: MessageBarType.success });
-				}.bind(this), 3000);
-			});
-	}
+        fetch(this.requestUrl, fetchData)
+            .catch(error => console.error('Error:', error))
+            .then(response => {
+                if (response.ok) {
+                    return response.json;
+                } else {
+                    //console.log('Error...: ');
+                }
+            }).then(json => {
+                let currentItems = this.state.items.filter(x => x.id !== item.id);
 
-	_onFilterByNameChanged(text) {
-		const items = this.state.itemsOriginal;
+                this.setState({
+                    items: currentItems
+                });
+                this.setState({ MessageDeleteOpp: " Deleted Opportunity - " + item.opportunity });
+                setTimeout(function () {
+                    this.setState({ isDelteOpp: false, MessageDeleteOpp: "", MessageBarTypeDeleteOpp: MessageBarType.success });
+                }.bind(this), 3000);
+            });
+    }
 
-		this.setState({
-			filterClient: text,
-			items: text ?
-				items.filter(item => item.client.toString().toLowerCase().indexOf(text.toString().toLowerCase()) > -1) :
-				items
-		});
-	}
+    _onFilterByNameChanged(text) {
+        const items = this.state.itemsOriginal;
 
-	_onFilterByDealChanged(value) {
-		const items = this.state.itemsOriginal;
+        this.setState({
+            filterClient: text,
+            items: text ?
+                items.filter(item => item.client.toString().toLowerCase().indexOf(text.toString().toLowerCase()) > -1) :
+                items
+        });
+    }
 
-		this.setState({
-			filterDeal: value,
-			items: value ?
-				items.filter(item => item.dealsize >= value) :
-				items
-		});
-	}
+    _onFilterByDealChanged(value) {
+        const items = this.state.itemsOriginal;
 
-	_onRenderCell(item, index) {
+        this.setState({
+            filterDeal: value,
+            items: value ?
+                items.filter(item => item.dealsize >= value) :
+                items
+        });
+    }
+
+    _onRenderCell(item, index) {
 
 
-		return (
-			<div className='ms-List-itemCell' data-is-focusable='true'>
-				<div className='ms-List-itemContent'>
-					<div className='ms-List-itemName'>
-						<Link to={'/OpportunityDetails?opportunityId=' + item.id} >
-							{item.opportunity}
-						</Link>
-					</div>
-					<div className='ms-List-itemClient'>{item.client}</div>
-					<div className='ms-List-itemDealsize'>{item.dealsize}</div>
-					<div className='ms-List-itemDate'>{item.openedDate}</div>
-					<div className={"ms-List-itemState " + oppStatusClassName[item.stausValue].toLowerCase()}>{oppStatusText[item.stausValue]}</div>
-					<div className="OpportunityDelete ">
-						<IconButton iconProps={{ iconName: 'Delete' }} onClick={e => this.deleteRow(item)} />
-					</div>
-				</div>
-			</div>
-		);
-	}
+        return (
+            <div className='ms-List-itemCell' data-is-focusable='true'>
+                <div className='ms-List-itemContent'>
+                    <div className='ms-List-itemName'>
+                        <Link to={'/OpportunityDetails?opportunityId=' + item.id} >
+                            {item.opportunity}
+                        </Link>
+                    </div>
+                    <div className='ms-List-itemClient'>{item.client}</div>
+                    <div className='ms-List-itemDealsize'>{item.dealsize}</div>
+                    <div className='ms-List-itemDate'>{item.openedDate}</div>
+                    <div className={"ms-List-itemState " + oppStatusClassName[item.stausValue].toLowerCase()}>{oppStatusText[item.stausValue]}</div>
+                    <div className="OpportunityDelete ">
+                        <IconButton iconProps={{ iconName: 'Delete' }} onClick={e => this.deleteRow(item)} />
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
-	opportunitiesList(itemsList, itemsListOriginal) {
-		//const lenght = typeof itemsList !== 'undefined' ? itemsList.length : 0;
-		//const lenghtOriginal = typeof itemsListOriginal !== 'undefined' ? itemsListOriginal.length : 0;
-		//const originalItems = itemsListOriginal;
-		const items = itemsList;
-		//const resultCountText = lenght === lenghtOriginal ? '' : ` (${items.length} of ${originalItems.length} shown)`;
+    opportunitiesList(itemsList, itemsListOriginal) {
+        //const lenght = typeof itemsList !== 'undefined' ? itemsList.length : 0;
+        //const lenghtOriginal = typeof itemsListOriginal !== 'undefined' ? itemsListOriginal.length : 0;
+        //const originalItems = itemsListOriginal;
+        const items = itemsList;
+        //const resultCountText = lenght === lenghtOriginal ? '' : ` (${items.length} of ${originalItems.length} shown)`;
 
-		return (
-			<FocusZone direction={FocusZoneDirection.vertical}>
-				<List
-					items={items}
-					onRenderCell={this._onRenderCell}
-					className='ms-List'
-				/>
-			</FocusZone>
-		);
-	}
+        return (
+            <FocusZone direction={FocusZoneDirection.vertical}>
+                <List
+                    items={items}
+                    onRenderCell={this._onRenderCell}
+                    className='ms-List'
+                />
+            </FocusZone>
+        );
+    }
 
-	//Granular Access start:
-	//Oppportunity create access
-	componentWillMount(){
-		this.authHelper.callCheckAccess(["Opportunity_Create"]).then((data)=>{
-			console.log("Granular Dashboard: ",data)
-			let haveGranularAccess = data
-			this.setState({haveGranularAccess})
-		})
-	}
-	//Granular Access end:
 
-	render() {
-		const { columns, isCompactMode, items } = this.state;
 
-		const isLoading = this.state.loading;
+    render() {
+        const { columns, isCompactMode, items } = this.state;
+
+        const isLoading = this.state.loading;
 
         let isRelationshipManager = false;
-        if ((this.state.authUserRoles.filter(x => x.displayName === "RelationshipManager")).length > 0) {
+        if (this.state.authUserRoles.filter(x => x.displayName === "RelationshipManager").length > 0) {
             isRelationshipManager = true;
         }
         let userPermissions = this.state.authUserPermissions;
-        
 
-		const itemsOriginal = this.state.itemsOriginal;
-		//const items = this.state.items;
 
-		const lenghtOriginal = typeof itemsOriginal !== 'undefined' ? itemsOriginal.length : 0;
-		const listHasItems = lenghtOriginal > 0 ? true : false;
+        const itemsOriginal = this.state.itemsOriginal;
+        //const items = this.state.items;
 
-		const opportunitiesListHeading = this.opportunitiesListHeading();
-		const opportunitiesListComponent = this.opportunitiesList(items, itemsOriginal);
+        const lenghtOriginal = typeof itemsOriginal !== 'undefined' ? itemsOriginal.length : 0;
+        const listHasItems = lenghtOriginal > 0 ? true : false;
 
-		return (
-			<div className='ms-Grid'>
-				{
-					this.state.messageBarEnabled ?
-						<div className='ms-Grid-col ms-sm12 ms-md12 ms-lg12'>
-							<MessageBar messageBarType={this.props.context.messageBarType} isMultiline={false}>
-								{this.props.context.messageBarText}
-							</MessageBar>
-						</div>
-						: ""
-				}
+        const opportunitiesListHeading = this.opportunitiesListHeading();
+        const opportunitiesListComponent = this.opportunitiesList(items, itemsOriginal);
 
-                
+        return (
+            <div className='ms-Grid'>
+                {
+                    this.state.messageBarEnabled ?
+                        <div className='ms-Grid-col ms-sm12 ms-md12 ms-lg12'>
+                            <MessageBar messageBarType={this.props.context.messageBarType} isMultiline={false}>
+                                {this.props.context.messageBarText}
+                            </MessageBar>
+                        </div>
+                        : ""
+                }
+
+
                 <div className='ms-Grid-row'>
                     <div className='ms-Grid-col ms-sm6 ms-md6 ms-lg6 pageheading'>
                         <h3><Trans>dashboard</Trans></h3>
@@ -413,14 +414,14 @@ export class Dashboard extends Component {
                         this.state.haveGranularAccess
                             ? <div className='ms-Grid-col ms-sm6 ms-md6 ms-lg6 createButton pt15 '>
                                 {
-                                    <PrimaryButton className='pull-right' onClick={this.props.onClickCreateOpp}> <i className="ms-Icon ms-Icon--Add pr10" aria-hidden="true"></i><Trans>createNew</Trans></PrimaryButton>
+                                    <PrimaryButton className='pull-right' onClick={this.props.onClickCreateOpp}> <i className="ms-Icon ms-Icon--Add pr10" aria-hidden="true" /><Trans>createNew</Trans></PrimaryButton>
                                 }
 
                             </div>
-							: ""
-						//Granular access end
+                            : ""
+                        //Granular access end
                     }
-                    
+
                 </div>
                 <div className='ms-Grid'>
                     <div className='ms-Grid-row ms-SearchBoxSmallExample'>
@@ -428,59 +429,66 @@ export class Dashboard extends Component {
                             <span><Trans>clientName</Trans></span>
                             <I18n>
                                 {
-                                    t => <SearchBox
-                                        placeholder={t('search')}
-                                        onChange={this._onFilterByNameChanged}
-                                         />
+                                    t => {
+                                        return (
+                                            <SearchBox
+                                                placeholder={t('search')}
+                                                onChange={this._onFilterByNameChanged}
+                                            />
+                                        );
+                                    }
+                                }
+                            </I18n>
+                        </div>
+                        <div className='ms-Grid-col ms-sm4 ms-md4 ms-lg3'>
+                            <span><Trans>dealSize</Trans></span>
+                            <I18n>
+                                {
+                                    t => {
+                                        return (
+                                            <SearchBox
+                                                placeholder={t('search')}
+                                                onChange={this._onFilterByDealChanged}
+                                            />
+                                        );
+                                    }
+                                }
+                            </I18n>
+                        </div>
+                    </div><br />
+                    <div className='ms-Grid-row'>
+                        <div className='ms-Grid-col ms-sm12 ms-md12 ms-lg12'>
+                            {
+                                this.state.isDelteOpp ?
+                                    <MessageBar messageBarType={this.state.MessageBarTypeDeleteOpp} isMultiline={false}>
+                                        {this.state.MessageDeleteOpp}
+                                    </MessageBar>
+                                    : ""
+                            }
+                        </div>
+                    </div>
+                    <div className='ms-Grid-row'>
+                        {
+                            items.length > 0
+                                ?
+                                <DetailsList
+                                    items={items}
+                                    compact={isCompactMode}
+                                    columns={columns}
+                                    selectionMode={SelectionMode.none}
+                                    setKey='key'
+                                    layoutMode={DetailsListLayoutMode.justified}
+                                    enterModalSelectionOnTouch='false'
+                                />
+                                :
+                                <div>There are no opportunities.</div>
+                        }
 
-								}
-							</I18n>
-						</div>
-						<div className='ms-Grid-col ms-sm4 ms-md4 ms-lg3'>
-							<span><Trans>dealSize</Trans></span>
-							<I18n>
-								{
-									t => <SearchBox
-										placeholder={t('search')}
-										onChange={this._onFilterByDealChanged}
-									/>
-								}
-							</I18n>
-						</div>
-					</div><br />
-					<div className='ms-Grid-row'>
-						<div className='ms-Grid-col ms-sm12 ms-md12 ms-lg12'>
-							{
-								this.state.isDelteOpp ?
-									<MessageBar messageBarType={this.state.MessageBarTypeDeleteOpp} isMultiline={false}>
-										{this.state.MessageDeleteOpp}
-									</MessageBar>
-									: ""
-							}
-						</div>
-					</div>
-					<div className='ms-Grid-row'>
-						{
-							items.length > 0
-								?
-								<DetailsList
-									items={items}
-									compact={isCompactMode}
-									columns={columns}
-									selectionMode={SelectionMode.none}
-									setKey='key'
-									layoutMode={DetailsListLayoutMode.justified}
-									enterModalSelectionOnTouch='false'
-								/>
-								:
-								<div>There are no opportunities.</div>
-						}
-
-					</div>
-					<br /><br />
-				</div>
-			</div>
-		);
-	}
+                    </div>
+                    <br /><br />
+                </div>
+            </div>
+        );
+    }
 
 }

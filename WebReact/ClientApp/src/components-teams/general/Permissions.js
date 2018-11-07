@@ -128,11 +128,17 @@ export class Permissions extends Component {
         };
     }
 
-    async componentWillMount() {
-        let rolesList = await this.getAllRoles();
-        let permissionsList = await this.getAllPemissionTypes();
-        let data = await this.getAllPermissionsList();
-        this.setState({ items: data.items, loading: data.loading, rowItemCounter: data.rowItemCounter, permissionTypes: permissionsList, roles: rolesList });
+    async componentDidMount() {
+        try {
+            if(this.state.loading){
+                let rolesList = await this.getAllRoles();
+                let permissionsList = await this.getAllPemissionTypes();
+                let data = await this.getAllPermissionsList();
+                this.setState({ items: data.items, loading: data.loading, rowItemCounter: data.rowItemCounter, permissionTypes: permissionsList, roles: rolesList });
+            }
+        } catch (error) {
+            this.setState({loading:true});    
+        }
     }
 
     async getAllRoles() {
@@ -249,7 +255,6 @@ export class Permissions extends Component {
     };
 
     onChangePermissions(e, item) {
-        console.log("vishnu:onChangePermissions: ", e);
         let updatedItems = [];
         if (this.state.updatedItems.length > 0) {
             updatedItems = this.copyArray(this.state.updatedItems);
@@ -265,10 +270,8 @@ export class Permissions extends Component {
             updatedItems.push(item);
         }
         else {
-            console.log("vishnu:onChangePermissions: ", item);
             if (Array.isArray(item["permissions"])) {
                 let index = item["permissions"].findIndex(obj => obj["name"] === e.key);
-                console.log("vishnu onChangePermissions: ", index);
                 if (index >= -1) {
                     item["permissions"].splice(index, 1);
                     updatedItems.push(item);
@@ -276,7 +279,6 @@ export class Permissions extends Component {
             } else
                 return false;
         }
-        console.log("vishnu:onChangePermissions: ", updatedItems);
         this.setState({ updatedItems });
     }
 
@@ -289,10 +291,6 @@ export class Permissions extends Component {
         let itemIdx = updatedItems.indexOf(item);
         if (itemIdx === -1) {
             return false;
-            if (!updatedItems[itemIdx].adGroupName || !updatedItems[itemIdx].role || !updatedItems[itemIdx].permissions) {
-                return false;
-            }
-            //return false;
         }
 
         this.setState({ isUpdate: true });
@@ -301,7 +299,6 @@ export class Permissions extends Component {
         postOrPatchObject["adGroupName"] = updatedItems[itemIdx].adGroupName;
         postOrPatchObject["role"] = updatedItems[itemIdx].role;
         postOrPatchObject["permissions"] = updatedItems[itemIdx].permissions;
-        console.log("vishnu onChangePermissions: ", updatedItems);
         if (item.id.length === 0) {
             postOrPatchObject["role"] = { "id": "", "displayName": postOrPatchObject["role"] };
             this.addPermission(postOrPatchObject);
@@ -348,10 +345,16 @@ export class Permissions extends Component {
             updatedItems: updatedItems
         });
 
+        let postOrPatchObject = {};
+        postOrPatchObject["id"] = updatedItems[itemIdx].id;
+        postOrPatchObject["adGroupName"] = updatedItems[itemIdx].adGroupName;
+        postOrPatchObject["role"] = updatedItems[itemIdx].role;
+        postOrPatchObject["permissions"] = updatedItems[itemIdx].permissions;
+        postOrPatchObject["role"] = { "id": "", "displayName": postOrPatchObject["role"] };
         if (item.id.length === 0) {
-            this.addPermission(updatedItems[itemIdx]);
+            this.addPermission(postOrPatchObject);
         } else if (item.id.length > 0) {
-            this.updatePermission(updatedItems[itemIdx]);
+            this.updatePermission(postOrPatchObject);
         }
 
     }

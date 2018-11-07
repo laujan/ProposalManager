@@ -39,8 +39,8 @@ using Newtonsoft.Json.Linq;
 using WebReact.ModelExamples;
 using ApplicationCore.Interfaces.SmartLink;
 using Infrastructure.Services.SmartLink;
-
 using Microsoft.Extensions.Options;
+using IAuthorizationService = ApplicationCore.Interfaces.IAuthorizationService;
 
 namespace WebReact
 {
@@ -59,30 +59,6 @@ namespace WebReact
 		/// This method gets called by the runtime. Use this method to add services to the container.
 		public void ConfigureServices(IServiceCollection services)
 		{
-            // Add CORS exception to enable authentication in Teams Client
-            //services.AddCors(options =>
-            //{
-            //    options.AddPolicy("AllowSpecificOrigins",
-            //    builder =>
-            //    {
-            //        builder.WithOrigins("https://webreact20180403042343.azurewebsites.net", "https://login.microsoftonline.com");
-            //    });
-
-            //    options.AddPolicy("AllowAllMethods",
-            //        builder =>
-            //        {
-            //            builder.WithOrigins("https://webreact20180403042343.azurewebsites.net")
-            //                   .AllowAnyMethod();
-            //        });
-
-            //    options.AddPolicy("ExposeResponseHeaders",
-            //        builder =>
-            //        {
-            //            builder.WithOrigins("https://webreact20180403042343.azurewebsites.net")
-            //                   .WithExposedHeaders("X-Frame-Options");
-            //        });
-            //});
-
             // Add in-mem cache service
             services.AddMemoryCache();
 
@@ -99,7 +75,7 @@ namespace WebReact
             services.AddSingleton(typeof(ICredentialProvider), credentialProvider);
 
             // Add Authorization services
-            services.AddScoped<Infrastructure.Authorization.IAuthorizationService, AuthorizationService>();
+            services.AddScoped<IAuthorizationService, AuthorizationService>();
 
             // Add MVC services
             services.AddMvc(options =>
@@ -116,13 +92,15 @@ namespace WebReact
 
 			// Register configuration options
 			services.Configure<AppOptions>(Configuration.GetSection("ProposalManagement"));
+            services.Configure<AzureAdOptions>(Configuration.GetSection("AzureAd"));
 
-			// Add application infrastructure services.
-			services.AddSingleton<IGraphAuthProvider, GraphAuthProvider>(); // Auth provider for Graph client, must be singleton
+            // Add application infrastructure services.
+            services.AddSingleton<IGraphAuthProvider, GraphAuthProvider>(); // Auth provider for Graph client, must be singleton
             services.AddSingleton<IWebApiAuthProvider, WebApiAuthProvider>(); // Auth provider for WebApi calls, must be singleton
             services.AddScoped<IGraphClientAppContext, GraphClientAppContext>();
 			services.AddScoped<IGraphClientUserContext, GraphClientUserContext>();
-			services.AddTransient<IUserContext, UserIdentityContext>();
+            services.AddScoped<IGraphClientOnBehalfContext, GraphClientOnBehalfContext>();
+            services.AddTransient<IUserContext, UserIdentityContext>();
             services.AddScoped<IWordParser, WordParser>();
 
             // Add core services
@@ -136,13 +114,15 @@ namespace WebReact
 			services.AddScoped<IRoleMappingRepository,RoleMappingRepository>();
             services.AddScoped<ITemplateRepository, TemplateRepository>();
             services.AddScoped<IProcessRepository, ProcessRepository>();
-            services.AddScoped<GraphSharePointAppService>();
             services.AddScoped<SharePointListsSchemaHelper>();
 			services.AddScoped<GraphSharePointUserService>();
-			services.AddScoped<GraphTeamUserService>();
-			services.AddScoped<GraphUserAppService>();
+            services.AddScoped<GraphSharePointAppService>();
+            services.AddScoped<GraphUserAppService>();
+            services.AddScoped<GraphTeamsUserService>();
             services.AddScoped<GraphTeamsAppService>();
+            services.AddScoped<GraphTeamsOnBehalfService>();
             services.AddScoped<IAddInHelper, AddInHelper>();
+            services.AddSingleton<IAzureKeyVaultService, AzureKeyVaultService>();
 
             // FrontEnd services
             services.AddScoped<IOpportunityService, OpportunityService>();
@@ -204,37 +184,6 @@ namespace WebReact
             //Configure writing to appsettings
             services.ConfigureWritable<AppOptions>(Configuration.GetSection("ProposalManagement"));
             services.ConfigureWritable<DocumentIdActivatorConfiguration>(Configuration.GetSection("DocumentIdActivator"));
-
-            // Register the Swagger generator, defining 1 or more Swagger documents
-            //services.AddSwaggerGen(c =>
-            //{
-            //    c.SwaggerDoc("v1", new Info
-            //    {
-            //        Version = "v1",
-            //        Title = "Proposal Manager API",
-            //        Description = "APIs to do CURD operations in Sharepoint schema using Microsoft Graph APIS for Proposal Management App"
-            //    });
-
-            //    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-            //    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-            //    c.IncludeXmlComments(xmlPath);
-
-            //    c.OperationFilter<AddFileParamTypesOperationFilter>();
-            //    c.OperationFilter<AddResponseHeadersFilter>(); // [SwaggerResponseHeader]
-            //    c.OperationFilter<AppendAuthorizeToSummaryOperationFilter>();
-
-            //    c.AddSecurityDefinition("Bearer", new ApiKeyScheme { In = "header", Description = "Please enter JWT with Bearer into field", Name = "Authorization", Type = "apiKey" });
-            //    c.AddSecurityRequirement(new Dictionary<string, IEnumerable<string>>
-            //        {
-            //            { "Bearer", Enumerable.Empty<string>() },
-            //        }
-            //    );
-
-            //});
-
-            //services.AddSwaggerExamplesFromAssemblyOf<RoleMappingModelExample>();
-            // Register the Swagger generator, defining 1 or more Swagger documents
-
         }
 
         /// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

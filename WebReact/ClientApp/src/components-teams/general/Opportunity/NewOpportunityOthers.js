@@ -114,7 +114,7 @@ export class NewOpportunityOthers extends Component {
 
     render() {
         let selectedUsers = this.getSelectedUsers();
-
+        let loanOfficerADName = this.state.teamMembers[0].userRoles.length>0 ? (this.state.teamMembers[0].userRoles[0].adGroupName) : <Trans>loanOfficer</Trans>;
         return (
             <div>
                 <div className='ms-Grid'>
@@ -197,7 +197,7 @@ export class NewOpportunityOthers extends Component {
 
                 <div className='ms-Grid'>
                     <div className='ms-grid-row'>
-                        <h3 className="pageheading"><Trans>loanOfficer</Trans></h3>
+                        <h3 className="pageheading">{loanOfficerADName}</h3>
                         <div className='ms-lg12 ibox-content pb20'>
                             <div className='docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg6'>
                                 <PeoplePickerTeamMembers teamMembers={this.state.teamMembers} defaultSelectedUsers={selectedUsers} onChange={(e) => this.onChangeLoanOfficer(e)} />

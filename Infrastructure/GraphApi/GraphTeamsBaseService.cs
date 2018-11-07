@@ -26,16 +26,19 @@ namespace Infrastructure.GraphApi
     {
         protected readonly IGraphClientContext _graphClientContext;
         protected readonly IUserContext _userContext;
+        protected readonly IAzureKeyVaultService _azureKeyVaultService;
 
         public GraphTeamsBaseService(
             ILogger<GraphTeamsBaseService> logger,
             IOptionsMonitor<AppOptions> appOptions,
             IGraphClientContext graphClientContext,
-            IUserContext userContext) : base(logger, appOptions)
+            IUserContext userContext,
+            IAzureKeyVaultService azureKeyVaultService) : base(logger, appOptions)
         {
             Guard.Against.Null(graphClientContext, nameof(graphClientContext));
             _graphClientContext = graphClientContext;
             _userContext = userContext;
+            _azureKeyVaultService = azureKeyVaultService;
         }
 
         /// <summary>

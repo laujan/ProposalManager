@@ -108,7 +108,8 @@ export class OpportunityListCompact extends Component {
                 onRender: (item) => {
                     return (
                         <div onMouseEnter={e => this.mouseEnter(item.createTeamDisable)}
-                            onMouseLeave={e => this.mouseLeave(item.createTeamDisable)}>
+                            onMouseLeave={e => this.mouseLeave(item.createTeamDisable)}
+                        >
                             <TooltipHost content={<Trans>addAddin</Trans>} calloutProps={{ gapSpace: 0 }} closeDelay={500}>
                                 <IconButton iconProps={{ iconName: 'PeopleAdd' }} onClick={e => this.onActionItemClick(item)} disabled={item.createTeamDisable} />
                             </TooltipHost>

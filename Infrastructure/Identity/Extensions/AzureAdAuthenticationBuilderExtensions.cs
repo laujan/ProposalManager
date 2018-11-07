@@ -59,7 +59,6 @@ namespace Infrastructure.Identity.Extensions
         }
 
 
-
         private class ConfigureAzureAdBearerOptions : IConfigureNamedOptions<JwtBearerOptions>
         {
             private readonly AzureAdOptions _azureOptions;
@@ -78,8 +77,9 @@ namespace Infrastructure.Identity.Extensions
                     _logger.LogError($"ConfigureAzureAdBearerOptions ClientId is Null");
                 }
 
-                options.Audience = _azureOptions.ClientId;
-                options.Authority = $"{_azureOptions.Instance}{_azureOptions.TenantId}";
+                options.Audience = _azureOptions.Audience;
+                //options.Authority = $"{_azureOptions.Instance}{_azureOptions.TenantId}";
+                options.Authority = _azureOptions.Authority;
 
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
@@ -96,7 +96,7 @@ namespace Infrastructure.Identity.Extensions
                 };
                 options.Events = new JwtBearerEvents
                 {
-                    OnTokenValidated = TokenValidated,
+                    //OnTokenValidated = TokenValidated,
                     OnAuthenticationFailed = AuthenticationFailed,
                     //OnMessageReceived = MessageReceived
                 };
@@ -125,24 +125,7 @@ namespace Infrastructure.Identity.Extensions
             // TokenValidated event
             private Task TokenValidated(Microsoft.AspNetCore.Authentication.JwtBearer.TokenValidatedContext context)
             {
-                /* ---------------------   
-                // Replace this with your logic to validate the issuer/tenant
-                   ---------------------       
-                // Retriever caller data from the incoming principal
-                string issuer = context.SecurityToken.Issuer;
-                string subject = context.SecurityToken.Subject;
-                string tenantID = context.Ticket.Principal.FindFirst("http://schemas.microsoft.com/identity/claims/tenantid").Value;
-
-                // Build a dictionary of approved tenants
-                IEnumerable<string> approvedTenantIds = new List<string>
-                {
-                    "<Your tenantID>",
-                    "9188040d-6c67-4c5b-b112-36a304b66dad" // MSA Tenant
-                };
-
-                if (!approvedTenantIds.Contains(tenantID))
-                    throw new SecurityTokenValidationException();
-                  --------------------- */
+                //Replace this with your logic to validate the issuer/tenant
 
                 // Store the token in the token cache
 

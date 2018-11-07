@@ -30,7 +30,6 @@
     <SccProvider>SAK</SccProvider>
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
-    <ApplicationInsightsResourceId>/subscriptions/ba4b754a-7463-466a-bd84-9d07c7ac9c9e/resourcegroups/Default-ApplicationInsights-EastUS/providers/microsoft.insights/components/SmartLink.Web</ApplicationInsightsResourceId>
     <WebProject_DirectoryAccessLevelKey>0</WebProject_DirectoryAccessLevelKey>
     <TargetOfficeVersion>15.0</TargetOfficeVersion>
     <TypeScriptToolsVersion>2.5</TypeScriptToolsVersion>
@@ -380,9 +379,6 @@
     <Content Include="Scripts\bignumber.min.js" />
     <Content Include="Scripts\bootstrap.js" />
     <Content Include="Scripts\bootstrap.min.js" />
-    <Content Include="ApplicationInsights.config">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="Properties\webjobs-list.json" />
     <Content Include="fonts\HelveticaNeue-Light_22621.ttf" />
     <Content Include="fonts\FabExMDL2.ttf" />

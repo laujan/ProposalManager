@@ -64,6 +64,8 @@ namespace Infrastructure.Services
 
                 _logger.LogInformation($"RequestId: {requestId} - RolesRepo_CreateItemAsync finished creating SharePoint list item.");
 
+                await SetCacheAsync(requestId);
+
                 return StatusCodes.Status201Created;
 
             }
@@ -91,6 +93,8 @@ namespace Infrastructure.Services
                 var result = await _graphSharePointAppService.DeleteListItemAsync(siteList, id, requestId);
 
                 _logger.LogInformation($"RequestId: {requestId} - RolesRepo_DeleteItemAsync finished creating SharePoint list item.");
+
+                await SetCacheAsync(requestId);
 
                 return StatusCodes.Status204NoContent;
 
@@ -137,6 +141,8 @@ namespace Infrastructure.Services
                 var result = await _graphSharePointAppService.UpdateListItemAsync(siteList, entity.Id, itemJson.ToString(), requestId);
 
                 _logger.LogInformation($"RequestId: {requestId} - RolesRepo_UpdateItemAsync finished creating SharePoint list item.");
+
+                await SetCacheAsync(requestId);
 
                 return StatusCodes.Status200OK;
 
@@ -213,6 +219,23 @@ namespace Infrastructure.Services
             {
                 _logger.LogError($"RequestId: {requestId} - RolesRepo_GetRoleListAsync error: {ex}");
                 throw;
+            }
+        }
+
+        private async Task SetCacheAsync(string requestId)
+        {
+            try
+            {
+                var roleList = new List<Role>();
+                roleList = (await GetRoleListAsync(requestId)).ToList();
+
+                var cacheEntryOptions = new MemoryCacheEntryOptions()
+                    .SetAbsoluteExpiration(TimeSpan.FromMinutes(_appOptions.UserProfileCacheExpiration));
+                _cache.Set("PM_RoleList", roleList, cacheEntryOptions);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"RequestId: {requestId} - Role_SetCahceAsync error: {ex}");
             }
         }
     }

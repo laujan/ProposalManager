@@ -1,16 +1,29 @@
-﻿$(function () {
-    Office.initialize = function (reason) {
+﻿$(function ()
+{
+    Office.initialize = function (reason)
+    {
         $(document).ready(function () {
-            point.init();
+            BigNumber.config({ EXPONENTIAL_AT: 1e+9 });
+            let token = sessionStorage["token"];
+
+            if (!token)
+                window.location.replace("/");
+
+            point.init(token);
+            $("#dvLogin").hide();
+            $("#powerpoint-addin").show();
         });
+
     };
 });
 
 var point = (function () {
     var point = {
+        token: "",
         filePath: "",
         controls: {},
         selectDocument: null,
+        file: null,
         points: [],
         sourcePointKeyword: "",
         pagerIndex: 0,
@@ -22,7 +35,8 @@ var point = (function () {
             token: "/api/GraphAccessToken",
             sharePointToken: "/api/SharePointAccessToken",
             graph: "https://graph.microsoft.com/v1.0",
-            userInfo: "/api/userprofile"
+            userInfo: "/api/userprofile",
+            customFormat: "/api/CustomFormats"
         },
         api: {
             host: "",
@@ -31,8 +45,9 @@ var point = (function () {
         }
     }, that = point;
 
-    that.init = function () {
-        that.filePath = Office.context.document.url.indexOf("E:") > -1 ? "https://cand3.sharepoint.com/Shared%20Documents/Presentation.pptx" : Office.context.document.url;
+    that.init = function (accessToken) {
+        that.token = accessToken;
+        that.filePath = Office.context.document.url;
         that.controls = {
             body: $("body"),
             main: $(".main"),
@@ -78,7 +93,11 @@ var point = (function () {
             openSettings: $(".f-settings"),
             closeSettings: $(".s-settings"),
             userName: $(".s-username"),
-            email: $(".s-email")
+            email: $(".s-email"),
+            // Navigation
+            sourceTypeNavMana: $(".point-types-mana li"),
+            sourceTypeNav: $(".point-types li"),
+            headerListPointsAdd: $("#headerListPointsAdd")
         };
 
         that.controls.body.click(function () {
@@ -140,6 +159,45 @@ var point = (function () {
             that.action.history($(this).closest(".point-item"));
             return false;
         });
+
+        that.controls.list.on("click", "li .i-add", function () {
+            $(this).blur();
+            that.action.save($(this));
+            return false;
+        });
+
+        that.controls.list.on("click", ".point-item", function () {
+            that.action.addSourcePoint($(this));
+            return false;
+        });
+
+        that.controls.list.on("click", "li .btnSelectFormat", function () {
+            $(this).closest(".point-item").find(".listFormats").hasClass("active") ? $(this).closest(".point-item").find(".listFormats").removeClass("active") : $(this).closest(".point-item").find(".listFormats").addClass("active");
+            return false;
+        });
+        that.controls.list.on("click", "li .iconSelectFormat", function () {
+            $(this).closest(".point-item").find(".listFormats").hasClass("active") ? $(this).closest(".point-item").find(".listFormats").removeClass("active") : $(this).closest(".point-item").find(".listFormats").addClass("active");
+            return false;
+        });
+        that.controls.list.on("click", "li .listFormats ul > li", function () {
+            var _ck = $(this).hasClass("checked"), _sg = $(this).closest(".drp-radio").length > 0, _cn = $(this).data("name");
+            if (_sg) {
+                $(this).closest("ul").find("li").removeClass("checked");
+            }
+            _ck ? $(this).removeClass("checked") : $(this).addClass("checked");
+            if (_cn == "ConvertToThousands" || _cn == "ConvertToMillions" || _cn == "ConvertToBillions" || _cn == "ConvertToHundreds") {
+                $(this).closest(".listFormats").removeClass("convert1 convert2 convert3 convert4");
+                $(this).closest(".listFormats").find(".drp-descriptor li.checked").removeClass("checked");
+                if (!_ck) {
+                    var _tn = _cn == "ConvertToThousands" ? "IncludeThousandDescriptor" : (_cn == "ConvertToMillions" ? "IncludeMillionDescriptor" : (_cn == "ConvertToBillions" ? "IncludeBillionDescriptor" : (_cn == "ConvertToHundreds" ? "IncludeHundredDescriptor" : "")));
+                    var _cl = _cn == "ConvertToThousands" ? "convert2" : (_cn == "ConvertToMillions" ? "convert3" : (_cn == "ConvertToBillions" ? "convert4" : (_cn == "ConvertToHundreds" ? "convert1" : "")));
+                    $(this).closest(".listFormats").addClass(_cl);
+                }
+            }
+            that.action.selectedFormats($(this));
+            return false;
+        });
+
         that.controls.main.on("click", ".search-tooltips li", function () {
             $(this).parent().parent().find("input").val($(this).text());
             $(this).parent().hide();
@@ -200,6 +258,55 @@ var point = (function () {
         });
         /* Footer end */
 
+        //Navegation
+        that.controls.sourceTypeNavMana.click(function () {
+            var _t = false;
+            if ($(this).hasClass("is-selected")) {
+                $(this).removeClass("is-selected");
+                _t = true;
+            } else {
+                that.controls.sourceTypeNavMana.removeClass("is-selected");
+                $(this).addClass("is-selected");
+            }
+
+            if ($(this).data("content") !== "Points" && !_t) {
+                that.controls.headerListPoints.find(".i3 span")[0].innerText = window.stringResources["PublishedStatus"];
+            }
+            else {
+                that.controls.headerListPoints.find(".i3 span")[0].innerText = window.stringResources["Value"];
+            }
+            $(".ckb-wrapper.all").find("input").prop("checked", false);
+            $(".ckb-wrapper.all").removeClass("checked");
+            that.utility.scrollTop();
+            that.controls.list.find(".point-item").remove();
+            //that.controls.moveUp.removeClass("disabled").addClass("disabled");
+            //that.controls.moveDown.removeClass("disabled").addClass("disabled");
+            that.utility.pager.init({ refresh: false });
+        });
+        that.controls.sourceTypeNav.click(function () {
+            // avoid executing same item
+            if (that.controls.sourceTypeNav.closest("li.ms-Pivot-link.is-selected").data("content") === $(this).data("content")) {
+                return;
+            }
+
+            if ($(this).hasClass("is-selected")) {
+                $(this).removeClass("is-selected");
+            } else {
+                that.controls.sourceTypeNav.removeClass("is-selected");
+                $(this).addClass("is-selected");
+            }
+
+            if ($(this).data("content") !== "Points") {
+                that.controls.headerListPointsAdd.find(".i3").hide();
+            }
+            else {
+                that.controls.headerListPointsAdd.find(".i3").show();
+            }
+
+            //that.ui.sources({ data: that.file, keyword: that.keyword, sourceType: that.utility.selectedSourceType(".point-types") });
+            that.ui.list();
+        });
+
         $(window).resize(function () {
             that.utility.height();
         });
@@ -207,14 +314,17 @@ var point = (function () {
         that.action.dft(that.controls.sourcePointName, false);
         that.utility.pager.status({ length: 0 });
         
-            // Get user Info
-            that.userInfo(function (result) {
-                if (result.status == app.status.succeeded) {
-                    that.controls.userName[0].innerText = result.data.Username;
-                    that.controls.email[0].innerText = result.data.Email;
-                }
-            });
-        
+        // Get user Info
+        that.userInfo(function (result) {
+            if (result.status === app.status.succeeded) {
+                that.controls.userName[0].innerText = result.data.Username;
+                that.controls.email[0].innerText = result.data.Email;
+                that.popup.processing(false);
+            }
+            else {
+                that.popup.message({ success: false, title: result.error.statusText });
+            }
+        });
     };
 
     that.userInfo = function (callback) {
@@ -225,12 +335,14 @@ var point = (function () {
 
     that.list = function () {
         that.popup.processing(true);
+        
         that.service.catalog({ documentId: that.selectDocument.Id }, function (result) {
-            if (result.status == app.status.succeeded) {
+            if (result.status === app.status.succeeded) {
                 that.popup.processing(false);
                 that.controls.titleName.html("Source Points in " + that.selectDocument.Name);
                 that.controls.titleName.prop("title", "Source Points in " + that.selectDocument.Name);
                 that.points = result.data && result.data.SourcePoints && result.data.SourcePoints.length > 0 ? result.data.SourcePoints : [];
+                that.file = { SourcePoints: that.points };
                 if (that.points.length > 0) {
                     that.utility.pager.init({ index: 1 });
                 }
@@ -245,6 +357,21 @@ var point = (function () {
     };
 
     that.utility = {
+        selectedSourceType: function (sourceTypeClass) {
+            var _i = $(sourceTypeClass).find("li.is-selected").index();
+            if (_i === 0) {
+                return app.sourceTypes.point;
+            }
+            else if (_i === 1) {
+                return app.sourceTypes.chart;
+            }
+            else if (_i === 2) {
+                return app.sourceTypes.table;
+            }
+            else {
+                return app.sourceTypes.all;
+            }
+        },
         format: function (n) {
             return n > 9 ? n : ("0" + n);
         },
@@ -357,7 +484,24 @@ var point = (function () {
                 }
             });
             return _ph.reverse().slice(0, 5);
-        }
+        },
+        selectedSource: function (id) {
+            var _m = null;
+            if (id && that.file.SourcePoints) {
+                var _t = [];
+                $.each(that.file.SourcePoints, function (i, d) {
+                    _t.push(d.Id);
+                });
+                if ($.inArray(id, _t) > -1) {
+                    _m = that.file.SourcePoints[$.inArray(id, _t)];
+                }
+            }
+            return _m;
+        }, 
+        // Navegation
+        scrollTop: function () {
+            that.controls.list.scrollTop(0);
+        },
     };
 
     that.action = {
@@ -407,6 +551,198 @@ var point = (function () {
                 that.controls.searchSourcePoint.removeClass("ms-Icon--Cancel").addClass("ms-Icon--Search");
             }
             that.utility.pager.init({});
+        },
+        addSourcePoint: function (o) {
+            var _selectedItem = o.hasClass("point-item") ? o : o.closest(".point-item");
+            var _i = _selectedItem.data("id"), _s = that.utility.selectedSource(_i);
+          //  if (!that.selected || (that.selected && that.selected.Id !== _i)) {
+                that.selected = { Id: _i, File: _selectedItem.data("file"), Name: _selectedItem.data("name"), Value: _s.Value, SourceType: _s.SourceType };
+                that.controls.list.find("li.selected .ckb-wrapper").removeClass("checked");
+                that.controls.list.find("li.selected").removeClass("selected");
+                that.controls.list.find(".add-point-customformat.show").removeClass("show");
+                that.controls.list.find(".add-point-customformat").find("ul .listFormats").removeClass("active");
+                _selectedItem.find("ul .listFormats").removeClass("active");
+
+                _selectedItem.addClass("selected");
+                _selectedItem.find(".ckb-wrapper").addClass("checked");
+                _selectedItem.find(".lbPreviewValue").html(that.selected.Value);
+                _selectedItem.find(".btnSelectFormat").prop("original", that.selected.Value);
+
+                if (!$(o).find(".add-point-customformat").hasClass("show")) {
+                    $(o).find(".add-point-customformat").addClass("show");
+
+                    that.action.customFormat({ o: _selectedItem, selectedPoint: that.selected });
+                }
+            //}
+        },
+        save: function (o) {
+
+            $(o).closest(".add-point-customformat").removeClass("show");
+            $(o).closest(".add-point-customformat").find("ul .listFormats").removeClass("active");
+
+            let value = that.selected.SourceType === 2 ? JSON.parse(that.selected.Value).image : that.selected.Value;
+            
+            // Add value to document
+            Office.context.document.setSelectedDataAsync(
+                value,
+                {
+                    coercionType: that.selected.SourceType === 1 ? "text" : "image"
+                },
+                function (asyncResult) {
+                if (asyncResult.status === Office.AsyncResultStatus.Failed) {
+                    //console.log(asyncResult.error.message);
+                    that.popup.message({ success: false, title: "Adding the source point to the slide failed." });
+                }
+                else {
+                    that.popup.message({ success: true, title: window.stringResources["SourcePointAddedCatalog"] }, function () { that.popup.hide(3000); });
+                }
+            });
+        },
+        selectedFormats: function (_that) {
+            var _fi = [], _fd = [], _fn = [];
+            _that.closest(".listFormats").find("ul > li").each(function (i, d) {
+                if ($(this).hasClass("checked")) {
+                    _fi.push($(this).data("id"));
+                    _fd.push($.trim($(this).data("displayname")));
+                    _fn.push($.trim($(this).data("name")));
+                    if ($.trim($(_that).data("name")).indexOf("ConvertTo") > -1) {
+                        _that.closest(".point-item").find(".btnSelectFormat").prop("place", "");
+                    }
+                }
+            });
+            _that.closest(".point-item").find(".btnSelectFormat").html(_fd.length > 0 ? _fd.join(", ") : window.stringResources["None"]);
+            _that.closest(".point-item").find(".btnSelectFormat").prop("title", _fd.length > 0 ? _fd.join(", ") : window.stringResources["None"]);
+            _that.closest(".point-item").find(".btnSelectFormat").prop("selected", _fi.join(","));
+            _that.closest(".point-item").find(".btnSelectFormat").prop("name", _fn.join(","));
+            that.format.preview($(_that).closest(".point-item"));
+        },
+        customFormat: function (options, callback) {
+            var _r = false;
+            var _pp = false;
+            setTimeout(function () {
+                if (!_r) {
+                    that.popup.processing(true);
+                    _pp = true;
+                }
+            }, 250);
+
+            that.service.customFormat(function (result) {
+                _r = true;
+                if (_pp) {
+                    that.popup.processing(false);
+                }
+                if (result.status === app.status.succeeded) {
+                    if (result.data) {
+                        that.ui.customFormat({ o: options.o, data: result.data, selected: options.selected ? options.selected : null, selectedPoint: options.selectedPoint ? options.selectedPoint : null, ref: options.ref }, callback);
+                    }
+                }
+                else {
+                    that.ui.customFormat({ o: options.o, selected: options.selected ? options.selected : null, selectedPoint: options.selectedPoint ? options.selectedPoint : null, ref: options.ref }, callback);
+                    that.popup.message({ success: false, title: window.stringResources["LoadCustomFormatFailed"] });
+                }
+            });
+        }
+    };
+
+    that.document = {
+        init: function (callback) {
+            that.popup.processing(true);
+            that.service.token({ endpoint: that.endpoints.token }, function (result) {
+                if (result.status == app.status.succeeded) {
+                    that.api.token = result.data;
+                    that.api.host = that.utility.path()[0].toLowerCase();
+                    that.service.token({ endpoint: that.endpoints.sharePointToken }, function (result) {
+                        if (result.status == app.status.succeeded) {
+                            that.api.sharePointToken = result.data;
+                            that.document.site(null, callback);
+                        }
+                        else {
+                            that.document.error({ title: window.stringResources["AccessTokenFailed"] });
+                        }
+                    });
+                }
+                else {
+                    that.document.error({ title: window.stringResources["GraphTokenFailed"] });
+                }
+            });
+        },
+        site: function (options, callback) {
+            if (options == null) {
+                options = {
+                    path: that.utility.path().reverse(),
+                    index: 0,
+                    values: [],
+                    webUrls: []
+                };
+            }
+            if (options.index < options.path.length) {
+                that.service.siteCollection({ path: options.path[options.index] }, function (result) {
+                    if (result.status == app.status.succeeded) {
+                        options.values.push(result.data.id);
+                        options.webUrls.push(result.data.webUrl);
+                    }
+                    options.index++;
+                    that.document.site(options, callback);
+                });
+            }
+            else {
+                if (options.values.length > 0) {
+                    that.document.library({ siteId: options.values.shift(), siteUrl: options.webUrls.shift() }, callback);
+                }
+                else {
+                    that.document.error({ title: window.stringResources["SiteUrlFailed"] });
+                }
+            }
+        },
+        library: function (options, callback) {
+            that.service.libraries(options, function (result) {
+                if (result.status == app.status.succeeded) {
+                    var _l = "";
+                    $.each(result.data.value, function (i, d) {
+                        if (decodeURI(that.filePath).toUpperCase().indexOf(decodeURI(d.webUrl).toUpperCase()) > -1) {
+                            _l = d.name;
+                            return false;
+                        }
+                    });
+                    if (_l != "") {
+                        that.document.file({ siteId: options.siteId, siteUrl: options.siteUrl, listName: _l, fileName: that.utility.fileName(that.filePath) }, callback);
+                    }
+                    else {
+                        that.document.error({ title: window.stringResources["GetLibraryNameFailed"] });
+                    }
+                }
+                else {
+                    that.document.error({ title: window.stringResources["GetLibraryNameFailed"] });
+                }
+            });
+        },
+        file: function (options, callback) {
+            that.service.item(options, function (result) {
+                if (result.status == app.status.succeeded) {
+                    var _d = "";
+                    $.each(result.data.value, function (i, d) {
+                        if (decodeURI(that.filePath).toUpperCase() == decodeURI(d.EncodedAbsUrl).toUpperCase() && d.OData__dlc_DocId) {
+                            _d = d.OData__dlc_DocId;
+                            return false;
+                        }
+                    });
+                    if (_d != "") {
+                        that.selectDocument = { Id: _d, Name: options.fileName };
+                        callback();
+                    }
+                    else {
+                        that.document.error({ title: window.stringResources["DocumentIdFailed"] });
+                    }
+                }
+                else {
+                    that.document.error({ title: window.stringResources["DocumnetIdFailed"] });
+                }
+            });
+        },
+        error: function (options) {
+            that.controls.documentIdError.html(window.stringResources["ErrorMessage"] + options.title);
+            that.controls.main.addClass("error");
+            that.popup.processing(false);
         }
     };
 
@@ -685,6 +1021,292 @@ var point = (function () {
         }
     };
 
+    that.format = {
+        convert: function (options) {
+            var _t = $.trim(options.value != null ? options.value : ""),
+                _v = _t,
+                _f = options.formats ? options.formats : [],
+                _d = that.format.hasDollar(_v),
+                _c = true, //that.format.hasComma(_v),
+                _p = that.format.hasPercent(_v),
+                _k = that.format.hasParenthesis(_v),
+                _m = [window.stringResources["January"], window.stringResources["February"], window.stringResources["March"],
+                window.stringResources["April"], window.stringResources["May"], window.stringResources["June"],
+                window.stringResources["July"], window.stringResources["August"], window.stringResources["September"],
+                window.stringResources["October"], window.stringResources["November"], window.stringResources["December"]],
+                _x = options.decimal;
+            $.each(_f, function (_a, _b) {
+                if (!_b.IsDeleted) {
+                    if (_b.Name == "ConvertToHundreds") {
+                        if (that.format.isNumber(_v)) {
+                            var _l = that.format.getDecimalLength(_v);
+                            _v = new BigNumber(that.format.toNumber(_v)).div(100).toString();
+                            _v = that.format.addDecimal(_v, _l);
+                            if (_c) {
+                                _v = that.format.addComma(_v);
+                            }
+                            if (_p) {
+                                _v = that.format.addPercent(_v);
+                            }
+                            if (_k) {
+                                _v = "(" + _v + ")";
+                            }
+                            if (_d) {
+                                _v = that.format.addDollar(_v);
+                            }
+                        }
+                    }
+                    else if (_b.Name == "ConvertToThousands") {
+                        if (that.format.isNumber(_v)) {
+                            var _l = that.format.getDecimalLength(_v);
+                            _v = new BigNumber(that.format.toNumber(_v)).div(1000).toString();
+                            _v = that.format.addDecimal(_v, _l);
+                            if (_c) {
+                                _v = that.format.addComma(_v);
+                            }
+                            if (_p) {
+                                _v = that.format.addPercent(_v);
+                            }
+                            if (_k) {
+                                _v = "(" + _v + ")";
+                            }
+                            if (_d) {
+                                _v = that.format.addDollar(_v);
+                            }
+                        }
+                    }
+                    else if (_b.Name == "ConvertToMillions") {
+                        if (that.format.isNumber(_v)) {
+                            var _l = that.format.getDecimalLength(_v);
+                            _v = new BigNumber(that.format.toNumber(_v)).div(1000000).toString();
+                            _v = that.format.addDecimal(_v, _l);
+                            if (_c) {
+                                _v = that.format.addComma(_v);
+                            }
+                            if (_p) {
+                                _v = that.format.addPercent(_v);
+                            }
+                            if (_k) {
+                                _v = "(" + _v + ")";
+                            }
+                            if (_d) {
+                                _v = that.format.addDollar(_v);
+                            }
+                        }
+                    }
+                    else if (_b.Name == "ConvertToBillions") {
+                        if (that.format.isNumber(_v)) {
+                            var _l = that.format.getDecimalLength(_v);
+                            _v = new BigNumber(that.format.toNumber(_v)).div(1000000000).toString();
+                            _v = that.format.addDecimal(_v, _l);
+                            if (_c) {
+                                _v = that.format.addComma(_v);
+                            }
+                            if (_p) {
+                                _v = that.format.addPercent(_v);
+                            }
+                            if (_k) {
+                                _v = "(" + _v + ")";
+                            }
+                            if (_d) {
+                                _v = that.format.addDollar(_v);
+                            }
+                        }
+                    }
+                    else if (_b.Name == "ShowNegativesAsPositives") {
+                        var _h = that.format.hasDollar(_v),
+                            _pt = that.format.hasPercent(_v),
+                            _pk = that.format.hasParenthesis(_v),
+                            _hh = _v.toString().indexOf("hundred") > -1,
+                            _ht = _v.toString().indexOf("thousand") > -1,
+                            _hm = _v.toString().indexOf("million") > -1,
+                            _hb = _v.toString().indexOf("billion") > -1;
+                        _v = $.trim(_v.toString().replace(/\$/g, "").replace(/-/g, "").replace(/%/g, "").replace(/\(/g, "").replace(/\)/g, "").replace(/hundred/g, "").replace(/thousand/g, "").replace(/million/g, "").replace(/billion/g, ""));
+                        if (_pt) {
+                            _v = that.format.addPercent(_v);
+                        }
+                        if (_h) {
+                            _v = that.format.addDollar(_v);
+                        }
+                        if (_hh) {
+                            _v = _v + " hundred";
+                        }
+                        else if (_ht) {
+                            _v = _v + " thousand";
+                        }
+                        else if (_hm) {
+                            _v = _v + " million";
+                        }
+                        else if (_hb) {
+                            _v = _v + " billion";
+                        }
+                    }
+                    else if (_b.Name == "IncludeHundredDescriptor") {
+                        if (that.format.isNumber(_v)) {
+                            _v = _v + " hundred";
+                        }
+                    }
+                    else if (_b.Name == "IncludeThousandDescriptor") {
+                        if (that.format.isNumber(_v)) {
+                            _v = _v + " thousand";
+                        }
+                    }
+                    else if (_b.Name == "IncludeMillionDescriptor") {
+                        if (that.format.isNumber(_v)) {
+                            _v = _v + " million";
+                        }
+                    }
+                    else if (_b.Name == "IncludeBillionDescriptor") {
+                        if (that.format.isNumber(_v)) {
+                            _v = _v + " billion";
+                        }
+                    }
+                    else if (_b.Name == "IncludeDollarSymbol") {
+                        if (!that.format.hasDollar(_v)) {
+                            _v = that.format.addDollar(_v);
+                        }
+                    }
+                    else if (_b.Name == "ExcludeDollarSymbol") {
+                        if (that.format.hasDollar(_v)) {
+                            _v = that.format.removeDollar(_v);
+                        }
+                    }
+                    else if (_b.Name == "DateShowLongDateFormat") {
+                        if (that.format.isDate(_v)) {
+                            var _tt = new Date(_v);
+                            _v = _m[_tt.getMonth()] + " " + _tt.getDate() + ", " + _tt.getFullYear();
+                        }
+                    }
+                    else if (_b.Name == "DateShowYearOnly") {
+                        if (that.format.isDate(_v)) {
+                            var _tt = new Date(_v);
+                            _v = _tt.getFullYear();
+                        }
+                    }
+                    else if (_b.Name == "ConvertNegativeSymbolToParenthesis") {
+                        var _h = that.format.hasDollar(_v),
+                            _pt = that.format.hasPercent(_v),
+                            _hh = _v.toString().indexOf("hundred") > -1,
+                            _ht = _v.toString().indexOf("thousand") > -1,
+                            _hm = _v.toString().indexOf("million") > -1,
+                            _hb = _v.toString().indexOf("billion") > -1;
+                        if (_v.indexOf("-") > -1) {
+                            _v = $.trim(_v.toString().replace(/\$/g, "").replace(/-/g, "").replace(/%/g, "").replace(/\(/g, "").replace(/\)/g, "").replace(/hundred/g, "").replace(/thousand/g, "").replace(/million/g, "").replace(/billion/g, ""));
+                            if (_h) {
+                                _v = that.format.addDollar(_v);
+                            }
+                            _v = "(" + _v + ")";
+                            if (_pt) {
+                                _v = that.format.addPercent(_v);
+                            }
+                            if (_hh) {
+                                _v = _v + " hundred";
+                            }
+                            else if (_ht) {
+                                _v = _v + " thousand";
+                            }
+                            else if (_hm) {
+                                _v = _v + " million";
+                            }
+                            else if (_hb) {
+                                _v = _v + " billion";
+                            }
+                        }
+                    }
+                }
+            });
+            if (_x != null && _x.toString() != "") {
+                var __a = that.format.hasComma(_v), __b = that.format.remove(_v);
+                if (that.format.isNumber(__b)) {
+                    var __c = __a ? that.format.addComma(__b) : __b, __d = "" + new BigNumber(__b).toFixed(_x) + "", __e = __a ? that.format.addComma(__d) : __d;
+                    _v = _v.replace(__c, __e)
+                }
+            }
+            return _v;
+        },
+        toNumber: function (_v) {
+            return that.format.removeComma(that.format.removeDollar(that.format.removePercent(that.format.removeParenthesis(_v))));
+        },
+        isNumber: function (_v) {
+            return that.format.toNumber(_v) != "" && !isNaN(that.format.toNumber(_v));
+        },
+        isDate: function (_v) {
+            var _ff = false;
+            try {
+                _ff = _ff = (new Date(_v.toString().replace(/ /g, ""))).getFullYear() > 0;
+            } catch (e) {
+                _ff = false;
+            }
+            return _ff;
+        },
+        hasDollar: function (_v) {
+            return _v.toString().indexOf("$") > -1;
+        },
+        hasComma: function (_v) {
+            return _v.toString().indexOf(",") > -1;
+        },
+        removeDollar: function (_v) {
+            return _v.toString().replace("$", "");
+        },
+        addDollar: function (_v) {
+            return "$" + _v;
+        },
+        removeComma: function (_v) {
+            return _v.toString().replace(/,/g, "");
+        },
+        addComma: function (_v) {
+            var __s = _v.toString().split(".");
+            __s[0] = __s[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)', 'ig'), "$1,");
+            return __s.join(".");
+        },
+        removePercent: function (_v) {
+            return _v.toString().replace(/%/g, "");
+        },
+        hasPercent: function (_v) {
+            return _v.toString().indexOf("%") > -1;
+        },
+        addPercent: function (_v) {
+            return _v + "%";
+        },
+        hasParenthesis: function (_v) {
+            return _v.toString().indexOf("(") > -1 && _v.toString().indexOf(")") > -1;
+        },
+        removeParenthesis: function (_v) {
+            return _v.toString().replace(/\(/g, "").replace(/\)/g, "");
+        },
+        remove: function (_v) {
+            return $.trim(_v.toString().replace(/\$/g, "").replace(/,/g, "").replace(/-/g, "").replace(/%/g, "").replace(/\(/g, "").replace(/\)/g, "").replace(/hundred/g, "").replace(/thousand/g, "").replace(/million/g, "").replace(/billion/g, ""));
+        },
+        getDecimalLength: function (_v) {
+            var _a = _v.toString().replace(/\$/g, "").replace(/,/g, "").replace(/-/g, "").replace(/\(/g, "").replace(/\)/g, "").split(".");
+            if (_a.length == 2) {
+                return _a[1].length;
+            }
+            else {
+                return 0;
+            }
+        },
+        addDecimal: function (_v, _l) {
+            var _dl = that.format.getDecimalLength(_v);
+            if (_l > 0 && _dl == 0) {
+                _v = "" + new BigNumber(_v).toFixed(_l) + "";
+            }
+            return _v;
+        },
+        preview: function (o) {
+            var _v = o.find(".btnSelectFormat").prop("original");
+            var _n = o.find(".btnSelectFormat").prop("name");
+            var _f = (typeof (_n) != "undefined" && _n != "") ? _n.split(",") : [], _fa = [];
+            var _x = o.find(".btnSelectFormat").prop("place");
+            $.each(_f, function (_a, _b) {
+                _fa.push({ Name: _b });
+            });
+            var _fd = that.format.convert({ value: _v, formats: _fa, decimal: _x });
+            o.find(".lbPreviewValue").html(_fd);
+            that.selected.Value = _fd;
+        }
+    };
+
     that.popup = {
         message: function (options, callback) {
             $(".popups .bg").removeAttr("style");
@@ -802,20 +1424,26 @@ var point = (function () {
 
     that.service = {
         common: function (options, callback) {
+            if (!that.token)
+                return;
+
+            let apiToken = that.token;
+            let apiHeaders = { "authorization": "Bearer " + apiToken };
+
             $.ajax({
                 url: options.url,
                 type: options.type,
                 cache: false,
                 data: options.data ? options.data : "",
                 dataType: options.dataType,
-                headers: options.headers ? options.headers : "",
+                headers: options.headers ? options.headers : apiHeaders,
                 success: function (data) {
                     callback({ status: app.status.succeeded, data: data });
                 },
                 error: function (error) {
                     if (error.status == 410) {
                         that.popup.message({ success: false, title: "The current login gets expired and needs re-authenticate. You will be redirected to the login page by click OK." }, function () {
-                            window.location = "../../Home/Index";
+                            //window.location = "/Home/Index";
                         });
                     }
                     else {
@@ -850,6 +1478,9 @@ var point = (function () {
         },
         userInfo: function (callback) {
             that.service.common({ url: that.endpoints.userInfo, type: "GET" }, callback);
+        },
+        customFormat: function (callback) {
+            that.service.common({ url: that.endpoints.customFormat, type: "GET", dataType: "json" }, callback);
         }
     };
 
@@ -890,42 +1521,174 @@ var point = (function () {
             that.ui.item({ index: 0, data: _d, selected: _ss });
         },
         item: function (options, callback) {
-            if (options.index < options.data.length) {
-                var _item = options.data[options.index];
-                if (options.index >= that.pagerSize * (that.pagerIndex - 1) && options.index < that.pagerSize * that.pagerIndex) {
-                    var _pn = that.utility.position(_item.NamePosition),
-                        _pv = (_item.PublishedHistories && _item.PublishedHistories.length > 0 ? (_item.PublishedHistories[0].Value ? _item.PublishedHistories[0].Value : "") : ""),
-                        _pht = that.utility.publishHistory({ data: _item.PublishedHistories });
-                    var _h = '<li class="point-item" data-id="' + _item.Id + '" data-range="' + _item.RangeId + '" data-position="' + _item.Position + '" data-namerange="' + _item.NameRangeId + '" data-nameposition="' + _item.NamePosition + '">';
-                    _h += '<div class="point-item-line">';
-                    _h += '<div class="i2"><span class="s-name" title="' + _item.Name + '">' + _item.Name + '</span>';
-                    _h += '<div class="sp-file-pos">';
-                    _h += '<span title="' + (_pn.sheet ? _pn.sheet : "") + ':[' + (_pn.cell ? _pn.cell : "") + ']">' + (_pn.sheet ? _pn.sheet : "") + ':[' + (_pn.cell ? _pn.cell : "") + ']</span>';
-                    _h += '</div>';
-                    _h += '</div>';
-                    _h += '<div class="i3" title="' + _pv + '">' + _pv + '</div>';
-                    _h += '<div class="i5">';
-                    _h += '<div class="i-menu"><a href="javascript:"><span title="Action"><i class="ms-Icon ms-Icon--More"></i></span><span class="quick-menu"><span class="i-history" title="History"><i class="ms-Icon ms-Icon--ChevronRight"></i><i>History</i></span></span></a></div>';
-                    _h += '</div>';
-                    _h += '<div class="clear"></div>';
-                    _h += '</div>';
+            that.utility.scrollTop(0);
+            that.controls.list.html("");
 
-                    _h += '<div class="item-history"><ul class="history-list">';
-                    _h += '<li class="history-header"><div class="h1"><span>Name</span></div><div class="h2"><span>Value</span></div><div class="h3"><span>Date</span></div></li>';
-                    $.each(_pht, function (m, n) {
-                        _h += '<li class="history-item"><div class="h1" title="' + n.PublishedUser + '">' + n.PublishedUser + '</div><div class="h2" title="' + (n.Value ? n.Value : "") + '">' + (n.Value ? n.Value : "") + '</div><div class="h3" title="' + that.utility.date(n.PublishedDate) + '">' + that.utility.date(n.PublishedDate) + '</div></li>';
-                    });
-                    _h += '</ul>';
-                    _h += '<div class="clear"></div>';
-                    _h += '</div>';
-                    _h += '</li>';
-                    that.controls.list.append(_h);
-                }
-                options.index++;
-                that.ui.item(options);
+            let pointCounter = 0;
+            let tableCounter = 0;
+            let chartCounter = 0;
+
+            let selectedSourceType = that.utility.selectedSourceType(".point-types");
+
+            selectedSourceType === app.sourceTypes.all ? app.sourceTypes.point : selectedSourceType;
+
+            $.each(options.data,
+                function (index, d)
+                {
+                    if (d.SourceType === app.sourceTypes.point) {
+                        pointCounter++;
+                    } else if (d.SourceType === app.sourceTypes.table) {
+                        tableCounter++;
+                    } else {
+                        chartCounter++;
+                    }
+
+                    if (d.SourceType === selectedSourceType)
+                    {
+                        var _pn = that.utility.position(d.Position);
+                        var _h = '<li class="point-item" data-id="' + d.Id + '" data-range="' + d.RangeId + '" data-position="' + d.Position + '" data-namerange="' + d.NameRangeId + '" data-nameposition="' + d.NamePosition + '">';
+
+                        _h += '<div class="point-item-line">';
+                        _h += '<div class="i2"><span class="s-name" title="' + d.Name + '">' + d.Name + '</span>';
+                        _h += '<div class="sp-file-pos">';
+                        _h += '<span title="' + (_pn.sheet ? _pn.sheet : "") + ':[' + (_pn.cell ? _pn.cell : "") + ']">' + (_pn.sheet ? _pn.sheet : "") + ':[' + (_pn.cell ? _pn.cell : "") + ']</span>';
+                        _h += '</div>';
+                        _h += '</div>';
+
+                        if (d.SourceType === app.sourceTypes.point) {
+                            _h += '<div class="i3" title="' + d.Value + '">' + d.Value + '</div>';
+                        }
+
+                        _h += '</div>'; //point-item-line
+
+                        /* Edit format */
+                        _h += '<div class="add-point-customformat" style="margin-left: 5% !important">';
+
+                        if (d.SourceType === app.sourceTypes.point) {
+                            _h += '<span class="i-preview">Preview: <strong class="lbPreviewValue"></strong></span>';
+                            _h += '<div class="addCustomFormat add-point-format">';
+
+                            _h += '<div class="add-point-place">';
+                            _h += '<span class="i-decimal">Decimal place: ';
+                            _h += '<i class="i-increase" title="Increase decimal places"></i><i class="i-decrease" title="Decrease decimal places"></i></span>';
+                            _h += '</div>';
+
+                            _h += '<div class="add-point-box">';
+                            _h += '<div class="add-point-select">';
+                            _h += '<a class="btnSelectFormat" href="javascript:"></a>';
+                            _h += '<i class="iconSelectFormat ms-Icon ms-Icon--ChevronDown"></i>';
+                            _h += '<ul class="listFormats">';
+                            _h += '</ul>';
+                            _h += '</div>';
+                        }
+
+                        _h += '<button class="ms-Button ms-Button--small ms-Button--primary i-add">';
+                        _h += '<span class="ms-Button-label">' + window.stringResources["Add"] + '</span>';
+                        _h += '</button>';
+
+                        _h += '</div>';
+                        _h += '</div>';
+                        _h += '<div class="clear"></div>';
+                        _h += '</div>';
+                        /* Edit format end */
+
+                        _h += '</li>';
+                        that.controls.list.append(_h);
+                    }
+                });
+
+            // Update counters
+            that.controls.sourceTypeNav[0].children[1].innerText = pointCounter;
+            that.controls.sourceTypeNav[1].children[1].innerText = chartCounter;
+            that.controls.sourceTypeNav[2].children[1].innerText = tableCounter;
+
+            that.controls.headerListPoints.find(".i3 span")[0].innerText = selectedSourceType === app.sourceTypes.point ? window.stringResources["Value"] : "";
+        },
+        customFormat: function (options, callback) {
+            var _currentItem = options.o.hasClass("point-item") ? options.o : options.o.closest(".point-item");
+
+            _currentItem.find(".listFormats").html("");
+            var _si = [], _sn = [], _sd = [];
+            if (options.selected && options.selected != null) {
+                $.each(options.selected.CustomFormats, function (_x, _y) {
+                    _si.push(_y.Id);
+                    _sn.push(_y.Name);
+                    _sd.push(_y.DisplayName);
+                });
+                _currentItem.find(".btnSelectFormat").html(_sd.length > 0 ? _sd.join(", ") : window.stringResources["None"]);
+                _currentItem.find(".btnSelectFormat").prop("title", _sd.length > 0 ? _sd.join(", ") : window.stringResources["None"]);
+                _currentItem.find(".btnSelectFormat").prop("selected", _si.join(","));
+                _currentItem.find(".btnSelectFormat").prop("name", _sn.join(","));
+                _currentItem.find(".btnSelectFormat").prop("place", options.selected.DecimalPlace && options.selected.DecimalPlace != null ? options.selected.DecimalPlace : "");
             }
             else {
-                that.controls.main.get(0).scrollTop = 0;
+                _currentItem.find(".btnSelectFormat").html(window.stringResources["None"]);
+                _currentItem.find(".btnSelectFormat").prop("title", window.stringResources["None"]);
+                _currentItem.find(".btnSelectFormat").prop("selected", "");
+                _currentItem.find(".btnSelectFormat").prop("name", "");
+                _currentItem.find(".btnSelectFormat").prop("place", "");
+            }
+
+            var _v = options.ref ? options.selected.ReferencedSourcePoint.Value : options.selectedPoint.Value; //_dataList.find("li." + _itemSelectedName + " .btnSelectFormat").prop("original");
+            _currentItem.find(".listFormats").removeClass("convert1 convert2 convert3 convert4");
+            _currentItem.find(".lbPreviewValue").html(_v);
+            _currentItem.find(".addCustomFormat").removeClass("selected-number selected-date");
+            if (that.format.isNumber(_v)) {
+                _currentItem.find(".addCustomFormat").addClass("selected-number");
+            }
+            else if (that.format.isDate(_v)) {
+                _currentItem.find(".addCustomFormat").addClass("selected-date");
+            }
+
+            if (_sn.length > 0) {
+                var _tn = $.inArray("ConvertToThousands", _sn) > -1 ? "IncludeThousandDescriptor" : ($.inArray("ConvertToMillions", _sn) > -1 ? "IncludeMillionDescriptor" : ($.inArray("ConvertToBillions", _sn) > -1 ? "IncludeBillionDescriptor" : ($.inArray("ConvertToHundreds", _sn) > -1 ? "IncludeHundredDescriptor" : "")));
+                var _cl = $.inArray("ConvertToThousands", _sn) > -1 ? "convert2" : ($.inArray("ConvertToMillions", _sn) > -1 ? "convert3" : ($.inArray("ConvertToBillions", _sn) > -1 ? "convert4" : ($.inArray("ConvertToHundreds", _sn) > -1 ? "convert1" : "")));
+                _currentItem.find(".listFormats").addClass(_cl);
+                _currentItem.find(".listFormats").find("ul > li[data-name=" + _tn + "]").addClass("checked");
+            }
+
+            var _dd = [], _dt = [];
+            $.each(options.data, function (_i, _e) {
+                var _i = $.inArray(_e.GroupName, _dt);
+                if (_i == -1) {
+                    _dd.push({ Name: _e.GroupName, OrderBy: _e.GroupOrderBy, Formats: [{ Id: _e.Id, Name: _e.Name, DisplayName: _e.DisplayName, Description: _e.Description, OrderBy: _e.OrderBy }] });
+                    _dt.push(_e.GroupName);
+                }
+                else {
+                    _dd[_i].Formats.push({ Id: _e.Id, Name: _e.Name, DisplayName: _e.DisplayName, Description: _e.Description, OrderBy: _e.OrderBy });
+                }
+            });
+            $.each(_dd, function (_i, _e) {
+                _e.Formats.sort(function (_m, _n) {
+                    return _m.OrderBy > _n.OrderBy ? 1 : _m.OrderBy < _n.OrderBy ? -1 : 0;
+                });
+            });
+            _dd.sort(function (_m, _n) {
+                return _m.OrderBy > _n.OrderBy ? 1 : _m.OrderBy < _n.OrderBy ? -1 : 0;
+            });
+
+            if (_dd) {
+                $.each(_dd, function (m, n) {
+                    var _h = '', _c = '';
+                    _c = (n.Name == "Convert to" || n.Name == "Negative number" || n.Name == "Descriptor") ? "value-number" : (n.Name == "Symbol") ? "value-string" : "value-date";
+                    _h += '<li class="' + (n.Name == "Descriptor" ? "drp-checkbox drp-descriptor " : "drp-radio ") + '' + _c + '">';
+                    if (n.Name != "Descriptor") {
+                        _h += '<label>' + n.Name + '</label>';
+                    }
+                    _h += '<ul>';
+                    $.each(n.Formats, function (i, d) {
+                        _h += '<li data-id="' + d.Id + '" data-name="' + d.Name + '" title="' + d.Description + '" class="' + ($.inArray(d.Id, _si) > -1 ? "checked" : "") + '" data-displayname="' + d.DisplayName.replace(/"/g, "&quot;") + '">';
+                        _h += '<div><i></i></div>';
+                        _h += '<a href="javascript:">' + (n.Name == "Descriptor" ? "Descriptor" : d.DisplayName) + '</a>';
+                        _h += '</li>';
+                    });
+                    _h += '</ul>';
+                    _h += '</li>';
+                    _currentItem.find(".listFormats").append(_h);
+                });
+            }
+            if (callback) {
+                callback();
             }
         }
     };

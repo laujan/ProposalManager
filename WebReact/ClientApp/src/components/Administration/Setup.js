@@ -79,6 +79,7 @@ export class Setup extends Component {
                 "WebhookUsername": "",
                 "WebhookPassword": ""
             },
+            renderStep_0 : false,
             renderStep_1: false,
             renderStep_2: false,
             renderStep_3: false,
@@ -90,6 +91,7 @@ export class Setup extends Component {
             finish: false
         };
 
+        this.SetTokenToVault = this.SetTokenToVault.bind(this);
         this.CreateProposalManagerTeam = this.CreateProposalManagerTeam.bind(this);
         this.SetAppSetting_JsonKeys = this.SetAppSetting_JsonKeys.bind(this);
         this.CreateAdminPermissions = this.CreateAdminPermissions.bind(this);
@@ -352,6 +354,33 @@ export class Setup extends Component {
             console.log("SetUp_updateDocumentIdActivatorSettings error: ", error.message);
             return false;
         }
+    }
+
+    async SetTokenToVault(){
+        this.setState({ renderStep_0: true });
+        this.setSpinnerAndMsg(true, false, "");
+        let token = this.authHelper.getWebApiToken();
+
+        try {
+            console.log("Setup_SetTokenToVault");
+            let requestUrl = `api/Setup/SetOnBehalfToken`;
+            let options = {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'authorization': `Bearer ${token}`
+                }
+            };
+
+            let data = await fetch(requestUrl, options);
+            this.setSpinnerAndMsg(false, true, "Token Set Successfully", MessageBarType.success);
+
+        } catch (error) {
+            this.setSpinnerAndMsg(false, true, error.message, MessageBarType.error);
+            console.log("Setup_SetTokenToVault error : ", error.message);
+        }
+
+        this.setState({ renderStep_0: false });
     }
 
     //Setp 1
@@ -1178,6 +1207,28 @@ export class Setup extends Component {
                         <span><Trans>Step1Complete</Trans></span>
                     </div>
                     {this.state.renderStep_1 ? this.showSpinnerAndMessage(true) : null}
+                </div>
+            </div>);
+    }
+
+    renderStep_0() {
+        const margin = { margin: '10px' };
+        const bold = { 'fontWeight': 'bold' };
+        return (
+            <div className='ms-Grid bg-white ibox-content p-10'>
+                <h4 style={bold} className="pageheading"><Trans>Step0</Trans></h4>
+                <span><Trans>Step0Label</Trans></span>
+                <div className="ms-Grid-row">
+                    <div className='ms-Grid-col ms-sm12 ms-md12 ms-lg6'><br />
+                        <PrimaryButton style={margin}
+                            onClick={(e) => this.SetTokenToVault()}
+                            disabled={this.state.isUpdateOpp}
+                        >{<Trans>SetOnBehalfToken</Trans>}</PrimaryButton>
+                    </div>
+                    <div className='ms-Grid-col ms-sm12 ms-md12 ms-lg12'>
+                        <span><Trans>step0Complete</Trans></span>
+                    </div>
+                    {this.state.renderStep_0 ? this.showSpinnerAndMessage(true) : null}
                 </div>
             </div>);
     }

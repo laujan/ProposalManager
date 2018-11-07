@@ -13,8 +13,10 @@ namespace ApplicationCore.Interfaces
     /// </summary>
     public interface IGraphAuthProvider
     {
-        Task<string> GetUserAccessTokenAsync(string userId);
+        Task<string> GetUserAccessTokenAsync(string userId, bool appOnBehalf = false);
 
         Task<string> GetAppAccessTokenAsync();
+
+        Task<string> SetOnBehalfAccessTokenAsync(string userId);
     }
 }

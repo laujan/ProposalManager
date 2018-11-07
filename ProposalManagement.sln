@@ -15,14 +15,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebReact", "WebReact\WebRea
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TeamsAddinPackage", "TeamsAddinPackage", "{2EDFDEC8-6610-4070-88B7-B2A2F6B1FBB4}"
 	ProjectSection(SolutionItems) = preProject
+		TeamsAddinPackage\App-Icon.png = TeamsAddinPackage\App-Icon.png
 		TeamsAddinPackage\color.png = TeamsAddinPackage\color.png
+		TeamsAddinPackage\conversation-Card.png = TeamsAddinPackage\conversation-Card.png
 		TeamsAddinPackage\manifest.json = TeamsAddinPackage\manifest.json
-		TeamsAddinPackage\manifest_golocaldemo3.json = TeamsAddinPackage\manifest_golocaldemo3.json
-		TeamsAddinPackage\manifest_golocaldemos.json = TeamsAddinPackage\manifest_golocaldemos.json
-		TeamsAddinPackage\manifest_onterawe.json = TeamsAddinPackage\manifest_onterawe.json
-		TeamsAddinPackage\manifest_terawelabs.json = TeamsAddinPackage\manifest_terawelabs.json
 		TeamsAddinPackage\outline.png = TeamsAddinPackage\outline.png
-		TeamsAddinPackage\README.md = TeamsAddinPackage\README.md
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{5625403B-2457-4296-B09C-22AEF7960C59}"

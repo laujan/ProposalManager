@@ -55,7 +55,7 @@ export class AdminArchivedOpportunities extends Component {
                 className: 'docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg3 clientcolum',
                 fieldName: 'client',
                 minWidth: 150,
-                maxWidth: 350,
+                maxWidth: 150,
                 isRowHeader: true,
                 isResizable: true,
                 onColumnClick: this.onColumnClick,
@@ -73,7 +73,7 @@ export class AdminArchivedOpportunities extends Component {
                 className: 'docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg3',
                 fieldName: 'openedDate',
                 minWidth: 150,
-                maxWidth: 350,
+                maxWidth: 150,
                 isRowHeader: true,
                 isResizable: true,
                 onColumnClick: this.onColumnClick,
@@ -91,7 +91,7 @@ export class AdminArchivedOpportunities extends Component {
                 className: 'docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg2',
                 fieldName: 'staus',
                 minWidth: 150,
-                maxWidth: 350,
+                maxWidth: 150,
                 isRowHeader: true,
                 isResizable: true,
                 onColumnClick: this.onColumnClick,
@@ -114,10 +114,10 @@ export class AdminArchivedOpportunities extends Component {
 
         this.state = {
             userProfile: userProfile,
-            loading: false,
+            loading: true,
             refreshing: false,
-            items: filteredItems,
-            itemsOriginal: itemsOriginal,
+            items: [],
+            itemsOriginal: [],
             userRoleList: userRoleList,
             channelCounter: 0,
             isCompactMode: false,
@@ -149,30 +149,30 @@ export class AdminArchivedOpportunities extends Component {
                     });
             }
         }
-		/*
-		if (this.state.itemsOriginal.length === 0) {
-			console.log("Administration_componentWillMount getOpportunityIndex");
-			this.getOpportunityIndex()
-				.then(data => {
-					console.log("Administration_componentWillMount getUserRoles");
-					this.getUserRoles()
-						.then(res => {
-							console.log("Administration_componentWillMount getUserRoles done" + res);
-							this.setState({
-								loading: false
-							});
-						})
-						.catch(err => {
-							// TODO: Add error message
-							this.errorHandler(err, "Administration_componentWillMount_getUserRoles");
-						});
-				})
-				.catch(err => {
-					// TODO: Add error message
-					this.errorHandler(err, "Administration_componentWillMount_getOpportunityIndex");
-				});
-		}
-		*/
+
+        if (this.state.itemsOriginal.length === 0) {
+            console.log("Administration_componentWillMount getOpportunityIndex");
+            this.getOpportunityIndex()
+                .then(data => {
+                    console.log("Administration_componentWillMount getUserRoles");
+                    this.getUserRoles()
+                        .then(res => {
+                            console.log("Administration_componentWillMount getUserRoles done" + res);
+                            this.setState({
+                                loading: false
+                            });
+                        })
+                        .catch(err => {
+                            // TODO: Add error message
+                            this.errorHandler(err, "Administration_componentWillMount_getUserRoles");
+                        });
+                })
+                .catch(err => {
+                    // TODO: Add error message
+                    this.errorHandler(err, "Administration_componentWillMount_getOpportunityIndex");
+                });
+        }
+
 
     }
 
@@ -257,8 +257,9 @@ export class AdminArchivedOpportunities extends Component {
 
 
                     this.setState({
-                        items: itemslist,
-                        itemsOriginal: itemslist
+                        items: filteredItems,
+                        itemsOriginal: itemslist,
+                        loading: false
                     });
 
                     resolve(true);
@@ -410,7 +411,7 @@ export class AdminArchivedOpportunities extends Component {
 
 
         return (
-            <div className='ms-Grid bg-white ibox-content'>
+            <div className='ms-Grid'>
 
                 <div className='ms-Grid-row p-10'>
                     <div className='ms-Grid-col ms-sm6 ms-md6 ms-lg9'>
@@ -419,10 +420,14 @@ export class AdminArchivedOpportunities extends Component {
                     <div className='ms-Grid-col ms-sm6 ms-md6 ms-lg3'>
                         <I18n>
                             {
-                                t => <SearchBox
-                                    placeholder={t('search')}
-                                    onChange={this._onFilterByOpportunityName}
-                                />
+                                t => {
+                                    return (
+                                        <SearchBox
+                                            placeholder={t('search')}
+                                            onChange={this._onFilterByOpportunityName}
+                                        />
+                                    );
+                                }
                             }
                         </I18n>
                     </div>
@@ -463,7 +468,7 @@ export class AdminArchivedOpportunities extends Component {
                                         enterModalSelectionOnTouch='false'
                                         layoutMode={DetailsListLayoutMode.fixedColumns}
                                         selection={this._selection}
-                                        selectionPreservedOnEmptyClick={true}
+                                        selectionPreservedOnEmptyClick='true'
                                         ariaLabelForSelectionColumn="Toggle selection"
                                         ariaLabelForSelectAllCheckbox="Toggle selection for all items"
                                     />

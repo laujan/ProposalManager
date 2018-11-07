@@ -17,5 +17,7 @@ namespace ApplicationCore.Interfaces
         Task<string> GetUserAccessTokenAsync(string userId);
 
         Task<(string token, DateTimeOffset expiration)> GetAppAccessTokenAsync();
+
+        Task<(string token, DateTimeOffset expiration)> GetUserAccessTokenWithUsernamePasswordAsync();
     }
 }

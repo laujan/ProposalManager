@@ -181,6 +181,29 @@ export class OpportunityList extends Component {
         this._onFilterByDealChanged = this._onFilterByDealChanged.bind(this);
     }
 
+
+    //Granular Access start:
+    //Oppportunity create access
+    componentWillMount() {
+        //this.getOpportunityIndex();
+        this.authHelper.callCheckAccess(["Opportunity_Create"]).then((data) => {
+            console.log("Granular Dashboard: ", data);
+            let haveGranularAccess = data;
+            this.setState({ haveGranularAccess });
+        });
+
+        this.authHelper.callCheckAccess(this.checkReadWrite).then((data) => {
+            console.log("Granular Dashboard: ", data);
+            if (data) {
+                let columns = this.state.columns;
+                columns.push(this.actionColumn);
+                this.setState({ columns });
+            }
+
+        });
+    }
+    //Granular Access end:
+
     fetchResponseHandler(response, referenceCall) {
         if (response.status === 401) {
             // TODO: This has been deprecated with the new token refresh functionality leaving the code for future expansion
@@ -191,7 +214,7 @@ export class OpportunityList extends Component {
         console.log("Dashboard Ref: " + referenceCall + " error: " + JSON.stringify(err));
     }
 
-    
+
 
     opportunitiesListHeading() {
         return (
@@ -211,7 +234,7 @@ export class OpportunityList extends Component {
 
     async hideMessagebar() {
         await this.delay(2000);
-        this.setState({ isDelteOpp: false, MessageDeleteOpp: "",MessageBarTypeDeleteOpp: "" });
+        this.setState({ isDelteOpp: false, MessageDeleteOpp: "", MessageBarTypeDeleteOpp: "" });
     }
 
     async deleteRow(item) {
@@ -225,22 +248,22 @@ export class OpportunityList extends Component {
             };
             this.requestUrl = 'api/opportunity/' + item.id;
             this.setState({ isDelteOpp: true, MessageDeleteOpp: " Deleting Opportunity - " + item.opportunity, MessageBarTypeDeleteOpp: MessageBarType.info });
-            let response  = await fetch(this.requestUrl, fetchData);
-            if(response){
-                if(response.ok){
+            let response = await fetch(this.requestUrl, fetchData);
+            if (response) {
+                if (response.ok) {
                     let currentItems = this.state.items.filter(x => x.id !== item.id);
-                    this.setState({ 
-                        MessageDeleteOpp: "Deleted opportunity " + item.opportunity, 
+                    this.setState({
+                        MessageDeleteOpp: "Deleted opportunity " + item.opportunity,
                         MessageBarTypeDeleteOpp: MessageBarType.success,
-                        items: currentItems 
+                        items: currentItems
                     });
-                }else
-                    throw new Error("Parsing reposne error.")
-            }else
-                throw new Error("Server throwed error on deleting")
+                } else
+                    throw new Error("Parsing reposne error.");
+            } else
+                throw new Error("Server throwed error on deleting");
         } catch (error) {
-            this.setState({ 
-                MessageDeleteOpp: "Error " + error, 
+            this.setState({
+                MessageDeleteOpp: "Error " + error,
                 MessageBarTypeDeleteOpp: MessageBarType.error
             });
             console.log("Setup_ConfigureAppIDAndGroupID error : ", error);
@@ -311,35 +334,13 @@ export class OpportunityList extends Component {
         );
     }
 
-    //Granular Access start:
-    //Oppportunity create access
-    componentWillMount() {
-        //this.getOpportunityIndex();
-        this.authHelper.callCheckAccess(["Opportunity_Create"]).then((data) => {
-            console.log("Granular Dashboard: ", data);
-            let haveGranularAccess = data;
-            this.setState({ haveGranularAccess });
-        });
-
-        this.authHelper.callCheckAccess(this.checkReadWrite).then((data) => {
-            console.log("Granular Dashboard: ", data);
-            if(data){
-                let columns = this.state.columns;
-                columns.push(this.actionColumn);
-                this.setState({columns})
-            }
-            
-        });
-    }
-    //Granular Access end:
-
     render() {
         const { columns, isCompactMode, items } = this.state;
 
         const isLoading = this.state.loading;
 
         let isRelationshipManager = false;
-        if ((this.state.authUserRoles.filter(x => x.displayName === "RelationshipManager")).length > 0) {
+        if (this.state.authUserRoles.filter(x => x.displayName === "RelationshipManager").length > 0) {
             isRelationshipManager = true;
         }
         let userPermissions = this.state.authUserPermissions;
@@ -375,7 +376,7 @@ export class OpportunityList extends Component {
                         this.state.haveGranularAccess
                             ? <div className='ms-Grid-col ms-sm6 ms-md6 ms-lg6 createButton pt15 '>
                                 {
-                                    <PrimaryButton className='pull-right' onClick={this.props.onClickCreateOpp}> <i className="ms-Icon ms-Icon--Add pr10" aria-hidden="true"></i><Trans>createNew</Trans></PrimaryButton>
+                                    <PrimaryButton className='pull-right' onClick={this.props.onClickCreateOpp}> <i className="ms-Icon ms-Icon--Add pr10" aria-hidden="true" /><Trans>createNew</Trans></PrimaryButton>
                                 }
 
                             </div>
@@ -390,10 +391,14 @@ export class OpportunityList extends Component {
                             <span><Trans>clientName</Trans></span>
                             <I18n>
                                 {
-                                    t => <SearchBox
-                                        placeholder={t('search')}
-                                        onChange={this._onFilterByNameChanged}
-                                    />
+                                    t => {
+                                        return (
+                                            <SearchBox
+                                                placeholder={t('search')}
+                                                onChange={this._onFilterByNameChanged}
+                                            />
+                                        );
+                                    }
 
                                 }
                             </I18n>
@@ -402,10 +407,14 @@ export class OpportunityList extends Component {
                             <span><Trans>dealSize</Trans></span>
                             <I18n>
                                 {
-                                    t => <SearchBox
-                                        placeholder={t('search')}
-                                        onChange={this._onFilterByDealChanged}
-                                    />
+                                    t => {
+                                        return (
+                                            <SearchBox
+                                                placeholder={t('search')}
+                                                onChange={this._onFilterByDealChanged}
+                                            />
+                                        );
+                                    }
                                 }
                             </I18n>
                         </div>
@@ -423,20 +432,20 @@ export class OpportunityList extends Component {
                     </div>
                     <div className='ms-Grid-row'>
                         <div className='ms-Grid-col ms-sm12 ms-md12 ms-lg12'>
-                        {
-                            items.length > 0
-                                ?
-                                <DetailsList
-                                    items={items}
-                                    compact={isCompactMode}
-                                    columns={columns}
-                                    selectionMode={SelectionMode.none}
-                                    setKey='key'
-                                    layoutMode={DetailsListLayoutMode.justified}
-                                    enterModalSelectionOnTouch='false'
-                                />
-                                :
-                                <div><Trans>noOpportunities</Trans></div>
+                            {
+                                items.length > 0
+                                    ?
+                                    <DetailsList
+                                        items={items}
+                                        compact={isCompactMode}
+                                        columns={columns}
+                                        selectionMode={SelectionMode.none}
+                                        setKey='key'
+                                        layoutMode={DetailsListLayoutMode.justified}
+                                        enterModalSelectionOnTouch='false'
+                                    />
+                                    :
+                                    <div><Trans>noOpportunities</Trans></div>
                             }
                         </div>
 

@@ -35,8 +35,7 @@ export class OpportunitySummary extends Component {
         this.authHelper = window.authHelper;
         const opportunityData = this.props.opportunityData;
         const teamsContext = this.props.teamsContext;
-        //this.isDealTypeAlreadyUpdated = opportunityData.dealType === null ? false : true;
-        this.isDealTypeAlreadyUpdated = (opportunityData) ? (opportunityData.dealType === null ? false : true) : false;
+        this.isDealTypeAlreadyUpdated = opportunityData ? opportunityData.dealType === null ? false : true : false;
         this.state = {
             teamsContext: teamsContext,
             loading: true,
@@ -69,7 +68,10 @@ export class OpportunitySummary extends Component {
             userId: "",
             isAuthenticated: false,
             isComponentDidUpdate: false,
-            isRelationshipManager: false
+            haveAccessToChangeLO: false,
+            haveAccessToChangeStatus: false,
+            haveAccessToEditTeam: false,
+            haveAccessToEditDealType: false
         };
 
 
@@ -91,7 +93,7 @@ export class OpportunitySummary extends Component {
     componentWillReceiveProps(nextProps) {
         console.log("OpportunitySummary_componentWillReceiveProps : ", nextProps);
         console.log("Opportunity_summary_constructor : teamsContext : ", nextProps.teamsContext);
-        this.isDealTypeAlreadyUpdated = (nextProps.opportunityData) ? (nextProps.opportunityData.dealType === null ? false : true) : false;
+        this.isDealTypeAlreadyUpdated = nextProps.opportunityData ? nextProps.opportunityData.dealType === null ? false : true : false;
         this.setState({ oppData: nextProps.opportunityData });
     }
 
@@ -118,7 +120,7 @@ export class OpportunitySummary extends Component {
             console.log("OpportunitySummary_componentDidUpdate error : ", error);
         }
 
-    }  
+    }
 
     async getOpportunityForTeams(teamname) {
         let oppData = "";
@@ -269,7 +271,7 @@ export class OpportunitySummary extends Component {
                 }
 
                 let currentUserId = userDetails.id;
-                if(!currentUserId){
+                if (!currentUserId) {
                     let userpro = await this.authHelper.callGetUserProfile();
                     currentUserId = userpro.id;
                 }
@@ -279,18 +281,26 @@ export class OpportunitySummary extends Component {
                 });
                 let userAssignedRole = teamMemberDetails[0].assignedRole.displayName;
                 console.log("OpportunitySummary_getOppDetails showPicker: ", loanOfficerObj.length === 0);
-                
-                // Loggedin user is RM
-                let isRelationshipManager = userDetails.roles.filter(function (r) {
-                    return r.displayName.toLowerCase() === 'relationshipmanager';
+                // Check access to edit dealtype
+                this.authHelper.callCheckAccess(["Opportunity_ReadWrite_Dealtype"]).then((data) => {
+                    this.setState({ haveAccessToEditDealType: data });
+                });
+
+                // Check access to edit team member
+                this.authHelper.callCheckAccess(["Opportunity_ReadWrite_Team"]).then((data) => {
+                    this.setState({ haveAccessToEditTeam: data });
+                });
+
+                // Check access to change Status, enable loan officer  link
+                this.authHelper.callCheckAccess(["Opportunity_Create"]).then((data) => {
+                    this.setState({ haveAccessToChangeLO: data, haveAccessToChangeStatus: data });
                 });
                 this.setState({
                     teamMembers: teamMembers,
                     LoanOfficer: loanOfficerObj.length === 0 ? loanOfficerObj : [],
                     showPicker: loanOfficerObj.length === 0 ? true : false,
                     userAssignedRole: userAssignedRole,
-                    loading: false,
-                    isRelationshipManager: isRelationshipManager.length > 0 ? true : false
+                    loading: false
                 });
             } else
                 throw Error("Data is null");
@@ -317,53 +327,40 @@ export class OpportunitySummary extends Component {
         this.setState({ oppData });
     }
 
-    startProcessClick() {
-        console.log("this.state.oppData : ", this.state.oppData);
-        // return false;
+    async startProcessClick() {
 
-        this.updateOpportunity(this.state.oppData)
-            .then(res => {
-                console.log(res);
-                if (res.ok === true) {
-                    // opportunity success
-                    this.setState({
-                        isUpdateOpp: false,
-                        isUpdateOppMsg: true,
-                        updateOppMessagebarText: "Opportunity Updated successfully.",
-                        updateMessageBarType: MessageBarType.success
-                    });
-                }
-                else {
-                    this.setState({
-                        isUpdateOpp: false,
-                        isUpdateOppMsg: true,
-                        updateOppMessagebarText: <Trans>DealTypeSelectMessage</Trans>,
-                        updateMessageBarType: MessageBarType.error
-                    });
-                    this.hideMessagebar();
-                    //reject(err);
-                }
-                this.setState({ isUpdateOpp: true, dealTypeUpdated: true, dealTypeSelectMsgShow: false });
-                this.hideMessagebar();
-            })
-            .catch(err => {
-                // display error
-                this.setState({
-                    isUpdateOpp: false,
-                    isUpdateOppMsg: true,
-                    updateOppMessagebarText: <Trans>errorWhileUpdatingPleaseTryagain</Trans>,
-                    updateMessageBarType: MessageBarType.error
-                });
-                this.hideMessagebar();
-                //reject(err);
+        this.setState({ isUpdateOpp: true });
+        console.log("OpportunitySummary_startProcessClick : ", this.state.oppData);
+        let msg = "";
+        let type = null;
+        let dealTypeUpdated = false;
+        try {
+
+            let res = await this.updateOpportunity(this.state.oppData);
+            msg = "Opportunity Updated successfully.";
+            type = MessageBarType.success;
+            dealTypeUpdated = true;
+        } catch (error) {
+            console.log("OpportunitySummary_startProcessClick : ", error.message);
+            msg = error.message;
+            type = MessageBarType.error;
+        } finally {
+            this.setState({
+                isUpdateOpp: false,
+                isUpdateOppMsg: true,
+                updateOppMessagebarText: msg,
+                updateMessageBarType: type,
+                dealTypeUpdated
             });
+            this.hideMessagebar();
+        }
+
     }
 
-    updateOpportunity(opportunity) {
-        return new Promise((resolve, reject) => {
-
-            let requestUrl = 'api/opportunity';
-
+    async updateOpportunity(opportunity) {
+        console.log("OpportubitySummary_updateOpportunity");
+        let requestUrl = 'api/opportunity';
+        try {
             let options = {
                 method: "PATCH",
                 headers: {
@@ -374,26 +371,13 @@ export class OpportunitySummary extends Component {
                 body: JSON.stringify(opportunity)
             };
 
-            fetch(requestUrl, options)
-                .then(response => {
+            let response = await fetch(requestUrl, options);
+            return response;
 
-                    return response;
-                })
-                .then(data => {
-                    resolve(data);
-                })
-                .catch(err => {
-                    console.log("OpportunitySummary_updateOpportunity: error", JSON.stringify(err));
-                    this.setState({
-                        isUpdateOpp: false,
-                        isUpdateOppMsg: true,
-                        updateOppMessagebarText: <Trans>errorWhileUpdatingPleaseTryagain</Trans>,
-                        updateMessageBarType: MessageBarType.error
-                    });
-                    this.hideMessagebar();
-                    reject(err);
-                });
-        });
+        } catch (error) {
+            console.log("OpportubitySummary_updateOpportunity error: ", error.message);
+            throw new Error(error);
+        }
     }
 
     hideMessagebar() {
@@ -425,7 +409,9 @@ export class OpportunitySummary extends Component {
             return k.assignedRole.displayName === "LoanOfficer";
 
 
-        });
+        });//adGroupName
+
+        let loanOfficerADName = loanOfficerArr.length > 0 ? loanOfficerArr[0].assignedRole.adGroupName : <Trans>loanOfficer</Trans>;
 
         console.log("OPportunity_summary : renderSummaryDetails,loanOfficerArr ", loanOfficerArr);
         console.log("Opportunity_summary : this.state.showPicker ", this.state.showPicker);
@@ -484,15 +470,18 @@ export class OpportunitySummary extends Component {
                     <div className=' ms-Grid-col ms-sm12 ms-md12 ms-lg2 pb10'>
                         <I18n>
                             {
-                                t =>
-                                    <Dropdown
-                                        label={t('status')}
-                                        selectedKey={this.state.oppData.opportunityState}
-                                        onChanged={(e) => this.onStatusChange(e)}
-                                        id='statusDropdown'
-                                        disabled={this.state.oppData.opportunityState === 1 || this.state.oppData.opportunityState === 3 || this.state.oppData.opportunityState === 5 || this.state.userAssignedRole.toLowerCase() !== "relationshipmanager" ? true : false}
-                                        options={this.state.oppStatusAll}
-                                    />
+                                t => {
+                                    return (
+                                        <Dropdown
+                                            label={t('status')}
+                                            selectedKey={this.state.oppData.opportunityState}
+                                            onChanged={(e) => this.onStatusChange(e)}
+                                            id='statusDropdown'
+                                            disabled={this.state.oppData.opportunityState === 1 || this.state.oppData.opportunityState === 3 || this.state.oppData.opportunityState === 5 || !this.state.haveAccessToChangeStatus}
+                                            options={this.state.oppStatusAll}
+                                        />
+                                    );
+                                }
                             }
                         </I18n>
 
@@ -537,7 +526,7 @@ export class OpportunitySummary extends Component {
                 <div className='ms-Grid-row bg-white'>
                     <div className=' ms-Grid-col ms-sm12 ms-md12 ms-lg4 pb10'>
 
-                        <Label><Trans>loanOfficer</Trans> </Label>
+                        <Label>{loanOfficerADName}</Label>
 
                         {
                             //loanOfficerName.length > 0 ?
@@ -550,13 +539,13 @@ export class OpportunitySummary extends Component {
                                                     {...{ imageUrl: loanOfficerArr[0].UserPicture }}
                                                     size={PersonaSize.size40}
                                                     text={loanOfficerArr[0].displayName}
-                                                    secondaryText="Loan Officer"
+                                                    secondaryText={loanOfficerADName}
                                                 />
                                             </div>
                                             <div>
                                                 <br />
                                                 {
-                                                    this.state.oppData.opportunityState === 10 || !this.state.isRelationshipManager ?
+                                                    this.state.oppData.opportunityState === 10 || !this.state.haveAccessToChangeLO ?
                                                         <Link className="pull-left" disabled><Trans>change</Trans></Link>
                                                         :
                                                         <Link onClick={this.toggleHiddenPicker.bind(this)} className="pull-leftt pr100"><Trans>change</Trans></Link>
@@ -625,7 +614,7 @@ export class OpportunitySummary extends Component {
                                             this.state.oppData.opportunityState === 2 ||
                                                 this.state.oppData.opportunityState === 3 ||
                                                 this.state.oppData.opportunityState === 5 ||
-                                                this.state.userAssignedRole.toLowerCase() !== "loanofficer" ||
+                                                !this.state.haveAccessToEditDealType ||
                                                 this.state.dealTypeUpdated || this.isDealTypeAlreadyUpdated ? true : false}
                                         options={this.state.dealTypeList}
                                         onChanged={(e) => this.onChangeDealType(e)}
@@ -639,7 +628,7 @@ export class OpportunitySummary extends Component {
                                     this.state.oppData.opportunityState === 2 ||
                                         this.state.oppData.opportunityState === 3 ||
                                         this.state.oppData.opportunityState === 5 ||
-                                        this.state.userAssignedRole.toLowerCase() !== "loanofficer"
+                                        !this.state.haveAccessToEditDealType
                                         || this.state.isUpdateOpp || this.isDealTypeAlreadyUpdated || this.state.dealTypeUpdated ? true : false
                                 }
                                 onClick={(e) => this.startProcessClick()}
@@ -702,7 +691,7 @@ export class OpportunitySummary extends Component {
                                     :
                                     <h3>{this.state.oppData.displayName}</h3>
                             }
-                            
+
                         </div>
                         <div className=' ms-Grid-col ms-sm12 ms-md12 ms-lg6'><br />
                             {
@@ -712,7 +701,7 @@ export class OpportunitySummary extends Component {
                                     :
                                     <LinkRoute to={'./generalDashboardTab'} className='pull-right'><Trans>backToDashboard</Trans> </LinkRoute>
                             }
-                            
+
                         </div>
                     </div>
                     <div className='ms-Grid-row  p-r-10'>
@@ -800,7 +789,7 @@ export class OpportunitySummary extends Component {
         //let oppViewData = this.state.oppData;
         // oppViewData.teamMembers = updTeamMembersObj;
 
-        // API Update call        
+        // API Update call
         this.requestUpdUrl = 'api/opportunity?id=' + oppViewData.id;
         let options = {
             method: "PATCH",
@@ -842,7 +831,7 @@ export class OpportunitySummary extends Component {
                     createTeamId={this.state.oppData.id}
                     opportunityName={this.state.oppData.displayName}
                     opportunityState={this.state.oppData.opportunityState}
-                    userRole={this.state.userAssignedRole}
+                    haveAccessToEditTeam={this.state.haveAccessToEditTeam}
                 />
             );
         };

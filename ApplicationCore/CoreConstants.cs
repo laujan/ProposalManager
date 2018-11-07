@@ -10,6 +10,15 @@ namespace ApplicationCore
         // TBD
     }
 
+    public static class VaultKeys
+    {
+        public static string AccessToken = "AccessToken";
+
+        public static string Expiration = "Expiration";
+
+        public static string Upn = "Upn";
+    }
+
     public static class ErrorConstants
     {
         public static class Codes

@@ -244,8 +244,11 @@ i18n.use(LanguageDetector).init({
                 "labelforstep2Note": `NOTE: The name below must match the name defined in the manifest file inside the zip file (check for the key "short": "Proposal ManagerTest" in manifest file)`,
                 "GetingAppKey":"Getting App Key for Proposal Manager Addin",
                 "PMPrerequesties": "Prerequisites",
+                "Step0": "Step 1: Configure Authentication.",
+                "Step0Label":"First, an authentication token has to be stored in Azure Key Vault, set up as detailed in Section ‘x’ of the Getting Started guide to facilitate some of the admin operations in the background.",
+                "step0Complete": "Following this, the credentials of the admin user is stored securely in Azure Key Vault, which will be used to perform some admin tasks such as adding the add-in to new teams automatically. The token will continue to remain valid, and will be auto-renewed, as long as the solution is used at least once within 30 days.",
                 "Step1": "Step 1: Create Proposal Manager team in Microsoft Teams",
-                "Step1Label":"First step is to create a team in Microsoft Teams to facilitate centralized administration and configuration of Proposal Manager",
+                "Step1Label":"Second step is to create a team in Microsoft Teams to facilitate centralized administration and configuration of Proposal Manager",
                 "Step1Complete":"Now, you will see a team with the above name when you log on to Microsoft Teams.",
                 "Step2":"Step 2: Sideload the Proposal Manager add-in",
                 "Step3":"Step 3: Setup SharePoint site.",
@@ -308,7 +311,8 @@ i18n.use(LanguageDetector).init({
                 "downlaod":"Export Proposal Manager Settings",
                 "step2AfterSuccessfullConfigMsg": "Teams App Instance ID",
                 "step2AfterSuccessfullConfigMsg1": "Once configuration is completed, the following Teams App Instance ID is linked to the solution.",
-                "Create": "Create"
+                "Create": "Create",
+                "SetOnBehalfToken":"Set Authentication Token"
             }
         },
         es: {

@@ -34,7 +34,7 @@ We have also published the following high level **walk-through videos** to help 
   - [Project Smart Link - Deployment](https://youtu.be/qNlUlCwKcto)
   - [Office Add-ins: Functional Overview](https://youtu.be/hy5TLFVum1E)
 
-Videos for deployment of Proposal Creation Office add-in is in progress and will be published soon.
+Video for deployment of Proposal Creation Office add-in is in progress and will be published soon.
 
 # Roadmap
 The upcoming versions of Proposal Manager are set to incrementally add several value-added features, including:

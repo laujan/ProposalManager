@@ -18,11 +18,6 @@ namespace ApplicationCore
         /// <summary>
         /// ClientId (Application Id) of this Web Application
         /// </summary>
-        public string AppId { get; set; }
-
-        /// <summary>
-        /// ClientId (Application Id) of this Web Application
-        /// </summary>
         public string ClientId { get; set; }
 
         /// <summary>
@@ -51,7 +46,8 @@ namespace ApplicationCore
         /// </summary>
         public string CallbackPath { get; set; }
 
-        public string Authority => $"{Instance}{TenantId}";
+        //public string Authority => $"{Instance}{TenantId}";
+        public string Authority { get; set; }
 
         public string BaseUrl { get; set; }
 
@@ -60,5 +56,7 @@ namespace ApplicationCore
         public string GraphResourceId { get; set; }
 
         public string GraphScopes { get; set; }
+
+        public string Audience { get; set; }
     }
 }

@@ -24,8 +24,7 @@ export class OpportunityDetails extends Component {
         this.sdkHelper = window.sdkHelper;
         this.authHelper = window.authHelper;
         this.accessGranted = false;
-        const oppData = this.props.oppDetails
-        console.log ("OpportunityDetails_constructor oppId : ", this.props.teamname)
+        const oppData = this.props.oppDetails;
         this.state = {
             loading: true,
             oppData: oppData,
@@ -38,10 +37,6 @@ export class OpportunityDetails extends Component {
         console.log("OpportunityDetails_componentWillMount isauth: " + this.authHelper.isAuthenticated());
     }
 
-    componentWillReceiveProps(nextProps) {
-        console.log("OpportunityDetails_componentWillReceiveProps : ",nextProps);
-        this.setState({ oppData: nextProps.oppDetails});  
-    }
 
     async componentDidMount() {
         console.log("OpportunityDetails_componentWillMount isauth: " + this.authHelper.isAuthenticated() + " this.accessGranted: " + this.accessGranted);
@@ -52,6 +47,11 @@ export class OpportunityDetails extends Component {
             });
         }
         
+    }
+
+    componentWillReceiveProps(nextProps) {
+        console.log("OpportunityDetails_componentWillReceiveProps : ", nextProps);
+        this.setState({ oppData: nextProps.oppDetails });
     }
 
     async componentDidUpdate() {
@@ -80,6 +80,8 @@ export class OpportunityDetails extends Component {
         }
     }
 
+
+
     async getOppDetails(teamname) {
         let data = "";
         let requestUrl = `api/Opportunity/?name=${teamname}`;
@@ -88,7 +90,7 @@ export class OpportunityDetails extends Component {
             requestUrl = `api/Opportunity/?id=${oppId}`;
         }
         
-        console.log("OpportunityDetails_getOppDetails teamname :", requestUrl)
+        console.log("OpportunityDetails_getOppDetails teamname :", requestUrl);
         try {
             let token = "";
             token = this.authHelper.getWebApiToken();
@@ -96,7 +98,7 @@ export class OpportunityDetails extends Component {
             let response = await fetch(requestUrl, {
                         method: "GET",
                         headers: { 'authorization': 'Bearer ' + token }
-                    }) ;
+                    });
             data = await response.json();
             return data;
 
@@ -112,12 +114,11 @@ export class OpportunityDetails extends Component {
             return <OpportunitySummary opportunityData={this.state.oppData} userprofile={this.state.userProfile}/>;
         };
 
-        console.log("OpportunityDetails_render oppId and userprofile : ", this.state.oppData, this.state.userProfile , this.state.loading)
         return (
             <div className='ms-Grid'>
                 <div className='ms-Grid-row'>
                     <div className='ms-Grid-col ms-sm12 ms-md8 ms-lg12' />
-                    {(this.state.loading && this.state.oppData && this.state.userProfile)
+                    {this.state.loading && this.state.oppData && this.state.userProfile
                         ?
                         <div className='ms-BasicSpinnersExample'>
                             <Spinner size={SpinnerSize.large} label={<Trans>loading</Trans>} ariaLive='assertive' />

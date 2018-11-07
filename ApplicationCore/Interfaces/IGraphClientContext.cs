@@ -20,5 +20,7 @@ namespace ApplicationCore.Interfaces
 
     public interface IGraphClientUserContext : IGraphClientContext { }
 
+    public interface IGraphClientOnBehalfContext : IGraphClientContext { }
+
     public interface IGraphClientAppContext : IGraphClientContext { }
 }

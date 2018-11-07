@@ -31,21 +31,15 @@ namespace ApplicationCore
 
         public string RegionsListId { get; set; }
 
-        public string NotificationsListId { get; set; }
-
         public string RoleMappingsListId { get; set; }
 
         public string OpportunitiesListId { get; set; }
-
-        public string PublicOpportunitiesListId { get; set; }
 
         public string SetupPage { get; set; }
 
         public string GraphRequestUrl { get; set; }
 
         public string GraphBetaRequestUrl { get; set; }
-
-        public string ServiceEmail { get; set; }
 
         public int UserProfileCacheExpiration { get; set; }
 
@@ -67,9 +61,11 @@ namespace ApplicationCore
 
         public string Permissions { get; set; }
 
+        // For production applications this should be stored in a secure location like Azure Key Volt
 		public string PBIUserName { get; set; }
 
-		public string PBIUserPassword { get; set; }
+        // For production applications this should be stored in a secure location like Azure Key Volt
+        public string PBIUserPassword { get; set; }
 
 		public string PBIApplicationId { get; set; }
 
@@ -80,9 +76,21 @@ namespace ApplicationCore
 		public string PBITenantId { get; set; }
 
         public string GeneralProposalManagementTeam { get; set; }
+
         public string SharePointListsPrefix { get; set; }
+
         public string ProposalManagerAddInName { get; set; }
+
         public string ProposalManagerGroupID { get; set; }
+
         public string SharePointSiteRelativeName { get; set; }
+
+        public string AccessToken { get; set; }
+
+        public string Upn { get; set; }
+
+        public string Expiration { get; set; }
+        
+        public string VaultBaseUrl { get; set; }
     }
 }

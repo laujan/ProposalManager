@@ -21,18 +21,31 @@ namespace Infrastructure.Services
             ILogger<GraphTeamsAppService> logger,
             IOptionsMonitor<AppOptions> appOptions,
             IGraphClientAppContext graphClientContext,
-            IUserContext userContext) : base(logger, appOptions, graphClientContext, userContext)
+            IUserContext userContext,
+            IAzureKeyVaultService azureKeyVaultService) : base(logger, appOptions, graphClientContext, userContext, azureKeyVaultService)
         {
         }
     }
 
-    public class GraphTeamUserService : GraphTeamsBaseService
+    public class GraphTeamsUserService : GraphTeamsBaseService
     {
-        public GraphTeamUserService(
-            ILogger<GraphTeamUserService> logger,
+        public GraphTeamsUserService(
+            ILogger<GraphTeamsUserService> logger,
             IOptionsMonitor<AppOptions> appOptions,
             IGraphClientUserContext graphClientContext,
-            IUserContext userContext) : base(logger, appOptions, graphClientContext, userContext)
+            IUserContext userContext,
+            IAzureKeyVaultService azureKeyVaultService) : base(logger, appOptions, graphClientContext, userContext, azureKeyVaultService)
+        {
+        }
+    }
+    public class GraphTeamsOnBehalfService : GraphTeamsBaseService
+    {
+        public GraphTeamsOnBehalfService(
+            ILogger<GraphTeamsUserService> logger,
+            IOptionsMonitor<AppOptions> appOptions,
+            IGraphClientOnBehalfContext graphClientContext,
+            IUserContext userContext,
+            IAzureKeyVaultService azureKeyVaultService) : base(logger, appOptions, graphClientContext, userContext, azureKeyVaultService)
         {
         }
     }
