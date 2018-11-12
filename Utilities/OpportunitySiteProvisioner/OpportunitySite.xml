@@ -1,0 +1,17 @@
+﻿<?xml version="1.0"?>
+<pnp:Provisioning xmlns:pnp="http://schemas.dev.office.com/PnP/2018/07/ProvisioningSchema">
+  <pnp:Preferences Generator="OfficeDevPnP.Core, Version=3.2.1810.0, Culture=neutral, PublicKeyToken=5e633289e95c321a" />
+  <pnp:Templates ID="CONTAINER-opportunitySite">
+    <pnp:ProvisioningTemplate ID="opportunitySite" Version="0" Scope="Undefined">
+      <pnp:PropertyBagEntries>
+        <pnp:PropertyBagEntry Key="docid_msft_hier_siteprefix" Value="PROPMGT" Overwrite="true" />
+        <pnp:PropertyBagEntry Key="docid_enabled" Value="1" Overwrite="true" />
+      </pnp:PropertyBagEntries>
+      <pnp:Features>
+        <pnp:SiteFeatures>
+          <pnp:Feature ID="b50e3104-6812-424f-a011-cc90e6327318" />
+        </pnp:SiteFeatures>
+      </pnp:Features>
+    </pnp:ProvisioningTemplate>
+  </pnp:Templates>
+</pnp:Provisioning>

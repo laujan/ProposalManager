@@ -10,7 +10,6 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebReact", "WebReact\WebReact.csproj", "{76036759-272D-4A14-8C65-973A12E57BFB}"
 	ProjectSection(ProjectDependencies) = postProject
 		{01377574-3C53-422D-9B81-DE46C2EF1D18} = {01377574-3C53-422D-9B81-DE46C2EF1D18}
-		{0B3A5DCE-1D2D-4433-839D-ACD949546DD9} = {0B3A5DCE-1D2D-4433-839D-ACD949546DD9}
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TeamsAddinPackage", "TeamsAddinPackage", "{2EDFDEC8-6610-4070-88B7-B2A2F6B1FBB4}"
@@ -23,6 +22,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TeamsAddinPackage", "TeamsA
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{5625403B-2457-4296-B09C-22AEF7960C59}"
+	ProjectSection(SolutionItems) = preProject
+		Solution Items\AppCreationScripts.md = Solution Items\AppCreationScripts.md
+		Solution Items\apps.json = Solution Items\apps.json
+		Solution Items\Cleanup.ps1 = Solution Items\Cleanup.ps1
+		Solution Items\Configure.ps1 = Solution Items\Configure.ps1
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Dynamics Integration", "Dynamics Integration", "{1CF4CF69-4586-4C3F-95EB-55B152B40F4E}"
 EndProject
@@ -30,7 +35,49 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Utilities", "Utilities", "{
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OneDriveSubscriptionRenewal", "Dynamics Integration\OneDriveSubscriptionRenewal\OneDriveSubscriptionRenewal.csproj", "{01377574-3C53-422D-9B81-DE46C2EF1D18}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DocumentIdActivator", "Utilities\DocumentIdActivator\DocumentIdActivator.csproj", "{0B3A5DCE-1D2D-4433-839D-ACD949546DD9}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items Internal", "Solution Items Internal", "{95D7AEC0-28A4-4C35-ABA4-62E64AD5B7F1}"
+	ProjectSection(SolutionItems) = preProject
+		Solution Items Internal\App-Icon.png = Solution Items Internal\App-Icon.png
+		Solution Items Internal\AppSettings.js = Solution Items Internal\AppSettings.js
+		Solution Items Internal\appsettings.json = Solution Items Internal\appsettings.json
+		Solution Items Internal\Github - AppSettings.js = Solution Items Internal\Github - AppSettings.js
+		Solution Items Internal\Github - appsettings.json = Solution Items Internal\Github - appsettings.json
+		Solution Items Internal\golocaldemo3 - AppSettings.js = Solution Items Internal\golocaldemo3 - AppSettings.js
+		Solution Items Internal\golocaldemo3 - appsettings.json = Solution Items Internal\golocaldemo3 - appsettings.json
+		Solution Items Internal\golocaldemos - AppSettings.js = Solution Items Internal\golocaldemos - AppSettings.js
+		Solution Items Internal\golocaldemos - appsettings.json = Solution Items Internal\golocaldemos - appsettings.json
+		Solution Items Internal\JasonTestSample2.json = Solution Items Internal\JasonTestSample2.json
+		Solution Items Internal\Notes.txt = Solution Items Internal\Notes.txt
+		Solution Items Internal\onterawe - AppSettings.js = Solution Items Internal\onterawe - AppSettings.js
+		Solution Items Internal\onterawe - appsettings.json = Solution Items Internal\onterawe - appsettings.json
+		Solution Items Internal\OpportunitySample.json = Solution Items Internal\OpportunitySample.json
+		Solution Items Internal\OpportunityViewModelSample.json = Solution Items Internal\OpportunityViewModelSample.json
+		Solution Items Internal\Proposal Manager WebApi.json = Solution Items Internal\Proposal Manager WebApi.json
+		Solution Items Internal\README.md = Solution Items Internal\README.md
+		Solution Items Internal\TeamsContext.json = Solution Items Internal\TeamsContext.json
+		Solution Items Internal\terawelabs - AppSettings.js = Solution Items Internal\terawelabs - AppSettings.js
+		Solution Items Internal\terawelabs - appsettings.json = Solution Items Internal\terawelabs - appsettings.json
+		Solution Items Internal\wave3_Placheholder_appsettings.json = Solution Items Internal\wave3_Placheholder_appsettings.json
+		Solution Items Internal\wave_3_Appsettings.js = Solution Items Internal\wave_3_Appsettings.js
+		Solution Items Internal\XMLFile1.xml = Solution Items Internal\XMLFile1.xml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TeamsAddinPackage Internal", "TeamsAddinPackage Internal", "{529127F1-03A4-4B73-8D30-6AAC5FE36C46}"
+	ProjectSection(SolutionItems) = preProject
+		TeamsAddinPackage Internal\App-Icon.png = TeamsAddinPackage Internal\App-Icon.png
+		TeamsAddinPackage Internal\color.png = TeamsAddinPackage Internal\color.png
+		TeamsAddinPackage Internal\conversation-Card.png = TeamsAddinPackage Internal\conversation-Card.png
+		TeamsAddinPackage Internal\GitHub - manifest.json = TeamsAddinPackage Internal\GitHub - manifest.json
+		TeamsAddinPackage Internal\manifes_terawelabst.json = TeamsAddinPackage Internal\manifes_terawelabst.json
+		TeamsAddinPackage Internal\manifest.json = TeamsAddinPackage Internal\manifest.json
+		TeamsAddinPackage Internal\manifest_dev.json = TeamsAddinPackage Internal\manifest_dev.json
+		TeamsAddinPackage Internal\manifest_golocaldemo3.json = TeamsAddinPackage Internal\manifest_golocaldemo3.json
+		TeamsAddinPackage Internal\manifest_golocaldemos.json = TeamsAddinPackage Internal\manifest_golocaldemos.json
+		TeamsAddinPackage Internal\outline.png = TeamsAddinPackage Internal\outline.png
+		TeamsAddinPackage Internal\README.md = TeamsAddinPackage Internal\README.md
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpportunitySiteProvisioner", "Utilities\OpportunitySiteProvisioner\OpportunitySiteProvisioner.csproj", "{9AD29393-A142-4EF2-94A1-C42C86139E5F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -54,17 +101,17 @@ Global
 		{01377574-3C53-422D-9B81-DE46C2EF1D18}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{01377574-3C53-422D-9B81-DE46C2EF1D18}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{01377574-3C53-422D-9B81-DE46C2EF1D18}.Release|Any CPU.Build.0 = Release|Any CPU
-		{0B3A5DCE-1D2D-4433-839D-ACD949546DD9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0B3A5DCE-1D2D-4433-839D-ACD949546DD9}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{0B3A5DCE-1D2D-4433-839D-ACD949546DD9}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{0B3A5DCE-1D2D-4433-839D-ACD949546DD9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9AD29393-A142-4EF2-94A1-C42C86139E5F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9AD29393-A142-4EF2-94A1-C42C86139E5F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9AD29393-A142-4EF2-94A1-C42C86139E5F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9AD29393-A142-4EF2-94A1-C42C86139E5F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{01377574-3C53-422D-9B81-DE46C2EF1D18} = {1CF4CF69-4586-4C3F-95EB-55B152B40F4E}
-		{0B3A5DCE-1D2D-4433-839D-ACD949546DD9} = {9F617D6F-6790-4C54-8F72-DC3129458213}
+		{9AD29393-A142-4EF2-94A1-C42C86139E5F} = {9F617D6F-6790-4C54-8F72-DC3129458213}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {07EDDBE2-A092-4BD4-917A-FC4A211900C3}

@@ -56,24 +56,36 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Remove="app_data\jobs\triggered\DocumentIdActivator\DocumentIdActivator.exe" />
-    <None Remove="app_data\jobs\triggered\DocumentIdActivator\DocumentIdActivator.pdb" />
-    <None Remove="app_data\jobs\triggered\DocumentIdActivator\git-placeholder" />
-    <None Remove="app_data\jobs\triggered\DocumentIdActivator\Microsoft.Office.Client.Policy.dll" />
-    <None Remove="app_data\jobs\triggered\DocumentIdActivator\Microsoft.Office.Client.TranslationServices.dll" />
-    <None Remove="app_data\jobs\triggered\DocumentIdActivator\Microsoft.Office.SharePoint.Tools.dll" />
-    <None Remove="app_data\jobs\triggered\DocumentIdActivator\Microsoft.Online.SharePoint.Client.Tenant.dll" />
-    <None Remove="app_data\jobs\triggered\DocumentIdActivator\Microsoft.ProjectServer.Client.dll" />
-    <None Remove="app_data\jobs\triggered\DocumentIdActivator\Microsoft.SharePoint.Client.dll" />
-    <None Remove="app_data\jobs\triggered\DocumentIdActivator\Microsoft.SharePoint.Client.DocumentManagement.dll" />
-    <None Remove="app_data\jobs\triggered\DocumentIdActivator\Microsoft.SharePoint.Client.Publishing.dll" />
-    <None Remove="app_data\jobs\triggered\DocumentIdActivator\Microsoft.SharePoint.Client.Runtime.dll" />
-    <None Remove="app_data\jobs\triggered\DocumentIdActivator\Microsoft.SharePoint.Client.Runtime.Windows.dll" />
-    <None Remove="app_data\jobs\triggered\DocumentIdActivator\Microsoft.SharePoint.Client.Search.Applications.dll" />
-    <None Remove="app_data\jobs\triggered\DocumentIdActivator\Microsoft.SharePoint.Client.Search.dll" />
-    <None Remove="app_data\jobs\triggered\DocumentIdActivator\Microsoft.SharePoint.Client.Taxonomy.dll" />
-    <None Remove="app_data\jobs\triggered\DocumentIdActivator\Microsoft.SharePoint.Client.UserProfiles.dll" />
-    <None Remove="app_data\jobs\triggered\DocumentIdActivator\Microsoft.SharePoint.Client.WorkflowServices.dll" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\AngleSharp.dll" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\AngleSharp.xml" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\DocumentIdActivator.exe" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\DocumentIdActivator.pdb" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\git-placeholder" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.Azure.ActiveDirectory.GraphClient.dll" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.Azure.KeyVault.Core.dll" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.Azure.KeyVault.Core.xml" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.Data.Edm.dll" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.Data.Edm.xml" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.Data.OData.dll" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.Data.OData.xml" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.Data.Services.Client.dll" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.Data.Services.Client.xml" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.Graph.Core.dll" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.Graph.Core.xml" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.Graph.dll" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.Graph.xml" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.IdentityModel.Clients.ActiveDirectory.dll" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.IdentityModel.Clients.ActiveDirectory.xml" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.IdentityModel.dll" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.IdentityModel.JsonWebTokens.dll" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.IdentityModel.JsonWebTokens.pdb" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.IdentityModel.JsonWebTokens.xml" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.IdentityModel.Logging.dll" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.IdentityModel.Logging.pdb" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.IdentityModel.Logging.xml" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.IdentityModel.Tokens.dll" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.IdentityModel.Tokens.pdb" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.IdentityModel.Tokens.xml" />
     <None Remove="app_data\jobs\triggered\OneDriveSubscriptionsRenewer\ApplicationCore.dll" />
     <None Remove="app_data\jobs\triggered\OneDriveSubscriptionsRenewer\ApplicationCore.pdb" />
     <None Remove="app_data\jobs\triggered\OneDriveSubscriptionsRenewer\Infrastructure.dll" />
@@ -82,61 +94,50 @@
     <None Remove="app_data\jobs\triggered\OneDriveSubscriptionsRenewer\OneDriveSubscriptionRenewal.pdb" />
     <None Remove="app_data\jobs\triggered\OneDriveSubscriptionsRenewer\run.cmd" />
     <None Remove="app_data\jobs\triggered\OneDriveSubscriptionsRenewer\settings.job" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.Office.Client.Policy.dll" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.Office.Client.TranslationServices.dll" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.Office.SharePoint.Tools.dll" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.Online.SharePoint.Client.Tenant.dll" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.ProjectServer.Client.dll" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.SharePoint.Client.dll" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.SharePoint.Client.DocumentManagement.dll" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.SharePoint.Client.Publishing.dll" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.SharePoint.Client.Runtime.dll" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.SharePoint.Client.Runtime.Windows.dll" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.SharePoint.Client.Search.Applications.dll" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.SharePoint.Client.Search.dll" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.SharePoint.Client.Taxonomy.dll" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.SharePoint.Client.UserProfiles.dll" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.SharePoint.Client.WorkflowServices.dll" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.WindowsAzure.Storage.dll" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.WindowsAzure.Storage.pdb" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.WindowsAzure.Storage.xml" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\Newtonsoft.Json.dll" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\Newtonsoft.Json.xml" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\OfficeDevPnP.Core.dll" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\OfficeDevPnP.Core.xml" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\OpportunitySite.xml" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\OpportunitySiteProvisioner.exe" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\OpportunitySiteProvisioner.pdb" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\SharePointPnP.IdentityModel.Extensions.dll" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\System.IdentityModel.Tokens.Jwt.dll" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\System.IdentityModel.Tokens.Jwt.pdb" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\System.IdentityModel.Tokens.Jwt.xml" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\System.Net.Http.dll" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\System.Net.Http.Formatting.dll" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\System.Net.Http.Formatting.xml" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\System.Security.Cryptography.Algorithms.dll" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\System.Security.Cryptography.Encoding.dll" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\System.Security.Cryptography.Primitives.dll" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\System.Security.Cryptography.X509Certificates.dll" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\System.Spatial.dll" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\System.Spatial.xml" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\System.Web.Http.dll" />
+    <None Remove="app_data\jobs\triggered\OpportunitySiteProvisioner\System.Web.Http.xml" />
     <None Remove="Properties\PublishProfiles\CustomProfile.pubxml" />
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="app_data\jobs\triggered\DocumentIdActivator\DocumentIdActivator.exe">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="app_data\jobs\triggered\DocumentIdActivator\DocumentIdActivator.pdb">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="app_data\jobs\triggered\DocumentIdActivator\Microsoft.Office.Client.Policy.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="app_data\jobs\triggered\DocumentIdActivator\Microsoft.Office.Client.TranslationServices.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="app_data\jobs\triggered\DocumentIdActivator\Microsoft.Office.SharePoint.Tools.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="app_data\jobs\triggered\DocumentIdActivator\Microsoft.Online.SharePoint.Client.Tenant.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="app_data\jobs\triggered\DocumentIdActivator\Microsoft.ProjectServer.Client.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="app_data\jobs\triggered\DocumentIdActivator\Microsoft.SharePoint.Client.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="app_data\jobs\triggered\DocumentIdActivator\Microsoft.SharePoint.Client.DocumentManagement.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="app_data\jobs\triggered\DocumentIdActivator\Microsoft.SharePoint.Client.Publishing.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="app_data\jobs\triggered\DocumentIdActivator\Microsoft.SharePoint.Client.Runtime.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="app_data\jobs\triggered\DocumentIdActivator\Microsoft.SharePoint.Client.Runtime.Windows.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="app_data\jobs\triggered\DocumentIdActivator\Microsoft.SharePoint.Client.Search.Applications.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="app_data\jobs\triggered\DocumentIdActivator\Microsoft.SharePoint.Client.Search.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="app_data\jobs\triggered\DocumentIdActivator\Microsoft.SharePoint.Client.Taxonomy.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="app_data\jobs\triggered\DocumentIdActivator\Microsoft.SharePoint.Client.UserProfiles.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="app_data\jobs\triggered\DocumentIdActivator\Microsoft.SharePoint.Client.WorkflowServices.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
     <Content Include="app_data\jobs\triggered\OneDriveSubscriptionsRenewer\ApplicationCore.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -159,6 +160,173 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="app_data\jobs\triggered\OneDriveSubscriptionsRenewer\settings.job">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\AngleSharp.dll" />
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\AngleSharp.xml" />
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.Azure.ActiveDirectory.GraphClient.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.Azure.KeyVault.Core.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.Azure.KeyVault.Core.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.Data.Edm.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.Data.Edm.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.Data.OData.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.Data.OData.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.Data.Services.Client.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.Data.Services.Client.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.Graph.Core.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.Graph.Core.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.Graph.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.Graph.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.IdentityModel.Clients.ActiveDirectory.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.IdentityModel.Clients.ActiveDirectory.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.IdentityModel.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.IdentityModel.JsonWebTokens.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.IdentityModel.JsonWebTokens.pdb">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.IdentityModel.JsonWebTokens.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.IdentityModel.Logging.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.IdentityModel.Logging.pdb">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.IdentityModel.Logging.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.IdentityModel.Tokens.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.IdentityModel.Tokens.pdb">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.IdentityModel.Tokens.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.Office.Client.Policy.dll" />
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.Office.Client.TranslationServices.dll" />
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.Office.SharePoint.Tools.dll" />
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.Online.SharePoint.Client.Tenant.dll" />
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.ProjectServer.Client.dll" />
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.SharePoint.Client.dll" />
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.SharePoint.Client.DocumentManagement.dll" />
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.SharePoint.Client.Publishing.dll" />
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.SharePoint.Client.Runtime.dll" />
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.SharePoint.Client.Runtime.Windows.dll" />
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.SharePoint.Client.Search.Applications.dll" />
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.SharePoint.Client.Search.dll" />
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.SharePoint.Client.Taxonomy.dll" />
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.SharePoint.Client.UserProfiles.dll" />
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.SharePoint.Client.WorkflowServices.dll" />
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.WindowsAzure.Storage.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.WindowsAzure.Storage.pdb">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.WindowsAzure.Storage.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\Newtonsoft.Json.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\Newtonsoft.Json.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\OfficeDevPnP.Core.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\OfficeDevPnP.Core.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\OpportunitySite.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\OpportunitySiteProvisioner.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\OpportunitySiteProvisioner.pdb">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\SharePointPnP.IdentityModel.Extensions.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\System.IdentityModel.Tokens.Jwt.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\System.IdentityModel.Tokens.Jwt.pdb">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\System.IdentityModel.Tokens.Jwt.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\System.Net.Http.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\System.Net.Http.Formatting.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\System.Net.Http.Formatting.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\System.Security.Cryptography.Algorithms.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\System.Security.Cryptography.Encoding.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\System.Security.Cryptography.Primitives.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\System.Security.Cryptography.X509Certificates.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\System.Spatial.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\System.Spatial.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\System.Web.Http.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\System.Web.Http.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

@@ -23,6 +23,7 @@ using Infrastructure.OfficeApi;
 using Microsoft.AspNetCore.Http;
 using ApplicationCore.Helpers.Exceptions;
 using System.Linq;
+using DocumentFormat.OpenXml.Packaging;
 
 namespace Infrastructure.Services
 {
@@ -32,6 +33,7 @@ namespace Infrastructure.Services
         private readonly IOpportunityRepository _opportunityRepository;
         private readonly IRoleMappingRepository _roleMappingRepository;
         private readonly IWordParser _wordParser;
+        private readonly IPowerPointParser _powerPointParser;
 
         public DocumentRepository(
             ILogger<DocumentRepository> logger,
@@ -39,17 +41,20 @@ namespace Infrastructure.Services
             GraphSharePointAppService graphSharePointAppService,
             IOpportunityRepository opportunityRepository,
             IRoleMappingRepository roleMappingRepository,
-            IWordParser wordParser) : base(logger, appOptions)
+            IWordParser wordParser,
+            IPowerPointParser powerPointParser) : base(logger, appOptions)
         {
             Guard.Against.Null(graphSharePointAppService, nameof(graphSharePointAppService));
             Guard.Against.Null(opportunityRepository, nameof(opportunityRepository));
             Guard.Against.Null(roleMappingRepository, nameof(roleMappingRepository));
             Guard.Against.Null(wordParser, nameof(wordParser));
+            Guard.Against.Null(powerPointParser, nameof(powerPointParser));
 
             _graphSharePointAppService = graphSharePointAppService;
             _opportunityRepository = opportunityRepository;
             _roleMappingRepository = roleMappingRepository;
             _wordParser = wordParser;
+            _powerPointParser = powerPointParser;
         }
 
         public async Task<JObject> UploadDocumentAsync(string siteId, string folder, IFormFile file, string requestId = "")
@@ -91,7 +96,7 @@ namespace Infrastructure.Services
                 if (docType == DocumentContext.ProposalTemplate.Name)
                 {
                     // If docType is proposal document template, try to extract sections before upload so if fails, upload is skipped
-                    sections = (await ExtractSectionsAsync(file.OpenReadStream(), requestId)).ToList();
+                    sections = (await ExtractSectionsAsync(file.OpenReadStream(), file.FileName, requestId)).ToList();
                     Guard.Against.Null(sections, "UploadDocumentTeamAsync_sections", requestId);
 
                     folder = "Formal Proposal";
@@ -290,15 +295,20 @@ namespace Infrastructure.Services
 
 
         // Private methods
-        private async Task<IList<DocumentSection>> ExtractSectionsAsync(Stream fileStream, string requestId = "")
+        private async Task<IList<DocumentSection>> ExtractSectionsAsync(Stream fileStream, string fileName, string requestId = "")
         {
             _logger.LogInformation($"RequestId: {requestId} - GetItemByIdAsync called.");
 
             try
             {
-                Guard.Against.Null(fileStream, nameof(fileStream), requestId);
-
-                return await _wordParser.RetrieveTOCAsync(fileStream);
+                if (fileName.Contains(".pptx"))
+                {
+                    return await _powerPointParser.RetrieveTOCAsync(fileStream);
+                }
+                else
+                {
+                    return await _wordParser.RetrieveTOCAsync(fileStream);
+                }
             }
             catch (Exception ex)
             {

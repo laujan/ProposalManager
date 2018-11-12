@@ -102,6 +102,7 @@ namespace WebReact
             services.AddScoped<IGraphClientOnBehalfContext, GraphClientOnBehalfContext>();
             services.AddTransient<IUserContext, UserIdentityContext>();
             services.AddScoped<IWordParser, WordParser>();
+            services.AddScoped<IPowerPointParser, PowerPointParser>();
 
             // Add core services
             services.AddScoped<IOpportunityFactory, OpportunityFactory>();
