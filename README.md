@@ -32,15 +32,15 @@ We have also published the following high level **walk-through videos** to help 
   - [Dynamics 365 Integration - Deployment](https://youtu.be/hblz_GK8VNs)
   - [Dynamics 365 and Office add-ins: Functional Overview](https://youtu.be/cQfYfxT5a-I)
   - [Project Smart Link - Deployment](https://youtu.be/qNlUlCwKcto)
-  - [Project Creation - Deployment](https://youtu.be/8AuPEAb-Trg)
   - [Office Add-ins: Functional Overview](https://youtu.be/hy5TLFVum1E)
 
-Note that the above videos are based on the version released in October 2018. With the commit on 6th November 2018, some of the features such as App Registration and Admin involvement for add-in addition have undergone significant changes.
+Video for deployment of Proposal Creation Office add-in is in progress and will be published soon.
 
 # Roadmap
 The upcoming versions of Proposal Manager are set to incrementally add several value-added features, including:
   - Q & A Bot
   - Advanced Predictive Analytics
+  - Support for more core banking scenarios such as Investment banking Pitchbooks
  
 Please use the Issues tab in GitHub to ask any questions, request help with troubleshooting or for new feature requests. 
 # Contributing
