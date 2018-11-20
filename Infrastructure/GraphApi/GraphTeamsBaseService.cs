@@ -650,7 +650,7 @@ namespace Infrastructure.GraphApi
             {
                 Guard.Against.Null(groupId, nameof(groupId));
 
-                var requestUrl = _appOptions.GraphBetaRequestUrl + "/groups/" + groupId + "/channels/";
+                var requestUrl = _appOptions.GraphBetaRequestUrl + "/teams/" + groupId + "/channels";
 
                 // Create the request message and add the content.
                 HttpRequestMessage hrm = new HttpRequestMessage(HttpMethod.Get, requestUrl);

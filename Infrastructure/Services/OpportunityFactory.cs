@@ -282,18 +282,21 @@ namespace Infrastructure.Services
 
             try
 			{
+                var initialState = opportunity.Metadata.OpportunityState;
+
                 //create team and channels
                 if (opportunity.Content.DealType.ProcessList != null && opportunity.Metadata.OpportunityState == OpportunityState.Creating)
                 {
                     if (await GroupIdCheckAsync(opportunity.DisplayName, requestId))
                     {
-                        await CreateTeamAndChannelsAsync(opportunity, requestId);
+                        string generalChannelId = await CreateTeamAndChannelsAsync(opportunity, requestId);
                         //Temperary change, will revert to back after implementing "add app"
                         opportunity.Metadata.OpportunityState = OpportunityState.InProgress;
+                        //set channelId for Bot notifications.
+                        opportunity.Metadata.OpportunityChannelId = generalChannelId;
                     }
                 }
 
-                var initialState = opportunity.Metadata.OpportunityState;
                 bool checklistPass = false;
 
                 if (opportunity.Metadata.OpportunityState != OpportunityState.Creating)
@@ -632,15 +635,15 @@ namespace Infrastructure.Services
             }
         }
 
-        private async Task CreateTeamAndChannelsAsync(Opportunity opportunity, string requestId = "")
+        private async Task<string> CreateTeamAndChannelsAsync(Opportunity opportunity, string requestId = "")
         {
             _logger.LogError($"RequestId: {requestId} - createTeamAndChannels Started");
 
             try
             {
                 //create team
-               await _graphTeamsAppService.CreateTeamAsync(opportunity.DisplayName, requestId);
-
+                var responce = await _graphTeamsAppService.CreateTeamAsync(opportunity.DisplayName, requestId);
+                
                 //get Group ID
                 bool check = true;
                 dynamic jsonDyn = null;
@@ -661,6 +664,12 @@ namespace Infrastructure.Services
                 }
                 var groupID = String.Empty;
                 groupID = jsonDyn.value[0].id.ToString();
+
+
+                //Get general channel id
+                var generalChannel = await _graphTeamsAppService.ListChannelAsync(groupID);
+                dynamic generalChannelObj = generalChannel;
+                string generalChannelId = generalChannelObj.value[0].id.ToString();
 
                 foreach (var process in opportunity.Content.DealType.ProcessList)
                 {
@@ -701,6 +710,8 @@ namespace Infrastructure.Services
                 {
                     _logger.LogError($"RequestId: {requestId} -_addInHelper.CallAddInWebhookAsync(opportunity, requestId): {ex}");
                 }
+
+                return generalChannelId;
             }
             catch(Exception ex)
             {
