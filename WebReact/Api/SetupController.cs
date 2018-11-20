@@ -203,6 +203,28 @@ namespace WebReact.Api
             return NoContent();
         }
 
+        [HttpPost("CreateSiteTasks", Name = "CreateSiteTasks")]
+        public async Task<IActionResult> CreateSiteTasks()
+        {
+            var requestId = Guid.NewGuid().ToString();
+            _logger.LogInformation($"RequestID:{requestId} SetupController_CreateSiteTasks called.");
+
+            // Check to see if setup is enabled and if not respond with bad request
+            var checkSetupState = await CheckSetupState();
+            if (checkSetupState != null) return BadRequest(checkSetupState);
+
+            try
+            {
+                await _setupService.CreateSiteTasksAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"RequestID:{requestId} SetupController_CreateSiteTasks error: {ex.Message}");
+                var errorResponse = JsonErrorResponse.BadRequest($"CreateSiteTasks error: {ex.Message}", requestId);
+                return BadRequest(errorResponse);
+            }
+            return NoContent();
+        }
         [HttpPost("CreateProposalManagerTeam/{name}", Name = "CreateProposalManagerTeam")]
         public async Task<IActionResult> CreateProposalManagerTeam(string name)
         {

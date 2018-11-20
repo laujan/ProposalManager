@@ -33,6 +33,7 @@ import { Administration } from './components-teams/general/Administration';
 import { General } from './components-teams/general/General';
 import { Configuration } from './components-teams/general/Configuration';
 import { AddDealType } from './components-teams/general/AddDealType';
+import { AddDealTypeR } from './components-teams/general/DealType/AddDealTypeR';
 import { OpportunityDetails } from './components-teams/general/Opportunity/OpportunityDetails';
 import { ChooseTeam } from './components-teams/general/Opportunity/ChooseTeam';
 
@@ -509,6 +510,10 @@ export class AppTeams extends Component {
         const AddDealTypeView = ({ match }) => {
             return <AddDealType teamsContext={teamsContext} />;
         };
+		const AddDealTypeViewR = ({ match }) => {
+            return <AddDealTypeR teamsContext={teamsContext} />;
+        };
+		
         const GeneralView = ({ match }) => {
             return <General teamsContext={teamsContext} appSettings={appSettings} />;
         };
@@ -558,6 +563,7 @@ export class AppTeams extends Component {
                 <Route exact path='/tab/generalAdministrationTab' component={AdministrationView} />
                 <Route exact path='/tab/generalDashboardTab' component={GeneralView} />
                 <Route exact path='/tab/generalAddDealType' component={AddDealTypeView} />
+				<Route exact path='/tab/generalAddDealTypeR' component={AddDealTypeViewR} />
                 <Route exact path='/tab/OpportunityDetails' component={OpportunityDetails} />
                 <Route exact path='/tab/ChooseTeam' component={ChooseTeam} />
 

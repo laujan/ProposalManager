@@ -56,7 +56,8 @@ export class Setup extends Component {
                 "RegionsListId": "",
                 "DashboardListId": "",
                 "RoleMappingsListId": "",
-                "OpportunitiesListId": ""
+                "OpportunitiesListId": "",
+                "TasksListId": ""
             },
             ProposalManagement_bot: {
                 "BotServiceUrl": "https://smba.trafficmanager.net/amer-client-ss.msg/",
@@ -233,6 +234,7 @@ export class Setup extends Component {
             "DashboardListId": "DashBoard",
             "RoleMappingsListId": "RoleMappings",
             "OpportunitiesListId": "Opportunities",
+            "TasksListId": "Tasks",
             "BotName": "Proposal Manager Bot",
             "BotId": "GUID",
             "PBIUserName": "Power BI user name",
@@ -267,6 +269,7 @@ export class Setup extends Component {
             "DashboardListId": "DashBoard",
             "RoleMappingsListId": "RoleMappings",
             "OpportunitiesListId": "Opportunities",
+            "TasksListId": "Tasks",
             "BotName": "Proposal Manager <tenant>",
             "UserProfileCacheExpiration": 30,
             "SharePointSiteRelativeName": "proposalmanager",
@@ -819,7 +822,7 @@ export class Setup extends Component {
                     key={key}
                     label={<Trans>{key}</Trans>}
                     onBlur={(e) => this.onBlurOnDocumentIdActivatorSettings(e, key)}
-                    required={true}
+                    required='true'
                     disabled={this.state.isUpdateOpp}
                     placeholder={`eg : <${placeholders(key)}>`}
                     value={this.state.DocumentIdActivator[key] ? this.state.DocumentIdActivator[key] : ""}
@@ -887,7 +890,7 @@ export class Setup extends Component {
                     key={key}
                     label={<Trans>{key}</Trans>}
                     onBlur={(e) => this.onBlurOnBISettings(e, key)}
-                    required={true}
+                    required='true'
                     disabled={this.state.isUpdateOpp}
                     placeholder={`eg : <${placeholders(key)}>`}
                     value={this.state.ProposalManagement_BI[key] ? this.state.ProposalManagement_BI[key] : ""}
@@ -932,7 +935,7 @@ export class Setup extends Component {
                         key={key}
                         label={<Trans>{key}</Trans>}
                         onBlur={(e) => this.onBlurOnBotSettings(e, key)}
-                        required={true}
+                        required='true'
                         disabled={this.state.isUpdateOpp}
                         placeholder={`eg : <${placeholders(key)}>`}
                         value={this.state.ProposalManagement_bot[key] ? this.state.ProposalManagement_bot[key] : ""}
@@ -981,7 +984,7 @@ export class Setup extends Component {
                             id='appKey'
                             label={<Trans>step5label</Trans>}
                             onBlur={(e) => this.onBlurSetPM(e, "ADGroupName")}
-                            required={true}
+                            required='true'
                             disabled={this.state.isUpdateOpp}
                             placeholder={`eg : < Proposal Manager >`}
                         />
@@ -1013,7 +1016,7 @@ export class Setup extends Component {
                         key={key}
                         label={<Trans>{key}</Trans>}
                         onBlur={(e) => this.onBlurOnAettingKeys(e, key)}
-                        required={true}
+                        required='true'
                         value={this.state.ProposalManagement_Misc[key] ? this.state.ProposalManagement_Misc[key] : this.defaultValue(key)}
                         disabled={this.state.isUpdateOpp}
                         placeholder={`eg : <${placeholders(key)}>`}
@@ -1058,7 +1061,7 @@ export class Setup extends Component {
                         key={key}
                         label={<Trans>{key}</Trans>}
                         onBlur={(e) => this.onBlurOnAettingKeys(e, key, this.defaultValue(key))}
-                        required={true}
+                        required='true'
                         disabled={this.state.isUpdateOpp}
                         placeholder={`eg : <${placeholders(key)}>`}
                         value={this.state.ProposalManagement_Sharepoint[key] ? this.state.ProposalManagement_Sharepoint[key] : this.defaultValue(key)}
@@ -1073,7 +1076,7 @@ export class Setup extends Component {
                         key={key}
                         label={<Trans>{key}</Trans>}
                         onBlur={(e) => this.onBlurOnAettingKeys(e, key, this.defaultValue(key))}
-                        required={true}
+                        required='true'
                         disabled={this.state.isUpdateOpp}
                         placeholder={`eg : <${placeholders(key)}>`}
                         value={this.state.ProposalManagement_Sharepoint[key] ? this.state.ProposalManagement_Sharepoint[key] : this.defaultValue(key)}
@@ -1145,9 +1148,9 @@ export class Setup extends Component {
                             id='appKey'
                             label={<Trans>setupProposalManager</Trans>}
                             onBlur={(e) => this.onBlurSetPM(e, "PMAddinName")}
-                            required={true}
+                            required='true'
                             value={
-                                (this.state.ProposalManagement_Team.ProposalManagerAddInName) ?
+                                this.state.ProposalManagement_Team.ProposalManagerAddInName ?
                                     this.state.ProposalManagement_Team.ProposalManagerAddInName : this.state.PMAddinName}
                             placeholder={`eg : < Proposal Manager >`}
                             disabled={this.state.isUpdateOpp}
@@ -1168,7 +1171,7 @@ export class Setup extends Component {
                         
                             value={this.state.ProposalManagement_Team.TeamsAppInstanceId ?
                                 this.state.ProposalManagement_Team.TeamsAppInstanceId : this.state.appId}
-                            disabled={true}
+                            disabled='true'
                         />
                     </div>
                     <div className='ms-Grid-col ms-sm12 ms-md12 ms-lg12'>
@@ -1193,7 +1196,7 @@ export class Setup extends Component {
                             onBlur={(e) => this.onBlurSetPM(e, "PMTeamName")}
                             value={this.state.ProposalManagement_Team.GeneralProposalManagementTeam ?
                                 this.state.ProposalManagement_Team.GeneralProposalManagementTeam : this.state.PMTeamName}
-                            required={true}
+                            required='true'
                             disabled={this.state.isUpdateOpp}
                         />
                     </div>

@@ -207,6 +207,46 @@ namespace Infrastructure.Services
             }
         }
 
+        public async Task CreateSiteTasksAsync(string requestId = "")
+        {
+            _logger.LogInformation($"RequestId: {requestId} - SetupService_CreateSiteTasksAsync called.");
+
+            try
+            {
+                var siteList = new SiteList
+                {
+                    SiteId = _appOptions.ProposalManagementRootSiteId,
+                    ListId = _appOptions.TasksListId
+                };
+                var tasks = getTasks();
+
+                foreach (string task in tasks)
+                {
+                    try
+                    {
+                        // Create Json object for SharePoint create list item
+                        dynamic itemFieldsJson = new JObject();
+                        itemFieldsJson.Name = task;
+
+                        dynamic itemJson = new JObject();
+                        itemJson.fields = itemFieldsJson;
+
+                        var result = await _graphSharePointAppService.CreateListItemAsync(siteList, itemJson.ToString());
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning($"RequestId: {requestId} - SetupService_CreateSiteTasksAsync warning: {ex}");
+                    }
+                }
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"RequestId: {requestId} - SetupService_CreateSiteTasksAsync Service Exception: {ex}");
+                throw;
+            }
+        }
+
         public async Task CreateSiteAdminPermissionsAsync(string adGroupName, string requestId = "")
         {
             _logger.LogInformation($"RequestId: {requestId} - SetupService_CreateSiteAdminPermissionsAsync called.");
@@ -296,6 +336,10 @@ namespace Infrastructure.Services
                             break;
                         case ListSchema.DashboardListId:
                             htmlBody = SharePointListsSchemaHelper.DashboardJsonSchema(_appOptions.DashboardListId);
+                            await _graphSharePointAppService.CreateSiteListAsync(htmlBody);
+                            break;
+                        case ListSchema.TasksListId:
+                            htmlBody = SharePointListsSchemaHelper.TasksJsonSchema(_appOptions.TasksListId);
                             await _graphSharePointAppService.CreateSiteListAsync(htmlBody);
                             break;
                     }
@@ -429,6 +473,7 @@ namespace Infrastructure.Services
             sharepointLists.Add(ListSchema.TemplateListId);
             sharepointLists.Add(ListSchema.Permissions);
             sharepointLists.Add(ListSchema.DashboardListId);
+            sharepointLists.Add(ListSchema.TasksListId);
             return sharepointLists;
         }
 
@@ -477,6 +522,16 @@ namespace Infrastructure.Services
             roles.Add("Compliance");
             roles.Add("Underwriting");            
             return roles;
+        }
+        private List<string> getTasks(string requestId = "")
+        {
+            _logger.LogInformation($"RequestId: {requestId} - SetupService_getTasks called.");
+
+            List<string> tasks = new List<string>();
+            tasks.Add("Approval");
+            tasks.Add("Content");
+            tasks.Add("Unassigned");
+            return tasks;
         }
 
         private List<ProcessesType> getProcesses(string requestId = "")

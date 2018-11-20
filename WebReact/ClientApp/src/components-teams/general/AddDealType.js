@@ -632,6 +632,7 @@ export class AddDealType extends Component {
     }
 
     saveGroupWithProcess(groupOrder, groupOperation) {
+        console.log("saveGroupWithProcess==>",groupOrder, groupOperation)
         let newOrder;
         let updGroupList = this.state.selectedProcess;
         let selGroupProcess = this.state.groupSelectedProcess;

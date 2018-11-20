@@ -11,17 +11,12 @@ import {
     PivotLinkFormat,
     PivotLinkSize
 } from 'office-ui-fabric-react/lib/Pivot';
-import { Workflow } from '../../components-teams/Proposal/Workflow';
-import { TeamUpdate } from '../../components-teams/Proposal/TeamUpdate';
-import { TeamsComponentContext } from 'msteams-ui-components-react';
-import { getQueryVariable } from '../../common';
-import { GroupEmployeeStatusCard } from '../../components/Opportunity/GroupEmployeeStatusCard';
 import { Trans } from "react-i18next";
-import { DealTypeList } from './DealTypeList';
+import { DealTypeListR } from './DealType/DealTypeListR';
 import { Category } from '../../components/Administration/Category';
 import { Region } from '../../components/Administration/Region';
 import { Industry } from '../../components/Administration/Industry';
-import { UserRole } from '../../components/Administration/UserRole';
+import { Tasks } from '../../components/Administration/Tasks';
 import { ProcessTypesList } from './ProcessTypesList';
 import { Permissions } from './Permissions';
 
@@ -82,11 +77,14 @@ export class Configuration extends Component {
                                     <PivotItem linkText={<Trans>industry</Trans>} itemKey="industry">
                                         <Industry />
                                     </PivotItem>
+                                    <PivotItem linkText={<Trans>tasks</Trans>} itemKey="tasks">
+                                        <Tasks />
+                                    </PivotItem>
                                     <PivotItem linkText={<Trans>permissions</Trans>} itemKey="permissions">
                                         <Permissions />
                                     </PivotItem>
                                     <PivotItem linkText={<Trans>dealTypes</Trans>} itemKey="dealType">
-                                        <DealTypeList />
+                                        <DealTypeListR />
                                     </PivotItem>
                                     <PivotItem linkText={<Trans>processTypes</Trans>} itemKey="processType">
                                         <ProcessTypesList />

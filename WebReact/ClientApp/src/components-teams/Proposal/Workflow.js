@@ -85,7 +85,7 @@ export class Workflow extends Component {
         } else {
             userRole = p.processStep;
         }
-        if (p.processStep.toLowerCase() === "customer decision") {
+        if (p.processStep.toLowerCase() === "draft proposal") {
             userRoleArry = this.props.memberslist.filter(function (k) {
                 return k.assignedRole.displayName.toLowerCase() === "loanofficer";
             });

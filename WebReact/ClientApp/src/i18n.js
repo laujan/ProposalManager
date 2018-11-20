@@ -312,7 +312,12 @@ i18n.use(LanguageDetector).init({
                 "step2AfterSuccessfullConfigMsg": "Teams App Instance ID",
                 "step2AfterSuccessfullConfigMsg1": "Once configuration is completed, the following Teams App Instance ID is linked to the solution.",
                 "Create": "Create",
-                "SetOnBehalfToken":"Set Authentication Token"
+                "SetOnBehalfToken": "Set Authentication Token",
+                "tasks": "Tasks",
+                "tasksAddedSuccess": "Tasks added successfully.",
+                "tasksUpdatedSuccess": "Tasks updated successfully.",
+                "tasksDeletedSuccess": "Tasks deleted successfully.",
+                "tasksCannotbeEmpty": "Task can not be empty."
             }
         },
         es: {
@@ -614,7 +619,13 @@ i18n.use(LanguageDetector).init({
                 "downlaod": "Descargar la configuración del administrador de propuestas",
                 "step2AfterSuccessfullConfigMsg": "A continuación se muestra el ID de aplicación generado después de la configuración exitosa.",
                 "step2AfterSuccessfullConfigMsg1": "Una vez que se completa la configuración, la siguiente ID de instancia de la aplicación de equipos se vincula a la solución.",
-                "Create": "Crear"
+                "Create": "Crear",
+                "SetOnBehalfToken": "Establecer token de autenticación",
+                "tasks": "Tareas",
+                "tasksAddedSuccess": "Tarea añadida con éxito.",
+                "tasksUpdatedSuccess": "Tarea actualizada con éxito.",
+                "tasksDeletedSuccess": "Tarea eliminada con éxito.",
+                "tasksCannotbeEmpty": "La tarea no puede estar vacía."
             }
         },
         ja: {

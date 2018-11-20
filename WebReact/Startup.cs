@@ -132,9 +132,11 @@ namespace WebReact
 			services.AddScoped<IRegionService, RegionService>();
 			services.AddScoped<IIndustryService, IndustryService>();
 			services.AddScoped<IRoleMappingService, RoleMappingService>();
+            services.AddScoped<ITasksService, TasksService>();
+            services.AddScoped<ITasksRepository, TasksRepository>();
             services.AddScoped<IContextService, ContextService>();
             services.AddScoped<ICategoryService, CategoryService>();
-			services.AddScoped<ISetupService, SetupService>();
+            services.AddScoped<ISetupService, SetupService>();
             services.AddScoped<UserProfileHelpers>();
             services.AddScoped<TemplateHelpers>();
             services.AddScoped<OpportunityHelpers>();

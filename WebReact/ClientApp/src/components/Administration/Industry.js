@@ -9,10 +9,7 @@ import { IconButton } from 'office-ui-fabric-react/lib/Button';
 import { DetailsList, DetailsListLayoutMode, SelectionMode } from 'office-ui-fabric-react/lib/DetailsList';
 import { Link } from 'office-ui-fabric-react/lib/Link';
 import Utils from '../../helpers/Utils';
-import {
-    Spinner,
-    SpinnerSize
-} from 'office-ui-fabric-react/lib/Spinner';
+import { Spinner,SpinnerSize } from 'office-ui-fabric-react/lib/Spinner';
 import { MessageBar, MessageBarType } from 'office-ui-fabric-react/lib/MessageBar';
 import { Trans } from "react-i18next";
 
@@ -21,11 +18,8 @@ export class Industry extends Component {
 
     constructor(props) {
         super(props);
-
-        this.sdkHelper = window.sdkHelper;
-        this.authHelper = window.authHelper;
-
         this.utils = new Utils();
+        this.authHelper = window.authHelper;
         const columns = [
             {
                 key: 'column1', 
@@ -41,7 +35,7 @@ export class Industry extends Component {
                         <TextField
                             id={'txtIndustry' + item.id}
                             value={item.name}
-                            onBlur={(e) => this.onBlurIndustryName(e, item, item.operation)}
+                            onBlur={(e) => this.onBlurIndustryName(e,item)}
                         />
                     );
                 }
@@ -63,91 +57,44 @@ export class Industry extends Component {
             }
         ];
 
-        let rowCounter = 0;
-
         this.state = {
             items: [],
-            rowItemCounter: rowCounter,
             columns: columns,
-            isCompactMode: false,
             loading: true,
             isUpdate: false,
-            updatedItems: [],
             MessagebarText: "",
             MessageBarType: MessageBarType.success,
             isUpdateMsg: false
         };
-
-        this.getIndustries().then();
-    }
-
-    componentWillMount() {
-        //this.getIndustries();
-    }
-
-    async getIndustries() {
-        let industryList = [];
-        let industryList_length = 0;
-        try{
-            // call to API fetch Categories
-            let requestUrl = 'api/Industry';
-            let response = await fetch(requestUrl, {
-                method: "GET",
-                headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() }
-            });
-            let data = await response.json();
-            if(typeof data === 'string'){
-                console.log("Industry_getIndustries : ", data);
-            }else if(typeof data === 'object'){
-                console.log("Industry_getIndustries : ", data);
-                for (let i = 0; i < data.length; i++) {
-                    let region = {};
-                    region.id = data[i].id;
-                    region.name = data[i].name;
-                    region.operation = "update";
-                    industryList.push(region);
-                }
-                industryList_length = industryList.length;
-            }
-            else{
-                throw new Error("response is not an expected type : ", data);
-            }
-        }catch(error){
-            console.log("Region_getRegions Error: ", error.message);
-        }finally{
-            this.setState({ items: industryList, loading: false, rowItemCounter:  industryList_length});
-        }
-    }
-
-    createItem(key) {
-        return {
-            id: key,
-            name: "",
-            operation: "add"
-        };
     }
 
     onAddRow() {
-        let rowCounter = this.state.rowItemCounter + 1;
-        let newItems = [];
-        newItems.push(this.createItem(rowCounter));
-
-        let currentItems = this.state.items.concat(newItems);
-
-        this.setState({
-            items: currentItems,
-            rowItemCounter: rowCounter
-        });
+        let items = this.state.items.slice(0);
+        items.push({ id: items.length+1, name: ""});
+        this.setState({ items});
     }
 
-    deleteRow(item) {
-        this.setState({ isUpdate: true });
-        //deleteIndustry
-        this.deleteIndustry(item);
+    checkIndustryIsAlreadyPresent(value){
+        let flag = false;
+        let items = this.state.items.slice(0);
+        let index = items.findIndex(industry =>industry.name.toLowerCase() === value.toLowerCase());
+        if (index !== -1) {
+            this.setState({
+                isUpdate: false,
+                isUpdateMsg: true,
+                MessagebarText: <Trans>industryExist</Trans>,
+                MessageBarType: MessageBarType.error
+            });
+            setTimeout(function () { 
+                this.setMessage(false,false,"","");
+                this.setState({items});
+            }.bind(this), 2000);
+            flag = true;
+        }
+        return flag;
     }
 
-
-    industryList(columns, isCompactMode, items, selectionDetails) {
+    industryList(columns, isCompactMode, items) {
         return (
             <div className='ms-Grid-row LsitBoxAlign p20ALL'>
                 <DetailsList
@@ -164,181 +111,87 @@ export class Industry extends Component {
         );
     }
 
-    onBlurIndustryName(e, item, operation) {
+    setMessage(isUpdate,isUpdateMsg,MessageBarType,MessagebarText){
+        this.setState({ isUpdate, isUpdateMsg, MessageBarType,MessagebarText });
+    }
+
+    async componentDidMount() {
+        await this.getIndustries();
+    }
+
+    async getIndustries() {
+        let items = [],loading=false;
+        try{
+            let requestUrl = 'api/Industry';
+            let response = await fetch(requestUrl, {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                method: "GET",
+                headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() }
+            });
+            let data = await (this.utils.handleErrors(response)).json();
+            items = data.map(industry=>{return {"id":industry.id,"name":industry.name}});     
+        }catch(error){
+            this.setMessage(false,true,MessageBarType.error,error.message);
+        }finally{
+            this.setState({ items, loading});
+        }
+    }
+
+    async onBlurIndustryName(e,item) {
         this.setState({ isUpdate: true });
-        //check Industry already exist in items
-        for (let p = 0; p < this.state.items.length; p++) {
-            if (this.state.items[p].name.toLowerCase() === e.target.value.toLowerCase()) {
-                this.setState({
-                    isUpdate: false,
-                    isUpdateMsg: true,
-                    MessagebarText: <Trans>industryExist</Trans>,
-                    MessageBarType: MessageBarType.error
-                });
-                setTimeout(function () { this.setState({ isUpdateMsg: false, MessageBarType: "", MessagebarText: "" }); }.bind(this), 3000);
-                return false;
-            }
+        let id = item.id;
+        let value = e.target.value;
+        let requestUpdUrl = 'api/Industry';
+        let method = item.name.length === 0 ? "POST" : "PATCH";
+
+        try {
+            //Checking item is already present
+            if(this.checkIndustryIsAlreadyPresent(value)) return;
+
+            let response = await fetch(requestUpdUrl, {
+                method: method,
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'authorization': 'Bearer    ' + window.authHelper.getWebApiToken()
+                },
+                body: JSON.stringify({"id":id,"name":value})
+            });
+            response = this.utils.handleErrors(response);
+            this.setMessage(false,true,MessageBarType.success,method === "PATCH" ? <Trans>industryUpdatedSuccess</Trans> : <Trans>industryAddedSuccess</Trans>);
+        } catch (error) {
+            this.setMessage(false,true,MessageBarType.error,<Trans>errorOoccuredPleaseTryAgain</Trans> + " " + error.message);
+        }finally{
+            setTimeout(function () { this.setMessage(false,false,"",""); }.bind(this), 2000);
+            await this.getIndustries();
         }
-        delete item['operation'];
+    }   
 
-        let updatedItems = this.state.items;
-        let itemIdx = updatedItems.indexOf(item);
-        updatedItems[itemIdx].name = e.target.value;
-        this.setState({
-            updatedItems: updatedItems
-        });
-
-        if (operation === "add") {
-            this.addIndustry(updatedItems[itemIdx]);
-        } else if (operation === "update") {
-            this.updateIndustry(updatedItems[itemIdx]);
-        }
-
-    }
-
-    addIndustry(industryItem) {
-        console.log(industryItem);
-        let industryObj = industryItem;
-        // API Update call        
-        this.requestUpdUrl = 'api/Industry';
-        let options = {
-            method: "POST",
-            headers: {
+    async deleteRow(industryItem) {
+        this.setState({isUpdate: true});
+        let requestUpdUrl = 'api/Industry/' + industryItem.id;
+        try {
+            let response = await fetch(requestUpdUrl, {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json',
-                'authorization': 'Bearer    ' + window.authHelper.getWebApiToken()
-            },
-            body: JSON.stringify(industryObj)
-        };
-
-        fetch(this.requestUpdUrl, options)
-            .catch(error => console.error('Error:', error))
-            .then(response => {
-                if (response.ok) {
-                    this.setState({
-                        items: this.state.updatedItems,
-                        MessagebarText: <Trans>industryAddedSuccess</Trans>,
-                        isUpdate: false,
-                        isUpdateMsg: true,
-                        MessageBarType: MessageBarType.success
-                    });
-                    setTimeout(function () { this.setState({ isUpdateMsg: false, MessageBarType: "", MessagebarText: "" }); }.bind(this), 3000);
-                    return response.json;
-                } else {
-                    this.setState({
-                        MessagebarText: <Trans>errorOoccuredPleaseTryAgain</Trans>,
-                        isUpdate: false,
-                        isUpdateMsg: true,
-                        MessageBarType: MessageBarType.error
-                    });
-                    setTimeout(function () { this.setState({ isUpdateMsg: false, MessageBarType: "", MessagebarText: "" }); }.bind(this), 3000);
-                }
-            }).then(json => {
-                //console.log(json);
-                this.setState({ isUpdate: false });
+                method: "DELETE",
+                headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() }
             });
-
-
+            response = this.utils.handleErrors(response);
+            this.setMessage(false,true,MessageBarType.success,<Trans>industryDeletedSuccess</Trans>);
+        } catch (error) {
+            this.setMessage(false,true,MessageBarType.error,<Trans>errorOoccuredPleaseTryAgain</Trans> + " " + error.message);
+        }finally{
+            setTimeout(function () { this.setMessage(false,false,"",""); }.bind(this), 2000);
+            await this.getIndustries();
+        }
+        return;
     }
-
-    updateIndustry(industryItem) {
-        console.log(industryItem);
-        let industryObj = industryItem;
-        // API Update call        
-        this.requestUpdUrl = 'api/Industry';
-        let options = {
-            method: "PATCH",
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-                'authorization': 'Bearer    ' + window.authHelper.getWebApiToken()
-            },
-            body: JSON.stringify(industryObj)
-        };
-
-        fetch(this.requestUpdUrl, options)
-            .catch(error => console.error('Error:', error))
-            .then(response => {
-                if (response.ok) {
-                    this.setState({
-                        items: this.state.updatedItems,
-                        MessagebarText: <Trans>industryUpdatedSuccess</Trans>,
-                        isUpdate: false,
-                        isUpdateMsg: true,
-                        MessageBarType: MessageBarType.success
-                    });
-                    setTimeout(function () { this.setState({ isUpdateMsg: false, MessageBarType: "", MessagebarText: "" }); }.bind(this), 3000);
-
-                    return response.json;
-                } else {
-                    this.setState({
-                        MessagebarText: <Trans>errorOoccuredPleaseTryAgain</Trans>,
-                        isUpdate: false,
-                        isUpdateMsg: true,
-                        MessageBarType: MessageBarType.error
-                    });
-                    setTimeout(function () { this.setState({ isUpdateMsg: false, MessageBarType: MessageBarType.error, MessagebarText: "" }); }.bind(this), 3000);
-                }
-            }).then(json => {
-                //console.log(json);
-                this.setState({ isUpdate: false });
-            });
-
-
-    }
-
-    deleteIndustry(industryItem) {
-        console.log(industryItem);
-        let industryObj = industryItem;
-        delete industryObj['operation'];
-        // API Update call        
-        this.requestUpdUrl = 'api/Industry/' + industryObj.id;
-        console.log(industryObj);
-
-        fetch(this.requestUpdUrl, {
-            method: "DELETE",
-            headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() }
-        })
-            .catch(error => console.error('Error:', error))
-            .then(response => {
-                if (response.ok) {
-                    let currentItems = this.state.items.filter(x => x.id !== industryObj.id);
-                    this.industry = currentItems;
-                    this.setState({
-                        items: currentItems,
-                        isUpdate: false
-                    });
-                    this.setState({
-                        items: currentItems,
-                        MessagebarText: <Trans>industryDeletedSuccess</Trans>,
-                        isUpdate: false,
-                        isUpdateMsg: true,
-                        MessageBarType: MessageBarType.success
-                    });
-
-                    setTimeout(function () { this.setState({ isUpdateMsg: false, MessageBarType: "", MessagebarText: "" }); }.bind(this), 3000);
-                    return response.json;
-                } else {
-                    this.setState({
-                        MessagebarText: <Trans>errorOoccuredPleaseTryAgain</Trans>,
-                        isUpdate: false,
-                        isUpdateMsg: true,
-                        MessageBarType: MessageBarType.error
-                    });
-                    setTimeout(function () { this.setState({ isUpdateMsg: false, MessageBarType: "", MessagebarText: "" }); }.bind(this), 3000);
-                }
-            }).then(json => {
-                //console.log(json);
-                this.setState({ isUpdate: false });
-            });
-
-
-    }
-
 
     render() {
-        const { columns, isCompactMode, items, selectionDetails } = this.state;
-        const industryList = this.industryList(columns, isCompactMode, items, selectionDetails);
+        const { columns, items } = this.state;
+        const industryList = this.industryList(columns, false, items);
         if (this.state.loading) {
             return (
                 <div className='ms-BasicSpinnersExample ibox-content pt15 '>

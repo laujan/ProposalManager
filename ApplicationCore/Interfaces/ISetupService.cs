@@ -21,6 +21,7 @@ namespace ApplicationCore.Interfaces
         Task CreateAdminGroupAsync(string name, string requestId = "");
         Task<string> GetAppId(string name, string requestId = "");
         Task CreateSiteAdminPermissionsAsync(string adGroupName, string requestId = "");
+        Task CreateSiteTasksAsync(string requestId = "");
     }
 
 }

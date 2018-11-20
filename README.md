@@ -16,6 +16,20 @@ Proposal Manager consists of four key components:
   - Office add-in [Proposal Creation] to enable different sections of a proposal document to be assigned to specific owners along with associated tasks and status. 
   - Dynamics 365 integration sample enables an opportunity to be created from Dynamics 365 which can then be managed by Proposal Manager in Microsoft Teams. Team members and documents can be updated from Dynamics business processes
 
+New features in the latest release include:
+  - All proposal manager features are available directly in Microsoft Teams 
+  - Master team for proposal creation, administration, and configuration 
+  - Individual teams are created automatically for each opportunity 
+  -	Role based access control to proposal manager
+  -	Customizable process types and team channels for different banking/insurance scenarios 
+  - Supporting corporate/commercial lending and investment banking pitchbook scenarios
+  - Analytics dashboard on commercial lending progress
+  - Improved deployment experience to get started quickly 
+  - Project Smart Link enables adding on demand data in Word and PowerPoint from different external data sources including Excel or Webservices
+  - Integration with Dynamics 365 sales business processes through APIs 
+  - Extensibility features for partners: proposal manager APIs, application channel tab customization, and project smart link integration from external webservice
+  - Improved documentation and getting started videos in GitHub
+ 
 Detailed documentation and links to instructional videos are available in Documents folders presented in the master and respective Add-Ins. 
 
 # Before you start
@@ -40,7 +54,7 @@ Video for deployment of Proposal Creation Office add-in is in progress and will 
 The upcoming versions of Proposal Manager are set to incrementally add several value-added features, including:
   - Q & A Bot
   - Advanced Predictive Analytics
-  - Support for more core banking scenarios such as Investment banking Pitchbooks
+ 
  
 Please use the Issues tab in GitHub to ask any questions, request help with troubleshooting or for new feature requests. 
 # Contributing

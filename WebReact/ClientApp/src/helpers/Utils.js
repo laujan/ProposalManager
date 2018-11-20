@@ -132,4 +132,23 @@ export default class Utils {
     sanitizeDisplayName(name) {
         let re = /apples/gi;
     }
+
+    //generic error handling functions
+    handleErrors(response) {
+        console.log("handleErrors==>", response);
+        let ok = response.ok;
+        if (!ok) {
+            let status = response.status;
+            let statusText = response.statusText;
+            let type = response.type;
+            if (status >= 500) {
+                throw new Error(`ServerError: ErrorMsg ${statusText} & status code ${status}`);
+            }
+            if (status <= 501) {
+                throw new Error(`ApplicationError: ErrorMsg ${statusText} & status code ${status}`);
+            }
+            throw new Error(`NetworkError: ErrorMsg ${statusText} & status code ${status}`);
+        }
+        return response;
+    }
 }

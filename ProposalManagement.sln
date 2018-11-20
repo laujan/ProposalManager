@@ -22,12 +22,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TeamsAddinPackage", "TeamsA
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{5625403B-2457-4296-B09C-22AEF7960C59}"
-	ProjectSection(SolutionItems) = preProject
-		Solution Items\AppCreationScripts.md = Solution Items\AppCreationScripts.md
-		Solution Items\apps.json = Solution Items\apps.json
-		Solution Items\Cleanup.ps1 = Solution Items\Cleanup.ps1
-		Solution Items\Configure.ps1 = Solution Items\Configure.ps1
-	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Dynamics Integration", "Dynamics Integration", "{1CF4CF69-4586-4C3F-95EB-55B152B40F4E}"
 EndProject

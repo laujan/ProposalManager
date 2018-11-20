@@ -28,6 +28,7 @@ namespace ApplicationCore
         public string ProcessListId { get; set; }
 
         public string IndustryListId { get; set; }
+        public string TasksListId { get; set; }
 
         public string RegionsListId { get; set; }
 
@@ -62,18 +63,18 @@ namespace ApplicationCore
         public string Permissions { get; set; }
 
         // For production applications this should be stored in a secure location like Azure Key Volt
-		public string PBIUserName { get; set; }
+        public string PBIUserName { get; set; }
 
         // For production applications this should be stored in a secure location like Azure Key Volt
         public string PBIUserPassword { get; set; }
 
-		public string PBIApplicationId { get; set; }
+        public string PBIApplicationId { get; set; }
 
-		public string PBIWorkSpaceId { get; set; }
+        public string PBIWorkSpaceId { get; set; }
 
-		public string PBIReportId { get; set; }
+        public string PBIReportId { get; set; }
 
-		public string PBITenantId { get; set; }
+        public string PBITenantId { get; set; }
 
         public string GeneralProposalManagementTeam { get; set; }
 
@@ -90,7 +91,7 @@ namespace ApplicationCore
         public string Upn { get; set; }
 
         public string Expiration { get; set; }
-        
+
         public string VaultBaseUrl { get; set; }
     }
 }

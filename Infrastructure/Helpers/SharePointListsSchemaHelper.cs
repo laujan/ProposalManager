@@ -24,6 +24,19 @@ namespace Infrastructure.Helpers
             }";
             return json;
         }
+        public static string TasksJsonSchema(string displayName)
+        {
+            string json = @"{
+              'displayName': '" + displayName + @"',
+              'columns': [
+                {
+                  'name': 'Name',
+                  'text': {}
+                }
+              ]
+            }";
+            return json;
+        }
         public static string IndustryJsonSchema(string displayName)
         {
             string json = @"{
@@ -85,7 +98,8 @@ namespace Infrastructure.Helpers
                 },
                 {
                   'name': 'Reference',
-                  'text': {}
+                  'text': {},
+                  'indexed': true
                 }
               ]
             }";
@@ -308,6 +322,7 @@ namespace Infrastructure.Helpers
         RoleMappingsListId,
         TemplateListId,
         Permissions,
-        DashboardListId
+        DashboardListId,
+        TasksListId
     }
 }
