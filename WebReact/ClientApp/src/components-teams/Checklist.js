@@ -20,6 +20,7 @@ import './checklist.css';
 import { FilePicker } from '../components/FilePicker';
 import Utils from '../helpers/Utils';
 import { I18n, Trans } from "react-i18next";
+import AccessDenied from '../helpers/AccessDenied';
 
 //Granular Access Start
 import AuthHelper from '../helpers/AuthHelper';
@@ -828,21 +829,24 @@ export class Checklist extends Component {
                                                             <div className='docs-TextFieldExample ms-Grid-col ms-sm6 ms-md8 ms-lg4'>
                                                                 <I18n>
                                                                     {
-                                                                        t => <Dropdown
-                                                                            label={t('status')}
-                                                                            selectedKey={this.state.selectedItemKey}
-                                                                            onChanged={(e) => this.onStatusChange(e)}
-                                                                            id='statusDropdown'
-                                                                            options={
-                                                                                [
-                                                                                    { key: 0, text: t('Not Started') },
-                                                                                    { key: 1, text: t('In Progress') },
-                                                                                    { key: 2, text: t('Blocked') },
-                                                                                    { key: 3, text: t('Completed') }
-                                                                                ]
-                                                                            }
-                                                                        />
-
+                                                                        t => {
+                                                                            return (
+                                                                                <Dropdown
+                                                                                    label={t('status')}
+                                                                                    selectedKey={this.state.selectedItemKey}
+                                                                                    onChanged={(e) => this.onStatusChange(e)}
+                                                                                    id='statusDropdown'
+                                                                                    options={
+                                                                                        [
+                                                                                            { key: 0, text: t('Not Started') },
+                                                                                            { key: 1, text: t('In Progress') },
+                                                                                            { key: 2, text: t('Blocked') },
+                                                                                            { key: 3, text: t('Completed') }
+                                                                                        ]
+                                                                                    }
+                                                                                />
+                                                                            );
+                                                                        }
                                                                     }
                                                                 </I18n>
                                                             </div>
@@ -878,7 +882,8 @@ export class Checklist extends Component {
                                                 </Panel>
                                             </div>
                                         </div>
-                                        : <div className="ms-Grid-col ms-sm12 ms-md8 ms-lg12 p-10"><h2><Trans>accessDenied</Trans></h2></div>
+                                        :
+                                        <AccessDenied />
                             }
                         </div>
                     </div>

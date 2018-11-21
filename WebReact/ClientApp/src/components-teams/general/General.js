@@ -21,6 +21,7 @@ import { NewOpportunityOthers } from './Opportunity/NewOpportunityOthers';
 import i18n from '../../i18n';
 import { MessageBar, MessageBarType } from 'office-ui-fabric-react/lib/MessageBar';
 import '../../Style.css';
+import AccessDenied from '../../helpers/AccessDenied';
 
 export class General extends Component {
     displayName = General.name
@@ -571,7 +572,7 @@ export class General extends Component {
 
     render() {
         const viewState = this.state.viewState;
-        console.log("General ==>appSettings", this.props.appSettings)
+        console.log("General ==>appSettings", this.props.appSettings);
         const DashboardView = ({ match }) => {
             return <Dashboard appSettings={this.props.appSettings} />;
         };
@@ -662,7 +663,7 @@ export class General extends Component {
                                     </div>
 
                                     :
-                                    <div className="bg-white p-10"><h2><Trans>accessDenied</Trans></h2></div>
+                                    <AccessDenied />
                         }
 
                     </div>

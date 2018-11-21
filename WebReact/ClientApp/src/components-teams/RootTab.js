@@ -17,6 +17,7 @@ import { Spinner, SpinnerSize } from 'office-ui-fabric-react/lib/Spinner';
 import { getQueryVariable } from '../common';
 import { OpportunitySummary } from './general/Opportunity/OpportunitySummary';
 import { OpportunityNotes } from './general/Opportunity/OpportunityNotes';
+import Accessdenied from '../helpers/AccessDenied';
 
 export class RootTab extends Component {
     displayName = RootTab.name
@@ -279,9 +280,11 @@ export class RootTab extends Component {
                                                                 <div className='ms-Grid-row pl15 bg-white'>
                                                                     {
                                                                         loanOfficerRealManagerArr.map((member, ind) => {
-                                                                            return (<div className=' ms-Grid-col ms-sm12 ms-md8 ms-lg4 p-5' key={ind} >
-                                                                                <TeamUpdate memberslist={member} channelId={channelId} groupId={this.state.groupId} OppName={this.state.OppName} />
-                                                                            </div>);
+                                                                            return (
+                                                                                <div className=' ms-Grid-col ms-sm12 ms-md8 ms-lg4 p-5' key={ind} >
+                                                                                    <TeamUpdate memberslist={member} channelId={channelId} groupId={this.state.groupId} OppName={this.state.OppName} />
+                                                                                </div>
+                                                                            );
                                                                         })
                                                                     }
                                                                 </div>
@@ -294,7 +297,7 @@ export class RootTab extends Component {
                                                         </Pivot>
                                                     </div>
                                                     :
-                                                    <div className="ms-Grid-col ms-sm6 ms-md8 ms-lg12 p-10"><h2><Trans>accessDenied</Trans></h2></div>
+                                                    <Accessdenied />
                                         }
                                     </div>
 

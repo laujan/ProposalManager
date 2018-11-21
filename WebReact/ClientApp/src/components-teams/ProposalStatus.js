@@ -15,6 +15,7 @@ import { List } from 'office-ui-fabric-react/lib/List';
 import { PeoplePickerTeamMembers } from '../components/PeoplePickerTeamMembers';
 import './teams.css';
 import { Trans } from "react-i18next";
+import Accessdenied from '../helpers/AccessDenied';
 
 
 const DayPickerStrings = {
@@ -527,7 +528,8 @@ export class ProposalStatus extends Component {
                                     </PanelBody>
                                     <PanelFooter />
                                 </Panel>
-                                : <div className="ms-Grid-col ms-sm6 ms-md8 ms-lg12 p-10 bgwhite tabviewUpdates"><h2><Trans>accessDenied</Trans></h2></div>
+                                :
+                                <Accessdenied />
                         }
                     </TeamsComponentContext>
                 </div >

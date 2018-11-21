@@ -14,6 +14,7 @@ import { Dropdown } from 'office-ui-fabric-react/lib/Dropdown';
 import { MessageBar, MessageBarType } from 'office-ui-fabric-react/lib/MessageBar';
 import { getQueryVariable } from '../common';
 import { I18n, Trans } from "react-i18next";
+import Accessdenied from '../helpers/AccessDenied';
 
 let teamContext = {};
 const DayPickerStrings = {
@@ -520,7 +521,8 @@ export class CustomerDecision extends Component {
 
                                     </PanelFooter>
                                 </Panel>
-                                : <div className="ms-Grid-col ms-sm6 ms-md8 ms-lg12 p-10 bgwhite tabviewUpdates"><h2><Trans>accessDenied</Trans></h2></div>
+                                :
+                                <Accessdenied />
                         }
 
 

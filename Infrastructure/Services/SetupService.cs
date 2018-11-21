@@ -25,6 +25,8 @@ using Microsoft.AspNetCore.Mvc;
 using Infrastructure.Helpers;
 using ApplicationCore.Entities.GraphServices;
 using System.Net;
+using System.Xml;
+using System.Xml.Linq;
 
 namespace Infrastructure.Services
 {
@@ -77,9 +79,23 @@ namespace Infrastructure.Services
         {
             _logger.LogInformation($"RequestId: {requestId} - SetupService_UpdateAppOpptionsAsync called.");
 
-            documentIdActivatorConfigurationWritableOptions.UpdateAsync(key, value, requestId);
+            if (!key.StartsWith("SharePoint"))
+                documentIdActivatorConfigurationWritableOptions.UpdateAsync(key, value, requestId);
+            else
+                SaveSharePointAppSetting(key, value);
 
             return Task.FromResult(StatusCodes.Status200OK);
+        }
+
+        private const string OpportunitySiteProvisionerConfigurationFileName = @"app_data\jobs\triggered\OpportunitySiteProvisioner\OpportunitySiteProvisioner.exe.config";
+
+        private void SaveSharePointAppSetting(string key, string value)
+        {
+            var actualKey = key.Replace("SharePoint", string.Empty);
+            var document = new XmlDocument();
+            document.Load(OpportunitySiteProvisionerConfigurationFileName);
+            document["configuration"]["appSettings"].ChildNodes.OfType<XmlNode>().First(n => n.Attributes["key"].Value == actualKey).Attributes["value"].Value = value;
+            document.Save(OpportunitySiteProvisionerConfigurationFileName);
         }
 
         public async Task CreateSiteProcessesAsync(string requestId = "")

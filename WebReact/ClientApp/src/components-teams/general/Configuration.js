@@ -19,6 +19,7 @@ import { Industry } from '../../components/Administration/Industry';
 import { Tasks } from '../../components/Administration/Tasks';
 import { ProcessTypesList } from './ProcessTypesList';
 import { Permissions } from './Permissions';
+import Accessdenied  from '../../helpers/AccessDenied';
 
 
 export class Configuration extends Component {
@@ -91,7 +92,7 @@ export class Configuration extends Component {
                                     </PivotItem>
                                 </Pivot>
                                 :
-                                <div className="bg-white p-10"><h2><Trans>accessDenied</Trans></h2></div>
+                                <Accessdenied />
                         }
                         
                     </div>

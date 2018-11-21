@@ -23,6 +23,7 @@ import {
 } from 'office-ui-fabric-react/lib/Spinner';
 import { OpportunitySummary } from '../components-teams/general/Opportunity/OpportunitySummary';
 import { OpportunityNotes } from '../components-teams/general/Opportunity/OpportunityNotes';
+import Accessdenied from '../helpers/AccessDenied';
 
 
 let teamMembers = [];
@@ -296,7 +297,7 @@ export class RootTab extends Component {
                                         </Pivot>
                                     </div>
                                     :
-                                    <div className="ms-Grid-col ms-sm6 ms-md8 ms-lg12 p-10"><h2><Trans>accessDenied</Trans></h2></div>
+                                    <Accessdenied />
                         }
                     </div>
                 </div>

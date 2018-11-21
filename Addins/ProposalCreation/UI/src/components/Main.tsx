@@ -59,7 +59,7 @@ export class Main extends React.Component<IMainProps> {
                             </PivotItem>
 
                             <PivotItem linkText={localizationService.getString("Documents")}>
-                            <Documents token={token} localizationService={localizationService}/>
+                                <Documents token={token} localizationService={localizationService}/>
                             </PivotItem>
 
                             <PivotItem linkText={localizationService.getString("CallReports")}>

@@ -8,6 +8,7 @@ import { Trans } from "react-i18next";
 import { Spinner, SpinnerSize } from 'office-ui-fabric-react/lib/Spinner';
 import Utils from '../../helpers/Utils';
 import * as pbi from 'powerbi-client';
+import Accessdenied from '../../helpers/AccessDenied';
 
 export class Dashboard extends Component {
 
@@ -149,7 +150,7 @@ export class Dashboard extends Component {
                                     this.accessGranted ?
                                         <div ref="reportContainerRef" id="reportContainer" className='ms-Grid-col ms-sm6 ms-md8 ms-lg12'/>
                                         :
-                                        <div className="ms-Grid-col ms-sm6 ms-md8 ms-lg12 p-10"><h2><Trans>accessDenied</Trans></h2></div>
+                                        <Accessdenied />
                                 }
                             </div>
                     }

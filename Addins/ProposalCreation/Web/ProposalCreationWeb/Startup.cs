@@ -3,9 +3,6 @@
 //
 // Licensed under the MIT license. See LICENSE file in the solution root folder for full license information.
 
-using ProposalCreation.Core.Extensions;
-using ProposalCreation.Core.Helpers;
-using ProposalCreation.Core.Providers;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -14,11 +11,15 @@ using Microsoft.AspNetCore.Localization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using ProposalCreation.Core.Extensions;
+using ProposalCreation.Core.Helpers;
+using ProposalCreation.Core.Interfaces;
+using ProposalCreation.Core.Providers;
 using System.Globalization;
 
 namespace ProposalCreationWeb
 {
-	public class Startup
+    public class Startup
 	{
 		public Startup(IConfiguration configuration) => Configuration = configuration;
 
@@ -76,6 +77,7 @@ namespace ProposalCreationWeb
 			services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 			services.AddSingleton(typeof(IConventionBasedConfigurationProvider<>), typeof(ConventionBasedConfigurationProvider<>));
 			services.AddSingleton<IRootConfigurationProvider, RootConfigurationProvider>();
+            services.AddSingleton<ITaskProvider, TaskProvider>();
 
 		}
 

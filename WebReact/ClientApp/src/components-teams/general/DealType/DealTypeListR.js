@@ -26,6 +26,7 @@ import {
 import { MessageBar, MessageBarType } from 'office-ui-fabric-react/lib/MessageBar';
 import { LinkContainer } from 'react-router-bootstrap';
 import i18n from '../../../i18n';
+import Accessdenied from '../../../helpers/AccessDenied';
 
 
 export class DealTypeListR extends Component {
@@ -324,11 +325,7 @@ export class DealTypeListR extends Component {
 
                     </div>
                     :
-                    <div className='ms-Grid bg-white  p-10 ibox-content'>
-                        <div className='ms-Grid-row'>
-                            <div className="ms-Grid-col ms-sm6 ms-md8 ms-lg12 p-10"><h2><Trans>accessDenied</Trans></h2></div>
-                        </div>
-                    </div>
+                    <Accessdenied />
             );
         }
     }

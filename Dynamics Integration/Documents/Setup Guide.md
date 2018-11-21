@@ -76,10 +76,23 @@ The professional performing the setup needs to have appropriate administrative p
       * On "Primary Entity", choose "Opportunity"
       * On the "Execution mode", choose **Asynchronous**. _This is extremely important. If the execution mode is not marked as Asynchronous, the integration will not work._
       * Click "Register new step".
-   7. Right click "Proposal Manager connections" and click "Register new Step". Fill the form as follows:
+   8. Right click "Proposal Manager connections" and click "Register new Step". Fill the form as follows:
       * On "Message", choose "Create"
       * On "Primary Entity", choose "Connection"
       * On the "Execution mode", choose **Synchronous**.
       * Click "Register new step".
 
-This concludes setup of the integration
+7. Give the integration engine permission to access the Proposal Manager API:
+   1. Open Microsoft Teams (keep in mind that you need to be a Proposal Manager administrator)
+   2. Go to the "Configuration" channel, in the Proposal Manager team
+   3. In the radio button set at the bottom of the tab, select the "Permissions" view
+   4. In the upper right corner of the tab, click on _"+ Add"_
+   5. Fill the new row with the following values:
+      * For _AD Group Name_, provide the string "aud_", followed by the **Proposal Manager app id** from its app registration. You can obtain it by going to the [app registration portal](apps.dev.microsoft.com). **Note**: this is not an _actual_ AD group name; it is the way that Proposal Manager has to authenticate applications instead of regular users.
+      * For _Role_, select "Administrator"
+      * For _Permissions_, select the following:
+         * Opportunity_Create
+         * Opportunities_ReadWrite_All
+         * Opportunity_ReadWrite_Team
+         * Opportunity_ReadWrite_Dealtype
+   6. Once you provided all the necessary values, click in the empty white portion at the top of the tab to save the changes. A green toast notification should appear below the list stating that the changes have been saved.

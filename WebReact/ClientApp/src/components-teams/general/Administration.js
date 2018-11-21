@@ -13,6 +13,7 @@ import { AdminActionRequired } from "./AdminActionRequired";
 import { AdminAllOpportunities } from './AdminAllOpportunities';
 import { Spinner, SpinnerSize } from 'office-ui-fabric-react/lib/Spinner';
 import Utils from '../../helpers/Utils';
+import Accessdenied from '../../helpers/AccessDenied';
 
 export class Administration extends Component {
     displayName = Administration.name
@@ -300,7 +301,7 @@ export class Administration extends Component {
 
 
                             :
-                            <div className="p-10"><h2><Trans>accessDenied</Trans></h2></div>
+                            <Accessdenied />
                         }
                     </div>
                 </div>

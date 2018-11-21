@@ -1,14 +1,14 @@
 import * as React from 'react';
 import * as $ from 'jquery';
 import { DocumentApiService, DocumentService } from '../services'
-import {Loading} from './Loading';
+import { Loading } from './Loading';
 import {
     DetailsList,
     DetailsListLayoutMode,
     Selection,
     IColumn,
     SelectionMode,
-  } from 'office-ui-fabric-react/lib/DetailsList';
+} from 'office-ui-fabric-react/lib/DetailsList';
 import { ScrollablePane } from 'office-ui-fabric-react/lib/ScrollablePane';
 import { MarqueeSelection } from 'office-ui-fabric-react/lib/MarqueeSelection';
 import { IDocument, ISection } from '../models';
@@ -17,7 +17,7 @@ import {
     CompactPeoplePicker,
     IBasePickerSuggestionsProps,
     ValidationState
-  } from 'office-ui-fabric-react/lib/Pickers';
+} from 'office-ui-fabric-react/lib/Pickers';
 import { assign } from 'office-ui-fabric-react/lib/Utilities';
 import { PrimaryButton, DefaultButton, IconButton } from 'office-ui-fabric-react/lib/Button';
 import { Panel, PanelType } from 'office-ui-fabric-react/lib/Panel';
@@ -25,9 +25,10 @@ import { ApiService } from '../services/ApiService'
 import './home.css';
 import { ErrorPopup } from './ErrorPopup';
 import { LocalizationService } from '../services/LocalizationService';
+import {ITaskProvider} from '../services/ITaskProvider';
+import { TaskProvider } from '../services/TaskProvider';
 
-export interface IHomeState
-{
+export interface IHomeState {
     document: IDocument;
     data: ISection[];
     selectionDetails: {};
@@ -46,89 +47,87 @@ const suggestionProps: IBasePickerSuggestionsProps = {
     loadingText: 'Loading'
 };
 
-export interface IHomeProps
-{
+export interface IHomeProps {
     token: string;
     localizationService: LocalizationService;
 }
 
-export interface IDialogData
-{
+export interface IDialogData {
     task: string;
     name: string;
 }
 
-export class Home extends React.Component<IHomeProps,IHomeState>
+export class Home extends React.Component<IHomeProps, IHomeState>
 {
     private selection: Selection;
     private data: ISection[] = [];
     private documentService: DocumentService;
     private currentSection: ISection;
     private dialogData: IDialogData;
-    
-    constructor(props: any)
-    {
+    private taskProvider: ITaskProvider;
+
+    constructor(props: any) {
         super(props);
         const { localizationService } = props;
-        const columns: IColumn[] = 
-        [
-            {
-                key: 'displayName',
-                name: localizationService.getString("Name"),
-                fieldName: 'displayName',
-                minWidth: 100,
-                maxWidth: 150,
-                isResizable: false,
-                isRowHeader: true,
-                isPadded: true,
-                isSorted: true,
-                isSortedDescending: true,
-                data: 'string',
-                onColumnClick: this.onSort.bind(this),
-                onRender: this.renderColumn.bind(this),
-                className: "ms-agile-col-name",
-                headerClassName: "ms-agile-col-name"
-            },
-            {
-                key: 'task',
-                name: localizationService.getString("Task"),
-                fieldName: 'task',
-                minWidth: 100,
-                maxWidth: 150,
-                isResizable: false,
-                isRowHeader: true,
-                isPadded: true,
-                onRender: this.renderColumn.bind(this),
-                className: "ms-agile-col",
-                headerClassName: "ms-agile-col"
-            },
-            {
-                key: 'assignedTo',
-                name: localizationService.getString("AssignedTo"),
-                fieldName: 'assignedTo',
-                minWidth: 100,
-                maxWidth: 150,
-                isResizable: false,
-                isRowHeader: true,
-                isPadded: true,
-                onRender: this.renderColumn.bind(this),
-                className: "ms-agile-col",
-                headerClassName: "ms-agile-col"
-            },
-            {
-                key: 'more',
-                name: '',
-                fieldName: 'more',
-                minWidth: 50,
-                maxWidth: 50,
-                isResizable: false,
-                isRowHeader: true,
-                isPadded: true,
-                onRender: this.renderColumn.bind(this),
-                className: "ms-agile-col-btn",
-                headerClassName: "ms-agile-col-btn"
-            }
-        ];
+        const columns: IColumn[] =
+            [
+                {
+                    key: 'displayName',
+                    name: localizationService.getString("Name"),
+                    fieldName: 'displayName',
+                    minWidth: 100,
+                    maxWidth: 150,
+                    isResizable: false,
+                    isRowHeader: true,
+                    isPadded: true,
+                    isSorted: true,
+                    isSortedDescending: true,
+                    data: 'string',
+                    onColumnClick: this.onSort.bind(this),
+                    onRender: this.renderColumn.bind(this),
+                    className: "ms-agile-col-name",
+                    headerClassName: "ms-agile-col-name"
+                },
+                {
+                    key: 'task',
+                    name: localizationService.getString("Task"),
+                    fieldName: 'task',
+                    minWidth: 100,
+                    maxWidth: 150,
+                    isResizable: false,
+                    isRowHeader: true,
+                    isPadded: true,
+                    onRender: this.renderColumn.bind(this),
+                    className: "ms-agile-col",
+                    headerClassName: "ms-agile-col"
+                },
+                {
+                    key: 'assignedTo',
+                    name: localizationService.getString("AssignedTo"),
+                    fieldName: 'assignedTo',
+                    minWidth: 100,
+                    maxWidth: 150,
+                    isResizable: false,
+                    isRowHeader: true,
+                    isPadded: true,
+                    onRender: this.renderColumn.bind(this),
+                    className: "ms-agile-col",
+                    headerClassName: "ms-agile-col"
+                },
+                {
+                    key: 'more',
+                    name: '',
+                    fieldName: 'more',
+                    minWidth: 50,
+                    maxWidth: 50,
+                    isResizable: false,
+                    isRowHeader: true,
+                    isPadded: true,
+                    onRender: this.renderColumn.bind(this),
+                    className: "ms-agile-col-btn",
+                    headerClassName: "ms-agile-col-btn"
+                }
+            ];
 
         this.onSort = this.onSort.bind(this);
         this.onChange = this.onChange.bind(this);
@@ -136,55 +135,52 @@ export class Home extends React.Component<IHomeProps,IHomeState>
         this.openEditPanel = this.openEditPanel.bind(this);
         this.closePanel = this.closePanel.bind(this);
         this.save = this.save.bind(this);
-        
+
         this.selection = new Selection(
             {
-                onSelectionChanged: () => 
-                { 
+                onSelectionChanged: () => {
                     this.setState(
-                    { 
-                        selectionDetails: this.getSelectionDetails()
-                    });
+                        {
+                            selectionDetails: this.getSelectionDetails()
+                        });
                 }
-          });
+            });
 
-        this.state = 
-        {
-            document: null,
-            data: this.data,
-            selectionDetails: this.getSelectionDetails(),
-            columns: columns,
-            isLoading: true,
-            title: localizationService.getString("Loading"),
-            peopleList: [],
-            isSaving: false,
-            showPanel: false
-        };
-
-        this.documentService = new DocumentService(new DocumentApiService(new ApiService(this.props.token)));
-        this.dialogData = { name: '', task: 'Unassigned'};
+        this.state =
+            {
+                document: null,
+                data: this.data,
+                selectionDetails: this.getSelectionDetails(),
+                columns: columns,
+                isLoading: true,
+                title: localizationService.getString("Loading"),
+                peopleList: [],
+                isSaving: false,
+                showPanel: false
+            };
+        let apiService = new ApiService(this.props.token);
+        this.documentService = new DocumentService(new DocumentApiService(apiService));
+        this.taskProvider = new TaskProvider(apiService);
+        this.dialogData = { name: '', task: 'Unassigned' };
     }
 
-    componentDidMount()
-    {
+    componentDidMount() {
         this.loadDocument();
     }
 
-    private renderColumn(item: any, index: number, column: IColumn)
-    {
+    private renderColumn(item: any, index: number, column: IColumn) {
         const fieldContent = item[column.name];
         const { localizationService } = this.props;
 
-        switch(column.key)
-        {
+        switch (column.key) {
             case 'displayName':
                 return (
                     <div className="homeCell ellipsis">
-                        <span title={item.name}>{item.name}</span><br/>
-                        <span className="ms-font-xs">{localizationService.getString("Status")}: {item.status}</span><br/>
+                        <span title={item.name}>{item.name}</span><br />
+                        <span className="ms-font-xs">{localizationService.getString("Status")}: {item.status}</span><br />
                         <div className="homeCell ellipsis">
                             <span className="ms-font-xs" title={item.owner}>{item.owner}</span>
-                         </div>
+                        </div>
                     </div>
                 );
             case 'task':
@@ -202,7 +198,7 @@ export class Home extends React.Component<IHomeProps,IHomeState>
             case 'more':
                 return (
                     <IconButton
-                        iconProps={ { iconName: 'MoreVertical' } }
+                        iconProps={{ iconName: 'MoreVertical' }}
                         title={localizationService.getString("Edit")}
                         ariaLabel='MoreVertical'
                         onClick={
@@ -218,62 +214,52 @@ export class Home extends React.Component<IHomeProps,IHomeState>
         }
     }
 
-    private openEditPanel(item: any)
-    {
+    private openEditPanel(item: any) {
         this.setState({ showPanel: true });
     }
 
-    private closePanel()
-    {
+    private closePanel() {
         this.setState({ showPanel: false });
     }
 
-    private onSort(e: React.MouseEvent<HTMLElement>, col: IColumn)
-    {
+    private onSort(e: React.MouseEvent<HTMLElement>, col: IColumn) {
         const { columns, data } = this.state;
         const newColumns = columns.slice();
         let sortedData = data.slice();
 
-        if(col.isSortedDescending)
-        {
+        if (col.isSortedDescending) {
             // Sort the data
             sortedData = sortedData.sort(
                 (a: ISection, b: ISection) => {
-                    if(a.name < b.name)
-                    {
+                    if (a.name < b.name) {
                         return 1;
                     }
-                    else if(a.name > b.name)
-                    {
+                    else if (a.name > b.name) {
                         return -1
                     }
                     return 0;
                 });
         }
-        else
-        {
+        else {
             // Sort the data
             sortedData = sortedData.sort(
                 (a: ISection, b: ISection) => {
-                    if(a.name > b.name)
-                    {
+                    if (a.name > b.name) {
                         return 1;
                     }
-                    else if(a.name < b.name)
-                    {
+                    else if (a.name < b.name) {
                         return -1
                     }
                     return 0;
                 });
         }
-        
+
         // Update the sort icon
         newColumns[0].isSortedDescending = !col.isSortedDescending;
-        this.setState({columns: newColumns, data: sortedData});
+        this.setState({ columns: newColumns, data: sortedData });
     }
 
-    private getSelectionDetails(): string 
-    {
+    private getSelectionDetails(): string {
         const selectionCount = this.selection.getSelectedCount();
 
         switch (selectionCount) {
@@ -285,42 +271,34 @@ export class Home extends React.Component<IHomeProps,IHomeState>
                 return `${selectionCount} items selected`;
         }
     }
-    
-    private getTextFromItem(persona: IPersonaProps): string 
-    {
+
+    private getTextFromItem(persona: IPersonaProps): string {
         return persona.primaryText as string;
     }
 
-    private validateInput = (input: string): ValidationState => 
-    {
-        if (input.indexOf('@') !== -1) 
-        {
+    private validateInput = (input: string): ValidationState => {
+        if (input.indexOf('@') !== -1) {
             return ValidationState.valid;
         }
-        else if (input.length > 1) 
-        {
+        else if (input.length > 1) {
             return ValidationState.warning;
-        } 
-        else 
-        {
+        }
+        else {
             return ValidationState.invalid;
         }
     }
-      
-    private async save()
-    {
-        if(this.currentSection)
-        {
-            this.setState({isSaving: true});
+
+    private async save() {
+        if (this.currentSection) {
+            this.setState({ isSaving: true });
 
             const { data, document } = this.state;
             const newData = data.slice();
 
-            let index = newData.findIndex( x => x.id === this.currentSection.id);
+            let index = newData.findIndex(x => x.id === this.currentSection.id);
             let updatedOpp = Object.assign({}, document);
 
-            if(index > -1)
-            {
+            if (index > -1) {
                 newData[index].assignedTo = this.dialogData.name;
                 newData[index].task = this.dialogData.task;
                 this.currentSection = newData[index];
@@ -335,108 +313,92 @@ export class Home extends React.Component<IHomeProps,IHomeState>
             }
 
             $("#popup").removeClass("on").addClass("off");
-            this.setState({isSaving: false, data: newData, showPanel: false, document: updatedOpp});
+            this.setState({ isSaving: false, data: newData, showPanel: false, document: updatedOpp });
         }
     }
 
-    private onTaskChange(e: React.ChangeEvent<HTMLSelectElement>)
-    {
+    private onTaskChange(e: React.ChangeEvent<HTMLSelectElement>) {
         assign(this.dialogData, { task: e.target.value });
     }
 
-    private onPeoplePickerChange(items: IPersonaProps[])
-    {
+    private onPeoplePickerChange(items: IPersonaProps[]) {
         let name = "";
         // A Persona has been selected
-        if(items && items.length > 0)
-        {
+        if (items && items.length > 0) {
             name = items[0].primaryText;
         }
-        
-        assign(this.dialogData, { 
+
+        assign(this.dialogData, {
             name: name
         });
     }
 
-    private getDefaultSelected(assignedTo:string)
-    {
+    private getDefaultSelected(assignedTo: string) {
         let { peopleList } = this.state;
 
-        const result = peopleList.find(x =>x.primaryText === assignedTo)
+        const result = peopleList.find(x => x.primaryText === assignedTo)
 
-        if(result)
-        {
+        if (result) {
             return [result as IPersonaProps];
         }
-        else
-        {
+        else {
             return [];
         }
     }
 
-    private renderPeoplePicker(assignedTo: string) 
-    {
+    private renderPeoplePicker(assignedTo: string) {
         return (
             <div className="homeCell">
                 <CompactPeoplePicker
                     itemLimit={1}
                     defaultSelectedItems={this.getDefaultSelected(assignedTo)}
-                    onResolveSuggestions={ this.onFilterChanged }
-                    getTextFromItem={ this.getTextFromItem }
-                    className={ 'ms-PeoplePicker' }
-                    pickerSuggestionsProps={ suggestionProps }
-                    onValidateInput={ this.validateInput }
-                    onChange={ this.onPeoplePickerChange.bind(this)}
+                    onResolveSuggestions={this.onFilterChanged}
+                    getTextFromItem={this.getTextFromItem}
+                    className={'ms-PeoplePicker'}
+                    pickerSuggestionsProps={suggestionProps}
+                    onValidateInput={this.validateInput}
+                    onChange={this.onPeoplePickerChange.bind(this)}
                 />
             </div>
         );
     }
 
-    private listContainsPersona(persona: IPersonaProps, personas: IPersonaProps[]) 
-    {
-        if (!personas || !personas.length || personas.length === 0) 
-        {
+    private listContainsPersona(persona: IPersonaProps, personas: IPersonaProps[]) {
+        if (!personas || !personas.length || personas.length === 0) {
             return false;
         }
-        
+
         return personas.filter(item => item.primaryText === persona.primaryText).length > 0;
     }
 
-    private removeDuplicates(personas: IPersonaProps[], possibleDupes: IPersonaProps[]) 
-    {
+    private removeDuplicates(personas: IPersonaProps[], possibleDupes: IPersonaProps[]) {
         return personas.filter(persona => !this.listContainsPersona(persona, possibleDupes));
     }
 
-    private doesTextStartWith(text: string, filterText: string): boolean 
-    {
+    private doesTextStartWith(text: string, filterText: string): boolean {
         return text.toLowerCase().indexOf(filterText.toLowerCase()) === 0;
     }
 
-    private filterPersonasByText(filterText: string): IPersonaProps[] 
-    {
+    private filterPersonasByText(filterText: string): IPersonaProps[] {
         let { peopleList } = this.state;
         return peopleList.filter(item => this.doesTextStartWith(item.primaryText as string, filterText));
     }
 
-    private onFilterChanged = (filterText: string, currentPersonas: IPersonaProps[], limitResults?: number): IPersonaProps[] | Promise<IPersonaProps[]> => 
-    {
-        if (filterText) 
-        {
+    private onFilterChanged = (filterText: string, currentPersonas: IPersonaProps[], limitResults?: number): IPersonaProps[] | Promise<IPersonaProps[]> => {
+        if (filterText) {
             let filteredPersonas: IPersonaProps[] = this.filterPersonasByText(filterText);
 
             filteredPersonas = this.removeDuplicates(filteredPersonas, currentPersonas);
             return limitResults ? filteredPersonas.splice(0, limitResults) : filteredPersonas;
-        } 
-        else 
-        {
+        }
+        else {
             return [];
         }
     }
 
-    private loadDocument()
-    {
-        this.setState({isLoading: true});
-        
+    private loadDocument() {
+        this.setState({ isLoading: true });
+
         this.documentService.getDocument()
             .then(document => {
                 const documentName = document.displayName;
@@ -446,7 +408,7 @@ export class Home extends React.Component<IHomeProps,IHomeState>
                 sections = document.proposalDocument.content.proposalSectionList.map(
                     item => {
                         let section: ISection;
-                        
+
                         section = {
                             name: item.displayName,
                             task: item.task ? item.task : "Unassigned",
@@ -456,147 +418,155 @@ export class Home extends React.Component<IHomeProps,IHomeState>
                             content: [],
                             owner: item.owner.displayName
                         };
-    
+
                         return section;
                     });
 
                 const peopleList: IPersonaProps[] = [];
                 document.teamMembers
                     .forEach(
-                        (item, index) => 
-                        {
+                        (item, index) => {
                             let names = item.displayName.split(' ');
                             let initials = names.length > 1 ? `${names[0].charAt(0)}${names[1].charAt(0)}` : names[0].charAt(0);
                             let persona = {
-                                    key: index,
-                                    imageInitials: initials,
-                                    primaryText: item.displayName
-                                }
-                            
+                                key: index,
+                                imageInitials: initials,
+                                primaryText: item.displayName
+                            }
+
                             peopleList.push(persona);
                         }
                     );
-            
-                this.setState({document: document, data: sections, isLoading: false, title: documentName, isDocumentLoaded: true, peopleList: peopleList });
+
+                this.setState({ document: document, data: sections, isLoading: false, title: documentName, isDocumentLoaded: true, peopleList: peopleList });
             })
             .catch(
-                err => 
-                {
-                    this.setState({error: err});
+                err => {
+                    this.setState({ error: err });
                 }
             );
     }
 
-    private onChange(text: any): void
-    {
+    private onChange(text: any): void {
         this.setState({ data: text ? this.data.filter(i => i.name.toLowerCase().indexOf(text) > -1) : this.data });
     }
 
-    private activeItemChanged(item?: any, index?: number, ev?: React.FocusEvent<HTMLElement>)
-    {
-        if(item)
-        {
+    private activeItemChanged(item?: any, index?: number, ev?: React.FocusEvent<HTMLElement>) {
+        if (item) {
             this.currentSection = item as ISection;
             assign(this.dialogData, { name: this.currentSection.assignedTo, task: this.currentSection.task });
         }
     }
 
-    public render(): JSX.Element
-    {
+    public render(): JSX.Element {
         const { data, columns, isLoading, title, isDocumentLoaded, isSaving, error } = this.state;
         const { localizationService } = this.props;
 
-        if(error)
-        {
+        if (error) {
             return (
-                <ErrorPopup error={error}/>
+                <ErrorPopup error={error} />
             );
         }
 
-        if(isLoading)
-        {
+        if (isLoading) {
             return (
-                <Loading message={localizationService.getString("Loading")+"..."}/>
+                <Loading message={localizationService.getString("Loading") + "..."} />
             );
         }
 
-        if(isSaving)
-        {
+        if (isSaving) {
             return (
-                <Loading message={localizationService.getString("Saving")+"..."} overlay={true}/>
+                <Loading message={localizationService.getString("Saving") + "..."} overlay={true} />
             );
         }
 
-        if(isDocumentLoaded && isDocumentLoaded.valueOf() === false)
-        {
+        if (isDocumentLoaded && isDocumentLoaded.valueOf() === false) {
             return <div>You must open a document.</div>;
         }
 
         return (
             <div>
                 <Panel
-                isOpen={ this.state.showPanel }
-                type={ PanelType.smallFluid }
-                onDismiss={ this.closePanel }
-                hasCloseButton={false}
-                headerText={this.currentSection ? this.currentSection.name : ""}>
+                    isOpen={this.state.showPanel}
+                    type={PanelType.smallFluid}
+                    onDismiss={this.closePanel}
+                    hasCloseButton={false}
+                    headerText={this.currentSection ? this.currentSection.name : ""}>
                     <div>
                         <div className="ms-font-m">
-                            <span>{localizationService.getString("Owner")}:</span><br/>
+                            <span>{localizationService.getString("Owner")}:</span><br />
                             {this.currentSection ? this.currentSection.owner : ""}
                         </div>
-                        <div className="ms-font-m" style={{paddingTop: "10px"}}>
-                            <span>{localizationService.getString("Task")}:</span><br/>
-                            <select style={{height: "32px"}} 
-                                defaultValue={this.currentSection ? this.currentSection.task : "Unassigned"}
-                                onChange={this.onTaskChange.bind(this)}
-                            >
-                                <option value="Approval">Approval</option>
-                                <option value="Content">Content</option>
-                                <option value="Unassigned">Unassigned</option>
-                            </select>
+                        <div className="ms-font-m" style={{ paddingTop: "10px" }}>
+                            <span>{localizationService.getString("Task")}:</span><br />
+                            <TaskSelector
+                                tasks={this.taskProvider.getTasks()}
+                                selectedTask={this.currentSection ? this.currentSection.task : "Unassigned"}
+                                onChange={this.onTaskChange.bind(this)} />
                         </div>
-                        <div className="ms-font-m" style={{paddingTop: "10px"}}>
-                            <span>{localizationService.getString("AssignedTo")}:</span><br/>
+                        <div className="ms-font-m" style={{ paddingTop: "10px" }}>
+                            <span>{localizationService.getString("AssignedTo")}:</span><br />
                             {this.renderPeoplePicker(this.currentSection ? this.currentSection.assignedTo : "")}
                         </div>
-                        <div style={{paddingTop: "10px", display: 'flex'}}>
-                            <div><PrimaryButton onClick={ this.save } text={localizationService.getString("Update")} /></div>
-                            <div style={{paddingLeft: "10px"}}><DefaultButton onClick={ this.closePanel } text={localizationService.getString("Cancel")} /></div>
+                        <div style={{ paddingTop: "10px", display: 'flex' }}>
+                            <div><PrimaryButton onClick={this.save} text={localizationService.getString("Update")} /></div>
+                            <div style={{ paddingLeft: "10px" }}><DefaultButton onClick={this.closePanel} text={localizationService.getString("Cancel")} /></div>
                         </div>
                     </div>
                 </Panel>
                 <ScrollablePane>
-                    <div style={{display: 'flex'}}> 
+                    <div style={{ display: 'flex' }}>
                         <h1 className='ms-font-xxl ms-search-notes'>{title}</h1>
                         <IconButton
-                        className='ms-agile-refresh'
-                        iconProps={ { iconName: 'Refresh' } }
-                        title={localizationService.getString("Refresh")}
-                        ariaLabel='Refresh'
-                        onClick={
-                            (e) => {
-                                e.preventDefault();
-                                this.loadDocument();
+                            className='ms-agile-refresh'
+                            iconProps={{ iconName: 'Refresh' }}
+                            title={localizationService.getString("Refresh")}
+                            ariaLabel='Refresh'
+                            onClick={
+                                (e) => {
+                                    e.preventDefault();
+                                    this.loadDocument();
+                                }
                             }
-                        }
-                    />
-                </div>
-                    <MarqueeSelection selection={ this.selection }>
+                        />
+                    </div>
+                    <MarqueeSelection selection={this.selection}>
                         <DetailsList
-                            items={ data }
-                            columns={ columns }
+                            items={data}
+                            columns={columns}
                             setKey='set'
-                            selection={ this.selection }
+                            selection={this.selection}
                             selectionMode={SelectionMode.none}
-                            selectionPreservedOnEmptyClick={ true }
-                            layoutMode={ DetailsListLayoutMode.justified }
+                            selectionPreservedOnEmptyClick={true}
+                            layoutMode={DetailsListLayoutMode.justified}
                             onActiveItemChanged={this.activeItemChanged}
                             className="homeCell"
                         />
                     </MarqueeSelection>
                 </ScrollablePane>
-        </div>
+            </div>
+        );
+    }
+}
+
+class TaskSelectorProps {
+    tasks: string[];
+    selectedTask: string;
+    onChange: any;
+}
+
+class TaskSelector extends React.Component<TaskSelectorProps> {
+    constructor(props) {
+        super(props);
+    }
+    render() {
+        return (
+            <select
+                style={{ height: "32px" }}
+                defaultValue={this.props.selectedTask}
+                onChange={this.props.onChange} >
+                {this.props.tasks.map(task => <option value={task}>{task}</option>)}
+            </select>
         );
     }
 }

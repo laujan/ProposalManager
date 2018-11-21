@@ -78,7 +78,9 @@ export class Setup extends Component {
             DocumentIdActivator: {
                 "WebhookAddress": "",
                 "WebhookUsername": "",
-                "WebhookPassword": ""
+                "WebhookPassword": "",
+                "SharePointAppId": "",
+                "SharePointAppSecret": ""
             },
             renderStep_0 : false,
             renderStep_1: false,
@@ -249,7 +251,9 @@ export class Setup extends Component {
             "BotServiceUrl": "https://smba.trafficmanager.net/amer-client-ss.msg/",
             "WebhookAddress": "https://<app_name>.scm.azurewebsites.net/api/triggeredwebjobs/DocumentIdActivator/run",
             "WebhookUsername": "The username to run the webjob",
-            "WebhookPassword": "The username to run the webjob"
+            "WebhookPassword": "The username to run the webjob",
+            "SharePointAppId": "The app id from the SharePoint application registration",
+            "SharePointAppSecret": "The app secret from the SharePoint application registration"
         };
         return function (key) {
             return obj[key];
@@ -814,7 +818,6 @@ export class Setup extends Component {
     renderStep_9() {
         let margin = { margin: '10px' };
         let bold = { 'fontWeight': 'bold' };
-        let disabled = Object.keys(this.state.DocumentIdActivator).every(key => this.state.DocumentIdActivator[key]);
         let placeholders = this.placeholderForProposalManager();
         let TextBoxViewList = Object.keys(this.state.DocumentIdActivator).map(key => {
             return (
