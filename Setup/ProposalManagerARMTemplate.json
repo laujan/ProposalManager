@@ -1,0 +1,21 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "0.0.0.0",
+    "parameters": {
+        "siteName": {
+            "type": "string"
+        },
+        "siteLocation": {
+            "type": "string"
+        }
+    },
+    "resources": [
+        {
+            "name": "[parameters('siteName')]",
+            "type": "Microsoft.Web/sites",
+            "apiVersion": "2018-02-01",
+            "location": "[parameters('siteLocation')]",
+            "properties": { }
+        }
+    ]
+}

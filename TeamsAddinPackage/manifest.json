@@ -2,7 +2,7 @@
   "$schema": "https://statics.teams.microsoft.com/sdk/v1.2/manifest/MicrosoftTeams.schema.json",
   "manifestVersion": "1.2",
   "version": "1.0.0",
-  "id": "be9cae62-f0a5-49a1-8799-1a3c28ed88a0", // Any Guid
+  "id": "<addInId>",
   "packageName": "com.microsoft.proposalmanager",
   "developer": {
     "name": "Microsoft",
@@ -34,7 +34,7 @@
   ],
   "bots": [
     {
-      "botId": "", //Registered Bot app Id.
+      "botId": "<botId>",
       "scopes": [
         "personal",
         "team"
@@ -46,7 +46,7 @@
     "messageTeamMembers"
   ],
   "validDomains": [
-    "<webAppUrl>/",
+    "<webDomain>",
     "login.microsoftonline.com"
   ]
 }
