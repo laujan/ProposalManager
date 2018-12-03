@@ -39,11 +39,11 @@ namespace Infrastructure.Services
         private readonly IRoleMappingRepository _roleMappingRepository;
         private readonly CardNotificationService _cardNotificationService;
         private readonly IUserContext _userContext;
-        private readonly CheckListProcessService _checkListProcessService;
-        private readonly CustomerDecisionProcessService _customerDecisionProcessService;
-        private readonly ProposalStatusProcessService _proposalStatusProcessService;
-        private readonly NewOpportunityProcessService _newOpportunityProcessService;
-        private readonly StartProcessService _startProcessService;
+        private readonly ICheckListProcessService _checkListProcessService;
+        private readonly ICustomerDecisionProcessService _customerDecisionProcessService;
+        private readonly IProposalDocumentProcessService _proposalStatusProcessService;
+        private readonly INewOpportunityProcessService _newOpportunityProcessService;
+        private readonly IStartProcessService _startProcessService;
         private readonly IDashboardService _dashboardService;
         private readonly IAuthorizationService _authorizationService;
         private readonly IPermissionRepository _permissionRepository;
@@ -63,14 +63,14 @@ namespace Infrastructure.Services
             IRoleMappingRepository roleMappingRepository,
             CardNotificationService cardNotificationService,
             IUserContext userContext,
-            CheckListProcessService checkListProcessService,
-            CustomerDecisionProcessService customerDecisionProcessService,
-            ProposalStatusProcessService proposalStatusProcessService,
-            NewOpportunityProcessService newOpportunityProcessService,
+            ICheckListProcessService checkListProcessService,
+            ICustomerDecisionProcessService customerDecisionProcessService,
+            IProposalDocumentProcessService proposalStatusProcessService,
+            INewOpportunityProcessService newOpportunityProcessService,
             IDashboardService dashboardService,
             IAuthorizationService authorizationService,
             IPermissionRepository permissionRepository,
-            StartProcessService startProcessService,
+            IStartProcessService startProcessService,
             IDashboardAnalysis dashboardAnalysis,
             GraphTeamsAppService graphTeamsAppService,
             IAddInHelper addInHelper,
@@ -704,7 +704,7 @@ namespace Infrastructure.Services
                 try
                 {
                     // Call to AddIn helper once team has been created
-                    var resCallAddIn = await _addInHelper.CallAddInWebhookAsync(opportunity, requestId);
+                     var resCallAddIn = await _addInHelper.CallAddInWebhookAsync(opportunity, requestId);
                 }
                 catch (Exception ex)
                 {

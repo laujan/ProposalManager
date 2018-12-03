@@ -30,16 +30,19 @@ namespace Infrastructure.Services
 	{
 		private readonly GraphSharePointAppService _graphSharePointAppService;
         private readonly DocumentIdActivatorConfiguration documentIdActivatorConfiguration;
+        private readonly IAzureKeyVaultService _azureKeyVaultService;
 
         public ContextService(
 			ILogger<ContextService> logger,
             IOptionsMonitor<AppOptions> appOptions,
             IConfiguration configuration,
-            GraphSharePointAppService graphSharePointAppService) : base(logger, appOptions)
+            GraphSharePointAppService graphSharePointAppService,
+            IAzureKeyVaultService azureKeyVaultService) : base(logger, appOptions)
 		{
 			Guard.Against.Null(graphSharePointAppService, nameof(graphSharePointAppService));
 
             _graphSharePointAppService = graphSharePointAppService;
+            _azureKeyVaultService = azureKeyVaultService;
 
             documentIdActivatorConfiguration = new DocumentIdActivatorConfiguration();
             configuration.Bind(DocumentIdActivatorConfiguration.ConfigurationName, documentIdActivatorConfiguration);
@@ -72,8 +75,8 @@ namespace Infrastructure.Services
             clientSettings.PBIWorkSpaceId = _appOptions.PBIWorkSpaceId;
             clientSettings.PBIReportId = _appOptions.PBIReportId;
             clientSettings.PBITenantId = _appOptions.PBITenantId;
-            clientSettings.PBIUserName = _appOptions.PBIUserName;
-            clientSettings.PBIUserPassword = _appOptions.PBIUserPassword;
+            clientSettings.PBIUserName = await _azureKeyVaultService.GetValueFromVaultAsync(_appOptions.PBIUserName);
+            clientSettings.PBIUserPassword = await _azureKeyVaultService.GetValueFromVaultAsync(_appOptions.PBIUserPassword);
 
             clientSettings.GeneralProposalManagementTeam = _appOptions.GeneralProposalManagementTeam;
             clientSettings.ProposalManagerAddInName = _appOptions.ProposalManagerAddInName;
@@ -84,6 +87,7 @@ namespace Infrastructure.Services
             clientSettings.GraphRequestUrl = _appOptions.GraphRequestUrl;
             clientSettings.GraphBetaRequestUrl = _appOptions.GraphBetaRequestUrl;
             clientSettings.SharePointSiteRelativeName = _appOptions.SharePointSiteRelativeName;
+            clientSettings.VaultBaseUrl = _appOptions.VaultBaseUrl;
 
             clientSettings.MicrosoftAppId = _appOptions.MicrosoftAppId;
             clientSettings.MicrosoftAppPassword = _appOptions.MicrosoftAppPassword;

@@ -35,7 +35,8 @@ export class Setup extends Component {
                 "GraphRequestUrl": "https://graph.microsoft.com/v1.0/",
                 "GraphBetaRequestUrl": "https://graph.microsoft.com/beta/",
                 "SetupPage": "",
-                "SharePointListsPrefix": "e3_"
+                "SharePointListsPrefix": "e3_",
+                "VaultBaseUrl": ""
             },
             ProposalManagement_Team: {
                 "GeneralProposalManagementTeam": "",
@@ -253,7 +254,8 @@ export class Setup extends Component {
             "WebhookUsername": "The username to run the webjob",
             "WebhookPassword": "The username to run the webjob",
             "SharePointAppId": "The app id from the SharePoint application registration",
-            "SharePointAppSecret": "The app secret from the SharePoint application registration"
+            "SharePointAppSecret": "The app secret from the SharePoint application registration",
+            "VaultBaseUrl": "<name>.vault.azure.net/"
         };
         return function (key) {
             return obj[key];
@@ -277,7 +279,8 @@ export class Setup extends Component {
             "BotName": "Proposal Manager <tenant>",
             "UserProfileCacheExpiration": 30,
             "SharePointSiteRelativeName": "proposalmanager",
-            "SharePointHostName": "<tenant>.sharepoint.com"
+            "SharePointHostName": "<tenant>.sharepoint.com",
+            "VaultBaseUrl": ""
         };
 
         return obj[key] || "";
@@ -320,6 +323,8 @@ export class Setup extends Component {
     async UpdateAppSettings(key, value, token) {
         try {
             console.log("SetUp_updateAppSettings");
+            // check vaultbaseurl contains http(s) - remove it
+            value = key === "VaultBaseUrl" ? value.replace(/https?:\/\//, "") : value;
             let requestUrl = `api/Setup/${key}/${value}`;
             let options = {
                 method: 'POST',
@@ -647,9 +652,10 @@ export class Setup extends Component {
         // CreateSitePermissions() to add all the known permissions to the permission list.
         // CreateSiteProcesses() to add all the known processes to the workflow items list.
         // CreateSiteRoles() to add all the known roles to the roles list.
+        // CreateSiteTasks() to add all the known tasks to the tasks list.
         this.setSpinnerAndMsg(true, false, "");
         let token = this.authHelper.getWebApiToken();
-        let requestUriArray = ["CreateSiteRoles", "CreateSiteProcesses", "CreateSitePermissions"];
+        let requestUriArray = ["CreateSiteRoles", "CreateSiteProcesses", "CreateSitePermissions", "CreateSiteTasks"];
         try {
             console.log("Setup_loadDataForPermision_Process_Roles");
             for (const uri of requestUriArray) {
@@ -759,6 +765,17 @@ export class Setup extends Component {
         this.setState({ ProposalManagement_Team });
     }
 
+    async onBlurOnAppSettingStep4(e, key, defaultValue = "") {
+        let value = e.target.value || defaultValue;
+        let obj = {};
+        const ProposalManagement_Misc = { ...this.state.ProposalManagement_Misc };
+        if (ProposalManagement_Misc.hasOwnProperty(key) && value) {
+            ProposalManagement_Misc[key] = value;
+            obj[key] = value;
+            this.setState({ ProposalManagement_Misc });
+        }
+    } 
+
     async onBlurOnAettingKeys(e, key, defaultValue = "") {
         let value = e.target.value || defaultValue;
         console.log("onBlurOnAettingKeys : ", key, e.target.value, defaultValue);
@@ -837,7 +854,7 @@ export class Setup extends Component {
             <div className='ms-Grid bg-white ibox-content p-10'>
                 <h4 style={bold} className="pageheading"><Trans>step9</Trans></h4>
                 <span>
-                    <Trans>ste9Label</Trans>
+                    <Trans>step9Label</Trans>
                 </span>
                 <div className="ms-Grid-row">
                     <div className='ms-Grid-col ms-sm12 ms-md12 ms-lg6'>
@@ -1018,8 +1035,8 @@ export class Setup extends Component {
                     <TextField
                         key={key}
                         label={<Trans>{key}</Trans>}
-                        onBlur={(e) => this.onBlurOnAettingKeys(e, key)}
-                        required='true'
+                        onBlur={(e) => this.onBlurOnAppSettingStep4(e, key)}
+                        required={key === "VaultBaseUrl" ? false : true}
                         value={this.state.ProposalManagement_Misc[key] ? this.state.ProposalManagement_Misc[key] : this.defaultValue(key)}
                         disabled={this.state.isUpdateOpp}
                         placeholder={`eg : <${placeholders(key)}>`}

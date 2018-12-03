@@ -68,6 +68,10 @@ export class Industry extends Component {
         };
     }
 
+    async componentDidMount() {
+        await this.getIndustries();
+    }
+
     onAddRow() {
         let items = this.state.items.slice(0);
         items.push({ id: items.length+1, name: ""});
@@ -115,12 +119,8 @@ export class Industry extends Component {
         this.setState({ isUpdate, isUpdateMsg, MessageBarType,MessagebarText });
     }
 
-    async componentDidMount() {
-        await this.getIndustries();
-    }
-
     async getIndustries() {
-        let items = [],loading=false;
+        let items = [], loading = false;
         try{
             let requestUrl = 'api/Industry';
             let response = await fetch(requestUrl, {
@@ -129,12 +129,13 @@ export class Industry extends Component {
                 method: "GET",
                 headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() }
             });
-            let data = await (this.utils.handleErrors(response)).json();
-            items = data.map(industry=>{return {"id":industry.id,"name":industry.name}});     
+            let data = await this.utils.handleErrors(response).json();
+            items = data.map(industry => { return { "id": industry.id, "name": industry.name };});     
         }catch(error){
             this.setMessage(false,true,MessageBarType.error,error.message);
         }finally{
-            this.setState({ items, loading});
+            this.setState({ items, loading });
+            setTimeout(function () { this.setMessage(false, false, "", ""); }.bind(this), 2000);
         }
     }
 

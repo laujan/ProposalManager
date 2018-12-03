@@ -58,6 +58,9 @@ namespace ApplicationCore.Services
 
             Guard.Against.NullOrEmpty(opportunityName, "sendNotificationCardAsync opportunityName is null or empty", requestId);
             Guard.Against.NullOrEmpty(channelId, "sendNotificationCardAsync channelId is null or empty", requestId);
+            Guard.Against.NullOrEmpty(_appOptions.BotId, "sendNotificationCardAsync BotId is null or empty", requestId);
+            Guard.Against.NullOrEmpty(_appOptions.BotName, "sendNotificationCardAsync BotName is null or empty", requestId);
+       
 
             var sendList = sendToList.ToList();
 

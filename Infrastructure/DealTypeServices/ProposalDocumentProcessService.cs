@@ -23,15 +23,15 @@ using ApplicationCore.Authorization;
 
 namespace Infrastructure.DealTypeServices
 {
-    public class ProposalStatusProcessService : BaseService<ProposalStatusProcessService>, IDealTypeService
+    public class ProposalDocumentProcessService : BaseService<ProposalDocumentProcessService>, IProposalDocumentProcessService
     {
         private readonly UserProfileHelpers _userProfileHelpers;
         private readonly CardNotificationService _cardNotificationService;
         private readonly IAuthorizationService _authorizationService;
         private readonly IPermissionRepository _permissionRepository;
 
-        public ProposalStatusProcessService(
-        ILogger<ProposalStatusProcessService> logger,
+        public ProposalDocumentProcessService(
+        ILogger<ProposalDocumentProcessService> logger,
         IOptionsMonitor<AppOptions> appOptions,
         UserProfileHelpers userProfileHelpers,
         IAuthorizationService authorizationService,

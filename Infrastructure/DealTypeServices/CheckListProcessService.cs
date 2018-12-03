@@ -23,7 +23,7 @@ using ApplicationCore.Authorization;
 
 namespace Infrastructure.DealTypeServices
 {
-    public class CheckListProcessService : BaseService<CheckListProcessService>, IDealTypeService
+    public class CheckListProcessService : BaseService<CheckListProcessService>, ICheckListProcessService
     {
         private readonly CardNotificationService _cardNotificationService;
         private readonly IAuthorizationService _authorizationService;

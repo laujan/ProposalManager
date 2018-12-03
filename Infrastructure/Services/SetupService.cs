@@ -39,6 +39,7 @@ namespace Infrastructure.Services
         private readonly GraphTeamsAppService _graphTeamsAppService;
         private readonly GraphUserAppService _graphUserAppService;
         private readonly IUserContext _userContext;
+        private readonly IAzureKeyVaultService _azureKeyVaultService;
 
         public SetupService(
             ILogger<SetupService> logger,
@@ -48,13 +49,15 @@ namespace Infrastructure.Services
             IWritableOptions<DocumentIdActivatorConfiguration> documentIdActivatorConfigurationWritableOptions,
             GraphTeamsAppService graphTeamsAppService,
             GraphUserAppService graphUserAppService,
-            IUserContext userContext) : base(logger, appOptions)
+            IUserContext userContext,
+            IAzureKeyVaultService azureKeyVaultService) : base(logger, appOptions)
         {
             Guard.Against.Null(graphSharePointAppService, nameof(graphSharePointAppService));
             Guard.Against.Null(writableOptions, nameof(writableOptions));
             Guard.Against.Null(graphTeamsAppService, nameof(graphTeamsAppService));
             Guard.Against.Null(graphUserAppService, nameof(graphUserAppService));
             Guard.Against.Null(userContext, nameof(userContext));
+            Guard.Against.Null(azureKeyVaultService, nameof(azureKeyVaultService));
 
             _graphSharePointAppService = graphSharePointAppService;
             _writableOptions = writableOptions;
@@ -63,6 +66,7 @@ namespace Infrastructure.Services
             _graphTeamsAppService = graphTeamsAppService;
             _graphUserAppService = graphUserAppService;
             _userContext = userContext;
+            _azureKeyVaultService = azureKeyVaultService;
 
         }
 
@@ -70,9 +74,18 @@ namespace Infrastructure.Services
         {
             _logger.LogInformation($"RequestId: {requestId} - SetupService_UpdateAppOpptionsAsync called.");
 
-            _writableOptions.UpdateAsync(key, value, requestId);
-
-            return Task.FromResult(StatusCodes.Status200OK);
+            //Save powerbi username and password to to Key Vault.
+            if (key == "PBIUserName" || key == "PBIUserPassword")
+            {
+                _azureKeyVaultService.SetValueInVaultAsync(key, value, requestId);
+                return Task.FromResult(StatusCodes.Status200OK);
+            }
+            //save values to appsettings.
+            else
+            {
+                _writableOptions.UpdateAsync(key, value, requestId);
+                return Task.FromResult(StatusCodes.Status200OK);
+            }
         }
 
         public Task<StatusCodes> UpdateDocumentIdActivatorOptionsAsync(string key, string value, string requestId = "")
@@ -108,7 +121,7 @@ namespace Infrastructure.Services
                     SiteId = _appOptions.ProposalManagementRootSiteId,
                     ListId = _appOptions.ProcessListId
                 };
-                var processes = getProcesses();                
+                var processes = getProcesses();
                 foreach (var process in processes)
                 {
                     try
@@ -297,7 +310,7 @@ namespace Infrastructure.Services
             }
         }
 
-        public async Task CreateAllListsAsync(string siteRootId,string requestId = "")
+        public async Task CreateAllListsAsync(string siteRootId, string requestId = "")
         {
             _logger.LogInformation($"RequestId: {requestId} - SetupService_CreateAllListsAsync called.");
 
@@ -414,7 +427,8 @@ namespace Infrastructure.Services
         {
             _logger.LogInformation($"RequestId: {requestId} - SetupService_CreateAdminGroupAsync called.");
 
-            try {
+            try
+            {
                 await _graphTeamsAppService.CreateGroupAsync(name, name + " Group");
                 //get groupID
                 bool check = true;
@@ -536,7 +550,7 @@ namespace Infrastructure.Services
             roles.Add("RiskAssessment");
             roles.Add("HumanResources");
             roles.Add("Compliance");
-            roles.Add("Underwriting");            
+            roles.Add("Underwriting");
             return roles;
         }
         private List<string> getTasks(string requestId = "")

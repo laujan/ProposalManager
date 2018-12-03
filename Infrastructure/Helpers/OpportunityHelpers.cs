@@ -32,9 +32,9 @@ namespace Infrastructure.Helpers
         private readonly IRoleMappingRepository _roleMappingRepository;
         private readonly CardNotificationService _cardNotificationService;
         private readonly TemplateHelpers _templateHelpers;
-        private readonly CheckListProcessService _checkListProcessService;
-        private readonly CustomerDecisionProcessService _customerDecisionProcessService;
-        private readonly ProposalStatusProcessService _proposalStatusProcessService;
+        private readonly ICheckListProcessService _checkListProcessService;
+        private readonly ICustomerDecisionProcessService _customerDecisionProcessService;
+        private readonly IProposalDocumentProcessService _proposalStatusProcessService;
         private readonly IAuthorizationService _authorizationService;
         private readonly IPermissionRepository _permissionRepository;
         private readonly IUserContext _userContext;
@@ -49,12 +49,12 @@ namespace Infrastructure.Helpers
             IRoleMappingRepository roleMappingRepository,
             CardNotificationService cardNotificationService,
             TemplateHelpers templateHelpers,
-            CheckListProcessService checkListProcessService,
-            CustomerDecisionProcessService customerDecisionProcessService,
+            ICheckListProcessService checkListProcessService,
+            ICustomerDecisionProcessService customerDecisionProcessService,
             IAuthorizationService authorizationService,
             IPermissionRepository permissionRepository,
             IUserContext userContext,
-            ProposalStatusProcessService proposalStatusProcessService)
+            IProposalDocumentProcessService proposalStatusProcessService)
         {
             Guard.Against.Null(logger, nameof(logger));
             Guard.Against.Null(appOptions, nameof(appOptions));

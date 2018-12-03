@@ -23,7 +23,7 @@ using ApplicationCore.Authorization;
 
 namespace Infrastructure.DealTypeServices
 {
-    public class CustomerDecisionProcessService : BaseService<CustomerDecisionProcessService>, IDealTypeService
+    public class CustomerDecisionProcessService : BaseService<CustomerDecisionProcessService>, ICustomerDecisionProcessService
     {
         private readonly IAuthorizationService _authorizationService;
         private readonly IPermissionRepository _permissionRepository;

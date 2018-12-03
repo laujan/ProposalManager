@@ -5,26 +5,21 @@
 
 import React, { Component } from 'react';
 import { TextField } from 'office-ui-fabric-react/lib/TextField';
-import { IconButton, PrimaryButton } from 'office-ui-fabric-react/lib/Button';
+import { IconButton } from 'office-ui-fabric-react/lib/Button';
 import { DetailsList, DetailsListLayoutMode, SelectionMode } from 'office-ui-fabric-react/lib/DetailsList';
 import { Link } from 'office-ui-fabric-react/lib/Link';
-import {
-    Spinner,
-    SpinnerSize
-} from 'office-ui-fabric-react/lib/Spinner';
+import Utils from '../../helpers/Utils';
+import { Spinner, SpinnerSize } from 'office-ui-fabric-react/lib/Spinner';
 import { MessageBar, MessageBarType } from 'office-ui-fabric-react/lib/MessageBar';
 import { Trans } from "react-i18next";
-
 
 export class ProcessTypesList extends Component {
     displayName = ProcessTypesList.name
 
     constructor(props) {
         super(props);
-
-        this.sdkHelper = window.sdkHelper;
+        this.utils = new Utils();
         this.authHelper = window.authHelper;
-
         const columns = [
             {
                 key: 'column1',
@@ -40,7 +35,7 @@ export class ProcessTypesList extends Component {
                         <TextField
                             id={'txtProcessType' + item.id}
                             value={item.processStep}
-                            onBlur={(e) => this.onBlurProcessType(e, item, item.operation)}
+                            onBlur={(e) => this.onBlurProcessType(e, item)}
                         />
                     );
                 }
@@ -62,96 +57,76 @@ export class ProcessTypesList extends Component {
             }
         ];
 
-        let rowCounter = 0;
-
-
         this.state = {
             items: [],
-            rowItemCounter: rowCounter,
             columns: columns,
-            isCompactMode: false,
             loading: true,
             isUpdate: false,
-            updatedItems: [],
             MessagebarText: "",
             MessageBarType: MessageBarType.success,
             isUpdateMsg: false
         };
     }
 
-    componentWillMount() {
-        this.getProcessTypeList();
+    async componentDidMount() {
+        await this.getProcessTypeList();
     }
 
-    getProcessTypeList() {
-        // call to API fetch Process
-        let requestUrl = 'api/Process';
-        fetch(requestUrl, {
-            method: "GET",
-            headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() }
-        })
-            .then(response => response.json())
-            .then(data => {
-                try {
-                    let allProcessTypes = data.itemsList;
-                    let processTypes = allProcessTypes.filter(function (k) {
-                        return k.processType.toLowerCase() !== "base" && k.processType.toLowerCase() !== "customerdecisiontab" && k.processType.toLowerCase() !== "proposalstatustab";
-                    });
-                    let processTypeList = [];
-                    for (let i = 0; i < processTypes.length; i++) {
-                        let processType = {};
-                        //processType.id = processTypes[i].id;
-                        //processType.processStep = processTypes[i].processStep;
-                        //processType.channel = processTypes[i].channel;
-                        //processType.processType = processTypes[i].processType;
-                        //processType.operation = "update";
-                        processTypes[i].operation = "update";
-                        processTypeList.push(processTypes[i]);
-                    }
-                    this.setState({ items: processTypeList, loading: false, rowItemCounter: processTypeList.length });
+    async getProcessTypeList() {
+        let items = this.state.items, loading = false;
+        try {
+            let requestUrl = 'api/Process';
+            let response = await fetch(requestUrl, {                
+                method: "GET",
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'authorization': 'Bearer ' + this.authHelper.getWebApiToken()
                 }
-                catch (err) {
-                    return false;
-                }
-
             });
-    }
-
-    createRowItem(key) {
-        return {
-            id: key.toString(),
-            processStep: "",
-            channel: "",
-            processType: "CheckListTab",
-            operation: "add"
-        };
+            let data = await this.utils.handleErrors(response).json();
+            let allProcessTypes = data.itemsList;
+            let processTypes = allProcessTypes.filter(function (k) {
+                let processName = k.processType.toLowerCase();
+                return processName !== "base" && processName !== "customerdecisiontab" && processName !== "proposalstatustab";
+            });
+            items = processTypes.map(process => { return { "id": process.id, "processStep": process.processStep }; });
+        } catch (error) {
+            this.setMessage(false, true, MessageBarType.error, error.message);
+        } finally {
+            this.setState({ items, loading });
+        }
     }
 
     onAddRow() {
-        //let rowCounter = this.state.rowItemCounter+ 1;
-        let rowCounter = parseInt(this.state.items[this.state.items.length - 1].id) + 1;
-        let newItems = [];
-        newItems.push(this.createRowItem(rowCounter));
-
-        let currentItems = this.state.items.concat(newItems);
-
-        this.setState({
-            items: currentItems,
-            rowItemCounter: rowCounter
-        });
+        let items = this.state.items.slice(0);
+        items.push({ id: items.length + 1, processStep: "" });
+        this.setState({ items });
     }
 
-    deleteRow(item) {
-        this.setState({ isUpdate: true });
-
-        //deleteProcessType
-        this.deleteProcessType(item);
+    checkProcessTypeIsAlreadyPresent(value) {
+        let flag = false;
+        let items = this.state.items.slice(0);
+        let index = items.findIndex(process => process.processStep.toLowerCase() === value.toLowerCase());
+        if (index !== -1) {
+            this.setState({
+                isUpdate: false,
+                isUpdateMsg: true,
+                MessagebarText: <Trans>processTypeAlreadyExist</Trans>,
+                MessageBarType: MessageBarType.error
+            });
+            setTimeout(function () {
+                this.setMessage(false, false, "", "");
+                this.setState({ items });
+            }.bind(this), 2000);
+            flag = true;
+        }
+        return flag;
     }
 
-    //ProcessType List - Details
-    processTypeList(columns, isCompactMode, items, selectionDetails) {
+    processTypeList(columns, isCompactMode, items) {
         return (
-            <div className='ms-Grid-row LsitBoxAlign p20ALL '>
+            <div className='ms-Grid-row LsitBoxAlign p20ALL'>
                 <DetailsList
                     items={items}
                     compact={isCompactMode}
@@ -166,166 +141,66 @@ export class ProcessTypesList extends Component {
         );
     }
 
-    onBlurProcessType(e, item, operation) {
-        //Check processType already exist
+    setMessage(isUpdate, isUpdateMsg, MessageBarType, MessagebarText) {
+        this.setState({ isUpdate, isUpdateMsg, MessageBarType, MessagebarText });
+    }
+
+    async onBlurProcessType(e, item) {
         this.setState({ isUpdate: true });
+        let id = item.id;
+        let value = e.target.value;
+        let requestUpdUrl = 'api/Process';
+        let method = item.processStep.length === 0 ? "POST" : "PATCH";
 
-        let isProcessExist = this.state.items.some(obj => obj.processStep.toLowerCase() === e.target.value.toLowerCase());
-        if (isProcessExist) {
-            this.setState({
-                MessagebarText: <Trans>processTypeAlreadyExist</Trans>,
-                MessageBarType: MessageBarType.error,
-                isUpdate: false,
-                isUpdateMsg: true
+        try {
+            //Checking item is already present
+            if (this.checkProcessTypeIsAlreadyPresent(value)) return;
+
+            let response = await fetch(requestUpdUrl, {
+                method: method,
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'authorization': 'Bearer    ' + window.authHelper.getWebApiToken()
+                },
+                body: JSON.stringify({
+                    "id": id, "processStep": value, "channel": value, "processType": "CheckListTab"
+                })
             });
-            setTimeout(function () { this.setState({  isUpdateMsg: false, MessageBarType: MessageBarType.error, MessagebarText: "" }); }.bind(this), 3000);
-            return false;
+            response = this.utils.handleErrors(response);
+            this.setMessage(false, true, MessageBarType.success, method === "PATCH" ? <Trans>processTypeUpdatedSuccess</Trans> : <Trans>processTypeAddSuccess</Trans>);
+        } catch (error) {
+            this.setMessage(false, true, MessageBarType.error, <Trans>errorOoccuredPleaseTryAgain</Trans> + " " + error.message);
+        } finally {
+            setTimeout(function () { this.setMessage(false, false, "", ""); }.bind(this), 2000);
+            await this.getProcessTypeList();
         }
-
-        delete item['operation'];
-        let updatedItems = this.state.items;
-        let itemIdx = updatedItems.indexOf(item);
-        updatedItems[itemIdx].processStep = e.target.value;
-        updatedItems[itemIdx].channel = e.target.value;
-        this.setState({
-            updatedItems: updatedItems
-        });
-
-        if (operation === "add") {
-            this.addProcessType(updatedItems[itemIdx]);
-        } else if (operation === "update") {
-            this.updateProcessType(updatedItems[itemIdx]);
-        }
-
     }
 
-    addProcessType(processTypeItem) {
-        // API Add call        
-        this.requestUpdUrl = 'api/Process';
-        let options = {
-            method: "POST",
-            headers: {
+    async deleteRow(processTypeItem) {
+        this.setState({ isUpdate: true });
+        let requestUpdUrl = 'api/Process/' + processTypeItem.id;
+        try {
+            let response = await fetch(requestUpdUrl, {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json',
-                'authorization': 'Bearer    ' + window.authHelper.getWebApiToken()
-            },
-            body: JSON.stringify(processTypeItem)
-        };
-
-        fetch(this.requestUpdUrl, options)
-            .catch(error => console.error('Error:', error))
-            .then(response => {
-                if (response.ok) {
-                    this.setState({
-                        items: this.state.updatedItems,
-                        MessagebarText: <Trans>processTypeAddSuccess</Trans>,
-                        MessageBarType: MessageBarType.success,
-                        isUpdate: false,
-                        isUpdateMsg: true
-                    });
-                    setTimeout(function () { this.setState({ isUpdateMsg: false, MessageBarType: MessageBarType.success, MessagebarText: "" }); }.bind(this), 3000);
-                    return response.json;
-                } else {
-                    this.setState({
-                        MessagebarText: <Trans>errorOoccuredPleaseTryAgain</Trans>,
-                        MessageBarType: MessageBarType.error,
-                        isUpdate: false,
-                        isUpdateMsg: true
-                    });
-                    setTimeout(function () { this.setState({ isUpdateMsg: false, MessageBarType: MessageBarType.error, MessagebarText: "" }); }.bind(this), 3000);
-                }
-            }).then(json => {
-                //console.log(json);
-                this.setState({ isUpdate: false });
+                method: "DELETE",
+                headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() }
             });
-
-
-    }
-
-    updateProcessType(processTypeItem) {
-        // API Update call        
-        this.requestUpdUrl = 'api/Process';
-        let options = {
-            method: "PATCH",
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-                'authorization': 'Bearer    ' + window.authHelper.getWebApiToken()
-            },
-            body: JSON.stringify(processTypeItem)
-        };
-
-        fetch(this.requestUpdUrl, options)
-            .catch(error => console.error('Error:', error))
-            .then(response => {
-                if (response.ok) {
-                    this.setState({
-                        items: this.state.updatedItems,
-                        MessagebarText: <Trans>processTypeUpdatedSuccess</Trans>,
-                        MessageBarType: MessageBarType.success,
-                        isUpdate: false,
-                        isUpdateMsg: true
-                    });
-                    setTimeout(function () { this.setState({ isUpdateMsg: false, MessageBarType: MessageBarType.success, MessagebarText: "" }); }.bind(this), 3000);
-
-                    return response.json;
-                } else {
-                    this.setState({
-                        MessagebarText: <Trans>errorOoccuredPleaseTryAgain</Trans>,
-                        MessageBarType: MessageBarType.error,
-                        isUpdate: false,
-                        isUpdateMsg: true
-                    });
-                    setTimeout(function () { this.setState({ isUpdateMsg: false, MessageBarType: MessageBarType.error, MessagebarText: "" }); }.bind(this), 3000);
-                }
-            }).then(json => {
-                //console.log(json);
-                this.setState({ isUpdate: false });
-            });
-
-
-    }
-
-    deleteProcessType(processTypeItem) {
-        // API Delete call        
-        this.requestUpdUrl = 'api/Process/' + processTypeItem.id;
-
-        fetch(this.requestUpdUrl, {
-            method: "DELETE",
-            headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() }
-        })
-            .catch(error => console.error('Error:', error))
-            .then(response => {
-                if (response.ok) {
-                    let currentItems = this.state.items.filter(x => x.id !== processTypeItem.id);
-                    this.setState({
-                        items: currentItems,
-                        MessagebarText: <Trans>processTypeDeletedSuccess</Trans>,
-                        isUpdate: false,
-                        isUpdateMsg: true
-                    });
-
-                    setTimeout(function () { this.setState({ isUpdateMsg: false, MessageBarType: MessageBarType.success, MessagebarText: "" }); }.bind(this), 3000);
-                    return response.json;
-                } else {
-                    this.setState({
-                        MessagebarText: <Trans>errorOoccuredPleaseTryAgain</Trans>,
-                        isUpdate: false,
-                        isUpdateMsg: true
-                    });
-                    setTimeout(function () { this.setState({ isUpdateMsg: false, MessageBarType: MessageBarType.error, MessagebarText: "" }); }.bind(this), 3000);
-                }
-            }).then(json => {
-                //console.log(json);
-                this.setState({ isUpdate: false });
-            });
-
-
+            response = this.utils.handleErrors(response);
+            this.setMessage(false, true, MessageBarType.success, <Trans>processTypeDeletedSuccess</Trans>);
+        } catch (error) {
+            this.setMessage(false, true, MessageBarType.error, <Trans>errorOoccuredPleaseTryAgain</Trans> + " " + error.message);
+        } finally {
+            setTimeout(function () { this.setMessage(false, false, "", ""); }.bind(this), 2000);
+            await this.getProcessTypeList();
+        }
+        return;
     }
 
     render() {
-        const { columns, isCompactMode, items, selectionDetails } = this.state;
-        const processTypeList = this.processTypeList(columns, isCompactMode, items, selectionDetails);
+        const { columns, items } = this.state;
+        const processTypeList = this.processTypeList(columns, false, items);
         if (this.state.loading) {
             return (
                 <div className='ms-BasicSpinnersExample ibox-content pt15 '>
@@ -336,16 +211,14 @@ export class ProcessTypesList extends Component {
             return (
 
                 <div className='ms-Grid bg-white ibox-content'>
-                    <div className='ms-Grid-row'>
-                        <div className='ms-Grid-col ms-sm12 ms-md12 ms-lg12 p-10'>
-                            <PrimaryButton iconProps={{ iconName: 'Add' }} className='pull-right mr20' onClick={() => this.onAddRow()} >&nbsp;<Trans>add</Trans></PrimaryButton>
-                        </div>
-                    </div>
+
                     <div className='ms-Grid-row'>
                         <div className='ms-Grid-col ms-sm12 ms-md12 ms-lg12'>
+                            <div className='ms-Grid-col ms-sm12 ms-md12 ms-lg12 pt10'>
+                                <Link href='' className='pull-left' onClick={() => this.onAddRow()} >+ <Trans>addNew</Trans></Link>
+                            </div>
                             {processTypeList}
                         </div>
-
                     </div>
                     <div className='ms-Grid-row'>
                         <div className='ms-Grid-col ms-sm12 ms-md12 ms-lg12'>

@@ -9,30 +9,23 @@ import { IconButton } from 'office-ui-fabric-react/lib/Button';
 import { DetailsList, DetailsListLayoutMode, SelectionMode } from 'office-ui-fabric-react/lib/DetailsList';
 import { Link } from 'office-ui-fabric-react/lib/Link';
 import Utils from '../../helpers/Utils';
-import {
-    Spinner,
-    SpinnerSize
-} from 'office-ui-fabric-react/lib/Spinner';
+import { Spinner, SpinnerSize } from 'office-ui-fabric-react/lib/Spinner';
 import { MessageBar, MessageBarType } from 'office-ui-fabric-react/lib/MessageBar';
 import { Trans } from "react-i18next";
-
 
 export class Category extends Component {
     displayName = Category.name
 
     constructor(props) {
         super(props);
-
-        this.sdkHelper = window.sdkHelper;
-        this.authHelper = window.authHelper;
-
         this.utils = new Utils();
+        this.authHelper = window.authHelper;
         const columns = [
             {
-                key: 'column1', 
+                key: 'column1',
                 name: <Trans>category</Trans>,
-                headerClassName: 'ms-List-th browsebutton CategoryCol',
-                className: 'docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg8 CategoryCol',
+                headerClassName: 'ms-List-th browsebutton RegionCol',
+                className: 'docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg8 RegionCol',
                 fieldName: 'Category',
                 minWidth: 150,
                 maxWidth: 250,
@@ -42,7 +35,7 @@ export class Category extends Component {
                         <TextField
                             id={'txtCategory' + item.id}
                             value={item.name}
-                            onBlur={(e) => this.onBlurCategoryName(e, item, item.operation)}
+                            onBlur={(e) => this.onBlurCategoryName(e, item)}
                         />
                     );
                 }
@@ -51,7 +44,7 @@ export class Category extends Component {
                 key: 'column2',
                 name: <Trans>action</Trans>,
                 headerClassName: 'ms-List-th Categoryaction',
-                className: 'ms-Grid-col ms-sm12 ms-md12 ms-lg4 Categoryaction',
+                className: 'ms-Grid-col ms-sm12 ms-md12 ms-lg4 categoryaction',
                 minWidth: 16,
                 maxWidth: 16,
                 onRender: (item) => {
@@ -64,97 +57,50 @@ export class Category extends Component {
             }
         ];
 
-        this.category = [];
-
-        let rowCounter = 0;
-        
-
         this.state = {
             items: [],
-            rowItemCounter: rowCounter,
             columns: columns,
-            isCompactMode: false,
             loading: true,
             isUpdate: false,
-            updatedItems: [],
             MessagebarText: "",
             MessageBarType: MessageBarType.success,
             isUpdateMsg: false
         };
-
-        this.getCategories().then();
     }
 
-    componentWillMount() {
-        //this.getCategories();
-    }
-
-    async getCategories() {
-        let categoryList = [];
-        let categoryList_length = 0;
-        try{
-            // call to API fetch Categories
-            let requestUrl = 'api/Category';
-            let response = await fetch(requestUrl, {
-                method: "GET",
-                headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() }
-            });
-            let data = await response.json();
-            if(typeof data === 'string'){
-                console.log("Categorty_getCategories : ", data);
-            }else if(typeof data === 'object'){
-                console.log("Categorty_getCategories : ", data);
-                for (let i = 0; i < data.length; i++) {
-                    let category = {};
-                    category.id = data[i].id;
-                    category.name = data[i].name;
-                    category.operation = "update";
-                    categoryList.push(category);
-                }
-                categoryList_length = categoryList.length;
-            }
-            else{
-                throw new Error("response is not an expected type : ", data);
-            }
-        }catch(error){
-            console.log("Categorty_getCategories Error: ", error.message);
-        }finally{
-            this.setState({ items: categoryList, loading: false, rowItemCounter:  categoryList_length});
-        }
-    }
-
-    createCategoryItem(key) {
-        return {
-            id: key,
-            name: "",
-            operation:"add"
-        };
+    async componentDidMount() {
+        await this.getCategories();
     }
 
     onAddRow() {
-        let rowCounter = this.state.rowItemCounter + 1;
-        let newItems = [];
-        newItems.push(this.createCategoryItem(rowCounter));
-
-        let currentItems = this.state.items.concat(newItems);
-
-        this.setState({
-            items: currentItems,
-            rowItemCounter: rowCounter
-        });
+        let items = this.state.items.slice(0);
+        items.push({ id: items.length + 1, name: "" });
+        this.setState({ items });
     }
 
-    deleteRow(item) {
-        this.setState({ isUpdate: true });
-
-        //deleteCategory
-        this.deleteCategory(item);
+    checkCategoryIsAlreadyPresent(value) {
+        let flag = false;
+        let items = this.state.items.slice(0);
+        let index = items.findIndex(category => category.name.toLowerCase() === value.toLowerCase());
+        if (index !== -1) {
+            this.setState({
+                isUpdate: false,
+                isUpdateMsg: true,
+                MessagebarText: <Trans>categoryExist</Trans>,
+                MessageBarType: MessageBarType.error
+            });
+            setTimeout(function () {
+                this.setMessage(false, false, "", "");
+                this.setState({ items });
+            }.bind(this), 2000);
+            flag = true;
+        }
+        return flag;
     }
 
-    //Category List - Details
-    categoryList(columns, isCompactMode, items, selectionDetails) {
+    categoryList(columns, isCompactMode, items) {
         return (
-            <div className='ms-Grid-row LsitBoxAlign p20ALL '>
+            <div className='ms-Grid-row LsitBoxAlign p20ALL'>
                 <DetailsList
                     items={items}
                     compact={isCompactMode}
@@ -169,170 +115,86 @@ export class Category extends Component {
         );
     }
 
-    onBlurCategoryName(e, item, operation) {
+    setMessage(isUpdate, isUpdateMsg, MessageBarType, MessagebarText) {
+        this.setState({ isUpdate, isUpdateMsg, MessageBarType, MessagebarText });
+    }
+
+    async getCategories() {
+        let items = [], loading = false;
+        try {
+            let requestUrl = 'api/Category';
+            let response = await fetch(requestUrl, {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                method: "GET",
+                headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() }
+            });
+            let data = await this.utils.handleErrors(response).json();
+            items = data.map(category => { return { "id": category.id, "name": category.name }; });
+        } catch (error) {
+            this.setMessage(false, true, MessageBarType.error, error.message);
+        } finally {
+            this.setState({ items, loading });
+            setTimeout(function () { this.setMessage(false, false, "", ""); }.bind(this), 2000);
+        }
+    }
+
+    async onBlurCategoryName(e, item) {
         this.setState({ isUpdate: true });
-        //check Category already exist in items
-        for (let p = 0; p < this.state.items.length; p++) {
-            if (this.state.items[p].name.toLowerCase() === e.target.value.toLowerCase()) {
-                this.setState({
-                    isUpdate: false,
-                    isUpdateMsg: true,
-                    MessagebarText: <Trans>categoryExist</Trans>,
-                    MessageBarType: MessageBarType.error
-                });
-                setTimeout(function () { this.setState({ isUpdateMsg: false, MessageBarType: "", MessagebarText: "" }); }.bind(this), 3000);
-                return false;
-            }
+        let id = item.id;
+        let value = e.target.value;
+        let requestUpdUrl = 'api/Category';
+        let method = item.name.length === 0 ? "POST" : "PATCH";
+
+        try {
+            //Checking item is already present
+            if (this.checkCategoryIsAlreadyPresent(value)) return;
+
+            let response = await fetch(requestUpdUrl, {
+                method: method,
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'authorization': 'Bearer    ' + window.authHelper.getWebApiToken()
+                },
+                body: JSON.stringify({ "id": id, "name": value })
+            });
+            response = this.utils.handleErrors(response);
+            this.setMessage(false, true, MessageBarType.success, method === "PATCH" ? <Trans>categoryUpdatedSuccess</Trans> : <Trans>categoryAddSuccess</Trans>);
+        } catch (error) {
+            this.setMessage(false, true, MessageBarType.error, <Trans>errorOoccuredPleaseTryAgain</Trans> + " " + error.message);
+        } finally {
+            setTimeout(function () { this.setMessage(false, false, "", ""); }.bind(this), 2000);
+            await this.getCategories();
         }
-        delete item['operation'];
-        let updatedItems = this.state.items;
-        let itemIdx = updatedItems.indexOf(item);
-        updatedItems[itemIdx].name = e.target.value;
-        this.setState({
-            updatedItems: updatedItems
-        });
+    }
 
-        if (operation === "add") {
-            this.addCategory(updatedItems[itemIdx]);
-        } else if (operation === "update") {
-            this.updateCategory(updatedItems[itemIdx]);
+    async deleteRow(categoryItem) {
+        this.setState({ isUpdate: true });
+        let requestUpdUrl = 'api/Category/' + categoryItem.id;
+        try {
+            let response = await fetch(requestUpdUrl, {
+                method: "DELETE",
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'authorization': 'Bearer ' + this.authHelper.getWebApiToken()
+                }
+            });
+            response = this.utils.handleErrors(response);
+            this.setMessage(false, true, MessageBarType.success, <Trans>categoryDeletedSuccess</Trans>);
+        } catch (error) {
+            this.setMessage(false, true, MessageBarType.error, <Trans>errorOoccuredPleaseTryAgain</Trans> + " " + error.message);
+        } finally {
+            setTimeout(function () { this.setMessage(false, false, "", ""); }.bind(this), 2000);
+            await this.getCategories();
         }
-        
-    }
-
-    addCategory(categoryItem) {
-        console.log(categoryItem);
-        let categoriesObj = categoryItem;
-        // API Update call        
-        this.requestUpdUrl = 'api/Category';
-        let options = {
-            method: "POST",
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-                'authorization': 'Bearer    ' + window.authHelper.getWebApiToken()
-            },
-            body: JSON.stringify(categoriesObj)
-        };
-
-        fetch(this.requestUpdUrl, options)
-            .catch(error => console.error('Error:', error))
-            .then(response => {
-                if (response.ok) {
-                    this.setState({
-                        items: this.state.updatedItems,
-                        MessagebarText: <Trans>categoryAddSuccess</Trans>,
-                        isUpdate: false,
-                        isUpdateMsg: true,
-                        MessageBarType: MessageBarType.success
-                    });
-                    setTimeout(function () { this.setState({ isUpdateMsg: false, MessageBarType: "", MessagebarText: "" }); }.bind(this), 3000);
-                    return response.json;
-                } else {
-                    this.setState({
-                        MessagebarText: <Trans>errorOoccuredPleaseTryAgain</Trans>,
-                        isUpdate: false,
-                        isUpdateMsg: true,
-                        MessageBarType: MessageBarType.error
-                    });
-                    setTimeout(function () { this.setState({ isUpdateMsg: false, MessageBarType: "", MessagebarText: "" }); }.bind(this), 3000);
-                }
-            }).then(json => {
-                //console.log(json);
-                this.setState({ isUpdate: false });
-            });
-
-
-    }
-
-    updateCategory(categoryItem) {
-        let categoriesObj = categoryItem;
-        // API Update call        
-        this.requestUpdUrl = 'api/Category';
-        let options = {
-            method: "PATCH",
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-                'authorization': 'Bearer    ' + window.authHelper.getWebApiToken()
-            },
-            body: JSON.stringify(categoriesObj)
-        };
-
-        fetch(this.requestUpdUrl, options)
-            .catch(error => console.error('Error:', error))
-            .then(response => {
-                if (response.ok) {
-                    this.setState({
-                        items: this.state.updatedItems,
-                        MessagebarText: <Trans>categoryUpdatedSuccess</Trans>,
-                        isUpdate: false,
-                        isUpdateMsg: true,
-                        MessageBarType: MessageBarType.success
-                    });
-                    setTimeout(function () { this.setState({ isUpdateMsg: false, MessageBarType: "", MessagebarText: "" }); }.bind(this), 3000);
-
-                    return response.json;
-                } else {
-                    this.setState({
-                        MessagebarText: <Trans>errorOoccuredPleaseTryAgain</Trans>,
-                        isUpdate: false,
-                        isUpdateMsg: true,
-                        MessageBarType: MessageBarType.error
-                    });
-                    setTimeout(function () { this.setState({ isUpdateMsg: false, MessageBarType: "", MessagebarText: "" }); }.bind(this), 3000);
-                }
-            }).then(json => {
-                //console.log(json);
-                this.setState({ isUpdate: false });
-            });
-
-
-    }
-
-    deleteCategory(categoryItem) {
-        // API Update call        
-        this.requestUpdUrl = 'api/Category/'+categoryItem.id;
-
-        fetch(this.requestUpdUrl, {
-            method: "DELETE",
-            headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() }
-        })
-            .catch(error => console.error('Error:', error))
-            .then(response => {
-                if (response.ok) {
-                    let currentItems = this.state.items.filter(x => x.id !== categoryItem.id);
-                    this.category = currentItems;
-                    this.setState({
-                        items: currentItems,
-                        MessagebarText: <Trans>categoryDeletedSuccess</Trans>,
-                        isUpdate: false,
-                        isUpdateMsg: true,
-                        MessageBarType: MessageBarType.success
-                    });
-
-                    setTimeout(function () { this.setState({ isUpdateMsg: false, MessageBarType: "", MessagebarText: "" }); }.bind(this), 3000);
-                    return response.json;
-                } else {
-                    this.setState({
-                        MessagebarText: <Trans>errorOoccuredPleaseTryAgain</Trans>,
-                        isUpdate: false,
-                        isUpdateMsg: true,
-                        MessageBarType: MessageBarType.error
-                    });
-                    setTimeout(function () { this.setState({ isUpdateMsg: false, MessageBarType: "", MessagebarText: "" }); }.bind(this), 3000);
-                }
-            }).then(json => {
-                //console.log(json);
-                this.setState({ isUpdate: false });
-            });
-
-
+        return;
     }
 
     render() {
-        const { columns, isCompactMode, items, selectionDetails } = this.state;
-        const categoryList = this.categoryList(columns, isCompactMode, items, selectionDetails);
+        const { columns, items } = this.state;
+        const categoryList = this.categoryList(columns, false, items);
         if (this.state.loading) {
             return (
                 <div className='ms-BasicSpinnersExample ibox-content pt15 '>
@@ -343,7 +205,7 @@ export class Category extends Component {
             return (
 
                 <div className='ms-Grid bg-white ibox-content'>
-                    
+
                     <div className='ms-Grid-row'>
                         <div className='ms-Grid-col ms-sm12 ms-md12 ms-lg12'>
                             <div className='ms-Grid-col ms-sm12 ms-md12 ms-lg12 pt10'>
@@ -351,7 +213,6 @@ export class Category extends Component {
                             </div>
                             {categoryList}
                         </div>
-                        
                     </div>
                     <div className='ms-Grid-row'>
                         <div className='ms-Grid-col ms-sm12 ms-md12 ms-lg12'>
@@ -359,7 +220,7 @@ export class Category extends Component {
                                 {
                                     this.state.isUpdate ?
                                         <Spinner size={SpinnerSize.large} ariaLive='assertive' />
-                                       : ""
+                                        : ""
                                 }
                                 {
                                     this.state.isUpdateMsg ?

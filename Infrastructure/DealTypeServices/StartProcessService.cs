@@ -23,7 +23,7 @@ using Newtonsoft.Json.Linq;
 
 namespace Infrastructure.DealTypeServices
 {
-    public class StartProcessService : BaseService<StartProcessService>, IDealTypeService
+    public class StartProcessService : BaseService<StartProcessService>, IStartProcessService
     {
         protected readonly GraphUserAppService _graphUserAppService;
 

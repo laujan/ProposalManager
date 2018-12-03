@@ -135,6 +135,7 @@ export class Tasks extends Component {
             this.setMessage(false, true, MessageBarType.error, error.message);
         } finally {
             this.setState({ items, loading });
+            setTimeout(function () { this.setMessage(false, false, "", ""); }.bind(this), 2000);
         }
     }
 

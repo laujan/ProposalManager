@@ -169,20 +169,7 @@ export class Workflow extends Component {
         let teamMembersAll = [];
         teamMembersAll = this.props.memberslist;
 
-        //if (this.props.memberslist.length > 0) {
-        //    loading = false;
-        //}
-
-        let loanOfficerObj = teamMembersAll.filter(function (k) {
-            return k.assignedRole.displayName === "LoanOfficer";
-        });
-
-        let relShipManagerObj = teamMembersAll.filter(function (k) {
-            return k.assignedRole.displayName === "RelationshipManager";
-        });
-
         let dealTypeObj = oppDetails.dealType;
-        //let processObj = dealTypeObj.processes;
         let groupsArry = [];
 
         if (Object.keys(dealTypeObj).length > 0) {
@@ -199,7 +186,7 @@ export class Workflow extends Component {
 
             let groupedByOrder = processObj.selectedProcessGroupBy('order');
 
-            let groups = groupedByOrder; // this.state.dealTypeGroups;
+            let groups = groupedByOrder;
             groupsArry = Object.keys(groups).map(i => groups[i]);
         }
 
@@ -216,7 +203,7 @@ export class Workflow extends Component {
                 {
                     loading ?
                         <div className='ms-BasicSpinnersExample pull-center'>
-                            <br /><br /> loading...
+                            <br /><br />
                             <Spinner size={SpinnerSize.medium} label={<Trans>loading</Trans>} ariaLive='assertive' />
                         </div>
                         :

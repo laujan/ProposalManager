@@ -25,24 +25,27 @@ namespace Infrastructure.Services
     public class PowerBIService : BaseService<PowerBIService>, IPowerBIService
     {
         private readonly IWebApiAuthProvider _webApiAuthProvider;
+        private readonly IAzureKeyVaultService _azureKeyVaultService;
 
         public PowerBIService(
            ILogger<PowerBIService> logger,
            IOptionsMonitor<AppOptions> appOptions,
-           IWebApiAuthProvider webApiAuthProvider) : base(logger, appOptions)
+           IWebApiAuthProvider webApiAuthProvider,
+           IAzureKeyVaultService azureKeyVaultService) : base(logger, appOptions)
         {
             _webApiAuthProvider = webApiAuthProvider;
+            _azureKeyVaultService = azureKeyVaultService;
         }
 
         public async Task<String> GenerateTokenAsync(string requestId = "")
         {
-            string _userName = _appOptions.PBIUserName;
-            string _password = _appOptions.PBIUserPassword;
+            string _userName = await _azureKeyVaultService.GetValueFromVaultAsync(_appOptions.PBIUserName, requestId);
+            string _password = await _azureKeyVaultService.GetValueFromVaultAsync(_appOptions.PBIUserPassword, requestId);
             string _applicationId = _appOptions.PBIApplicationId;
             string _workspaceId = _appOptions.PBIWorkSpaceId;
             string _reportId = _appOptions.PBIReportId;
             string _resourceUrl = "https://analysis.windows.net/powerbi/api";
-            
+
             try
             {
                 _logger.LogInformation($"RequestID:{requestId} - PowerBIService_GenerateTokenAsync called.");

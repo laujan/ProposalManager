@@ -150,11 +150,11 @@ namespace WebReact
             services.AddScoped<IPermissionService, PermissionService>();
 
             // DealType Services
-            services.AddScoped<CheckListProcessService>();
-            services.AddScoped<CustomerDecisionProcessService>();
-            services.AddScoped<ProposalStatusProcessService>();
-            services.AddScoped<NewOpportunityProcessService>();
-            services.AddScoped<StartProcessService>();
+            services.AddScoped<ICheckListProcessService, CheckListProcessService>();
+            services.AddScoped<ICustomerDecisionProcessService, CustomerDecisionProcessService>();
+            services.AddScoped<IProposalDocumentProcessService, ProposalDocumentProcessService>();
+            services.AddScoped<INewOpportunityProcessService, NewOpportunityProcessService>();
+            services.AddScoped<IStartProcessService, StartProcessService>();
 
             // SmartLink
             services.AddScoped<IDocumentIdService, DocumentIdService>();

@@ -104,7 +104,7 @@ export class CustomerDecision extends Component {
         this.onStatusChange = this.onStatusChange.bind(this);
 
     }
-     
+
     componentWillMount() {
         console.log("CustomerDecision_componentWillMount isauth: " + this.authHelper.isAuthenticated());
     }
@@ -181,8 +181,6 @@ export class CustomerDecision extends Component {
     fnGetOpportunityData(teamName) {
         return new Promise((resolve, reject) => {
             // API - Fetch call
-            //let requestUrl = "api/Opportunity?name='" + teamName + "'";
-            //changing to template string
             this.requestUrl = `api/Opportunity?name=${teamName}`;
             fetch(this.requestUrl, {
                 method: "GET",
@@ -227,16 +225,14 @@ export class CustomerDecision extends Component {
                             }
                         })
                             .catch(err => {
-                                //this.errorHandler(err, "CustomerDecision_checkUserAccess");
                                 this.setState({
                                     loading: false,
                                     haveGranularAccess: false
                                 });
-                                //this.hideMessagebar();
                                 reject(err);
                             });
                         // End Check Access
-                        
+
                     }
 
                 })
@@ -281,7 +277,6 @@ export class CustomerDecision extends Component {
                 'authorization': 'Bearer    ' + window.authHelper.getWebApiToken()
             },
             body: JSON.stringify(oppViewData)
-            //id: this.props.match.params.id
         };
 
         fetch(this.requestUpdUrl, options)
@@ -294,7 +289,6 @@ export class CustomerDecision extends Component {
                 }
             }).then(json => {
                 this.setState({ MessagebarText: <Trans>updatedSuccessfully</Trans> });
-                // this.setState({ isUpdate: false, MessagebarText: "" });
                 setTimeout(function () { this.setState({ isUpdate: false, MessagebarText: "" }); }.bind(this), 3000);
             });
 
@@ -524,12 +518,7 @@ export class CustomerDecision extends Component {
                                 :
                                 <Accessdenied />
                         }
-
-
-
                     </TeamsComponentContext>
-
-
                 </div>
             );
         }

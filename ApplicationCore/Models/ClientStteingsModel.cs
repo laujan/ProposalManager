@@ -100,5 +100,7 @@ namespace ApplicationCore.Models
         public string WebhookUsername { get; set; }
         [JsonProperty("WebhookPassword", Order = 40)]
         public string WebhookPassword { get; set; }
+        [JsonProperty("VaultBaseUrl", Order = 41)]
+        public string VaultBaseUrl { get; set; }
     }
 }

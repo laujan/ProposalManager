@@ -155,10 +155,7 @@ export class ProposalStatus extends Component {
     fnGetOpportunityData(teamName) {
         return new Promise((resolve, reject) => {
             // API - Fetch call
-            //let requestUrl = "api/Opportunity?name='" + teamName + "'";
-            //changing to template string
             this.requestUrl = `api/Opportunity?name=${teamName}`;
-            //this.requestUrl = 'api/Opportunity?id=140';
             fetch(this.requestUrl, {
                 method: "GET",
                 headers: { 'authorization': 'Bearer ' + window.authHelper.getWebApiToken() }
@@ -174,7 +171,6 @@ export class ProposalStatus extends Component {
                         resolve(true);
                     } else {
                         // Start Check Access
-                        //Opportunity_Read_Partial,Opportunity_ReadWrite_Partial,CreditCheck_Read,CreditCheck_ReadWrite
                         let permissionRequired = ["Opportunity_ReadWrite_All", "Opportunities_ReadWrite_All", "Administrator"];
                         this.authHelper.callCheckAccess(permissionRequired).then(checkAccess => {
                             if (checkAccess) {
@@ -208,7 +204,7 @@ export class ProposalStatus extends Component {
                                     loading: false,
                                     proposalDocumentList: proposalSectionListArr,
                                     teamMembers: data.teamMembers,
-                                    peopleList: peopleListAll, // peopleListLoan
+                                    peopleList: peopleListAll, 
                                     mostRecentlyUsed: peopleListAll.slice(0, 5),
                                     oppData: data,
                                     haveGranularAccess: true
@@ -224,13 +220,11 @@ export class ProposalStatus extends Component {
                             }
                         })
                             .catch(err => {
-                                //this.errorHandler(err, "FormalProposal_checkUserAccess");
                                 this.setState({
                                     loading: false,
                                     isReadOnly: true,
                                     haveGranularAccess:false
                                 });
-                                //this.hideMessagebar();
                                 reject(err);
                             });
 
@@ -257,7 +251,7 @@ export class ProposalStatus extends Component {
 
 
         // API Update call        
-        this.requestUpdUrl = 'api/opportunity?id=' + oppViewData.id; //56';// + oppID;
+        this.requestUpdUrl = 'api/opportunity?id=' + oppViewData.id;
         let options = {
             method: "PATCH",
             headers: {
@@ -280,9 +274,7 @@ export class ProposalStatus extends Component {
             }).then(json => {
                 this.setState({ MessagebarText: <Trans>updatedSuccessfully</Trans> });
                 console.log(json);
-                // this.setState({ isUpdate: false, MessagebarText: "" });
                 setTimeout(function () { this.setState({ isUpdate: false, MessagebarText: "" }); }.bind(this), 3000);
-                //this.setState({ showPicker: false });
             });
     }
 
@@ -295,7 +287,7 @@ export class ProposalStatus extends Component {
         let propDoc = this.state.oppData.proposalDocument;
 
         let propSecItem = propDoc.content.proposalSectionList[idx];
-        propSecItem.sectionStatus = event.key; //oppStatus[event.key];
+        propSecItem.sectionStatus = event.key;
 
         oppViewData.proposalDocument.content.proposalSectionList[idx] = propSecItem;
         this.fnUpdateFormalProposal(oppViewData);
@@ -314,7 +306,6 @@ export class ProposalStatus extends Component {
 
         oppViewData.proposalDocument.content.proposalSectionList[idx] = propSecItem;
         this.fnUpdateFormalProposal(oppViewData);
-        // this.fnUpdateFormalProposal(proposalDocumentObj,idx);
     }
 
     /* Owner updated */
@@ -330,8 +321,8 @@ export class ProposalStatus extends Component {
                 "id": owner[0].key,
                 "displayName": owner[0].text,
                 "mail": owner[0].mail,
-                "phoneNumber": "",//owner[0].phoneNumber,
-                "UserPicture": "",//owner[0].imageUrl,
+                "phoneNumber": "",
+                "UserPicture": "",
                 "userPrincipalName": owner[0].userPrincipalName,
                 "userRole": owner[0].userRole
             };
@@ -345,7 +336,6 @@ export class ProposalStatus extends Component {
 
     /* Date Picker */
     _setItemDate(lastModifiedDateTime) {
-        //new Date(item.lastModifiedDateTime)
         let lmDate = new Date(lastModifiedDateTime);
         if (lmDate.getFullYear() === 1 || lmDate.getFullYear() === 0) {
             return new Date();

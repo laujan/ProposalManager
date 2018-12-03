@@ -71,7 +71,11 @@ namespace Infrastructure.Identity
             {
                 var keyVaultClient = new KeyVaultClient(new
                     KeyVaultClient.AuthenticationCallback(GetToken), new HttpClient());
-                var sec = await keyVaultClient.SetSecretAsync(_appOptions.VaultBaseUrl, key, value);
+                // checking vaultBaseURL containes https or not
+                string vaultBaseUrl = _appOptions.VaultBaseUrl;
+                if (!(_appOptions.VaultBaseUrl.Contains("https://")))
+                    vaultBaseUrl = "https://" + vaultBaseUrl;
+                var sec = await keyVaultClient.SetSecretAsync(vaultBaseUrl, key, value);
                 //update appsetings with the new secret identifier.
                 await _writableOptions.UpdateAsync(key, sec.SecretIdentifier.ToString());
             }

@@ -25,7 +25,6 @@ export class OpportunityList extends Component {
         this.sdkHelper = window.sdkHelper;
         this.authHelper = window.authHelper;
 
-        //const userProfile = this.props.userProfile;
         const dashboardList = this.props.dashboardList;
 
         let columns = [
@@ -143,9 +142,6 @@ export class OpportunityList extends Component {
             }
         };
         this.checkReadWrite = ["Opportunities_ReadWrite_All", "Opportunity_ReadWrite_All", "Opportunity_ReadWrite_Partial"];
-        // if (this.props.userProfile.roles.filter(x => x.displayName === "RelationshipManager").length > 0) {
-        //     columns.push(actionColumn);
-        // }
         this.actionColumn = actionColumn;
 
         this.state = {
@@ -185,7 +181,6 @@ export class OpportunityList extends Component {
     //Granular Access start:
     //Oppportunity create access
     componentWillMount() {
-        //this.getOpportunityIndex();
         this.authHelper.callCheckAccess(["Opportunity_Create"]).then((data) => {
             console.log("Granular Dashboard: ", data);
             let haveGranularAccess = data;
@@ -241,7 +236,6 @@ export class OpportunityList extends Component {
         try {
             let fetchData = {
                 method: 'delete',
-                //body: JSON.stringify(item.id),
                 headers: {
                     'authorization': 'Bearer ' + this.authHelper.getWebApiToken()
                 }
@@ -294,8 +288,6 @@ export class OpportunityList extends Component {
     }
 
     _onRenderCell(item, index) {
-
-
         return (
             <div className='ms-List-itemCell' data-is-focusable='true'>
                 <div className='ms-List-itemContent'>
@@ -317,12 +309,7 @@ export class OpportunityList extends Component {
     }
 
     opportunitiesList(itemsList, itemsListOriginal) {
-        //const lenght = typeof itemsList !== 'undefined' ? itemsList.length : 0;
-        //const lenghtOriginal = typeof itemsListOriginal !== 'undefined' ? itemsListOriginal.length : 0;
-        //const originalItems = itemsListOriginal;
         const items = itemsList;
-        //const resultCountText = lenght === lenghtOriginal ? '' : ` (${items.length} of ${originalItems.length} shown)`;
-
         return (
             <FocusZone direction={FocusZoneDirection.vertical}>
                 <List
@@ -337,24 +324,6 @@ export class OpportunityList extends Component {
     render() {
         const { columns, isCompactMode, items } = this.state;
 
-        const isLoading = this.state.loading;
-
-        let isRelationshipManager = false;
-        if (this.state.authUserRoles.filter(x => x.displayName === "RelationshipManager").length > 0) {
-            isRelationshipManager = true;
-        }
-        let userPermissions = this.state.authUserPermissions;
-
-
-        const itemsOriginal = this.state.itemsOriginal;
-        //const items = this.state.items;
-
-        const lenghtOriginal = typeof itemsOriginal !== 'undefined' ? itemsOriginal.length : 0;
-        const listHasItems = lenghtOriginal > 0 ? true : false;
-
-        const opportunitiesListHeading = this.opportunitiesListHeading();
-        const opportunitiesListComponent = this.opportunitiesList(items, itemsOriginal);
-
         return (
             <div className='ms-Grid pr18'>
                 {
@@ -366,13 +335,11 @@ export class OpportunityList extends Component {
                         </div>
                         : ""
                 }
-
-
                 <div className='ms-Grid-row'>
                     <div className='ms-Grid-col ms-sm6 ms-md6 ms-lg6 pageheading'>
                         &nbsp;&nbsp;
                     </div>
-                    {	//Granular access start
+                    {	
                         this.state.haveGranularAccess
                             ? <div className='ms-Grid-col ms-sm6 ms-md6 ms-lg6 createButton pt15 '>
                                 {
@@ -381,9 +348,7 @@ export class OpportunityList extends Component {
 
                             </div>
                             : ""
-                        //Granular access end
                     }
-
                 </div>
                 <div className='ms-Grid'>
                     <div className='ms-Grid-row ms-SearchBoxSmallExample'>

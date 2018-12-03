@@ -129,15 +129,19 @@ export class Permissions extends Component {
     }
 
     async componentDidMount() {
+        await this.loadAllPermissionData();
+    }
+
+    async loadAllPermissionData() {
         try {
-            if(this.state.loading){
+            if (this.state.loading) {
                 let rolesList = await this.getAllRoles();
                 let permissionsList = await this.getAllPemissionTypes();
                 let data = await this.getAllPermissionsList();
                 this.setState({ items: data.items, loading: data.loading, rowItemCounter: data.rowItemCounter, permissionTypes: permissionsList, roles: rolesList });
             }
         } catch (error) {
-            this.setState({loading:true});    
+            this.setState({ loading: true });
         }
     }
 
@@ -299,11 +303,14 @@ export class Permissions extends Component {
         postOrPatchObject["adGroupName"] = updatedItems[itemIdx].adGroupName;
         postOrPatchObject["role"] = updatedItems[itemIdx].role;
         postOrPatchObject["permissions"] = updatedItems[itemIdx].permissions;
+        let dispSuccessMsg = "";
         if (item.id.length === 0) {
             postOrPatchObject["role"] = { "id": "", "displayName": postOrPatchObject["role"] };
-            this.addPermission(postOrPatchObject);
+            dispSuccessMsg = <Trans>permissionAddSuccess</Trans>;
+            this.addOrUpdatePermission(postOrPatchObject, "POST", dispSuccessMsg);
         } else if (item.id.length > 0) {
-            this.updatePermission(postOrPatchObject);
+            dispSuccessMsg = <Trans>permissionUpdatedSuccess</Trans>;
+            this.addOrUpdatePermission(postOrPatchObject, "PATCH", dispSuccessMsg);
         }
     }
 
@@ -351,18 +358,22 @@ export class Permissions extends Component {
         postOrPatchObject["role"] = updatedItems[itemIdx].role;
         postOrPatchObject["permissions"] = updatedItems[itemIdx].permissions;
         postOrPatchObject["role"] = { "id": "", "displayName": postOrPatchObject["role"] };
+        let dispSuccessMsg = "";
         if (item.id.length === 0) {
-            this.addPermission(postOrPatchObject);
+            //this.addPermission(postOrPatchObject);
+            dispSuccessMsg = <Trans>permissionAddSuccess</Trans>;
+            this.addOrUpdatePermission(postOrPatchObject, "POST", dispSuccessMsg);
         } else if (item.id.length > 0) {
-            this.updatePermission(postOrPatchObject);
+            //this.updatePermission(postOrPatchObject);
+            dispSuccessMsg = <Trans>permissionUpdatedSuccess</Trans>;
+            this.addOrUpdatePermission(postOrPatchObject, "PATCH", dispSuccessMsg);
         }
-
     }
 
-    async addPermission(permissionItem) {
+    async addOrUpdatePermission(permissionItem, methodType, dispSuccessMsg) {
         this.requestUpdUrl = 'api/RoleMapping';
         let options = {
-            method: "POST",
+            method: methodType,
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json',
@@ -372,71 +383,30 @@ export class Permissions extends Component {
         };
         try {
             let response = await fetch(this.requestUpdUrl, options);
+            console.log(response);
             if (response.ok) {
-                let some = await this.getAllPermissionsList(true);
+                let updatedPermissions = await this.getAllPermissionsList(true);
                 this.setState({
-                    items: some.items,
-                    MessagebarText: <Trans>permissionAddSuccess</Trans>,
-                    MessageBarType: MessageBarType.success,
-                    isUpdate: false,
-                    isUpdateMsg: true
+                    items: updatedPermissions.items
                 });
-                setTimeout(function () { this.setState({ isUpdateMsg: false, MessagebarText: "" }); }.bind(this), 3000);
-                return "done";
+                this.setMessage(false, true, MessageBarType.success, dispSuccessMsg);
             } else {
-                this.setState({
-                    MessagebarText: <Trans>errorOoccuredPleaseTryAgain</Trans>,
-                    MessageBarType: MessageBarType.error,
-                    isUpdate: false,
-                    isUpdateMsg: true
-                });
-                setTimeout(function () { this.setState({ isUpdateMsg: false, MessagebarText: "" }); }.bind(this), 3000);
+                dispSuccessMsg = <Trans>errorOoccuredPleaseTryAgain</Trans>;
+                this.setMessage(false, true, MessageBarType.error, dispSuccessMsg);
             }
         } catch (error) {
             console.log("Permission.js getAllPermissionsList :, ", error);
+            dispSuccessMsg = <Trans>errorOoccuredPleaseTryAgain</Trans>;
+            this.setMessage(false, true, MessageBarType.error, dispSuccessMsg);
             return false;
+        } finally {
+            setTimeout(function () { this.setMessage(false, false, "", ""); }.bind(this), 2000);
+            return "done";
         }
     }
 
-    async updatePermission(permissionItem) {
-        this.requestUpdUrl = 'api/RoleMapping';
-        let options = {
-            method: "PATCH",
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-                'authorization': 'Bearer    ' + window.authHelper.getWebApiToken()
-            },
-            body: JSON.stringify(permissionItem)
-        };
-
-        try {
-            let response = await fetch(this.requestUpdUrl, options);
-            if (response.ok) {
-                let some = await this.getAllPermissionsList(true);
-                this.setState({
-                    items: some.items,
-                    MessagebarText: <Trans>permissionUpdatedSuccess</Trans>,
-                    MessageBarType: MessageBarType.success,
-                    isUpdate: false,
-                    isUpdateMsg: true
-                });
-                setTimeout(function () { this.setState({ isUpdateMsg: false, MessagebarText: "" }); }.bind(this), 3000);
-                return "done";
-            } else {
-                this.setState({
-                    MessagebarText: <Trans>errorOoccuredPleaseTryAgain</Trans>,
-                    MessageBarType: MessageBarType.error,
-                    isUpdate: false,
-                    isUpdateMsg: true
-                });
-                setTimeout(function () { this.setState({ isUpdateMsg: false, MessagebarText: "" }); }.bind(this), 3000);
-            }
-        } catch (error) {
-            console.log("Permission.js getAllPermissionsList :, ", error);
-            return false;
-        }
-
+    setMessage(isUpdate, isUpdateMsg, MessageBarType, MessagebarText) {
+        this.setState({ isUpdate, isUpdateMsg, MessageBarType, MessagebarText });
     }
 
     async deletePermission(permissionItem) {
@@ -445,37 +415,28 @@ export class Permissions extends Component {
         let options = {
             method: "DELETE",
             headers: {
-                'authorization': 'Bearer ' + window.authHelper.getWebApiToken() 
+                'authorization': 'Bearer ' + window.authHelper.getWebApiToken()
             }
         };
         try {
             let response = await fetch(this.requestUpdUrl, options);
             if (response.ok) {
-                // let currentItems = this.state.items.filter(x => x.id !== permissionItem.id);
                 let updatedPermissions = await this.getAllPermissionsList(true);
                 this.setState({
-                    items: updatedPermissions.items,
-                    MessagebarText: <Trans>permissionDeletedSuccess</Trans>,
-                    MessageBarType: MessageBarType.success,
-                    isUpdate: false,
-                    isUpdateMsg: true
+                    items: updatedPermissions.items
                 });
-
-                setTimeout(function () { this.setState({ isUpdateMsg: false, MessagebarText: "" }); }.bind(this), 3000);
+                this.setMessage(false, true, MessageBarType.success, <Trans>permissionDeletedSuccess</Trans>);
                 return response.json;
             } else {
-                this.setState({
-                    MessagebarText: <Trans>errorOoccuredPleaseTryAgain</Trans>,
-                    MessageBarType: MessageBarType.error,
-                    isUpdate: false,
-                    isUpdateMsg: true
-                });
-                setTimeout(function () { this.setState({ isUpdateMsg: false, MessagebarText: "" }); }.bind(this), 3000);
+                this.setMessage(false, true, MessageBarType.error, <Trans>errorOoccuredPleaseTryAgain</Trans>);
             }
         } catch (error) {
             this.setState({ isUpdate: false });
             console.log("Permission getAllPermissionsList :, ", error);
             return false;
+        } finally {
+            setTimeout(function () { this.setMessage(false, false, "", ""); }.bind(this), 2000);
+            return "done";
         }
     }
 

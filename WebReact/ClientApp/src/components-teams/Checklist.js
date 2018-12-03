@@ -142,9 +142,6 @@ export class Checklist extends Component {
                     let fileName = "";
 
                     if (itemFileUri.length > 0) {
-                        //fileName = itemFileUri.substring(itemFileUri.lastIndexOf('file='), itemFileUri.lastIndexOf('&action'));
-                        //fileName = fileName.substring(5, fileName.length);
-
                         fileName = this.getDocumentName(itemFileUri);
                         if (!fileName) {
                             fileName = itemFileUri.substring(itemFileUri.lastIndexOf("/") + 1);
@@ -317,8 +314,7 @@ export class Checklist extends Component {
     getOpportunity(oppName, channelName) {
 
         let opportunityObj;
-        //changing to template string
-        //let requestUrl = "api/Opportunity?name='" + oppName + "'";
+        // API - Fetch call by opportunity name
         let requestUrl = `api/Opportunity?name=${oppName}`;
         fetch(requestUrl, {
             method: "GET",
@@ -330,9 +326,7 @@ export class Checklist extends Component {
                     console.log("Checklist_getOpportunity ERROR: can't load opp: " + oppName);
                     return;
                 } else if (data.error) {
-                    console.log(" ********** DATA Error");
                     console.log(data.error.code);
-                    //alert(data.error.code);
                     this.setState({
                         isLoading: false,
                         teamName: oppName,
@@ -423,7 +417,6 @@ export class Checklist extends Component {
         return new Promise((resolve, reject) => {
             // Foreach in opportunity.checklists to find this one then replace with state one, then replace items in checklist then add to oppotunity and update
             // when copy the items, get rid of file which holds the file for upload
-            //this.state.items;
 
             let requestUrl = 'api/opportunity';
 
@@ -489,7 +482,6 @@ export class Checklist extends Component {
             if (updateOpp) {
                 this.updateOpportunity(opportunity)
                     .then(res => {
-                        //setTimeout(function () { this.setState({ updateStatus: false, MessagebarText: "" }); }.bind(this), 3000);
                         let teamName = getQueryVariable('teamName');
                         let channelName = getQueryVariable('channelName');
                         this.getOpportunity(teamName, channelName);
@@ -566,21 +558,11 @@ export class Checklist extends Component {
     }
 
     getChecklistStatus(opportunity) {
-        // divider: { key: 6, text: '-', itemType: DropdownMenuItemType.Divider },
-        const checklistStatusOptions = [
-            { key: 0, text: <Trans>Not Started</Trans> },
-            { key: 1, text: <Trans>In Progress</Trans> },
-            { key: 2, text: <Trans>Blocked</Trans> },
-            { key: 3, text: <Trans>Completed</Trans> }
-        ];
-
         let checkListObj = opportunity.checklists.filter(x => x.checklistChannel === this.state.channelName);
         let checkListStatusKey = 0;
         if (checkListObj.length > 0) {
             checkListStatusKey = checkListObj[0].checklistStatus;
         }
-
-
         return checkListStatusKey;
     }
 
@@ -599,22 +581,17 @@ export class Checklist extends Component {
         let rowCounter = this.state.rowItemCounter + 1;
         let newItems = [];
         newItems.push(this.createListItem(rowCounter));
-
         let currentItems = newItems.concat(this.state.items);
-
         this.updateCurrentItems(currentItems, null, false);
     }
 
     deleteRow(item) {
         if (this.state.items.length > 0) {
             this.setState({ updateStatus: true, MessagebarText: <Trans>updating</Trans> });
-
             let currentItems = this.state.items.filter(x => x.id !== item.id);
-
             this.updateCurrentItems(currentItems, null, true);
         }
     }
-
 
     onCheckboxChange(e, item) {
         if (e.target.value === "") {
@@ -778,7 +755,7 @@ export class Checklist extends Component {
 
 
     render() {
-        const { columns, isCompactMode, items, selectionDetails } = this.state;
+        const { columns, isCompactMode, items } = this.state;
 
         return (
             <TeamsComponentContext fontSize={this.state.fontSize} theme={this.state.theme}>
