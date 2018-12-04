@@ -118,7 +118,16 @@ npm install
 cd ..\..\Setup
 
 # Publish Proposal Manager
-rd ..\WebReact\bin\Release\netcoreapp2.1\publish -Recurse
+$solutionDir = (Get-Item -Path "..\").FullName
+.\nuget.exe restore ..\Dynamics Integration\OneDriveSubscriptionRenewal\OneDriveSubscriptionRenewal.csproj -SolutionDirectory ..\
+cd "..\Dynamics Integration\OneDriveSubscriptionRenewal"
+dotnet msbuild "OneDriveSubscriptionRenewal.csproj" "/p:SolutionDir=`"$($solutionDir)\\`""
+cd ..\..\Setup
+.\nuget.exe restore ..\Utilities\OpportunitySiteProvisioner\OpportunitySiteProvisioner.csproj -SolutionDirectory ..\
+cd "..\Utilities\OpportunitySiteProvisioner"
+dotnet msbuild "OpportunitySiteProvisioner.csproj" "/p:SolutionDir=`"$($solutionDir)\\`""
+cd ..\..\Setup
+rd ..\WebReact\bin\Release\netcoreapp2.1\publish -Recurse -ErrorAction Ignore
 dotnet publish ..\WebReact -c Release
 
 New-PMSite -PMSiteLocation $AzureResourceLocation -ApplicationName $ApplicationName
