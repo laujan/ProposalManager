@@ -31,10 +31,7 @@
 
 function New-PMGroupStructure {
     [CmdletBinding()]
-    param(
-        [Parameter(Mandatory = $true)]
-        [string]$PMAdminUpn
-    )
+    param()
     process {
         # Common attributes that should be applied to all Office 365 groups being created
         $groupsCommonAttributes = @{ }
@@ -59,11 +56,13 @@ function New-PMSite {
         [Parameter(Mandatory = $true)]
         [string]$PMSiteLocation,
         [Parameter(Mandatory = $true)]
-        [string]$ApplicationName
+        [string]$ApplicationName,
+        [Parameter(Mandatory = $true)]
+        [string]$Subscription
     )
     process {
         Write-Host "Starting resource group deployment in Azure..." -ForegroundColor Cyan
-        Connect-AzureRmAccount #-Credential $Global:credential
+        Connect-AzureRmAccount -Subscription $Subscription
         New-AzureRmResourceGroup -Name $ApplicationName -Location $PMSiteLocation
         New-AzureRmResourceGroupDeployment -ResourceGroupName $ApplicationName -TemplateFile .\ProposalManagerARMTemplate.json -siteName $ApplicationName -siteLocation $PMSiteLocation
         $xml = [xml](Get-AzureRmWebAppPublishingProfile -ResourceGroupName $ApplicationName -Name $ApplicationName -OutputFile .\settings.xml)

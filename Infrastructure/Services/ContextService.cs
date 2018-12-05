@@ -75,8 +75,19 @@ namespace Infrastructure.Services
             clientSettings.PBIWorkSpaceId = _appOptions.PBIWorkSpaceId;
             clientSettings.PBIReportId = _appOptions.PBIReportId;
             clientSettings.PBITenantId = _appOptions.PBITenantId;
-            clientSettings.PBIUserName = await _azureKeyVaultService.GetValueFromVaultAsync(_appOptions.PBIUserName);
-            clientSettings.PBIUserPassword = await _azureKeyVaultService.GetValueFromVaultAsync(_appOptions.PBIUserPassword);
+
+            try
+            {
+                clientSettings.PBIUserName = await _azureKeyVaultService.GetValueFromVaultAsync(_appOptions.PBIUserName);
+                clientSettings.PBIUserPassword = await _azureKeyVaultService.GetValueFromVaultAsync(_appOptions.PBIUserPassword);
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError("Get PowerBI user credentials error: " + ex);
+                clientSettings.PBIUserName = "";
+                clientSettings.PBIUserPassword = "";
+            }
+
 
             clientSettings.GeneralProposalManagementTeam = _appOptions.GeneralProposalManagementTeam;
             clientSettings.ProposalManagerAddInName = _appOptions.ProposalManagerAddInName;

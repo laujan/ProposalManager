@@ -509,7 +509,7 @@ export class Setup extends Component {
             for (const Objkey of Object.keys(ProposalManagement)) {
                 try {
                     if (Objkey !== "ProposalManagementRootSiteId") {
-                        const contents = await this.UpdateAppSettings(Objkey, ProposalManagement[Objkey], token);
+                        const contents = await this.UpdateAppSettings(Objkey, ProposalManagement[Objkey] ? ProposalManagement[Objkey] : this.defaultValue(Objkey), token);
                         console.log(`SetAppSetting_JsonKeys_${Objkey} : `, contents);
                     }
                 } catch (error) {
@@ -1274,12 +1274,6 @@ export class Setup extends Component {
                                     </ul>
                                     {t('prereq5')}
                                     <br /><br />
-                                    {t('prerequiste1')}
-                                    <ul>
-                                        <li>{t('prereq6')}</li>
-                                        <li>{t('prereq7')}</li>
-                                        <li>{t('prereq8')}</li>
-                                    </ul>
                                 </div>
                             );
                         }

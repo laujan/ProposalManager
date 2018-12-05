@@ -141,19 +141,10 @@
     <Content Include="app_data\jobs\triggered\OneDriveSubscriptionsRenewer\ApplicationCore.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="app_data\jobs\triggered\OneDriveSubscriptionsRenewer\ApplicationCore.pdb">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
     <Content Include="app_data\jobs\triggered\OneDriveSubscriptionsRenewer\Infrastructure.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="app_data\jobs\triggered\OneDriveSubscriptionsRenewer\Infrastructure.pdb">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
     <Content Include="app_data\jobs\triggered\OneDriveSubscriptionsRenewer\OneDriveSubscriptionRenewal.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="app_data\jobs\triggered\OneDriveSubscriptionsRenewer\OneDriveSubscriptionRenewal.pdb">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="app_data\jobs\triggered\OneDriveSubscriptionsRenewer\run.cmd">
@@ -219,25 +210,16 @@
     <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.IdentityModel.JsonWebTokens.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.IdentityModel.JsonWebTokens.pdb">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
     <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.IdentityModel.JsonWebTokens.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.IdentityModel.Logging.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.IdentityModel.Logging.pdb">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
     <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.IdentityModel.Logging.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.IdentityModel.Tokens.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.IdentityModel.Tokens.pdb">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.IdentityModel.Tokens.xml">
@@ -291,9 +273,6 @@
     <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.WindowsAzure.Storage.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.WindowsAzure.Storage.pdb">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
     <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\Microsoft.WindowsAzure.Storage.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -315,16 +294,10 @@
     <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\OpportunitySiteProvisioner.exe">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\OpportunitySiteProvisioner.pdb">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
     <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\SharePointPnP.IdentityModel.Extensions.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\System.IdentityModel.Tokens.Jwt.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\System.IdentityModel.Tokens.Jwt.pdb">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="app_data\jobs\triggered\OpportunitySiteProvisioner\System.IdentityModel.Tokens.Jwt.xml">

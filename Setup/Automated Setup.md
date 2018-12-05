@@ -3,14 +3,19 @@ Proposal Manager can be easily installed using PowerShell. In this folder, a scr
 
 This script is intended to run in that folder, with the whole repo downloaded to your machine. Trying to download only the scripts and run them without the code **will not work**.
 
-To run it, you need to provide the following parameters:
+Before running the script, please execute the following:
+
+`Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass`
+
+To run the script, you need to provide the following parameters:
 
 Parameter|Meaning
 ---------|-------
-PMAdminUpn|The upn of the user that will be made administrator of this instance of Proposal Manager. It can be yourself or someone else.
+PMAdminUpn|The upn of the user that will be made administrator of this instance of Proposal Manager. It can be yourself or someone else. It will be added as the administrator of the Proposal Manager SharePoint site. **This user will later have to be added manually to the PM admins group in the Setup page.**
 PMSharePointSiteAlias|The name of the SharePoint site to create for Proposal Manager (`proposalmanager` is ok most of the times)
 OfficeTenantName|The name of the office tenant. For example, if your mail domain is @contoso.onmicrosoft.com, then the name of the tenant is "contoso"
 AzureResourceLocation|The azure region in which you want the resources to be allocated (for example, "East US")
+AzureSubscription|The name (id also works) of the azure subscription you want the resource group to be deployed to.
 
 You will be prompted for credentials two times. The first time, you need to log in to office 365 with your **office tenant global administrator credentials**. Once this is done, the script will start setting up office 365 to prepare it for the installation of Proposal Manager.
 

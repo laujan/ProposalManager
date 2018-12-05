@@ -16,18 +16,20 @@
 #>
 [CmdletBinding()]
 param(
-  [Parameter(Mandatory = $false)]
-  [string]$PMSharePointSiteAlias,
-  [Parameter(Mandatory = $true)]
-  [string]$PMAdminUpn,
-  [Parameter(Mandatory = $true)]
-  [string]$PMSiteAlias,
-  [Parameter(Mandatory = $true)]
-  [string]$OfficeTenantName,
-  [Parameter(Mandatory = $true)]
-  [string]$AzureResourceLocation,
-  [Parameter(Mandatory = $false)]
-  [string]$ApplicationName
+    [Parameter(Mandatory = $false)]
+    [string]$PMSharePointSiteAlias,
+    [Parameter(Mandatory = $true)]
+    [string]$PMAdminUpn,
+    [Parameter(Mandatory = $true)]
+    [string]$PMSiteAlias,
+    [Parameter(Mandatory = $true)]
+    [string]$OfficeTenantName,
+    [Parameter(Mandatory = $true)]
+    [string]$AzureResourceLocation,
+    [Parameter(Mandatory = $true)]
+    [string]$AzureSubscription,
+    [Parameter(Mandatory = $false)]
+    [string]$ApplicationName
 )
 
 # Check Pre-requisites
@@ -84,7 +86,7 @@ if(!$PMSharePointSiteAlias)
 # Create SharePoint Site
 $pmSiteUrl = New-PMSharePointSite -AdminSiteUrl $PMSharePointSiteAlias -PMAdminUpn $PMAdminUpn -PMSiteAlias $PMSiteAlias
 
-New-PMGroupStructure -PMAdminUpn $PMAdminUpn
+New-PMGroupStructure
 
 if(!$ApplicationName)
 {
@@ -119,18 +121,18 @@ cd ..\..\Setup
 
 # Publish Proposal Manager
 $solutionDir = (Get-Item -Path "..\").FullName
-.\nuget.exe restore ..\Dynamics Integration\OneDriveSubscriptionRenewal\OneDriveSubscriptionRenewal.csproj -SolutionDirectory ..\
+.\nuget.exe restore "..\Dynamics Integration\OneDriveSubscriptionRenewal\OneDriveSubscriptionRenewal.csproj" -SolutionDirectory ..\
 cd "..\Dynamics Integration\OneDriveSubscriptionRenewal"
-dotnet msbuild "OneDriveSubscriptionRenewal.csproj" "/p:SolutionDir=`"$($solutionDir)\\`""
+dotnet msbuild "OneDriveSubscriptionRenewal.csproj" "/p:SolutionDir=`"$($solutionDir)\\`";Configuration=Release"
 cd ..\..\Setup
-.\nuget.exe restore ..\Utilities\OpportunitySiteProvisioner\OpportunitySiteProvisioner.csproj -SolutionDirectory ..\
+.\nuget.exe restore "..\Utilities\OpportunitySiteProvisioner\OpportunitySiteProvisioner.csproj" -SolutionDirectory ..\
 cd "..\Utilities\OpportunitySiteProvisioner"
-dotnet msbuild "OpportunitySiteProvisioner.csproj" "/p:SolutionDir=`"$($solutionDir)\\`""
+dotnet msbuild "OpportunitySiteProvisioner.csproj" "/p:SolutionDir=`"$($solutionDir)\\`";Configuration=Release"
 cd ..\..\Setup
 rd ..\WebReact\bin\Release\netcoreapp2.1\publish -Recurse -ErrorAction Ignore
 dotnet publish ..\WebReact -c Release
 
-New-PMSite -PMSiteLocation $AzureResourceLocation -ApplicationName $ApplicationName
+New-PMSite -PMSiteLocation $AzureResourceLocation -ApplicationName $ApplicationName -Subscription $AzureSubscription
 
 $applicationDomain = "$ApplicationName.azurewebsites.net"
 $applicationUrl = "https://$applicationDomain"
