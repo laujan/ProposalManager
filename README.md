@@ -43,7 +43,9 @@ This repository consists of the source code for the Proposal Manager solution an
 To facilitate quick deployment, Proposal Manager provides an automated experience detailed (here](https://github.com/OfficeDev/ProposalManager/blob/master/Setup/Automated%20Setup.md)).
 
 We have also published the following high level **walk-through videos** to help with the deployment process and to get a functional understanding:
-  - [Proposal Manager - Deployment](https://youtu.be/mlmzLMFDxcQ)
+  - [Proposal Manager - Automated Deployment](https://youtu.be/Pd62rhF6Cy0)
+  - [Proposal Manager - Configuration](https://youtu.be/WmOT6D2mQPs)
+  - [Proposal Manager - Manual Deployment](https://youtu.be/mlmzLMFDxcQ)
   - [Proposal Manager: Functional Overview](https://youtu.be/lNjG9e9U0p0)
   - [Dynamics 365 Integration - Deployment](https://youtu.be/hblz_GK8VNs)
   - [Dynamics 365 and Office add-ins: Functional Overview](https://youtu.be/cQfYfxT5a-I)
@@ -51,7 +53,7 @@ We have also published the following high level **walk-through videos** to help 
   - [Project Smart Link - Deployment](https://youtu.be/qNlUlCwKcto)
   - [Office Add-ins: Functional Overview](https://youtu.be/hy5TLFVum1E)
 
-Deployment walkthrough video does not currently include the automated deployment process, and covers how this can be done manually by an advanced user.
+The Manual Deployment walkthrough video covers how the deployment can be done manually by an advanced user without using the Deployment Automation scripts.
 
 # Roadmap
 The upcoming versions of Proposal Manager are set to incrementally add several value-added features, including:

@@ -6,6 +6,8 @@
     )
 
     $appSettings = Get-Content -Path $pathToJson | ConvertFrom-Json -ErrorAction Stop
+    
+    # AzureAd settings
     $appSettings.AzureAd.ClientId = $inputParams.ClientId
     $appSettings.AzureAd.ClientSecret = $inputParams.ClientSecret
     $appSettings.AzureAd.TenantId = $inputParams.TenantId
@@ -13,6 +15,10 @@
     $appSettings.AzureAd.Domain = "$($inputParams.TenantName).sharepoint.com"
     $appSettings.AzureAd.Authority = "https://login.microsoftonline.com/$($inputParams.TenantId)"
     $appSettings.AzureAd.BaseUrl = $inputParams.BaseUrl
+
+    # Proposal Management settings
+    $appSettings.ProposalManagement.SharePointHostName = $inputParams.SharePointHostName
+    $appSettings.ProposalManagement.SharePointSiteRelativeName = $inputParams.SharePointSiteRelativeName
 
     $appSettings | ConvertTo-Json | Set-Content $pathToJson
 

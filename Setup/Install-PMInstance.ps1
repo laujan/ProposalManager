@@ -106,7 +106,15 @@ Connect-AzureAD -Credential $global:credential
 $tenantId = (Get-AzureADTenantDetail).ObjectId
 Disconnect-AzureAD
 
-$appSettings = @{ClientId = $global:appId; ClientSecret = $global:secretText; TenantId = $tenantId; TenantName = $OfficeTenantName; BaseUrl = "https://$ApplicationName.azurewebsites.net";}
+$appSettings = @{
+    ClientId = $global:appId; 
+    ClientSecret = $global:secretText; 
+    TenantId = $tenantId; 
+    TenantName = $OfficeTenantName; 
+    BaseUrl = "https://$ApplicationName.azurewebsites.net"; 
+    SharePointSiteRelativeName = $PMSiteAlias;
+    SharePointHostName = "$OfficeTenantName.sharepoint.com"; 
+}
 
 # Update Proposal Manager application settings
 UpdateAppSettings -pathToJson ..\WebReact\appsettings.json -inputParams $appSettings
@@ -121,13 +129,15 @@ cd ..\..\Setup
 
 # Publish Proposal Manager
 $solutionDir = (Get-Item -Path "..\").FullName
-.\nuget.exe restore "..\Dynamics Integration\OneDriveSubscriptionRenewal\OneDriveSubscriptionRenewal.csproj" -SolutionDirectory ..\
+
+Write-Host "Restore Nuget solution packages" -ForegroundColor Cyan
+.\nuget.exe restore "..\ProposalManagement.sln" -SolutionDirectory ..\
+
 cd "..\Dynamics Integration\OneDriveSubscriptionRenewal"
-dotnet msbuild "OneDriveSubscriptionRenewal.csproj" "/p:SolutionDir=`"$($solutionDir)\\`";Configuration=Release"
+dotnet msbuild "OneDriveSubscriptionRenewal.csproj" "/p:SolutionDir=`"$($solutionDir)\\`";Configuration=Release;DebugSymbols=false;DebugType=None"
 cd ..\..\Setup
-.\nuget.exe restore "..\Utilities\OpportunitySiteProvisioner\OpportunitySiteProvisioner.csproj" -SolutionDirectory ..\
 cd "..\Utilities\OpportunitySiteProvisioner"
-dotnet msbuild "OpportunitySiteProvisioner.csproj" "/p:SolutionDir=`"$($solutionDir)\\`";Configuration=Release"
+dotnet msbuild "OpportunitySiteProvisioner.csproj" "/p:SolutionDir=`"$($solutionDir)\\`";Configuration=Release;DebugSymbols=false;DebugType=None"
 cd ..\..\Setup
 rd ..\WebReact\bin\Release\netcoreapp2.1\publish -Recurse -ErrorAction Ignore
 dotnet publish ..\WebReact -c Release
@@ -150,4 +160,5 @@ Write-Host "Installation Information following" -ForegroundColor Green
 Write-Host "App url: $applicationUrl" -ForegroundColor Green
 Write-Host "App id: $global:appId" -ForegroundColor Green
 Write-Host "Site: $pmSiteUrl" -ForegroundColor Green
+Write-Host "Consent page: $adminConsentUrl" -ForegroundColor Green
 .\ProposalManager.zip

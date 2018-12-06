@@ -1,7 +1,9 @@
 # Installing Proposal Manager
 Proposal Manager can be easily installed using PowerShell. In this folder, a script called `Install-PMInstance.ps1` is included for your convenience.
 
-This script is intended to run in that folder, with the whole repo downloaded to your machine. Trying to download only the scripts and run them without the code **will not work**.
+This script is intended to run in that folder, with the whole repo downloaded to your machine. Trying to download only the scripts and running them without the code **will not work**.
+
+Refer to this Automated Deployment Process [walk-through video](https://youtu.be/Pd62rhF6Cy0) for an overview of the process before you start.
 
 Before running the script, please execute the following:
 
@@ -16,6 +18,9 @@ PMSharePointSiteAlias|The name of the SharePoint site to create for Proposal Man
 OfficeTenantName|The name of the office tenant. For example, if your mail domain is @contoso.onmicrosoft.com, then the name of the tenant is "contoso"
 AzureResourceLocation|The azure region in which you want the resources to be allocated (for example, "East US")
 AzureSubscription|The name (id also works) of the azure subscription you want the resource group to be deployed to.
+ApplicationName|The name of the application (for example, "ProposalManager")
+
+To find the subscription info, navigate to the [Azure Portal](https://portal.azure.com) and select Subscriptions. Pick the subscription  name or ID from the displayed list, for the subscription where you are planning to deploy the solution to.
 
 You will be prompted for credentials two times. The first time, you need to log in to office 365 with your **office tenant global administrator credentials**. Once this is done, the script will start setting up office 365 to prepare it for the installation of Proposal Manager.
 
@@ -37,3 +42,5 @@ After deploying the app, the script will do 3 things to help you get started:
    4. After having given consent the second time, you will still see the Proposal Manager login page. At this point, change the url to go to /Setup (under the same domain). You'll see there the same login page.
    5. In the /Setup login page, sign in again, as always with your admin account. You'll see a third and final consent screen, which you need to accept on behalf of your organization once again.
    6. You'll still see the sign in page. Click "Sign in" one last time, and the Setup page should show up. At this point, you can continue with step 8 of the Getting Started Guide (Guided Setup).
+   
+   Note: The automated setup will add the O365 Global Administrator as the owner and member of all the created groups. If required, please login into https://portal.office.com and remove the user to enhance security.
