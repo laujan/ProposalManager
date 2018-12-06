@@ -3,7 +3,7 @@ Proposal Manager can be easily installed using PowerShell. In this folder, a scr
 
 This script is intended to run in that folder, with the whole repo downloaded to your machine. Trying to download only the scripts and running them without the code **will not work**.
 
-Refer to this Automated Deployment Process [walk-through video](https://youtu.be/Pd62rhF6Cy0) for an overview of the process before you start. After this deployment process refer to [configure-proposal-manager-video](https://youtu.be/WmOT6D2mQPs) to configure the system or see the Getting Start guide. 
+Refer to this Automated Deployment Process [walk-through video](https://youtu.be/Pd62rhF6Cy0) for an overview of the process before you start. After this deployment process refer to [configure-proposal-manager-video](https://youtu.be/WmOT6D2mQPs) to configure the system or see the Getting Started guide. 
 
 Before running the script, please execute the following:
 
