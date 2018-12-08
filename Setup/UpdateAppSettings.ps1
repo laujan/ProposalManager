@@ -20,6 +20,11 @@
     $appSettings.ProposalManagement.SharePointHostName = $inputParams.SharePointHostName
     $appSettings.ProposalManagement.SharePointSiteRelativeName = $inputParams.SharePointSiteRelativeName
 
+    # Opportunity site provisioner webjob settings
+    $appSettings.DocumentIdActivator.WebhookAddress = $inputParams.WebhookAddress
+    $appSettings.DocumentIdActivator.WebhookUsername = $inputParams.WebhookUsername
+    $appSettings.DocumentIdActivator.WebhookPassword = $inputParams.WebhookPassword
+
     $appSettings | ConvertTo-Json | Set-Content $pathToJson
 
     Write-Host "AppSettings.json has been updated"

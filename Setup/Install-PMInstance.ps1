@@ -106,6 +106,8 @@ Connect-AzureAD -Credential $global:credential
 $tenantId = (Get-AzureADTenantDetail).ObjectId
 Disconnect-AzureAD
 
+$deploymentCredentials = New-PMSite -PMSiteLocation $AzureResourceLocation -ApplicationName $ApplicationName -Subscription $AzureSubscription
+
 $appSettings = @{
     ClientId = $global:appId; 
     ClientSecret = $global:secretText; 
@@ -114,6 +116,9 @@ $appSettings = @{
     BaseUrl = "https://$ApplicationName.azurewebsites.net"; 
     SharePointSiteRelativeName = $PMSiteAlias;
     SharePointHostName = "$OfficeTenantName.sharepoint.com"; 
+    WebhookAddress = "https://$ApplicationName.scm.azurewebsites.net/api/triggeredwebjobs/OpportunitySiteProvisioner/run";
+    WebhookUsername = $deploymentCredentials.Username;
+    WebhookPassword = $deploymentCredentials.Password
 }
 
 # Update Proposal Manager application settings
@@ -142,7 +147,8 @@ cd ..\..\Setup
 rd ..\WebReact\bin\Release\netcoreapp2.1\publish -Recurse -ErrorAction Ignore
 dotnet publish ..\WebReact -c Release
 
-New-PMSite -PMSiteLocation $AzureResourceLocation -ApplicationName $ApplicationName -Subscription $AzureSubscription
+.\ZipDeploy.ps1 -sourcePath ..\WebReact\bin\Release\netcoreapp2.1\publish\* -username $deploymentCredentials.Username -password $deploymentCredentials.Password -appName $ApplicationName
+Write-Host "Web app deployment has completed" -ForegroundColor Green
 
 $applicationDomain = "$ApplicationName.azurewebsites.net"
 $applicationUrl = "https://$applicationDomain"

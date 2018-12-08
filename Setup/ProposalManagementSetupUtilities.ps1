@@ -65,14 +65,16 @@ function New-PMSite {
         Connect-AzureRmAccount -Subscription $Subscription
         New-AzureRmResourceGroup -Name $ApplicationName -Location $PMSiteLocation
         New-AzureRmResourceGroupDeployment -ResourceGroupName $ApplicationName -TemplateFile .\ProposalManagerARMTemplate.json -siteName $ApplicationName -siteLocation $PMSiteLocation
+        Write-Host "Resource group deployment succeeded" -ForegroundColor Green
+        Write-Host "Retrieving deployment credentials..." -ForegroundColor Cyan
         $xml = [xml](Get-AzureRmWebAppPublishingProfile -ResourceGroupName $ApplicationName -Name $ApplicationName -OutputFile .\settings.xml)
         # Extract connection information from publishing profile
         $username = [System.Linq.Enumerable]::Last($xml.SelectNodes("//publishProfile[@publishMethod=`"FTP`"]/@userName").value.Split('\'))
         $password = $xml.SelectNodes("//publishProfile[@publishMethod=`"FTP`"]/@userPWD").value
         $url = $xml.SelectNodes("//publishProfile[@publishMethod=`"FTP`"]/@publishUrl").value
         Disconnect-AzureRmAccount
-        .\ZipDeploy.ps1 -sourcePath ..\WebReact\bin\Release\netcoreapp2.1\publish\* -username $username -password $password -appName $ApplicationName
-        Write-Host "Web app deployment has completed" -ForegroundColor Green
+        Write-Host "Deployment credentials successfully retrieved" -ForegroundColor Cyan
+        return @{Username = $username; Password = $password; Url = $url}
     }
 }
 
