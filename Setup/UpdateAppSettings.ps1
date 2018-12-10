@@ -27,5 +27,5 @@
 
     $appSettings | ConvertTo-Json | Set-Content $pathToJson
 
-    Write-Host "AppSettings.json has been updated"
+    Write-Information "AppSettings.json has been updated"
 }

@@ -13,17 +13,17 @@
         # We open a PnP connection and do all we need in sequence to avoid having many connections open unnecessarily
         Connect-PnPOnline -Url $AdminSiteUrl -Credentials $Credential
         # First we create the site with the specified alias and store the url of the created site
-        Write-Host "Creating the Proposal Manager SharePoint site..."
+        Write-Information "Creating the Proposal Manager SharePoint site..."
         $pmSiteUrl = New-PnPSite -Type TeamSite -Title "Proposal Management" -Alias $PMSiteAlias
-        Write-Host "SharePoint site succesfully created" -ForegroundColor Green
+        Write-Information "SharePoint site succesfully created"
         # And we immediately close the PnP connection
         Disconnect-PnPOnline
 
         # Afterwards, we open a regular SPO connection to make the desired PM admin the primary admin of the new site
         Connect-SPOService -Url $AdminSiteUrl -Credential $Credential
-        Write-Host "Setting the SharePoint site administrator..."
+        Write-Information "Setting the SharePoint site administrator..."
         Set-SPOUser -Site $pmSiteUrl -LoginName $PMAdminUpn -IsSiteCollectionAdmin $true
-        Write-Host "SharePoint site administrator set correctly." -ForegroundColor Green
+        Write-Information "SharePoint site administrator set correctly."
         Disconnect-SPOService
         return $pmSiteUrl
     }
@@ -36,16 +36,32 @@ function New-PMGroupStructure {
         # Common attributes that should be applied to all Office 365 groups being created
         $groupsCommonAttributes = @{ }
         # Then we create the Office 365 groups corresponding to the PM roles (as the Getting Started guide asks)
-        Write-Host "Connecting to Office 365 to create unified groups..."
+        Write-Information "Connecting to Office 365 to create unified groups..."
         $exchangeSession = New-PSSession -ConfigurationName Microsoft.Exchange -ConnectionUri https://outlook.office365.com/powershell-liveid/ -Credential $global:credential -Authentication Basic -AllowRedirection
         Import-PSSession $exchangeSession -DisableNameChecking
-        Write-Host "Group creation has started" -ForegroundColor Cyan
-        New-UnifiedGroup @groupsCommonAttributes -DisplayName "Relationship Managers"
-        New-UnifiedGroup @groupsCommonAttributes -DisplayName "Loan Officers"
-        New-UnifiedGroup @groupsCommonAttributes -DisplayName "Legal Counsel"
-        New-UnifiedGroup @groupsCommonAttributes -DisplayName "Risk Officers"
-        New-UnifiedGroup @groupsCommonAttributes -DisplayName "Credit Analysts"
-        Write-Host "Group creation has been succesfully completed" -ForegroundColor Green
+        Write-Information "Group creation has started"
+        $groups = @(
+            "Relationship Managers",
+            "Loan Officers",
+            "Legal Counsel",
+            "Risk Officers",
+            "Credit Analysts"
+        )
+        foreach($group in $groups)
+        {
+            Write-Information "Checking pre-existance of the $group group."
+            if(!(Get-UnifiedGroup -Identity $group -ErrorAction SilentlyContinue))
+            {
+                Write-Information "$group group does not exist. Creating..."
+                New-UnifiedGroup @groupsCommonAttributes -DisplayName $group
+                Write-Information "$group group successfully created."
+            }
+            else
+            {
+                Write-Warning "$group group already exists."
+            }
+        }
+        Write-Information "Group creation has been succesfully completed"
         Remove-PSSession $exchangeSession
     }
 }
@@ -61,19 +77,19 @@ function New-PMSite {
         [string]$Subscription
     )
     process {
-        Write-Host "Starting resource group deployment in Azure..." -ForegroundColor Cyan
+        Write-Information "Starting resource group deployment in Azure..."
         Connect-AzureRmAccount -Subscription $Subscription
         New-AzureRmResourceGroup -Name $ApplicationName -Location $PMSiteLocation
         New-AzureRmResourceGroupDeployment -ResourceGroupName $ApplicationName -TemplateFile .\ProposalManagerARMTemplate.json -siteName $ApplicationName -siteLocation $PMSiteLocation
-        Write-Host "Resource group deployment succeeded" -ForegroundColor Green
-        Write-Host "Retrieving deployment credentials..." -ForegroundColor Cyan
+        Write-Information "Resource group deployment succeeded"
+        Write-Information "Retrieving deployment credentials..."
         $xml = [xml](Get-AzureRmWebAppPublishingProfile -ResourceGroupName $ApplicationName -Name $ApplicationName -OutputFile .\settings.xml)
         # Extract connection information from publishing profile
         $username = [System.Linq.Enumerable]::Last($xml.SelectNodes("//publishProfile[@publishMethod=`"FTP`"]/@userName").value.Split('\'))
         $password = $xml.SelectNodes("//publishProfile[@publishMethod=`"FTP`"]/@userPWD").value
         $url = $xml.SelectNodes("//publishProfile[@publishMethod=`"FTP`"]/@publishUrl").value
         Disconnect-AzureRmAccount
-        Write-Host "Deployment credentials successfully retrieved" -ForegroundColor Cyan
+        Write-Information "Deployment credentials successfully retrieved"
         return @{Username = $username; Password = $password; Url = $url}
     }
 }
@@ -87,19 +103,23 @@ function New-PMTeamsAddInManifest {
         [string]$AppDomain
     )
     process {
-        Write-Host "Creating teams add-in package..." -ForegroundColor Cyan
+        Write-Information "Creating teams add-in package..."
         $manifest = (Get-Content ..\TeamsAddinPackage\manifest.json).
                     Replace('<addInId>', [System.Guid]::NewGuid().ToString()).
                     Replace('<webAppUrl>', $AppUrl).
                     Replace('<botId>', [System.Guid]::NewGuid().ToString()).
                     Replace('<webDomain>', $AppDomain)
+        if(Get-Item ProposalManager -ErrorAction SilentlyContinue)
+        {
+            rd ProposalManager -Recurse
+        }
         md ProposalManager
         New-Item -Path .\ProposalManager\ -Name manifest.json -ItemType File
         Set-Content .\ProposalManager\manifest.json $manifest
         copy ..\TeamsAddinPackage\outline.png .\ProposalManager\outline.png
         copy ..\TeamsAddinPackage\color.png .\ProposalManager\color.png
-        Compress-Archive .\ProposalManager\* .\ProposalManager.zip
+        Compress-Archive .\ProposalManager\* .\ProposalManager.zip -CompressionLevel Fastest -Force
         rd ProposalManager -Recurse
-        Write-Host "Package created successfully" -ForegroundColor Green
+        Write-Information "Package created successfully"
     }
 }

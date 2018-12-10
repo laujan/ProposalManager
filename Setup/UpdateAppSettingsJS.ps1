@@ -46,5 +46,5 @@
         $index++
     }
 
-    Write-Host "AppSettings.js has been updated"
+    Write-Information "AppSettings.js has been updated"
 }

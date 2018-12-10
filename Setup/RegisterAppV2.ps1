@@ -50,7 +50,7 @@
         }
     }";
 
-    Write-Host "Creating application $applicationName"
+    Write-Information "Creating application $applicationName"
     $uri = "https://graph.microsoft.com/beta/applications"
     $result = Invoke-RestMethod -Uri $uri -Headers $authHeader -Body $data -Method POST
 
@@ -73,7 +73,7 @@
         `"oauth2PermissionScopes`": [ $oauthPerms ]
     }"
 
-    Write-Host "Setting oauth2 Permissions"
+    Write-Information "Setting oauth2 Permissions"
     $update = "{
         `"identifierUris`": [`"api://$global:appId`"],
         `"api`": $api
@@ -81,7 +81,7 @@
 
     Invoke-RestMethod -Uri "$($uri)/$($result.id)" -Headers $authHeader -Body $update -Method PATCH
 
-    Write-Host "Setting Graph Permissions"
+    Write-Information "Setting Graph Permissions"
     #Delegated: Scope
     #Application: Role
     $requiredResourceAccess = "[
@@ -143,7 +143,7 @@
 
     Invoke-RestMethod -Uri "$($uri)/$($result.id)" -Headers $authHeader -Body $updatePerm -Method PATCH
 
-    Write-Host "Add PreAuthorized apps"
+    Write-Information "Add PreAuthorized apps"
     # Add PreAuthorized applications
     $preAuthorizedApps = "[ {
         `"appId`": `"$global:appId`",
@@ -160,7 +160,7 @@
 
     Disconnect-AzureAD
 
-    Write-Host "The application $applicationName has been successfully registered"
+    Write-Information "The application $applicationName has been successfully registered"
 }
 
 Function GetAuthToken

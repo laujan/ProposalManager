@@ -17,5 +17,5 @@ Compress-Archive -Path $sourcePath -DestinationPath $zipFile -Force -Compression
 $filePath = $zipFile
 $apiUrl = "https://$appName.scm.azurewebsites.net/api/zipdeploy"
 $base64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $username, $password)))
-Write-Host "Deploying..."
+Write-Information "Deploying..."
 $result = Invoke-RestMethod -Uri $apiUrl -Headers @{Authorization=("Basic $base64AuthInfo")} -Method POST -InFile $filePath -ContentType "multipart/form-data"

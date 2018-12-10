@@ -1,3 +1,8 @@
+# Pre-requisites
+.Net Core 2.1 (https://dotnet.microsoft.com/download/thank-you/dotnet-sdk-2.1.500-windows-x64-installer)
+.Net Framework 4.6.1 (https://www.microsoft.com/en-us/download/details.aspx?id=49982)
+Node.js (https://nodejs.org/en/download/)
+
 # Installing Proposal Manager
 Proposal Manager can be easily installed using PowerShell. In this folder, a script called `Install-PMInstance.ps1` is included for your convenience.
 
@@ -13,7 +18,7 @@ To run the script, you need to provide the following parameters:
 
 Parameter|Meaning
 ---------|-------
-PMAdminUpn|The upn of the user that will be made administrator of this instance of Proposal Manager. It can be yourself or someone else. It will be added as the administrator of the Proposal Manager SharePoint site. **This user will later have to be added manually to the PM admins group in the Setup page.**
+PMAdminUpn|The upn (user principal name, for example: john.doe@domain.com) of the user that will be made administrator of this instance of Proposal Manager. It can be yourself or someone else. It will be added as the administrator of the Proposal Manager SharePoint site. **This user will later have to be added manually to the PM admins group in the Setup page.**
 PMSharePointSiteAlias|The name of the SharePoint site to create for Proposal Manager (`proposalmanager` is ok most of the times)
 OfficeTenantName|The name of the office tenant. For example, if your mail domain is @contoso.onmicrosoft.com, then the name of the tenant is "contoso"
 AzureResourceLocation|The azure region in which you want the resources to be allocated (for example, "East US")

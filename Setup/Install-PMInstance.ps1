@@ -6,7 +6,7 @@
 .PARAMETER PMSharePointSiteAlias
     The name of the SharePoint site to create for Proposal Manager (`proposalmanager` is ok most of the times).
 .PARAMETER PMAdminUpn
-    The upn of the user that will be made administrator of this instance of Proposal Manager. It can be yourself or someone else.
+    The upn (user principal name, for example: john.doe@domain.com) of the user that will be made administrator of this instance of Proposal Manager. It can be yourself or someone else.
 .PARAMETER OfficeTenantName
     The name of the office tenant. For example, if your mail domain is @contoso.onmicrosoft.com, then the name of the tenant is "contoso".
 .PARAMETER AzureResourceLocation
@@ -16,8 +16,6 @@
 #>
 [CmdletBinding()]
 param(
-    [Parameter(Mandatory = $false)]
-    [string]$PMSharePointSiteAlias,
     [Parameter(Mandatory = $true)]
     [string]$PMAdminUpn,
     [Parameter(Mandatory = $true)]
@@ -28,45 +26,54 @@ param(
     [string]$AzureResourceLocation,
     [Parameter(Mandatory = $true)]
     [string]$AzureSubscription,
+    [Parameter(Mandatory = $true)]
+    [string]$ApplicationName,
     [Parameter(Mandatory = $false)]
-    [string]$ApplicationName
+    [string]$PMSharePointSiteAlias
 )
 
+$ErrorActionPreference = 'Stop'
+$InformationPreference = 'Continue'
+
 # Check Pre-requisites
-Write-Host ""
-Write-Host -ForegroundColor Cyan "Checking pre-requisites"
+Write-Information "Checking pre-requisites"
 
 # Verify npm is installed
 try
 {
-    write-host "The NPM version is: $(npm -v)"
+    Write-Information "The NPM version is: $(npm -v)"
 }
 catch
 {
-    Write-Host "You need to install npm. Please do so by navigating to http://nodejs.org"
-    exit
+    Write-Error "You need to install npm. Please do so by navigating to http://nodejs.org"
 }
 
 # Verify dotnet core is installed
 try
 {
-    write-host "The .NET Core version is: $(dotnet --version)"
+    Write-Information "The .NET Core version is: $(dotnet --version)"
 }
 catch
 {
-    Write-Host "You need to install the dotnet core sdk 2.1. Please do so by navigating to https://dotnet.microsoft.com/download/thank-you/dotnet-sdk-2.1.500-windows-x64-installer"
-    exit
+    Write-Error "You need to install the dotnet core sdk 2.1. Please do so by navigating to https://dotnet.microsoft.com/download/thank-you/dotnet-sdk-2.1.500-windows-x64-installer"
 }
 
 # Add references to utility scripts
+. .\Check-NetFrameworkVersion.ps1
 . .\CheckPowerShellModule.ps1
 . .\ProposalManagementSetupUtilities.ps1
 . .\RegisterAppV2.ps1
 . .\UpdateAppSettings.ps1
 . .\UpdateAppSettingsJS.ps1
 
+$isInstalled = Check-DotNetFrameworkVersion
+if($isInstalled -eq $false)
+{
+    Write-Error "You need to install the .Net Framework v4.6.1 or later. Please do so by navigating to https://www.microsoft.com/en-us/download/details.aspx?id=49982"
+}
+
 # Verify required modules are available
-Write-Host -ForegroundColor Cyan "Checking required PS modules"
+Write-Information "Checking required PS modules"
 $modules = @("AzureRm", "Microsoft.Online.SharePoint.Powershell", "SharePointPnPPowerShellOnline", "Azure", "AzureAD")
 
 foreach($module in $modules)
@@ -75,8 +82,8 @@ foreach($module in $modules)
 }
 
 # Prompt the user one time for credentials to use across all necessary connections (like SSO)
-Write-Host "Installation of Proposal Manager will begin. You need to be a Global Administrator to continue." -ForegroundColor Magenta
-$global:credential = Get-Credential -Message "Enter your credentials"
+Write-Information "Installation of Proposal Manager will begin. You need to be a Global Administrator to continue."
+$global:credential = Get-Credential -Message "Enter your Office 365 tenant global administrator credentials"
 
 if(!$PMSharePointSiteAlias)
 {
@@ -97,7 +104,7 @@ if(!$ApplicationName)
 RegisterApp -applicationName $ApplicationName
 
 # Create Service Principal
-Write-Host "Creating Service Principal" -ForegroundColor Cyan
+Write-Information "Creating Service Principal"
 Connect-AzureRmAccount -Credential $global:credential
 New-AzureRmADServicePrincipal -ApplicationId $global:appId
 Disconnect-AzureRmAccount
@@ -128,15 +135,18 @@ UpdateAppSettingsClient -pathToJson ..\WebReact\ClientApp\src\helpers\AppSetting
 cd ..\WebReact\ClientApp
 
 # Install all required dependencies
+$ErrorActionPreference = 'Inquire'
 npm install
+$ErrorActionPreference = 'Stop'
 
 cd ..\..\Setup
 
 # Publish Proposal Manager
 $solutionDir = (Get-Item -Path "..\").FullName
 
-Write-Host "Restore Nuget solution packages" -ForegroundColor Cyan
+Write-Information "Restoring Nuget solution packages..."
 .\nuget.exe restore "..\ProposalManagement.sln" -SolutionDirectory ..\
+Write-Information "Nuget solution packages successfully retrieved"
 
 cd "..\Dynamics Integration\OneDriveSubscriptionRenewal"
 dotnet msbuild "OneDriveSubscriptionRenewal.csproj" "/p:SolutionDir=`"$($solutionDir)\\`";Configuration=Release;DebugSymbols=false;DebugType=None"
@@ -148,7 +158,7 @@ rd ..\WebReact\bin\Release\netcoreapp2.1\publish -Recurse -ErrorAction Ignore
 dotnet publish ..\WebReact -c Release
 
 .\ZipDeploy.ps1 -sourcePath ..\WebReact\bin\Release\netcoreapp2.1\publish\* -username $deploymentCredentials.Username -password $deploymentCredentials.Password -appName $ApplicationName
-Write-Host "Web app deployment has completed" -ForegroundColor Green
+Write-Information "Web app deployment has completed"
 
 $applicationDomain = "$ApplicationName.azurewebsites.net"
 $applicationUrl = "https://$applicationDomain"
@@ -160,11 +170,11 @@ $adminConsentUrl = "https://login.microsoftonline.com/common/adminconsent?client
 
 Start-Process $adminConsentUrl
 
-Write-Host "INSTALLATION COMPLETE" -ForegroundColor Green
-Write-Host "============ ========" -ForegroundColor Green
-Write-Host "Installation Information following" -ForegroundColor Green
-Write-Host "App url: $applicationUrl" -ForegroundColor Green
-Write-Host "App id: $global:appId" -ForegroundColor Green
-Write-Host "Site: $pmSiteUrl" -ForegroundColor Green
-Write-Host "Consent page: $adminConsentUrl" -ForegroundColor Green
+Write-Information "INSTALLATION COMPLETE"
+Write-Information "============ ========"
+Write-Information "Installation Information following"
+Write-Information "App url: $applicationUrl"
+Write-Information "App id: $global:appId"
+Write-Information "Site: $pmSiteUrl"
+Write-Information "Consent page: $adminConsentUrl"
 .\ProposalManager.zip
