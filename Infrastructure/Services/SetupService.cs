@@ -70,21 +70,21 @@ namespace Infrastructure.Services
 
         }
 
-        public Task<StatusCodes> UpdateAppOpptionsAsync(string key, string value, string requestId = "")
+        public async Task<StatusCodes> UpdateAppOpptionsAsync(string key, string value, string requestId = "")
         {
             _logger.LogInformation($"RequestId: {requestId} - SetupService_UpdateAppOpptionsAsync called.");
 
             //Save powerbi username and password to to Key Vault.
             if (key == "PBIUserName" || key == "PBIUserPassword")
             {
-                _azureKeyVaultService.SetValueInVaultAsync(key, value, requestId);
-                return Task.FromResult(StatusCodes.Status200OK);
+                await _azureKeyVaultService.SetValueInVaultAsync(key, value, requestId);
+                return StatusCodes.Status200OK;
             }
             //save values to appsettings.
             else
             {
-                _writableOptions.UpdateAsync(key, value, requestId);
-                return Task.FromResult(StatusCodes.Status200OK);
+                await _writableOptions.UpdateAsync(key, value, requestId);
+                return StatusCodes.Status200OK;
             }
         }
 

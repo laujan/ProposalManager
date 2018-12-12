@@ -1,7 +1,9 @@
 # Pre-requisites
-.Net Core 2.1 (https://dotnet.microsoft.com/download/thank-you/dotnet-sdk-2.1.500-windows-x64-installer)
-.Net Framework 4.6.1 (https://www.microsoft.com/en-us/download/details.aspx?id=49982)
+.NET Core 2.1 (https://dotnet.microsoft.com/download/thank-you/dotnet-sdk-2.1.500-windows-x64-installer)
+.NET Framework 4.6.1 Developer Pack (https://www.microsoft.com/en-us/download/details.aspx?id=49978)
 Node.js (https://nodejs.org/en/download/)
+
+**Important**: after installing any of the pre-requisites displayed above, you will need to exit powershell and re-launch it to make sure all the environment variables are correctly picked up by the shell.
 
 # Installing Proposal Manager
 Proposal Manager can be easily installed using PowerShell. In this folder, a script called `Install-PMInstance.ps1` is included for your convenience.
@@ -13,6 +15,8 @@ Refer to this Automated Deployment Process [walk-through video](https://youtu.be
 Before running the script, please execute the following:
 
 `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass`
+
+**Important**: if you exited the shell and re-launched it, you will need to run the former command again; it is only good for the lifespan of the instance of the shell you're working with.
 
 To run the script, you need to provide the following parameters:
 

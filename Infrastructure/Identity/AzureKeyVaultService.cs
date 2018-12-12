@@ -54,7 +54,7 @@ namespace Infrastructure.Identity
             {
                 var keyVaultClient = new KeyVaultClient(new
                     KeyVaultClient.AuthenticationCallback(GetToken), new HttpClient());
-                var sec = await keyVaultClient.GetSecretAsync(GetVaultBaseUrl(key));
+                var sec = await keyVaultClient.GetSecretAsync(key);
                 return sec.Value;
             }
             catch(Exception ex)
@@ -99,24 +99,5 @@ namespace Infrastructure.Identity
             return result.AccessToken;
         }
 
-        private string GetVaultBaseUrl(string key)
-        {
-            string vaultBaseUrl = string.Empty;
-
-            switch (key)
-            {
-                case "AccessToken":
-                    vaultBaseUrl = _appOptions.AccessToken;
-                    break;
-                case "Upn":
-                    vaultBaseUrl = _appOptions.Upn;
-                    break;
-                case "Expiration":
-                    vaultBaseUrl = _appOptions.Expiration;
-                    break;
-            }
-
-            return vaultBaseUrl;
-        }
     }
 }
