@@ -59,17 +59,17 @@ catch
 }
 
 # Add references to utility scripts
-. .\Check-NetFrameworkVersion.ps1
+. .\CheckDevPack.ps1
 . .\CheckPowerShellModule.ps1
 . .\ProposalManagementSetupUtilities.ps1
 . .\RegisterAppV2.ps1
 . .\UpdateAppSettings.ps1
 . .\UpdateAppSettingsJS.ps1
 
-$isInstalled = Check-DotNetFrameworkVersion
+$isInstalled = CheckDevPack
 if($isInstalled -eq $false)
 {
-    Write-Error "You need to install the .Net Framework v4.6.1 or later. Please do so by navigating to https://www.microsoft.com/en-us/download/details.aspx?id=49982"
+    Write-Error "You need to install the .NET Framework 4.6.1 Developer Pack or later. Please do so by navigating to https://www.microsoft.com/en-us/download/details.aspx?id=49978"
 }
 
 # Verify required modules are available
@@ -149,6 +149,7 @@ Write-Information "Restoring Nuget solution packages..."
 Write-Information "Nuget solution packages successfully retrieved"
 
 cd "..\Dynamics Integration\OneDriveSubscriptionRenewal"
+dotnet restore
 dotnet msbuild "OneDriveSubscriptionRenewal.csproj" "/p:SolutionDir=`"$($solutionDir)\\`";Configuration=Release;DebugSymbols=false;DebugType=None"
 cd ..\..\Setup
 cd "..\Utilities\OpportunitySiteProvisioner"

@@ -160,8 +160,6 @@
 
     Disconnect-AzureAD
 
-    Start-Sleep 5
-
     Write-Information "The application $applicationName has been successfully registered"
 }
 
