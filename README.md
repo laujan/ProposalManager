@@ -52,6 +52,7 @@ We have also published the following high level **walk-through videos** to help 
   - [Proposal Creation - Deployment](https://youtu.be/8AuPEAb-Trg)
   - [Project Smart Link - Deployment](https://youtu.be/qNlUlCwKcto)
   - [Office Add-ins: Functional Overview](https://youtu.be/hy5TLFVum1E)
+  - [Proposal Manager - Dashboard Setup](https://youtu.be/ZG7WQGTgn6k)
 
 The Manual Deployment walkthrough video covers how the deployment can be done manually by an advanced user without using the Deployment Automation scripts.
 
