@@ -83,7 +83,7 @@ export class Setup extends Component {
                 "SharePointAppId": "",
                 "SharePointAppSecret": ""
             },
-            renderStep_0 : false,
+            renderStep_0: false,
             renderStep_1: false,
             renderStep_2: false,
             renderStep_3: false,
@@ -350,7 +350,7 @@ export class Setup extends Component {
                 key: key,
                 value: value
             };
-        
+
             let options = {
                 method: 'POST',
                 headers: {
@@ -368,7 +368,7 @@ export class Setup extends Component {
         }
     }
 
-    async SetTokenToVault(){
+    async SetTokenToVault() {
         this.setState({ renderStep_0: true });
         this.setSpinnerAndMsg(true, false, "");
         let token = this.authHelper.getWebApiToken();
@@ -549,24 +549,28 @@ export class Setup extends Component {
         console.log("SetDocumentIdActivatorSetting_JsonKeys   : ", DocumentIdActivator.constructor.name);
         this.spinnerOff(group, true);
         let token = this.authHelper.getWebApiToken();
+        if (!DocumentIdActivator.SharePointAppId || !DocumentIdActivator.SharePointAppSecret) {
+            alert("All fields are mandatory");
+        }
+        else {
+            this.setSpinnerAndMsg(true, false, "");
+            try {
 
-        this.setSpinnerAndMsg(true, false, "");
-        try {
-
-            for (const Objkey of Object.keys(DocumentIdActivator)) {
-                try {
-                    const contents = await this.UpdateDocumentIdActivatorSettings(Objkey, DocumentIdActivator[Objkey], token);
-                    console.log(`SetDocumentIdActivatorSetting_JsonKeys_${Objkey} : `, contents);
-                } catch (error) {
-                    console.log(`SetDocumentIdActivatorSetting_JsonKeys_${Objkey}_err : `, error.message);
+                for (const Objkey of Object.keys(DocumentIdActivator)) {
+                    try {
+                        const contents = await this.UpdateDocumentIdActivatorSettings(Objkey, DocumentIdActivator[Objkey], token);
+                        console.log(`SetDocumentIdActivatorSetting_JsonKeys_${Objkey} : `, contents);
+                    } catch (error) {
+                        console.log(`SetDocumentIdActivatorSetting_JsonKeys_${Objkey}_err : `, error.message);
+                    }
                 }
+
+                this.setSpinnerAndMsg(false, true, "Updated", MessageBarType.success);
+
+            } catch (error) {
+                this.setSpinnerAndMsg(false, true, error.message, MessageBarType.error);
+                console.log(`SetDocumentIdActivatorSetting_JsonKeys_err : `, error.message);
             }
-
-            this.setSpinnerAndMsg(false, true, "Updated", MessageBarType.success);
-
-        } catch (error) {
-            this.setSpinnerAndMsg(false, true, error.message, MessageBarType.error);
-            console.log(`SetDocumentIdActivatorSetting_JsonKeys_err : `, error.message);
         }
         this.hideMessagebar();
         this.spinnerOff(group, false);
@@ -774,7 +778,7 @@ export class Setup extends Component {
             obj[key] = value;
             this.setState({ ProposalManagement_Misc });
         }
-    } 
+    }
 
     async onBlurOnAettingKeys(e, key, defaultValue = "") {
         let value = e.target.value || defaultValue;
@@ -1075,7 +1079,7 @@ export class Setup extends Component {
         let disabled = Object.keys(this.state.ProposalManagement_Sharepoint).every(key => this.state.ProposalManagement_Sharepoint[key]);
         let placeholders = this.placeholderForProposalManager();
         let TextBoxViewList_1 = Object.keys(this.state.ProposalManagement_Sharepoint).map(key => {
-            if (key ==="SharePointHostName" || key ==="SharePointSiteRelativeName") {
+            if (key === "SharePointHostName" || key === "SharePointSiteRelativeName") {
                 return (
                     <TextField
                         key={key}
@@ -1090,7 +1094,7 @@ export class Setup extends Component {
             }
         });
         let TextBoxViewList_2 = Object.keys(this.state.ProposalManagement_Sharepoint).map(key => {
-            if (key !== "ProposalManagementRootSiteId" && key !=="SharePointHostName" && key !=="SharePointSiteRelativeName") {
+            if (key !== "ProposalManagementRootSiteId" && key !== "SharePointHostName" && key !== "SharePointSiteRelativeName") {
                 return (
                     <TextField
                         key={key}
@@ -1108,17 +1112,17 @@ export class Setup extends Component {
             <div className='ms-Grid bg-white ibox-content p-10'>
                 <h4 style={bold} className="pageheading"><Trans>Step3</Trans></h4>
                 <span><Trans>step3label</Trans></span>
-                <br/>
+                <br />
                 <div className="ms-Grid-row">
                     <div className='ms-Grid-col ms-sm12 ms-md12 ms-lg6'>
                         {TextBoxViewList_1}
                     </div>
                 </div>
-                <br/>
+                <br />
                 <span>
                     <Trans>step3label_1</Trans>
                 </span>
-                <br/>
+                <br />
                 <div className="ms-Grid-row">
                     <div className='ms-Grid-col ms-sm12 ms-md12 ms-lg6'>
                         {TextBoxViewList_2}
@@ -1188,7 +1192,7 @@ export class Setup extends Component {
                             id='appKey'
                             label={<Trans>step2AfterSuccessfullConfigMsg</Trans>}
                             onBlur={(e) => this.onBlurSetPM(e, "APPID")}
-                        
+
                             value={this.state.ProposalManagement_Team.TeamsAppInstanceId ?
                                 this.state.ProposalManagement_Team.TeamsAppInstanceId : this.state.appId}
                             disabled='true'
@@ -1320,13 +1324,13 @@ export class Setup extends Component {
                         {this.renderStep_5()}
                     </div>
                     <div className='ms-Grid bg-white ibox-content'>
+                        {this.renderStep_9()}
+                    </div>
+                    <div className='ms-Grid bg-white ibox-content'>
                         {this.renderStep_6()}
                     </div>
                     <div className='ms-Grid bg-white ibox-content'>
                         {this.renderStep_7()}
-                    </div>
-                    <div className='ms-Grid bg-white ibox-content'>
-                        {this.renderStep_9()}
                     </div>
                     <div className='ms-Grid bg-white ibox-content'>
                         {this.renderStep_8()}

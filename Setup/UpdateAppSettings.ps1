@@ -19,6 +19,11 @@
     # Proposal Management settings
     $appSettings.ProposalManagement.SharePointHostName = $inputParams.SharePointHostName
     $appSettings.ProposalManagement.SharePointSiteRelativeName = $inputParams.SharePointSiteRelativeName
+    $appSettings.ProposalManagement.BotName = $inputParams.BotName
+    $appSettings.ProposalManagement.BotId = $inputParams.BotId
+    $appSettings.ProposalManagement.MicrosoftAppId = $inputParams.MicrosoftAppId
+    $appSettings.ProposalManagement.MicrosoftAppPassword = $inputParams.MicrosoftAppPassword
+    $appSettings.ProposalManagement.AllowedTenants = $inputParams.AllowedTenants
 
     # Opportunity site provisioner webjob settings
     $appSettings.DocumentIdActivator.WebhookAddress = $inputParams.WebhookAddress

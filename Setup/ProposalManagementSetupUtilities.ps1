@@ -1,4 +1,6 @@
-﻿function New-PMSharePointSite {
+﻿. .\RegisterAppV2.ps1
+
+function New-PMSharePointSite {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
@@ -6,10 +8,11 @@
         [Parameter(Mandatory = $true)]
         [string]$PMAdminUpn,
         [Parameter(Mandatory = $true)]
-        [string]$PMSiteAlias
+        [string]$PMSiteAlias,
+        [Parameter(Mandatory = $true)]
+        [pscredential]$Credential
     )
     process {
-        $Credential = $global:credential
         # We open a PnP connection and do all we need in sequence to avoid having many connections open unnecessarily
         Connect-PnPOnline -Url $AdminSiteUrl -Credentials $Credential
         # First we create the site with the specified alias and store the url of the created site
@@ -31,13 +34,16 @@
 
 function New-PMGroupStructure {
     [CmdletBinding()]
-    param()
+    param(
+        [Parameter(Mandatory = $true)]
+        [pscredential]$Credential
+    )
     process {
         # Common attributes that should be applied to all Office 365 groups being created
         $groupsCommonAttributes = @{ }
         # Then we create the Office 365 groups corresponding to the PM roles (as the Getting Started guide asks)
         Write-Information "Connecting to Office 365 to create unified groups..."
-        $exchangeSession = New-PSSession -ConfigurationName Microsoft.Exchange -ConnectionUri https://outlook.office365.com/powershell-liveid/ -Credential $global:credential -Authentication Basic -AllowRedirection
+        $exchangeSession = New-PSSession -ConfigurationName Microsoft.Exchange -ConnectionUri https://outlook.office365.com/powershell-liveid/ -Credential $Credential -Authentication Basic -AllowRedirection
         Import-PSSession $exchangeSession -DisableNameChecking
         Write-Information "Group creation has started"
         $groups = @(
@@ -90,7 +96,7 @@ function New-PMSite {
         $url = $xml.SelectNodes("//publishProfile[@publishMethod=`"FTP`"]/@publishUrl").value
         Disconnect-AzureRmAccount
         Write-Information "Deployment credentials successfully retrieved"
-        return @{Username = $username; Password = $password; Url = $url}
+        return @{ Username = $username; Password = $password; Url = $url }
     }
 }
 
@@ -100,14 +106,20 @@ function New-PMTeamsAddInManifest {
         [Parameter(Mandatory = $true)]
         [string]$AppUrl,
         [Parameter(Mandatory = $true)]
-        [string]$AppDomain
+        [string]$AppDomain,
+        [Parameter(Mandatory = $false)]
+        [string]$BotId
     )
     process {
         Write-Information "Creating teams add-in package..."
+        if(!$BotId)
+        {
+            $BotId = (New-Guid).ToString()
+        }
         $manifest = (Get-Content ..\TeamsAddinPackage\manifest.json).
-                    Replace('<addInId>', [System.Guid]::NewGuid().ToString()).
+                    Replace('<addInId>', (New-Guid).ToString()).
                     Replace('<webAppUrl>', $AppUrl).
-                    Replace('<botId>', [System.Guid]::NewGuid().ToString()).
+                    Replace('<botId>', $BotId).
                     Replace('<webDomain>', $AppDomain)
         if(Get-Item ProposalManager -ErrorAction SilentlyContinue)
         {
@@ -121,5 +133,31 @@ function New-PMTeamsAddInManifest {
         Compress-Archive .\ProposalManager\* .\ProposalManager.zip -CompressionLevel Fastest -Force
         rd ProposalManager -Recurse
         Write-Information "Package created successfully"
+    }
+}
+
+function New-PMBot {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Subscription,
+        [Parameter(Mandatory = $true)]
+        [string]$ApplicationName,
+        [Parameter(Mandatory = $true)]
+        [pscredential]$Credential,
+        [Parameter(Mandatory = $true)]
+        [string]$AppId,
+        [Parameter(Mandatory = $true)]
+        [string]$AppSecret
+    )
+    process {
+        Write-Information "Beginning bot registration..."
+        az login -u $Credential.UserName -p $Credential.GetNetworkCredential().Password
+        az account set -s $Subscription
+        $botJson = az bot create -k registration -v v3 -n $ApplicationName -g $ApplicationName --appid $AppId -p $AppSecret -e https://smba.trafficmanager.net/amer-client-ss.msg/
+        $bot = $botJson | ConvertFrom-Json
+        az bot msteams create -n $bot.name -g $bot.resourceGroup
+        az logout
+        return $bot
     }
 }

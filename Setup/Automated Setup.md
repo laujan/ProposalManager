@@ -23,11 +23,14 @@ To run the script, you need to provide the following parameters:
 Parameter|Meaning
 ---------|-------
 PMAdminUpn|The upn (user principal name, for example: john.doe@domain.com) of the user that will be made administrator of this instance of Proposal Manager. It can be yourself or someone else. It will be added as the administrator of the Proposal Manager SharePoint site. **This user will later have to be added manually to the PM admins group in the Setup page.**
-PMSharePointSiteAlias|The name of the SharePoint site to create for Proposal Manager (`proposalmanager` is ok most of the times)
-OfficeTenantName|The name of the office tenant. For example, if your mail domain is @contoso.onmicrosoft.com, then the name of the tenant is "contoso"
-AzureResourceLocation|The azure region in which you want the resources to be allocated (for example, "East US")
+PMSiteAlias|The name of the SharePoint site to create for Proposal Manager (`proposalmanager` is ok most of the times).
+OfficeTenantName|The name of the office tenant. For example, if your mail domain is @contoso.onmicrosoft.com, then the name of the tenant is "contoso".
+AzureResourceLocation|The azure region in which you want the resources to be allocated (for example, "East US").
 AzureSubscription|The name (id also works) of the azure subscription you want the resource group to be deployed to.
-ApplicationName|The name of the application (for example, "ProposalManager")
+ApplicationName|The name of the application (for example, "ProposalManager").
+IncludeBot|FLAG; Include this parameter only if you also want the bot to be deployed by this script. Otherwise, don't include it.
+BotAzureSubscription|OPTIONAL; The name or id of the Azure subscription to register the bot in; it has to belong to the tenant identified by the OfficeTenantName parameter; if not included, you have to register the bot by hand by following the getting started guide and provide the bot name when prompted so.
+AdminSharePointSiteUrl|OPTIONAL; The url of the admin sharepoint site; if none is provided, the default one will be used.
 
 To find the subscription info, navigate to the [Azure Portal](https://portal.azure.com) and select Subscriptions. Pick the subscription  name or ID from the displayed list, for the subscription where you are planning to deploy the solution to.
 

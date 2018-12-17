@@ -1,33 +1,35 @@
-﻿Function RegisterApp {
+﻿function RegisterApp {
     [CmdletBinding()]
     param
-        (
-         [Parameter(Mandatory=$false)]
-        $applicationName
-        )
+    (
+        [Parameter(Mandatory=$false)]
+        [string]$ApplicationName,
+        [Parameter(Mandatory = $true)]
+        [pscredential]$Credential
+    )
 
-    Connect-AzureAD -Credential $global:credential
+    Connect-AzureAD -Credential $Credential
 
     # ADAL JSON token - necessary for making requests to Graph API
-    $token = GetAuthToken
+    $token = GetAuthToken -Credential $Credential
 
     $secretGuid = New-Guid
     $guidBytes = [System.Text.Encoding]::UTF8.GetBytes($secretGuid)
-    $global:secretText =[System.Convert]::ToBase64String($guidBytes)
+    $secretText =[System.Convert]::ToBase64String($guidBytes)
     $clientSecret = @{
         'endDateTime'=[DateTime]::UtcNow.AddDays(365).ToString('u').Replace(' ', 'T');
         'keyId'=$secretGuid;
         'hint'=$secretGuid;
         'startDateTime'=[DateTime]::UtcNow.AddDays(-1).ToString('u').Replace(' ', 'T');  
-        'secretText'=$global:secretText;
+        'secretText'=$secretText;
     }
 
     $replyUrls = "[
-        `"https://$applicationname.azurewebsites.net/Setup`",
-        `"https://$applicationname.azurewebsites.net/tab/config`",
-        `"https://$applicationname.azurewebsites.net/tab/tabauth`",
-        `"https://$applicationname.azurewebsites.net/tab`",
-        `"https://$applicationname.azurewebsites.net`"
+        `"https://$ApplicationName.azurewebsites.net/Setup`",
+        `"https://$ApplicationName.azurewebsites.net/tab/config`",
+        `"https://$ApplicationName.azurewebsites.net/tab/tabauth`",
+        `"https://$ApplicationName.azurewebsites.net/tab`",
+        `"https://$ApplicationName.azurewebsites.net`"
       ]
       "
 
@@ -38,10 +40,10 @@
     }
 
     $data = "{
-            `"displayName`": `"$applicationName`",
+            `"displayName`": `"$ApplicationName`",
             `"passwordCredentials`": [$(ConvertTo-Json -InputObject $clientSecret)],
             `"web`": {
-                `"logoutUrl`": `"https://$applicationname.azurewebsites.net`",
+                `"logoutUrl`": `"https://$ApplicationName.azurewebsites.net`",
                 `"redirectUris`": $replyUrls,
                 `"implicitGrantSettings`": {
                     `"enableIdTokenIssuance`": true,
@@ -50,11 +52,11 @@
         }
     }";
 
-    Write-Information "Creating application $applicationName"
+    Write-Information "Creating application $ApplicationName"
     $uri = "https://graph.microsoft.com/beta/applications"
     $result = Invoke-RestMethod -Uri $uri -Headers $authHeader -Body $data -Method POST
 
-    $global:appId = $result.appId
+    $appId = $result.appId
     # Add permissions
     $scopeGuid = New-Guid
     $oauthPerms = "{
@@ -75,7 +77,7 @@
 
     Write-Information "Setting oauth2 Permissions"
     $update = "{
-        `"identifierUris`": [`"api://$global:appId`"],
+        `"identifierUris`": [`"api://$appId`"],
         `"api`": $api
     }"
 
@@ -127,7 +129,7 @@
           ]
         },
         {
-            `"resourceAppId`": `"$global:appId`",
+            `"resourceAppId`": `"$appId`",
             `"resourceAccess`": [
                 {
                     `"id`": `"$scopeGuid`",
@@ -146,7 +148,7 @@
     Write-Information "Add PreAuthorized apps"
     # Add PreAuthorized applications
     $preAuthorizedApps = "[ {
-        `"appId`": `"$global:appId`",
+        `"appId`": `"$appId`",
         `"permissionIds`": [ `"$scopeGuid`" ]
     }]"
 
@@ -160,18 +162,25 @@
 
     Disconnect-AzureAD
 
-    Write-Information "The application $applicationName has been successfully registered"
+    Write-Information "The application $ApplicationName has been successfully registered"
+
+    return @{ AppId = $appId; AppSecret = $secretText }
 }
 
 Function GetAuthToken
 {
+    [CmdletBinding()]
+    param
+    (
+        [Parameter(Mandatory = $true)]
+        [pscredential]$Credential
+    )
     Import-Module Azure
     $clientId = "1950a258-227b-4e31-a9cf-717495945fc2" 
     $redirectUri = "urn:ietf:wg:oauth:2.0:oob"
     $resourceAppIdURI = "https://graph.microsoft.com"
     $authority = "https://login.microsoftonline.com/common"
     $authContext = New-Object "Microsoft.IdentityModel.Clients.ActiveDirectory.AuthenticationContext" -ArgumentList $authority
-    $Credential = $global:credential
     $AADCredential = New-Object "Microsoft.IdentityModel.Clients.ActiveDirectory.UserCredential" -ArgumentList $credential.UserName,$credential.Password
     $authResult = $authContext.AcquireToken($resourceAppIdURI, $clientId,$AADCredential)
     return $authResult
