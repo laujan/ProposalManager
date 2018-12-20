@@ -1,0 +1,822 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AccessDenied" xml:space="preserve">
+    <value>Access denied.</value>
+  </data>
+  <data name="AccessTokenFailed" xml:space="preserve">
+    <value>Get sharepoint access token failed.</value>
+  </data>
+  <data name="Action" xml:space="preserve">
+    <value>Action</value>
+  </data>
+  <data name="Add" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="AddDestPoint" xml:space="preserve">
+    <value>Add Destination Point</value>
+  </data>
+  <data name="AddImage" xml:space="preserve">
+    <value>Add as Image</value>
+  </data>
+  <data name="AddTable" xml:space="preserve">
+    <value>Add as Table</value>
+  </data>
+  <data name="April" xml:space="preserve">
+    <value>April</value>
+  </data>
+  <data name="August" xml:space="preserve">
+    <value>August</value>
+  </data>
+  <data name="Back" xml:space="preserve">
+    <value>Back</value>
+  </data>
+  <data name="Billion" xml:space="preserve">
+    <value>billion</value>
+  </data>
+  <data name="Browse" xml:space="preserve">
+    <value>Browse</value>
+  </data>
+  <data name="CannotRemoveDestPoint" xml:space="preserve">
+    <value>Removing this destination point cannot be undone.</value>
+  </data>
+  <data name="CannotRemoveSelectedDestPoint" xml:space="preserve">
+    <value>Removing these destination points cannot be undone.</value>
+  </data>
+  <data name="Charts" xml:space="preserve">
+    <value>Charts</value>
+  </data>
+  <data name="ClickSelectDestFolder" xml:space="preserve">
+    <value>Click Browse to select a destination folder</value>
+  </data>
+  <data name="ClickSelectSourceFolder" xml:space="preserve">
+    <value>Click Browse to select a source folder</value>
+  </data>
+  <data name="CloneFileStatusFailed" xml:space="preserve">
+    <value>Check the clone file status failed.</value>
+  </data>
+  <data name="CloneFolderFailed" xml:space="preserve">
+    <value>Clone folder failed.</value>
+  </data>
+  <data name="Cloning" xml:space="preserve">
+    <value>Cloning</value>
+  </data>
+  <data name="CloningMessage" xml:space="preserve">
+    <value>Are you sure you want to cancel cloning?</value>
+  </data>
+  <data name="Create" xml:space="preserve">
+    <value>Create</value>
+  </data>
+  <data name="CreateFolderFailed" xml:space="preserve">
+    <value>Create folder failed: A file name can't contain any of the following characters:&lt;br/&gt;\/:*?\"&lt;&gt;|</value>
+  </data>
+  <data name="CreateRangeFailed" xml:space="preserve">
+    <value>Create range in Word failed.</value>
+  </data>
+  <data name="December" xml:space="preserve">
+    <value>December</value>
+  </data>
+  <data name="DecimalPlace" xml:space="preserve">
+    <value>Decimal place</value>
+  </data>
+  <data name="DecreaseDecimalPlaces" xml:space="preserve">
+    <value>Decrease decimal places</value>
+  </data>
+  <data name="Delete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="DeleteDestPoint" xml:space="preserve">
+    <value>Do you want to delete the destination point?</value>
+  </data>
+  <data name="DeleteDestPointFailed" xml:space="preserve">
+    <value>Delete destination point failed.</value>
+  </data>
+  <data name="DeleteDestPointOK" xml:space="preserve">
+    <value>Delete destination point succeeded.</value>
+  </data>
+  <data name="DeleteDestPointWord" xml:space="preserve">
+    <value>Delete destination point in Word failed.</value>
+  </data>
+  <data name="DeleteSelectedDestPoint" xml:space="preserve">
+    <value>Do you want to delete the selected destination point?</value>
+  </data>
+  <data name="DestinationPointRemoved" xml:space="preserve">
+    <value>The content control that was bound to the source point for this destination point has been removed, please deleted destination point.</value>
+  </data>
+  <data name="DestPointDeleted" xml:space="preserve">
+    <value>The destination point has been deleted.</value>
+  </data>
+  <data name="DisplayedDecimals" xml:space="preserve">
+    <value>Displayed decimals</value>
+  </data>
+  <data name="DocumentIdFailed" xml:space="preserve">
+    <value>Get file Document ID failed.</value>
+  </data>
+  <data name="Down" xml:space="preserve">
+    <value>Down</value>
+  </data>
+  <data name="EnterFolderName" xml:space="preserve">
+    <value>Please enter folder name.</value>
+  </data>
+  <data name="Error" xml:space="preserve">
+    <value>Error</value>
+  </data>
+  <data name="ErrorMessage" xml:space="preserve">
+    <value>Error message:</value>
+  </data>
+  <data name="Errors" xml:space="preserve">
+    <value>errors</value>
+  </data>
+  <data name="February" xml:space="preserve">
+    <value>February</value>
+  </data>
+  <data name="FolderName" xml:space="preserve">
+    <value>Folder Name</value>
+  </data>
+  <data name="GetDestFilesFailed" xml:space="preserve">
+    <value>Get files in destination folder failed.</value>
+  </data>
+  <data name="GetFilesFailed" xml:space="preserve">
+    <value>Get files failed.</value>
+  </data>
+  <data name="GetLibrariesFailed" xml:space="preserve">
+    <value>Get libraries failed.</value>
+  </data>
+  <data name="GetLibraryNameFailed" xml:space="preserve">
+    <value>Get library name failed.</value>
+  </data>
+  <data name="GetSitesFailed" xml:space="preserve">
+    <value>Get sites failed.</value>
+  </data>
+  <data name="GetSourceFilesFailed" xml:space="preserve">
+    <value>Get files in source folder failed.</value>
+  </data>
+  <data name="GraphTokenFailed" xml:space="preserve">
+    <value>Get graph access token failed.</value>
+  </data>
+  <data name="HighlightOn" xml:space="preserve">
+    <value>Highlight On</value>
+  </data>
+  <data name="Hundred" xml:space="preserve">
+    <value>hundred</value>
+  </data>
+  <data name="IncreaseDecimalPlaces" xml:space="preserve">
+    <value>Increase decimal places</value>
+  </data>
+  <data name="InvalidNumber" xml:space="preserve">
+    <value>Invalid number.</value>
+  </data>
+  <data name="January" xml:space="preserve">
+    <value>January</value>
+  </data>
+  <data name="July" xml:space="preserve">
+    <value>July</value>
+  </data>
+  <data name="June" xml:space="preserve">
+    <value>June</value>
+  </data>
+  <data name="LoadCustomFormatFailed" xml:space="preserve">
+    <value>Load custom format failed.</value>
+  </data>
+  <data name="Loading" xml:space="preserve">
+    <value>Loading</value>
+  </data>
+  <data name="LoginExpired" xml:space="preserve">
+    <value>The current login gets expired and needs re-authenticate. You will be redirected to the login page by click OK.</value>
+  </data>
+  <data name="ManageDestinationPoints" xml:space="preserve">
+    <value>Manage Destination Points</value>
+  </data>
+  <data name="March" xml:space="preserve">
+    <value>March</value>
+  </data>
+  <data name="May" xml:space="preserve">
+    <value>May</value>
+  </data>
+  <data name="Million" xml:space="preserve">
+    <value>million</value>
+  </data>
+  <data name="Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="NewDestPoint" xml:space="preserve">
+    <value>Add new destination point succeeded.</value>
+  </data>
+  <data name="NewDestPointFailed" xml:space="preserve">
+    <value>Add destination point failed.</value>
+  </data>
+  <data name="NewFolder" xml:space="preserve">
+    <value>New Folder</value>
+  </data>
+  <data name="No" xml:space="preserve">
+    <value>No</value>
+  </data>
+  <data name="NoFiles" xml:space="preserve">
+    <value>No files found in source folder.</value>
+  </data>
+  <data name="NoItemsFound" xml:space="preserve">
+    <value>No items found.</value>
+  </data>
+  <data name="None" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="NotInSync" xml:space="preserve">
+    <value>The document is not in sync with the catalog, please click refresh to synchronize.</value>
+  </data>
+  <data name="November" xml:space="preserve">
+    <value>November</value>
+  </data>
+  <data name="October" xml:space="preserve">
+    <value>October</value>
+  </data>
+  <data name="OK" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="Only26Chars" xml:space="preserve">
+    <value>Only support less then 26 keywords.</value>
+  </data>
+  <data name="OnlyNumbers" xml:space="preserve">
+    <value>Only numbers are a valid input.</value>
+  </data>
+  <data name="PointDeletedInWord" xml:space="preserve">
+    <value>The point in Word has been deleted.</value>
+  </data>
+  <data name="Points" xml:space="preserve">
+    <value>Points</value>
+  </data>
+  <data name="PopUpBlockerMessage" xml:space="preserve">
+    <value>Please disable your pop-up blocker and reset the add-in by closing it and adding it again.</value>
+  </data>
+  <data name="Preview" xml:space="preserve">
+    <value>Preview</value>
+  </data>
+  <data name="PublishedStatus" xml:space="preserve">
+    <value>Published Status</value>
+  </data>
+  <data name="RecentFilesFailed" xml:space="preserve">
+    <value>Load recent files failed.</value>
+  </data>
+  <data name="Refresh" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
+  <data name="RefreshAll" xml:space="preserve">
+    <value>Refresh All</value>
+  </data>
+  <data name="RefreshDestinationPoints" xml:space="preserve">
+    <value>Refresh all destination points succeeded.</value>
+  </data>
+  <data name="ResetSort" xml:space="preserve">
+    <value>Reset sort</value>
+  </data>
+  <data name="SearchResults" xml:space="preserve">
+    <value>Search results</value>
+  </data>
+  <data name="SearchSourcePoint" xml:space="preserve">
+    <value>Search for a source point</value>
+  </data>
+  <data name="SearchSourcePointName" xml:space="preserve">
+    <value>Search by Source Point Name</value>
+  </data>
+  <data name="SelectDestPoint" xml:space="preserve">
+    <value>Please select destination point.</value>
+  </data>
+  <data name="SelectFile" xml:space="preserve">
+    <value>Select a file</value>
+  </data>
+  <data name="SelectFolderToClone" xml:space="preserve">
+    <value>Select folder to clone</value>
+  </data>
+  <data name="SelectFromRecentFiles" xml:space="preserve">
+    <value>Select from recent files</value>
+  </data>
+  <data name="September" xml:space="preserve">
+    <value>September</value>
+  </data>
+  <data name="Signout" xml:space="preserve">
+    <value>Sign out</value>
+  </data>
+  <data name="SiteCollectionIdFailed" xml:space="preserve">
+    <value>Get site collection ID failed.</value>
+  </data>
+  <data name="SiteUrlFailed" xml:space="preserve">
+    <value>Get site url failed.</value>
+  </data>
+  <data name="SourceFileDeletedMessage" xml:space="preserve">
+    <value>The source file used for this destination point has been deleted from the catalog, please delete the destination point and use a valid source point.</value>
+  </data>
+  <data name="SourceFolder" xml:space="preserve">
+    <value>Source folder</value>
+  </data>
+  <data name="SourcePointFailed" xml:space="preserve">
+    <value>Load source points failed.</value>
+  </data>
+  <data name="SourcePointRemovedCatalog" xml:space="preserve">
+    <value>The source point used for this destination point has been deleted from the catalog, please delete the destination point and use a valid source point.</value>
+  </data>
+  <data name="StayInDoc" xml:space="preserve">
+    <value>Do you want the value to stay in the document?</value>
+  </data>
+  <data name="Tables" xml:space="preserve">
+    <value>Tables</value>
+  </data>
+  <data name="Thousand" xml:space="preserve">
+    <value>thousand</value>
+  </data>
+  <data name="Up" xml:space="preserve">
+    <value>Up</value>
+  </data>
+  <data name="UpdateDestPoint" xml:space="preserve">
+    <value>Update destination point custom format succeeded.</value>
+  </data>
+  <data name="UpdateDestPointFailed" xml:space="preserve">
+    <value>Update destination point custom format failed.</value>
+  </data>
+  <data name="UpdateRangeFailed" xml:space="preserve">
+    <value>Update range in Word failed.</value>
+  </data>
+  <data name="Value" xml:space="preserve">
+    <value>Value</value>
+  </data>
+  <data name="Yes" xml:space="preserve">
+    <value>Yes</value>
+  </data>
+  <data name="ClickReload" xml:space="preserve">
+    <value>Click to reload document ID</value>
+  </data>
+  <data name="CloneFolder" xml:space="preserve">
+    <value>Clone Folder</value>
+  </data>
+  <data name="DateModified" xml:space="preserve">
+    <value>Date Modified</value>
+  </data>
+  <data name="DestinationFolder" xml:space="preserve">
+    <value>Destination Folder</value>
+  </data>
+  <data name="Edit" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="EditCustomFormat" xml:space="preserve">
+    <value>Edit Custom Format</value>
+  </data>
+  <data name="Format" xml:space="preserve">
+    <value>Format</value>
+  </data>
+  <data name="FormattedValue" xml:space="preserve">
+    <value>Formatted value</value>
+  </data>
+  <data name="HighlightOff" xml:space="preserve">
+    <value>Highlight Off</value>
+  </data>
+  <data name="History" xml:space="preserve">
+    <value>History</value>
+  </data>
+  <data name="Next" xml:space="preserve">
+    <value>Next</value>
+  </data>
+  <data name="NoCustomFormatApplied" xml:space="preserve">
+    <value>No custom formatting applied</value>
+  </data>
+  <data name="NoItems" xml:space="preserve">
+    <value>No Items</value>
+  </data>
+  <data name="NoRecentFiles" xml:space="preserve">
+    <value>No recent files</value>
+  </data>
+  <data name="Published" xml:space="preserve">
+    <value>Published</value>
+  </data>
+  <data name="SourcePointValue" xml:space="preserve">
+    <value>Source point value</value>
+  </data>
+  <data name="AddBulk" xml:space="preserve">
+    <value>add bulk</value>
+  </data>
+  <data name="AddEdit" xml:space="preserve">
+    <value>add edit </value>
+  </data>
+  <data name="AddNewSourcePointFailed" xml:space="preserve">
+    <value>Add source point failed.</value>
+  </data>
+  <data name="AddNewSourcePointOK" xml:space="preserve">
+    <value>Add new source point succeeded</value>
+  </data>
+  <data name="AddNewSourceTableOK" xml:space="preserve">
+    <value>Add new source table succeeded.</value>
+  </data>
+  <data name="AddSingle" xml:space="preserve">
+    <value>add single</value>
+  </data>
+  <data name="AddSourceChart" xml:space="preserve">
+    <value>Add Source Chart</value>
+  </data>
+  <data name="AddSourceChartFailed" xml:space="preserve">
+    <value>Add source chart failed.</value>
+  </data>
+  <data name="AddSourceChartOK" xml:space="preserve">
+    <value>Add new source chart succeeded.</value>
+  </data>
+  <data name="AddSourcePoint" xml:space="preserve">
+    <value>Add Source Point</value>
+  </data>
+  <data name="AddSourceTable" xml:space="preserve">
+    <value>Add Source Table</value>
+  </data>
+  <data name="AddSourceTableFailed" xml:space="preserve">
+    <value>Add source table failed.</value>
+  </data>
+  <data name="AllSourcePointsDeleted" xml:space="preserve">
+    <value>All source points have been deleted.</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Chart" xml:space="preserve">
+    <value>Chart</value>
+  </data>
+  <data name="CheckCloneStatusFailed" xml:space="preserve">
+    <value>Check the clone file status failed.</value>
+  </data>
+  <data name="CreateRangeExcelFailed" xml:space="preserve">
+    <value>Create range in Excel failed.</value>
+  </data>
+  <data name="CreateSourcePointNameExcelFailed" xml:space="preserve">
+    <value>Create source point name range in Excel failed.</value>
+  </data>
+  <data name="CreateSourcePointRangeExcelFailed" xml:space="preserve">
+    <value>Create source point name range in Excel failed.</value>
+  </data>
+  <data name="CreateTableRangeExcelFailed" xml:space="preserve">
+    <value>Create table range in Excel failed.</value>
+  </data>
+  <data name="DeletePreviousRangeFailed" xml:space="preserve">
+    <value>Delete the previous range failed.</value>
+  </data>
+  <data name="DeletePreviousSourcePointNameRangeFailed" xml:space="preserve">
+    <value>Delete the previous source point name range failed.</value>
+  </data>
+  <data name="DeletePreviousTableRangeFailed" xml:space="preserve">
+    <value>Delete the previous table range failed.</value>
+  </data>
+  <data name="DeleteSelectedSourcePoint" xml:space="preserve">
+    <value>Do you want to delete the selected source</value>
+  </data>
+  <data name="DeleteSource" xml:space="preserve">
+    <value>Delete source</value>
+  </data>
+  <data name="DeleteSourcePoint" xml:space="preserve">
+    <value>Do you want to delete the source</value>
+  </data>
+  <data name="DocumentValue" xml:space="preserve">
+    <value>Document Value</value>
+  </data>
+  <data name="EditSourceChart" xml:space="preserve">
+    <value>Edit Source Chart</value>
+  </data>
+  <data name="EditSourceChartFailed" xml:space="preserve">
+    <value>Edit source chart failed.</value>
+  </data>
+  <data name="EditSourcePoint" xml:space="preserve">
+    <value>Edit Source Point</value>
+  </data>
+  <data name="EditSourcePointFailed" xml:space="preserve">
+    <value>Edit source point failed.</value>
+  </data>
+  <data name="EditSourceTable" xml:space="preserve">
+    <value>Edit Source Table</value>
+  </data>
+  <data name="EditSourceTableFailed" xml:space="preserve">
+    <value>Edit source table failed.</value>
+  </data>
+  <data name="EditWorkbookButton" xml:space="preserve">
+    <value>Please click "edit workbook" button under the excel ribbon.</value>
+  </data>
+  <data name="EnterRequiredFields" xml:space="preserve">
+    <value>Please enter the following required fields:</value>
+  </data>
+  <data name="ErrorOccurred" xml:space="preserve">
+    <value>Error occurred:</value>
+  </data>
+  <data name="Failed" xml:space="preserve">
+    <value>failed</value>
+  </data>
+  <data name="FilesAssociatedWithThisSourcePoint" xml:space="preserve">
+    <value>Files associated with this Source Point</value>
+  </data>
+  <data name="GetAssociatedFilesFailed" xml:space="preserve">
+    <value>Get associated files failed.</value>
+  </data>
+  <data name="GetFilesSourceFolderFailed" xml:space="preserve">
+    <value>Get files in source folder failed.</value>
+  </data>
+  <data name="GetSelectedCellFailed" xml:space="preserve">
+    <value>Get selected cell failed.</value>
+  </data>
+  <data name="GetSourceTableStylesFailed" xml:space="preserve">
+    <value>Get source table styles failed.</value>
+  </data>
+  <data name="HasBeenDeleted" xml:space="preserve">
+    <value>has been deleted.</value>
+  </data>
+  <data name="InvalidNotSavingExcel" xml:space="preserve">
+    <value>is invalid. This could be caused by not saving the excel file after creating the source point. Please delete the source</value>
+  </data>
+  <data name="IsInvalid" xml:space="preserve">
+    <value>is invalid.</value>
+  </data>
+  <data name="LoadChartsWorksheetFailed" xml:space="preserve">
+    <value>Load charts in worksheet failed.</value>
+  </data>
+  <data name="LoadDocumentIdFailed" xml:space="preserve">
+    <value>Load document ID failed</value>
+  </data>
+  <data name="LoadWorksheetFailed" xml:space="preserve">
+    <value>Load worksheets failed.</value>
+  </data>
+  <data name="LocationNotTheSame" xml:space="preserve">
+    <value>The cell value or location is not the same with the one in Add-in. Please click 'No' to cancel it and click 'refresh' to manually sync the value or location from excel to Add-in. Are you sure to publish the selected source point still?</value>
+  </data>
+  <data name="ManageSourcePoints" xml:space="preserve">
+    <value>Manage Source Points</value>
+  </data>
+  <data name="More" xml:space="preserve">
+    <value>More</value>
+  </data>
+  <data name="NoFilesInSourceFolder" xml:space="preserve">
+    <value>No files found in source folder.</value>
+  </data>
+  <data name="NoSourcePoint" xml:space="preserve">
+    <value>There is no source point.</value>
+  </data>
+  <data name="Only1CellCanBeSelected" xml:space="preserve">
+    <value>Only 1 cell can be selected for</value>
+  </data>
+  <data name="Only2AdjacentColumns" xml:space="preserve">
+    <value>Only 2 adjacent columns can be selected.</value>
+  </data>
+  <data name="Point" xml:space="preserve">
+    <value>Point</value>
+  </data>
+  <data name="PositionIsInvalid" xml:space="preserve">
+    <value>position is invalid.</value>
+  </data>
+  <data name="Publish" xml:space="preserve">
+    <value>Publish</value>
+  </data>
+  <data name="PublishAll" xml:space="preserve">
+    <value>Publish All</value>
+  </data>
+  <data name="PublishCancelled" xml:space="preserve">
+    <value>Publish Cancelled: No changes detected, click the refresh button and try again.</value>
+  </data>
+  <data name="PublishSourcePointFailed" xml:space="preserve">
+    <value>Publish source point failed.</value>
+  </data>
+  <data name="Range" xml:space="preserve">
+    <value>range</value>
+  </data>
+  <data name="RangeInExcelDeleted" xml:space="preserve">
+    <value>The range in the Excel has been deleted.</value>
+  </data>
+  <data name="RecreateIt" xml:space="preserve">
+    <value>and recreate it.</value>
+  </data>
+  <data name="RefreshSourcePoints" xml:space="preserve">
+    <value>Refresh all source points succeeded.</value>
+  </data>
+  <data name="Save" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="SelectChart" xml:space="preserve">
+    <value>Select Chart</value>
+  </data>
+  <data name="SelectDifferentName" xml:space="preserve">
+    <value>already exists, please select a different name.</value>
+  </data>
+  <data name="SelectedRangeCannotBeBlank" xml:space="preserve">
+    <value>The selected range cannot be blank.</value>
+  </data>
+  <data name="SelectedSourcePointsDeleted" xml:space="preserve">
+    <value>The source points you selected have been deleted.</value>
+  </data>
+  <data name="SelectPointTableChart" xml:space="preserve">
+    <value>Please select source point, table or chart.</value>
+  </data>
+  <data name="SelectRange" xml:space="preserve">
+    <value>Select Range</value>
+  </data>
+  <data name="SelectSourcePointName" xml:space="preserve">
+    <value>Select source point name</value>
+  </data>
+  <data name="Single" xml:space="preserve">
+    <value>single</value>
+  </data>
+  <data name="SourceChartExcelDeleted" xml:space="preserve">
+    <value>The source chart in the Excel has been deleted.</value>
+  </data>
+  <data name="SourceChartTitle" xml:space="preserve">
+    <value>Source Chart Title</value>
+  </data>
+  <data name="SourceChartUpdateComplete" xml:space="preserve">
+    <value>Source chart update complete.</value>
+  </data>
+  <data name="SourcePoint" xml:space="preserve">
+    <value>Source Point</value>
+  </data>
+  <data name="SourcePoint255Chars" xml:space="preserve">
+    <value>The source point name cannot exceed 255 characters.</value>
+  </data>
+  <data name="SourcePointAddedCatalog" xml:space="preserve">
+    <value>Source Point(s) have been added to the catalog.</value>
+  </data>
+  <data name="SourcePointCannotBeBlank" xml:space="preserve">
+    <value>The source point name cannot be blank.</value>
+  </data>
+  <data name="SourcePointExists" xml:space="preserve">
+    <value>The following Source Points already exist, please input a unique name:</value>
+  </data>
+  <data name="SourcePointFailedExcel" xml:space="preserve">
+    <value>source point failed.</value>
+  </data>
+  <data name="SourcePointName" xml:space="preserve">
+    <value>Source Point Name</value>
+  </data>
+  <data name="SourcePointRangeExcelDeleted" xml:space="preserve">
+    <value>The source point name range in the Excel has been deleted.</value>
+  </data>
+  <data name="SourcePointsPublishedFailed" xml:space="preserve">
+    <value>Not all Source Points were published, please check Source Point list for errors.</value>
+  </data>
+  <data name="SourcePointsPublishedOK" xml:space="preserve">
+    <value>Publish source point succeeded.</value>
+  </data>
+  <data name="SourcePointsSucceeded" xml:space="preserve">
+    <value>source points succeeded, add</value>
+  </data>
+  <data name="SourcePointUpdateComplete" xml:space="preserve">
+    <value>Source point update complete.</value>
+  </data>
+  <data name="SourceTable255Chars" xml:space="preserve">
+    <value>The source table title cannot exceed 255 characters.</value>
+  </data>
+  <data name="SourceTableCannotBeBlank" xml:space="preserve">
+    <value>The source table cannot be blank.</value>
+  </data>
+  <data name="SourceTableRange" xml:space="preserve">
+    <value>Source Table Range</value>
+  </data>
+  <data name="SourceTableTitle" xml:space="preserve">
+    <value>Source Table Title</value>
+  </data>
+  <data name="SourceTableTitleCannotBeBlank" xml:space="preserve">
+    <value>The source table title cannot be blank.</value>
+  </data>
+  <data name="SourceTableUpdateComplete" xml:space="preserve">
+    <value>Source table update complete.</value>
+  </data>
+  <data name="Succeeded" xml:space="preserve">
+    <value>succeeded</value>
+  </data>
+  <data name="Table" xml:space="preserve">
+    <value>Table</value>
+  </data>
+  <data name="TableMustHave2Rows" xml:space="preserve">
+    <value>A table must contain at least 2 rows and 2 columns, please try again.</value>
+  </data>
+  <data name="TableRangeExcelDeleted" xml:space="preserve">
+    <value>The table range in the Excel has been deleted.</value>
+  </data>
+  <data name="TheSelected" xml:space="preserve">
+    <value>The selected</value>
+  </data>
+  <data name="TheSource" xml:space="preserve">
+    <value>The source</value>
+  </data>
+  <data name="WorksheetExcelDeleted" xml:space="preserve">
+    <value>The worksheet in the Excel has been deleted.</value>
+  </data>
+  <data name="Update" xml:space="preserve">
+    <value>Update</value>
+  </data>
+  <data name="Login" xml:space="preserve">
+    <value>Login</value>
+  </data>
+  <data name="Images" xml:space="preserve">
+    <value>Images</value>
+  </data>
+</root>

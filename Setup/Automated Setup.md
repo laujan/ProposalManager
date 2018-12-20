@@ -1,7 +1,8 @@
 # Pre-requisites
-.NET Core 2.1 (https://dotnet.microsoft.com/download/thank-you/dotnet-sdk-2.1.500-windows-x64-installer)
-.NET Framework 4.6.1 Developer Pack (https://www.microsoft.com/en-us/download/details.aspx?id=49978)
-Node.js (https://nodejs.org/en/download/)
+* .NET Core 2.1 (https://dotnet.microsoft.com/download/thank-you/dotnet-sdk-2.1.500-windows-x64-installer)
+* .NET Framework 4.6.1 Developer Pack (https://www.microsoft.com/en-us/download/details.aspx?id=49978)
+* Node.js (https://nodejs.org/en/download/)
+* Microsoft Azure CLI (https://docs.microsoft.com/en-us/cli/azure/install-azure-cli-windows?view=azure-cli-latest)
 
 **Important**: after installing any of the pre-requisites displayed above, you will need to exit powershell and re-launch it to make sure all the environment variables are correctly picked up by the shell.
 
@@ -31,6 +32,7 @@ ApplicationName|The name of the application (for example, "ProposalManager").
 IncludeBot|FLAG; Include this parameter only if you also want the bot to be deployed by this script. Otherwise, don't include it.
 BotAzureSubscription|OPTIONAL; The name or id of the Azure subscription to register the bot in; it has to belong to the tenant identified by the OfficeTenantName parameter; if not included, you have to register the bot by hand by following the getting started guide and provide the bot name when prompted so.
 AdminSharePointSiteUrl|OPTIONAL; The url of the admin sharepoint site; if none is provided, the default one will be used.
+Force|FLAG; Specify only if you explicitly intend to overwrite an existing installation of Proposal Manager.
 
 To find the subscription info, navigate to the [Azure Portal](https://portal.azure.com) and select Subscriptions. Pick the subscription  name or ID from the displayed list, for the subscription where you are planning to deploy the solution to.
 

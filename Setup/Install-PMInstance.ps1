@@ -15,10 +15,14 @@
     The name or id of the Azure subscription to deploy the Proposal Manager web app to. It can belong to any tenant (you will be asked to log in to azure in that tenant).
 .PARAMETER ApplicationName
     The name of the application (for example "proposalmanager")
+.PARAMETER IncludeBot
+    Specify only if you want the bot to be deployed alongside the application.
 .PARAMETER BotAzureSubscription
     The name or id of the Azure subscription to register the bot in. It has to belong to the tenant identified by the OfficeTenantName parameter.
 .PARAMETER AdminSharePointSiteUrl
     OPTIONAL. The url of the admin sharepoint site. If none is provided, the default one will be used.
+.PARAMETER Force
+    Specify only if you explicitly intend to overwrite an existing installation of Proposal Manager.
 #>
 [CmdletBinding()]
 param(
@@ -39,7 +43,9 @@ param(
     [Parameter(Mandatory = $false)]
     [string]$BotAzureSubscription,
     [Parameter(Mandatory = $false)]
-    [string]$AdminSharePointSiteUrl
+    [string]$AdminSharePointSiteUrl,
+    [Parameter(Mandatory = $false)]
+    [switch]$Force
 )
 
 $ErrorActionPreference = 'Stop'
@@ -111,9 +117,9 @@ if(!$AdminSharePointSiteUrl)
 }
 
 # Create SharePoint Site
-$pmSiteUrl = New-PMSharePointSite -AdminSiteUrl $AdminSharePointSiteUrl -Credential $credential -PMAdminUpn $PMAdminUpn -PMSiteAlias $PMSiteAlias
+$pmSiteUrl = New-PMSharePointSite -AdminSiteUrl $AdminSharePointSiteUrl -Credential $credential -PMAdminUpn $PMAdminUpn -PMSiteAlias $PMSiteAlias -OfficeTenantName $OfficeTenantName -Force:$Force
 
-New-PMGroupStructure -Credential $Credential
+New-PMGroupStructure -Credential $Credential -Force:$Force
 
 if(!$ApplicationName)
 {
@@ -133,7 +139,7 @@ Connect-AzureAD -Credential $credential
 $tenantId = (Get-AzureADTenantDetail).ObjectId
 Disconnect-AzureAD
 
-$deploymentCredentials = New-PMSite -PMSiteLocation $AzureResourceLocation -ApplicationName $ApplicationName -Subscription $AzureSubscription
+$deploymentCredentials = New-PMSite -PMSiteLocation $AzureResourceLocation -ApplicationName $ApplicationName -Subscription $AzureSubscription -Force:$Force
 
 $appSettings = @{
     ClientId = $appRegistration.AppId; 

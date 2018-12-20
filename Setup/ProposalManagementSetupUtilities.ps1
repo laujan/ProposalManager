@@ -10,25 +10,49 @@ function New-PMSharePointSite {
         [Parameter(Mandatory = $true)]
         [string]$PMSiteAlias,
         [Parameter(Mandatory = $true)]
-        [pscredential]$Credential
+        [string]$OfficeTenantName,
+        [Parameter(Mandatory = $true)]
+        [pscredential]$Credential,
+        [Parameter(Mandatory = $false)]
+        [switch]$Force
     )
     process {
-        # We open a PnP connection and do all we need in sequence to avoid having many connections open unnecessarily
-        Connect-PnPOnline -Url $AdminSiteUrl -Credentials $Credential
-        # First we create the site with the specified alias and store the url of the created site
-        Write-Information "Creating the Proposal Manager SharePoint site..."
-        $pmSiteUrl = New-PnPSite -Type TeamSite -Title "Proposal Management" -Alias $PMSiteAlias
-        Write-Information "SharePoint site succesfully created"
-        # And we immediately close the PnP connection
-        Disconnect-PnPOnline
-
-        # Afterwards, we open a regular SPO connection to make the desired PM admin the primary admin of the new site
         Connect-SPOService -Url $AdminSiteUrl -Credential $Credential
-        Write-Information "Setting the SharePoint site administrator..."
-        Set-SPOUser -Site $pmSiteUrl -LoginName $PMAdminUpn -IsSiteCollectionAdmin $true
-        Write-Information "SharePoint site administrator set correctly."
-        Disconnect-SPOService
-        return $pmSiteUrl
+        try
+        {
+            $pmSiteUrl = Get-SPOSite -Identity "https://$OfficeTenantName.sharepoint.com/sites/$PMSiteAlias" -ErrorAction SilentlyContinue
+        } catch { }
+        if(!$pmSiteUrl)
+        {
+            # We open a PnP connection and do all we need in sequence to avoid having many connections open unnecessarily
+            Connect-PnPOnline -Url $AdminSiteUrl -Credentials $Credential
+            # First we create the site with the specified alias and store the url of the created site
+            Write-Information "Creating the Proposal Manager SharePoint site..."
+            $pmSiteUrl = New-PnPSite -Type TeamSite -Title "Proposal Management" -Alias $PMSiteAlias
+            Write-Information "SharePoint site succesfully created"
+            # And we immediately close the PnP connection
+            Disconnect-PnPOnline
+
+            # Afterwards, we use a regular SPO connection to make the desired PM admin the primary admin of the new site
+            Write-Information "Setting the SharePoint site administrator..."
+            Set-SPOUser -Site $pmSiteUrl -LoginName $PMAdminUpn -IsSiteCollectionAdmin $true
+            Write-Information "SharePoint site administrator set correctly."
+            Disconnect-SPOService
+            return $pmSiteUrl
+        }
+        else
+        {
+            Disconnect-SPOService
+            if($Force)
+            {
+                Write-Warning "SharePoint site for Proposal Manager already exists. The -Force flag was specified so the existing site will be used."
+                return $pmSiteUrl
+            }
+            else
+            {
+                Write-Error "A SharePoint site with the name $PMSiteAlias already exists in tenant $OfficeTenantName. If you want to overwrite an existing installation of Proposal Manager, use the -Force flag."
+            }
+        }
     }
 }
 
@@ -36,7 +60,9 @@ function New-PMGroupStructure {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
-        [pscredential]$Credential
+        [pscredential]$Credential,
+        [Parameter(Mandatory = $false)]
+        [switch]$Force
     )
     process {
         # Common attributes that should be applied to all Office 365 groups being created
@@ -64,7 +90,14 @@ function New-PMGroupStructure {
             }
             else
             {
-                Write-Warning "$group group already exists."
+                if($Force)
+                {
+                    Write-Warning "$group group already exists. The -Force flag was specified so the existing group will be used."
+                }
+                else
+                {
+                    Write-Error "A group with the name $group already exists in your tenant. If you want to overwrite an existing installation of Proposal Manager, use the -Force flag."
+                }
             }
         }
         Write-Information "Group creation has been succesfully completed"
@@ -80,11 +113,28 @@ function New-PMSite {
         [Parameter(Mandatory = $true)]
         [string]$ApplicationName,
         [Parameter(Mandatory = $true)]
-        [string]$Subscription
+        [string]$Subscription,
+        [Parameter(Mandatory = $false)]
+        [switch]$Force
     )
     process {
         Write-Information "Starting resource group deployment in Azure..."
         Connect-AzureRmAccount -Subscription $Subscription
+        $existingResourceGroup = Get-AzureRmResourceGroup -Name $ApplicationName -ErrorAction SilentlyContinue
+        if($existingResourceGroup)
+        {
+            if($Force)
+            {
+                Write-Warning "$ApplicationName resource group already exists. The -Force flag was specified so the existing resource group will be overwritten."
+                $existingResourceGroup | Remove-AzureRmResourceGroup -Force
+                ipconfig /flushdns #Doing this to ensure old ip address is not used when redeploying from this machine
+                Write-Information "The existing resource group was successfully deleted to be able to redeploy with the same resource group name."
+            }
+            else
+            {
+                Write-Error "A resource group with the name $ApplicationName already exists. If you want to overwrite an existing installation of Proposal Manager, use the -Force flag."
+            }
+        }
         New-AzureRmResourceGroup -Name $ApplicationName -Location $PMSiteLocation
         New-AzureRmResourceGroupDeployment -ResourceGroupName $ApplicationName -TemplateFile .\ProposalManagerARMTemplate.json -siteName $ApplicationName -siteLocation $PMSiteLocation
         Write-Information "Resource group deployment succeeded"
