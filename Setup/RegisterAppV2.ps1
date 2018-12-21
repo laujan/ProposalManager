@@ -5,8 +5,21 @@
         [Parameter(Mandatory=$false)]
         [string]$ApplicationName,
         [Parameter(Mandatory = $true)]
-        [pscredential]$Credential
+        [pscredential]$Credential,
+        [Parameter(Mandatory=$false)]
+        [string[]]$RelativeReplyUrls,
+        [Parameter(Mandatory=$false)]
+        [string[]]$DelegatedPermissions,
+        [Parameter(Mandatory=$false)]
+        [string[]]$ApplicationPermissions,
+        [Parameter(Mandatory=$false)]
+        [string[]]$AdditionalPreAuthorizedAppIds
     )
+
+    if(!$RelativeReplyUrls)
+    {
+        $RelativeReplyUrls = @('Setup', 'tab/config', 'tab/tabauth', 'tab', [string]::Empty)
+    }
 
     Connect-AzureAD -Credential $Credential
 
@@ -24,14 +37,8 @@
         'secretText'=$secretText;
     }
 
-    $replyUrls = "[
-        `"https://$ApplicationName.azurewebsites.net/Setup`",
-        `"https://$ApplicationName.azurewebsites.net/tab/config`",
-        `"https://$ApplicationName.azurewebsites.net/tab/tabauth`",
-        `"https://$ApplicationName.azurewebsites.net/tab`",
-        `"https://$ApplicationName.azurewebsites.net`"
-      ]
-      "
+    $replyUrls = $RelativeReplyUrls | % { "https://$ApplicationName.azurewebsites.net/" + $_ } | ConvertTo-Json
+    Write-Debug $replyUrls
 
     # REST API header with auth token
     $authHeader = @{
@@ -84,49 +91,39 @@
     Invoke-RestMethod -Uri "$($uri)/$($result.id)" -Headers $authHeader -Body $update -Method PATCH
 
     Write-Information "Setting Graph Permissions"
+
+    if(!$DelegatedPermissions)
+    {
+        $DelegatedPermissions =
+            '64a6cdd6-aab1-4aaf-94b8-3cc8405e90d0',
+            '7427e0e9-2fba-42fe-b0c0-848c9e6a8182',
+            '37f7f235-527c-4136-accd-4a02d197296e',
+            '14dad69e-099b-42c9-810b-d002981feec1',
+            'e1fe6dd8-ba31-4d61-89e7-88639da4683d'
+    }
+
+    if(!$ApplicationPermissions)
+    {
+        $ApplicationPermissions =
+            '75359482-378d-4052-8f01-80520e7db3cd',
+            '62a82d76-70ea-41e2-9197-370581804d09',
+            '0c0bf378-bf22-4481-8f81-9e89a9b4960a',
+            '741f803b-c850-494e-b5df-cde7c675a1ca'
+    }
+
+    $ofType = [System.Linq.Enumerable].GetMethod("OfType").MakeGenericMethod([System.Object]);
+    
     #Delegated: Scope
     #Application: Role
+    $graphPermissions = ConvertTo-Json (
+        ($ApplicationPermissions | % { @{ id = $_ ; type = 'Role' } }) +
+        ($DelegatedPermissions | % { @{ id = $_ ; type = 'Scope' } }))
+        
+
     $requiredResourceAccess = "[
         {
           `"resourceAppId`": `"00000003-0000-0000-c000-000000000000`",
-          `"resourceAccess`": [
-            {
-              `"id`": `"64a6cdd6-aab1-4aaf-94b8-3cc8405e90d0`", 
-              `"type`": `"Scope`"
-            },
-            {
-              `"id`": `"7427e0e9-2fba-42fe-b0c0-848c9e6a8182`",
-              `"type`": `"Scope`"
-            },
-            {
-              `"id`": `"37f7f235-527c-4136-accd-4a02d197296e`",
-              `"type`": `"Scope`"
-            },
-            {
-              `"id`": `"14dad69e-099b-42c9-810b-d002981feec1`",
-              `"type`": `"Scope`"
-            },
-            {
-              `"id`": `"e1fe6dd8-ba31-4d61-89e7-88639da4683d`",
-              `"type`": `"Scope`"
-            },
-            {
-              `"id`": `"75359482-378d-4052-8f01-80520e7db3cd`",
-              `"type`": `"Role`"
-            },
-            {
-              `"id`": `"62a82d76-70ea-41e2-9197-370581804d09`",
-              `"type`": `"Role`"
-            },
-            {
-              `"id`": `"0c0bf378-bf22-4481-8f81-9e89a9b4960a`",
-              `"type`": `"Role`"
-            },
-            {
-              `"id`": `"741f803b-c850-494e-b5df-cde7c675a1ca`",
-              `"type`": `"Role`"
-            }
-          ]
+          `"resourceAccess`": $graphPermissions
         },
         {
             `"resourceAppId`": `"$appId`",
@@ -143,6 +140,8 @@
         `"requiredResourceAccess`": $requiredResourceAccess
     }"
 
+    Write-Debug $updatePerm
+
     Invoke-RestMethod -Uri "$($uri)/$($result.id)" -Headers $authHeader -Body $updatePerm -Method PATCH
 
     Write-Information "Add PreAuthorized apps"
@@ -151,6 +150,12 @@
         `"appId`": `"$appId`",
         `"permissionIds`": [ `"$scopeGuid`" ]
     }]"
+
+    if($AdditionalPreAuthorizedAppIds)
+    {
+        $parsedPreAuthorizedApps = $preAuthorizedApps | ConvertFrom-Json
+        $preAuthorizedApps = $parsedPreAuthorizedApps + ($AdditionalPreAuthorizedAppIds | % { @{ appId = $_ ; permissionIds = , $scopeGuid } }) | ConvertTo-Json
+    }
 
     $addPreAuth = "{
     `"api`": { 

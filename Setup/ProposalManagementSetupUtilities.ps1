@@ -115,6 +115,8 @@ function New-PMSite {
         [Parameter(Mandatory = $true)]
         [string]$Subscription,
         [Parameter(Mandatory = $false)]
+        [switch]$IncludeProposalCreation,
+        [Parameter(Mandatory = $false)]
         [switch]$Force
     )
     process {
@@ -136,7 +138,8 @@ function New-PMSite {
             }
         }
         New-AzureRmResourceGroup -Name $ApplicationName -Location $PMSiteLocation
-        New-AzureRmResourceGroupDeployment -ResourceGroupName $ApplicationName -TemplateFile .\ProposalManagerARMTemplate.json -siteName $ApplicationName -siteLocation $PMSiteLocation
+        New-AzureRmResourceGroupDeployment -ResourceGroupName $ApplicationName -TemplateFile .\ProposalManagerARMTemplate.json `
+            -siteName $ApplicationName -siteLocation $PMSiteLocation -includeProposalCreation $(if($IncludeProposalCreation) {$true} else {$false})
         Write-Information "Resource group deployment succeeded"
         Write-Information "Retrieving deployment credentials..."
         $xml = [xml](Get-AzureRmWebAppPublishingProfile -ResourceGroupName $ApplicationName -Name $ApplicationName -OutputFile .\settings.xml)
@@ -144,9 +147,21 @@ function New-PMSite {
         $username = [System.Linq.Enumerable]::Last($xml.SelectNodes("//publishProfile[@publishMethod=`"FTP`"]/@userName").value.Split('\'))
         $password = $xml.SelectNodes("//publishProfile[@publishMethod=`"FTP`"]/@userPWD").value
         $url = $xml.SelectNodes("//publishProfile[@publishMethod=`"FTP`"]/@publishUrl").value
+        
+        $returnedInformation = @{ Username = $username; Password = $password; Url = $url }
+        if($IncludeProposalCreation)
+        {
+            $pcxml = [xml](Get-AzureRmWebAppPublishingProfile -ResourceGroupName $ApplicationName -Name "$ApplicationName-propcreation" -OutputFile .\settings-propcreation.xml)
+            $pcusername = [System.Linq.Enumerable]::Last($pcxml.SelectNodes("//publishProfile[@publishMethod=`"FTP`"]/@userName").value.Split('\'))
+            $pcpassword = $pcxml.SelectNodes("//publishProfile[@publishMethod=`"FTP`"]/@userPWD").value
+            $pcurl = $pcxml.SelectNodes("//publishProfile[@publishMethod=`"FTP`"]/@publishUrl").value
+            $returnedInformation.PCUsername = $pcusername
+            $returnedInformation.PCPassword = $pcpassword
+            $returnedInformation.PCUrl = $pcurl
+        }
         Disconnect-AzureRmAccount
         Write-Information "Deployment credentials successfully retrieved"
-        return @{ Username = $username; Password = $password; Url = $url }
+        return $returnedInformation
     }
 }
 

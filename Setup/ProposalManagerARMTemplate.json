@@ -7,15 +7,47 @@
         },
         "siteLocation": {
             "type": "string"
+        },
+        "includeProposalCreation": {
+            "type": "bool",
+            "defaultValue": "false"
         }
+    },
+    "variables": {
+        "appServicePlanId" : "[resourceId('Microsoft.Web/serverfarms', parameters('siteName'))]"
     },
     "resources": [
         {
             "name": "[parameters('siteName')]",
+            "type": "Microsoft.Web/serverfarms",
+            "apiVersion": "2018-02-01",
+            "location": "[parameters('siteLocation')]",
+            "sku": {
+                "name": "F1",
+                "tier": "Free"
+            },
+            "properties": {}
+        },
+        {
+            "dependsOn": ["[variables('appServicePlanId')]"],
+            "name": "[parameters('siteName')]",
             "type": "Microsoft.Web/sites",
             "apiVersion": "2018-02-01",
             "location": "[parameters('siteLocation')]",
-            "properties": { }
+            "properties": {
+                "serverFarmId": "[variables('appServicePlanId')]"
+            }
+        },
+        {
+            "condition": "[parameters('includeProposalCreation')]",
+            "dependsOn": ["[resourceId('Microsoft.Web/serverfarms', parameters('siteName'))]"],
+            "name": "[concat(parameters('siteName'),'-propcreation')]",
+            "type": "Microsoft.Web/sites",
+            "apiVersion": "2018-02-01",
+            "location": "[parameters('siteLocation')]",
+            "properties": {
+                "serverFarmId": "[variables('appServicePlanId')]"
+             }
         }
     ]
 }

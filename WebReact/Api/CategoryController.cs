@@ -260,7 +260,7 @@ namespace WebReact.Api
                 if (modelList.Count == 0)
                 {
                     _logger.LogError($"RequestID:{requestId} - Category_GetAll no items found.");
-                    return Ok(modelList);
+                    return NotFound($"RequestID:{requestId} - Category_GetAll no items found");
                 }
 
                 return Ok(modelList);

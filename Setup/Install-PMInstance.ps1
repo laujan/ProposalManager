@@ -17,6 +17,8 @@
     The name of the application (for example "proposalmanager")
 .PARAMETER IncludeBot
     Specify only if you want the bot to be deployed alongside the application.
+.PARAMETER IncludeAddins
+    Specify only if you want the addins (Proposal Creation & Project Smart Link) to be deployed alongside the application.
 .PARAMETER BotAzureSubscription
     The name or id of the Azure subscription to register the bot in. It has to belong to the tenant identified by the OfficeTenantName parameter.
 .PARAMETER AdminSharePointSiteUrl
@@ -40,6 +42,8 @@ param(
     [string]$ApplicationName,
     [Parameter(Mandatory = $false)]
     [switch]$IncludeBot,
+    [Parameter(Mandatory = $false)]
+    [switch]$IncludeAddins,
     [Parameter(Mandatory = $false)]
     [string]$BotAzureSubscription,
     [Parameter(Mandatory = $false)]
@@ -111,6 +115,9 @@ foreach($module in $modules)
 Write-Information "Installation of Proposal Manager will begin. You need to be a Global Administrator to continue."
 $credential = Get-Credential -Message "Enter your Office 365 tenant global administrator credentials"
 
+$applicationDomain = "$ApplicationName.azurewebsites.net"
+$applicationUrl = "https://$applicationDomain"
+
 if(!$AdminSharePointSiteUrl)
 {
     $AdminSharePointSiteUrl = "https://$OfficeTenantName-admin.sharepoint.com"
@@ -126,20 +133,55 @@ if(!$ApplicationName)
     $ApplicationName = "propmgr-$OfficeTenantName"
 }
 
+$preAuthorizedAppIds = @()
+
+if($IncludeAddins)
+{
+    Write-Information "Registering the Proposal Creation add-in."
+    $replyUrls = @([string]::Empty, 'auth', 'auth/end')
+    [array]$delegatedPermissions = @(,'e1fe6dd8-ba31-4d61-89e7-88639da4683d')
+    $applicationPermissions = @()
+    $proposalCreationRegistration = RegisterApp -ApplicationName "$ApplicationName-propcreation" -RelativeReplyUrls $replyUrls -DelegatedPermissions $delegatedPermissions -Credential $credential
+    $preAuthorizedAppIds += $proposalCreationRegistration.AppId
+    Write-Information "Proposal Creation add-in successfully registered."
+}
+
 # Register Azure AD application (Endpoint v2)
-$appRegistration = RegisterApp -ApplicationName $ApplicationName -Credential $credential
+$appRegistration = RegisterApp -ApplicationName $ApplicationName -AdditionalPreAuthorizedAppIds $preAuthorizedAppIds -Credential $credential
 
 # Create Service Principal
 Write-Information "Creating Service Principal"
 Connect-AzureRmAccount -Credential $credential
-New-AzureRmADServicePrincipal -ApplicationId $appRegistration.AppId
+[int]$retriesLeft = 3
+[bool]$success = $false
+while(!$success)
+{
+    try
+    {
+        New-AzureRmADServicePrincipal -ApplicationId $appRegistration.AppId
+        $success = $true
+    }
+    catch
+    {
+        if($retriesLeft)
+        {
+            $retriesLeft -= 1
+            Write-Warning "Service Principal creation failed. Retrying..."
+            Start-Sleep -Seconds 10
+        }
+        else
+        {
+            Write-Error "Service Principal creation failed after 3 retries."
+        }
+    }
+}
 Disconnect-AzureRmAccount
 
 Connect-AzureAD -Credential $credential
 $tenantId = (Get-AzureADTenantDetail).ObjectId
 Disconnect-AzureAD
 
-$deploymentCredentials = New-PMSite -PMSiteLocation $AzureResourceLocation -ApplicationName $ApplicationName -Subscription $AzureSubscription -Force:$Force
+$deploymentCredentials = New-PMSite -PMSiteLocation $AzureResourceLocation -ApplicationName $ApplicationName -Subscription $AzureSubscription -Force:$Force -IncludeProposalCreation:$IncludeAddins
 
 $appSettings = @{
     ClientId = $appRegistration.AppId; 
@@ -177,6 +219,66 @@ if($IncludeBot)
     }
 }
 
+if($IncludeAddins)
+{
+    Write-Information "Initiating Proposal Creation add-in deployment..."
+
+    $proposalCreationSettings = @{
+        SiteId = $appSettings.SharePointHostName;
+        ProposalManagerUrl = $applicationUrl;
+        ClientId = $proposalCreationRegistration.AppId;
+        ClientSecret = $proposalCreationRegistration.AppSecret;
+        TenantId = $tenantId;
+        ProposalManagerApiId = $appRegistration.AppId;
+    }
+    UpdateAppSettings -pathToJson ..\Addins\ProposalCreation\Web\ProposalCreationWeb\appsettings.json -inputParams $proposalCreationSettings -ProposalCreation
+    
+    $proposalCreationClientConfigFilePath = "..\Addins\ProposalCreation\UI\src\config\appconfig.ts"
+
+    $proposalCreationManifestTemplateFilePath = "..\Addins\ProposalCreation\Manifest\proposal-creation-manifest.xml"
+    $proposalCreationManifestFileName = "$ApplicationName-proposal-creation-manifest.xml"
+    $proposalCreationManifestFilePath = "..\Addins\ProposalCreation\Manifest\"
+    $proposalCreationManifestFullName = "$proposalCreationManifestFilePath$proposalCreationManifestFileName"
+
+    (Get-Content $proposalCreationClientConfigFilePath).
+        Replace('<APPLICATION_ID>', $proposalCreationRegistration.AppId) `
+        | Set-Content $proposalCreationClientConfigFilePath
+
+    New-Item -Path $proposalCreationManifestFilePath -Name $proposalCreationManifestFileName -ItemType File
+    (Get-Content $proposalCreationManifestTemplateFilePath).
+        Replace('<NEW_GUID>', (New-Guid)).
+        Replace('<PROPOSAL_CREATION_URL>', "$ApplicationName-propcreation.azurewebsites.net") `
+        | Set-Content $proposalCreationManifestFullName
+
+    cd ..\Addins\ProposalCreation\UI
+
+    $ErrorActionPreference = 'Inquire'
+    npm install
+    npm run build
+    $ErrorActionPreference = 'Stop'
+
+    cd ..\..\..\Setup
+
+    # Publish Proposal Manager
+    $solutionDir = (Get-Item -Path "..\Addins\ProposalCreation\Web").FullName
+
+    Write-Information "Proposal Creation: Restoring Nuget solution packages..."
+    .\nuget.exe restore "..\Addins\ProposalCreation\Web\ProposalCreationWeb.sln" -SolutionDirectory $solutionDir
+    Write-Information "Proposal Creation: Nuget solution packages successfully retrieved"
+
+    cd "..\Addins\ProposalCreation\Web\ProposalCreation.Core"
+    dotnet msbuild "ProposalCreation.Core.csproj" "/p:SolutionDir=`"$($solutionDir)\\`";Configuration=Release;DebugSymbols=false;DebugType=None"
+    cd ..\..\..\..\Setup
+    rd ..\Addins\ProposalCreation\Web\ProposalCreationWeb\bin\Release\netcoreapp2.1\publish -Recurse -ErrorAction Ignore
+    dotnet publish ..\Addins\ProposalCreation\Web\ProposalCreationWeb -c Release
+
+    .\ZipDeploy.ps1 -sourcePath ..\Addins\ProposalCreation\Web\ProposalCreationWeb\bin\Release\netcoreapp2.1\publish\* -username $deploymentCredentials.PCUsername -password $deploymentCredentials.PCPassword -appName "$ApplicationName-propcreation"
+    Write-Information "Proposal Creation: Web app deployment has completed!"
+
+}
+
+Write-Information "Initiating main app deployment..."
+
 # Update Proposal Manager application settings
 UpdateAppSettings -pathToJson ..\WebReact\appsettings.json -inputParams $appSettings
 UpdateAppSettingsClient -pathToJson ..\WebReact\ClientApp\src\helpers\AppSettings.js -appId $appRegistration.AppId -appUri "https://$ApplicationName.azurewebsites.net" -tenantId $tenantId
@@ -208,10 +310,7 @@ rd ..\WebReact\bin\Release\netcoreapp2.1\publish -Recurse -ErrorAction Ignore
 dotnet publish ..\WebReact -c Release
 
 .\ZipDeploy.ps1 -sourcePath ..\WebReact\bin\Release\netcoreapp2.1\publish\* -username $deploymentCredentials.Username -password $deploymentCredentials.Password -appName $ApplicationName
-Write-Information "Web app deployment has completed"
-
-$applicationDomain = "$ApplicationName.azurewebsites.net"
-$applicationUrl = "https://$applicationDomain"
+Write-Information "Web app deployment has completed!"
 
 New-PMTeamsAddInManifest -AppUrl $applicationUrl -AppDomain $applicationDomain -BotId $botRegistration.AppId
 

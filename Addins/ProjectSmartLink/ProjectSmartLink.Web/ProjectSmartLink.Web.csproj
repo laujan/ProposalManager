@@ -30,6 +30,10 @@
     <ProjectReference Include="..\ProjectSmartLink.Entity\ProjectSmartLink.Entity.csproj" />
     <ProjectReference Include="..\ProjectSmartLink.Service\ProjectSmartLink.Service.csproj" />
   </ItemGroup>
+  
+  <ItemGroup>
+    <None Include="wwwroot\*" />
+  </ItemGroup>
 
   <ItemGroup>
     <Reference Include="Microsoft.IdentityModel.Clients.ActiveDirectory">

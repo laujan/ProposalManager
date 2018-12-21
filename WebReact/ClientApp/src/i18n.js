@@ -314,7 +314,8 @@ i18n.use(LanguageDetector).init({
                 "tasksAddedSuccess": "Tasks added successfully.",
                 "tasksUpdatedSuccess": "Tasks updated successfully.",
                 "tasksDeletedSuccess": "Tasks deleted successfully.",
-                "tasksCannotbeEmpty": "Task can not be empty."
+                "tasksCannotbeEmpty": "Task can not be empty.",
+                "itemsNotFound": "Items not found."
             }
         },
         es: {
@@ -624,7 +625,8 @@ i18n.use(LanguageDetector).init({
                 "tasksAddedSuccess": "Tarea añadida con éxito.",
                 "tasksUpdatedSuccess": "Tarea actualizada con éxito.",
                 "tasksDeletedSuccess": "Tarea eliminada con éxito.",
-                "tasksCannotbeEmpty": "La tarea no puede estar vacía."
+                "tasksCannotbeEmpty": "La tarea no puede estar vacía.",
+                "itemsNotFound": "Artículos no encontrados."
             }
         },
         ja: {

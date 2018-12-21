@@ -130,6 +130,10 @@ export class Industry extends Component {
                 headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() }
             });
             let data = await this.utils.handleErrors(response).json();
+            if (typeof data === "string") {
+                this.setMessage(false, true, MessageBarType.info, <Trans>itemsNotFound</Trans>);
+                return true;
+            }
             items = data.map(industry => { return { "id": industry.id, "name": industry.name };});     
         }catch(error){
             this.setMessage(false,true,MessageBarType.error,error.message);

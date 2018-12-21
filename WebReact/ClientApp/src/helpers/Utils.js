@@ -141,6 +141,10 @@ export default class Utils {
             let status = response.status;
             let statusText = response.statusText;
             let type = response.type;
+            if (status === 404) {
+                // Items Not Found - so return the response
+                return response;
+            }
             if (status >= 500) {
                 throw new Error(`ServerError: ErrorMsg ${statusText} & status code ${status}`);
             }
