@@ -25,7 +25,7 @@ yarn-error.log*
 # package
 /dist
 # compiled css
-*.css
+# *.css commenting because seems it ignore some css from projectsmartlink
 
 # lauchsettings
 launchSettings.json*
