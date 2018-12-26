@@ -78,8 +78,8 @@ export default class App extends Component {
             i18n.t('key');
         });
 
-        console.log("App_render inTeams: " + this.state.inTeams + " iframed: " + this.iframed());
-        
+        console.log("App_render inTeams: " + this.state.inTeams + " iframed: " + this.iframed() + " Language: " + this.state.language);
+
         if (this.state.inTeams) {
             return (
                 <I18nextProvider i18n={i18n}>

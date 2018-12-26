@@ -3,7 +3,8 @@
     param(
         [Parameter(Mandatory = $true)][string]$pathToJson,
         [Parameter(Mandatory = $true)] $inputParams,
-        [Parameter(Mandatory = $false)][switch]$ProposalCreation
+        [Parameter(Mandatory = $false)][switch]$ProposalCreation,
+        [Parameter(Mandatory = $false)][switch]$ProjectSmartLink
     )
 
     $appSettings = Get-Content -Path $pathToJson | ConvertFrom-Json -ErrorAction Stop
@@ -21,6 +22,16 @@
         $appSettings.AzureAd.TenantId = $inputParams.TenantId
         $appSettings.AzureAd.ProposalManagerApiId = $inputParams.ProposalManagerApiId
 
+    }
+    elseif($ProjectSmartLink)
+    {
+        $appSettings.AzureAd.ClientId = $inputParams.ClientId
+        $appSettings.AzureAd.ClientSecret = $inputParams.ClientSecret
+        $appSettings.AzureAd.TenantId = $inputParams.TenantId
+        $appSettings.AzureAd.SharePointUrl = $inputParams.SharePointUrl
+        $appSettings.AzureAd.AllowedTenants = $inputParams.AllowedTenants
+
+        $appSettings.ConnectionStrings.DefaultConnection.ConnectionString = $inputParams.ConnectionString
     }
     else
     {

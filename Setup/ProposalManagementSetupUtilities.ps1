@@ -117,6 +117,12 @@ function New-PMSite {
         [Parameter(Mandatory = $false)]
         [switch]$IncludeProposalCreation,
         [Parameter(Mandatory = $false)]
+        [switch]$IncludeProjectSmartLink,
+        [Parameter(Mandatory = $false)]
+        [string]$SqlServerAdminUsername,
+        [Parameter(Mandatory = $false)]
+        [string]$SqlServerAdminPassword,
+        [Parameter(Mandatory = $false)]
         [switch]$Force
     )
     process {
@@ -139,7 +145,8 @@ function New-PMSite {
         }
         New-AzureRmResourceGroup -Name $ApplicationName -Location $PMSiteLocation
         New-AzureRmResourceGroupDeployment -ResourceGroupName $ApplicationName -TemplateFile .\ProposalManagerARMTemplate.json `
-            -siteName $ApplicationName -siteLocation $PMSiteLocation -includeProposalCreation $(if($IncludeProposalCreation) {$true} else {$false})
+            -siteName $ApplicationName -siteLocation $PMSiteLocation -includeProposalCreation $(if($IncludeProposalCreation) {$true} else {$false}) `
+            -includeProjectSmartLink $(if($IncludeProjectSmartLink) {$true} else {$false}) -sqlServerAdminUsername $SqlServerAdminUsername -sqlServerAdminPassword ($SqlServerAdminPassword | ConvertTo-SecureString -AsPlainText -Force)
         Write-Information "Resource group deployment succeeded"
         Write-Information "Retrieving deployment credentials..."
         $xml = [xml](Get-AzureRmWebAppPublishingProfile -ResourceGroupName $ApplicationName -Name $ApplicationName -OutputFile .\settings.xml)
@@ -158,6 +165,16 @@ function New-PMSite {
             $returnedInformation.PCUsername = $pcusername
             $returnedInformation.PCPassword = $pcpassword
             $returnedInformation.PCUrl = $pcurl
+        }
+        if($IncludeProjectSmartLink)
+        {
+            $pslxml = [xml](Get-AzureRmWebAppPublishingProfile -ResourceGroupName $ApplicationName -Name "$ApplicationName-projectsmartlink" -OutputFile .\settings-projectsmartlink.xml)
+            $pslusername = [System.Linq.Enumerable]::Last($pslxml.SelectNodes("//publishProfile[@publishMethod=`"FTP`"]/@userName").value.Split('\'))
+            $pslpassword = $pslxml.SelectNodes("//publishProfile[@publishMethod=`"FTP`"]/@userPWD").value
+            $pslurl = $pslxml.SelectNodes("//publishProfile[@publishMethod=`"FTP`"]/@publishUrl").value
+            $returnedInformation.PSLUsername = $pslusername
+            $returnedInformation.PSLPassword = $pslpassword
+            $returnedInformation.PSLUrl = $pslurl
         }
         Disconnect-AzureRmAccount
         Write-Information "Deployment credentials successfully retrieved"

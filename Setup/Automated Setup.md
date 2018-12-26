@@ -30,6 +30,9 @@ AzureResourceLocation|The azure region in which you want the resources to be all
 AzureSubscription|The name (id also works) of the azure subscription you want the resource group to be deployed to.
 ApplicationName|The name of the application (for example, "ProposalManager").
 IncludeBot|FLAG; Include this parameter only if you also want the bot to be deployed by this script. Otherwise, don't include it.
+IncludeAddins|FLAG; Specify only if you want the addins (Proposal Creation & Project Smart Link) to be deployed alongside the application.
+SqlServerAdminUsername|If IncluddeAddins was specified, this is the sql server admin username for the project smart link sql server. This sql server is created by this script; it does not exist beforehand. Therefore, you don't need to look up the value for this parameter but rather invent it now and take note of what you input. If IncludeAddins was not specified, this parameter is ignored.
+SqlServerAdminPassword|If IncluddeAddins was specified, this is the sql server admin password for the project smart link sql server. This sql server is created by this script; it does not exist beforehand. Therefore, you don't need to look up the value for this parameter but rather invent it now and take note of what you input. If IncludeAddins was not specified, this parameter is ignored.
 BotAzureSubscription|OPTIONAL; The name or id of the Azure subscription to register the bot in; it has to belong to the tenant identified by the OfficeTenantName parameter; if not included, you have to register the bot by hand by following the getting started guide and provide the bot name when prompted so.
 AdminSharePointSiteUrl|OPTIONAL; The url of the admin sharepoint site; if none is provided, the default one will be used.
 Force|FLAG; Specify only if you explicitly intend to overwrite an existing installation of Proposal Manager.

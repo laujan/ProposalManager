@@ -9,7 +9,7 @@ import * as microsoftTeams from '@microsoft/teams-js';
 import { Route } from 'react-router';
 import GraphSdkHelper from './helpers/GraphSdkHelper';
 import AuthHelper from './helpers/AuthHelper';
-import  appSettingsObject  from './helpers/AppSettings';
+import appSettingsObject from './helpers/AppSettings';
 // Teams Add-in imports
 import { ThemeStyle, Th } from 'msteams-ui-components-react';
 
@@ -100,6 +100,8 @@ export class AppTeams extends Component {
             if (this.getQueryVariable('locale') !== null && this.getQueryVariable('locale') !== undefined) {
                 locale = this.getQueryVariable('locale');
             }
+            locale = (navigator.languages && navigator.languages[0]) || navigator.language || navigator.userLanguage;
+            console.log("App Teams Locale====" + locale + " ***** getQueryVarLocale **** " + this.getQueryVariable('locale'));
 
             this.state = {
                 isAuthenticated: false,
@@ -367,8 +369,8 @@ export class AppTeams extends Component {
     }
 
     //getting client settings
-    async getClientSettings(){
-        let clientSettings = {"reportId":"","workspaceId": "","teamsAppInstanceId":""};
+    async getClientSettings() {
+        let clientSettings = { "reportId": "", "workspaceId": "", "teamsAppInstanceId": "" };
         try {
             console.log("AppTeams_getClientSettings");
             let requestUrl = 'api/Context/GetClientSettings';
@@ -394,7 +396,7 @@ export class AppTeams extends Component {
                 return "AppTeams_getTeamsContext success loginHint: " + this.state.loginHint;
             }
             else {
-                
+
                 let context = await microsoftTeams.getContext();
                 console.log("AppTeams_getTeamsContext context ==>", context);
 
@@ -407,11 +409,13 @@ export class AppTeams extends Component {
                             teamName: context.teamName,
                             groupId: context.groupId,
                             loginHint: context.loginHint,
+                            locale: context.locale,
                             authUser: "start"
                         });
                     }
                 });
-
+                console.log("AppTeams_getTeamsContext context Test ==>", context);
+                console.log(context);
                 return "AppTeams_getTeamsContext started - " + window.location.pathname;
             }
         } catch (err) {
@@ -425,10 +429,10 @@ export class AppTeams extends Component {
         this.authHelper.logout()
             .then(() => {
                 this.setState({
-                isAuthenticated: false,
-                displayName: ''
+                    isAuthenticated: false,
+                    displayName: ''
+                });
             });
-        });
     }
 
     // Grabs the font size in pixels from the HTML element on your page.
@@ -471,7 +475,7 @@ export class AppTeams extends Component {
         }
         return "";
     }
-    
+
     render() {
         const teamsContext = {
             channelName: this.state.channelName,
@@ -510,10 +514,10 @@ export class AppTeams extends Component {
         const AddDealTypeView = ({ match }) => {
             return <AddDealType teamsContext={teamsContext} />;
         };
-		const AddDealTypeViewR = ({ match }) => {
+        const AddDealTypeViewR = ({ match }) => {
             return <AddDealTypeR teamsContext={teamsContext} />;
         };
-		
+
         const GeneralView = ({ match }) => {
             return <General teamsContext={teamsContext} appSettings={appSettings} />;
         };
@@ -563,7 +567,7 @@ export class AppTeams extends Component {
                 <Route exact path='/tab/generalAdministrationTab' component={AdministrationView} />
                 <Route exact path='/tab/generalDashboardTab' component={GeneralView} />
                 <Route exact path='/tab/generalAddDealType' component={AddDealTypeView} />
-				<Route exact path='/tab/generalAddDealTypeR' component={AddDealTypeViewR} />
+                <Route exact path='/tab/generalAddDealTypeR' component={AddDealTypeViewR} />
                 <Route exact path='/tab/OpportunityDetails' component={OpportunityDetails} />
                 <Route exact path='/tab/ChooseTeam' component={ChooseTeam} />
 

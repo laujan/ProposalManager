@@ -19,6 +19,10 @@
     Specify only if you want the bot to be deployed alongside the application.
 .PARAMETER IncludeAddins
     Specify only if you want the addins (Proposal Creation & Project Smart Link) to be deployed alongside the application.
+.PARAMETER SqlServerAdminUsername
+    If IncluddeAddins was specified, this is the sql server admin username for the project smart link sql server. This sql server is created by this script; it does not exist beforehand. Therefore, you don't need to look up the value for this parameter but rather invent it now and take note of what you input. If IncludeAddins was not specified, this parameter is ignored.
+.PARAMETER SqlServerAdminPassword
+    If IncluddeAddins was specified, this is the sql server admin password for the project smart link sql server. This sql server is created by this script; it does not exist beforehand. Therefore, you don't need to look up the value for this parameter but rather invent it now and take note of what you input. If IncludeAddins was not specified, this parameter is ignored.
 .PARAMETER BotAzureSubscription
     The name or id of the Azure subscription to register the bot in. It has to belong to the tenant identified by the OfficeTenantName parameter.
 .PARAMETER AdminSharePointSiteUrl
@@ -44,6 +48,10 @@ param(
     [switch]$IncludeBot,
     [Parameter(Mandatory = $false)]
     [switch]$IncludeAddins,
+    [Parameter(Mandatory = $false)]
+    [string]$SqlServerAdminUsername,
+    [Parameter(Mandatory = $false)]
+    [string]$SqlServerAdminPassword,
     [Parameter(Mandatory = $false)]
     [string]$BotAzureSubscription,
     [Parameter(Mandatory = $false)]
@@ -144,6 +152,19 @@ if($IncludeAddins)
     $proposalCreationRegistration = RegisterApp -ApplicationName "$ApplicationName-propcreation" -RelativeReplyUrls $replyUrls -DelegatedPermissions $delegatedPermissions -Credential $credential
     $preAuthorizedAppIds += $proposalCreationRegistration.AppId
     Write-Information "Proposal Creation add-in successfully registered."
+
+    Write-Information "Registering the Project Smart Link add-in."
+    $replyUrls = @([string]::Empty, 'auth', 'auth/end')
+    [array]$delegatedPermissions =
+        '7427e0e9-2fba-42fe-b0c0-848c9e6a8182',
+        '37f7f235-527c-4136-accd-4a02d197296e',
+        '14dad69e-099b-42c9-810b-d002981feec1',
+        '89fe6a52-be36-487e-b7d8-d061c450a026',
+        'e1fe6dd8-ba31-4d61-89e7-88639da4683d'
+    $applicationPermissions = @()
+    $projectSmartLinkRegistration = RegisterApp -ApplicationName "$ApplicationName-projectsmartlink" -RelativeReplyUrls $replyUrls -DelegatedPermissions $delegatedPermissions -Credential $credential
+    #$preAuthorizedAppIds += $projectSmartLinkRegistration.AppId
+    Write-Information "Proposal Creation add-in successfully registered."
 }
 
 # Register Azure AD application (Endpoint v2)
@@ -181,7 +202,9 @@ Connect-AzureAD -Credential $credential
 $tenantId = (Get-AzureADTenantDetail).ObjectId
 Disconnect-AzureAD
 
-$deploymentCredentials = New-PMSite -PMSiteLocation $AzureResourceLocation -ApplicationName $ApplicationName -Subscription $AzureSubscription -Force:$Force -IncludeProposalCreation:$IncludeAddins
+$deploymentCredentials = New-PMSite -PMSiteLocation $AzureResourceLocation -ApplicationName $ApplicationName -Subscription $AzureSubscription -Force:$Force `
+    -IncludeProposalCreation:$IncludeAddins -IncludeProjectSmartLink:$IncludeAddins `
+    -SqlServerAdminUsername $SqlServerAdminUsername -SqlServerAdminPassword $SqlServerAdminPassword
 
 $appSettings = @{
     ClientId = $appRegistration.AppId; 
@@ -247,7 +270,8 @@ if($IncludeAddins)
     New-Item -Path $proposalCreationManifestFilePath -Name $proposalCreationManifestFileName -ItemType File
     (Get-Content $proposalCreationManifestTemplateFilePath).
         Replace('<NEW_GUID>', (New-Guid)).
-        Replace('<PROPOSAL_CREATION_URL>', "$ApplicationName-propcreation.azurewebsites.net") `
+        Replace('<PROPOSAL_CREATION_URL>', "$ApplicationName-propcreation.azurewebsites.net").
+        Replace('<PROJECT_SMARTLINK_URL>', "$ApplicationName-projectsmartlink.azurewebsites.net") `
         | Set-Content $proposalCreationManifestFullName
 
     cd ..\Addins\ProposalCreation\UI
@@ -259,7 +283,6 @@ if($IncludeAddins)
 
     cd ..\..\..\Setup
 
-    # Publish Proposal Manager
     $solutionDir = (Get-Item -Path "..\Addins\ProposalCreation\Web").FullName
 
     Write-Information "Proposal Creation: Restoring Nuget solution packages..."
@@ -273,6 +296,61 @@ if($IncludeAddins)
     dotnet publish ..\Addins\ProposalCreation\Web\ProposalCreationWeb -c Release
 
     .\ZipDeploy.ps1 -sourcePath ..\Addins\ProposalCreation\Web\ProposalCreationWeb\bin\Release\netcoreapp2.1\publish\* -username $deploymentCredentials.PCUsername -password $deploymentCredentials.PCPassword -appName "$ApplicationName-propcreation"
+    Write-Information "Proposal Creation: Web app deployment has completed!"
+
+    #===============================================================================================
+
+    Write-Information "Initiating Project Smart Link add-in deployment..."
+
+    $projectSmartLinkSettings = @{
+        ClientId = $projectSmartLinkRegistration.AppId;
+        ClientSecret = $projectSmartLinkRegistration.AppSecret;
+        TenantId = $tenantId;
+        AllowedTenants = @(,$tenantId);
+        SharePointUrl = "https://$OfficeTenantName.sharepoint.com/.default";
+        ConnectionString = "Data Source=tcp:$ApplicationName.database.windows.net,1433;Initial Catalog=ProjectSmartLink;User Id=$SqlServerAdminUsername;Password=$SqlServerAdminPassword;"
+    }
+    UpdateAppSettings -pathToJson ..\Addins\ProjectSmartLink\ProjectSmartLink.Web\appsettings.json -inputParams $projectSmartLinkSettings -ProjectSmartLink
+    
+    $projectSmartLinkManifestTemplateFilePath = "..\Addins\ProjectSmartLink\ProjectSmartLinkExcel\ProjectSmartLinkExcelManifest\ProjectSmartLinkExcel.xml"
+    $projectSmartLinkManifestFileName = "$ApplicationName-project-smart-link-excel-manifest.xml"
+    $projectSmartLinkManifestFilePath = "..\Addins\ProjectSmartLink\"
+    $projectSmartLinkManifestFullName = "$projectSmartLinkManifestFilePath$projectSmartLinkManifestFileName"
+    
+    New-Item -Path $projectSmartLinkManifestFilePath -Name $projectSmartLinkManifestFileName -ItemType File
+    (Get-Content $projectSmartLinkManifestTemplateFilePath).
+        Replace('{NEW_GUID}', (New-Guid)).
+        Replace('{PROJECT_SMART_LINK_WEB_URL}', "$ApplicationName-projectsmartlink.azurewebsites.net") `
+        | Set-Content $projectSmartLinkManifestFullName
+
+    $projectSmartLinkManifestTemplateFilePath = "..\Addins\ProjectSmartLink\ProjectSmartLinkPowerPoint\ProjectSmartLinkPowerPointManifest\ProjectSmartLinkPowerPoint.xml"
+    $projectSmartLinkManifestFileName = "$ApplicationName-project-smart-link-powerpoint-manifest.xml"
+    $projectSmartLinkManifestFilePath = "..\Addins\ProjectSmartLink\"
+    $projectSmartLinkManifestFullName = "$projectSmartLinkManifestFilePath$projectSmartLinkManifestFileName"
+    
+    New-Item -Path $projectSmartLinkManifestFilePath -Name $projectSmartLinkManifestFileName -ItemType File
+    (Get-Content $projectSmartLinkManifestTemplateFilePath).
+        Replace('{NEW_GUID}', (New-Guid)).
+        Replace('{PROJECT_SMART_LINK_WEB_URL}', "$ApplicationName-projectsmartlink.azurewebsites.net") `
+        | Set-Content $projectSmartLinkManifestFullName
+
+    $solutionDir = (Get-Item -Path "..\Addins\ProjectSmartLink").FullName
+
+    Write-Information "Project Smart Link: Restoring Nuget solution packages..."
+    .\nuget.exe restore "..\Addins\ProjectSmartLink\ProjectSmartLink.sln" -SolutionDirectory $solutionDir
+    Write-Information "Project Smart Link: Nuget solution packages successfully retrieved"
+
+    cd "..\Addins\ProjectSmartLink\ProjectSmartLink.Common"
+    dotnet msbuild "ProjectSmartLink.Common.csproj" "/p:SolutionDir=`"$($solutionDir)\\`";Configuration=Release;DebugSymbols=false;DebugType=None"
+    cd "..\ProjectSmartLink.Entity"
+    dotnet msbuild "ProjectSmartLink.Entity.csproj" "/p:SolutionDir=`"$($solutionDir)\\`";Configuration=Release;DebugSymbols=false;DebugType=None"
+    cd "..\ProjectSmartLink.Service"
+    dotnet msbuild "ProjectSmartLink.Service.csproj" "/p:SolutionDir=`"$($solutionDir)\\`";Configuration=Release;DebugSymbols=false;DebugType=None"
+    cd ..\..\..\Setup
+    rd ..\Addins\ProjectSmartLink\ProjectSmartLink.Web\bin\Release\netcoreapp2.1\publish -Recurse -ErrorAction Ignore
+    dotnet publish ..\Addins\ProjectSmartLink\ProjectSmartLink.Web -c Release
+
+    .\ZipDeploy.ps1 -sourcePath ..\Addins\ProjectSmartLink\ProjectSmartLink.Web\bin\Release\netcoreapp2.1\publish\* -username $deploymentCredentials.PSLUsername -password $deploymentCredentials.PSLPassword -appName "$ApplicationName-projectsmartlink"
     Write-Information "Proposal Creation: Web app deployment has completed!"
 
 }

@@ -11,16 +11,27 @@
         "includeProposalCreation": {
             "type": "bool",
             "defaultValue": "false"
+        },
+        "includeProjectSmartLink": {
+            "type": "bool",
+            "defaultValue": "false"
+        },
+        "sqlServerAdminUsername": {
+            "type": "string"
+        },
+        "sqlServerAdminPassword": {
+            "type": "securestring"
         }
     },
     "variables": {
-        "appServicePlanId" : "[resourceId('Microsoft.Web/serverfarms', parameters('siteName'))]"
+        "appServicePlanId" : "[resourceId('Microsoft.Web/serverfarms', parameters('siteName'))]",
+        "sqlServerId": "[resourceId('Microsoft.Sql/servers', parameters('siteName'))]"
     },
     "resources": [
         {
-            "name": "[parameters('siteName')]",
             "type": "Microsoft.Web/serverfarms",
             "apiVersion": "2018-02-01",
+            "name": "[parameters('siteName')]",
             "location": "[parameters('siteLocation')]",
             "sku": {
                 "name": "F1",
@@ -30,9 +41,9 @@
         },
         {
             "dependsOn": ["[variables('appServicePlanId')]"],
-            "name": "[parameters('siteName')]",
             "type": "Microsoft.Web/sites",
             "apiVersion": "2018-02-01",
+            "name": "[parameters('siteName')]",
             "location": "[parameters('siteLocation')]",
             "properties": {
                 "serverFarmId": "[variables('appServicePlanId')]"
@@ -40,14 +51,60 @@
         },
         {
             "condition": "[parameters('includeProposalCreation')]",
-            "dependsOn": ["[resourceId('Microsoft.Web/serverfarms', parameters('siteName'))]"],
-            "name": "[concat(parameters('siteName'),'-propcreation')]",
+            "dependsOn": ["[variables('appServicePlanId')]"],
             "type": "Microsoft.Web/sites",
             "apiVersion": "2018-02-01",
+            "name": "[concat(parameters('siteName'),'-propcreation')]",
             "location": "[parameters('siteLocation')]",
             "properties": {
                 "serverFarmId": "[variables('appServicePlanId')]"
              }
+        },
+        {
+            "condition": "[parameters('includeProjectSmartLink')]",
+            "dependsOn": ["[variables('appServicePlanId')]"],
+            "type": "Microsoft.Web/sites",
+            "apiVersion": "2018-02-01",
+            "name": "[concat(parameters('siteName'),'-projectsmartlink')]",
+            "location": "[parameters('siteLocation')]",
+            "properties": {
+                "serverFarmId": "[variables('appServicePlanId')]"
+            }
+        },
+        {
+            "condition": "[parameters('includeProjectSmartLink')]",
+            "type": "Microsoft.Sql/servers",
+            "apiVersion": "2014-04-01",
+            "name": "[parameters('siteName')]",
+            "location": "[parameters('siteLocation')]",
+            "properties": {
+                "administratorLogin": "[parameters('sqlServerAdminUsername')]",
+                "administratorLoginPassword": "[parameters('sqlServerAdminPassword')]"
+            },
+            "resources": [
+                {
+                    "condition": "[parameters('includeProjectSmartLink')]",
+                    "dependsOn": ["[variables('sqlServerId')]"],
+                    "type": "databases",
+                    "apiVersion": "2014-04-01",
+                    "name": "ProjectSmartLink",
+                    "location": "[parameters('siteLocation')]",
+                    "properties": {
+                        "edition": "Free"
+                    }
+                },
+                {
+                    "condition": "[parameters('includeProjectSmartLink')]",
+                    "dependsOn": ["[variables('sqlServerId')]"],
+                    "type": "firewallRules",
+                    "apiVersion": "2014-04-01",
+                    "name": "AllowAzureIps",
+                    "properties": {
+                        "startIpAddress": "0.0.0.0",
+                        "endIpAddress": "0.0.0.0"
+                    }
+                }
+            ]
         }
     ]
 }
