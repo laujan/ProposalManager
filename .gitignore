@@ -370,3 +370,4 @@ ASALocalRun/
 # Local History for Visual Studio
 .localhistory/
 /WebReact/app_data/jobs/triggered
+/Addins/ProjectSmartLink/ProjectSmartLink.Web/wwwroot/lib/bootstrap/dist/css

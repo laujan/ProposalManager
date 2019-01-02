@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28010.2003
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SourcePointCreator", "SourcePointCreator\SourcePointCreator.csproj", "{D38B94BF-3439-4217-98A0-71F15630599E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D38B94BF-3439-4217-98A0-71F15630599E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D38B94BF-3439-4217-98A0-71F15630599E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D38B94BF-3439-4217-98A0-71F15630599E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D38B94BF-3439-4217-98A0-71F15630599E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {CEC5A0C3-D012-4C44-AFC9-8A94B01FFCF9}
+	EndGlobalSection
+EndGlobal

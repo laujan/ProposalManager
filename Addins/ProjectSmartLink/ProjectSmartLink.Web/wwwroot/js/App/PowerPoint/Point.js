@@ -371,6 +371,9 @@ var point = (function () {
             else if (_i === 2) {
                 return app.sourceTypes.table;
             }
+            else if (_i === 3) {
+                return app.sourceTypes.image;
+            }
             else {
                 return app.sourceTypes.all;
             }
@@ -591,7 +594,7 @@ var point = (function () {
             $(o).closest(".add-point-customformat").removeClass("show");
             $(o).closest(".add-point-customformat").find("ul .listFormats").removeClass("active");
 
-            let value = (that.selected.SourceType === 2 || that.selected.SourceType === 4) ? JSON.parse(that.selected.Value).image : that.selected.Value;
+            let value = (that.selected.SourceType === 2) ? JSON.parse(that.selected.Value).image : that.selected.Value;
 
             // Add value to document
             Office.context.document.setSelectedDataAsync(
@@ -1599,6 +1602,7 @@ var point = (function () {
             let pointCounter = 0;
             let tableCounter = 0;
             let chartCounter = 0;
+            let imageCounter = 0;
 
             let selectedSourceType = that.utility.selectedSourceType(".point-types");
 
@@ -1610,8 +1614,10 @@ var point = (function () {
                         pointCounter++;
                     } else if (d.SourceType === app.sourceTypes.table) {
                         tableCounter++;
-                    } else {
+                    } else if (d.SourceType === app.sourceTypes.chart) {
                         chartCounter++;
+                    } else {
+                        imageCounter++;
                     }
 
                     if (d.SourceType === selectedSourceType) {
@@ -1671,6 +1677,7 @@ var point = (function () {
             that.controls.sourceTypeNav[0].children[1].innerText = pointCounter;
             that.controls.sourceTypeNav[1].children[1].innerText = chartCounter;
             that.controls.sourceTypeNav[2].children[1].innerText = tableCounter;
+            that.controls.sourceTypeNav[3].children[1].innerText = imageCounter;
 
             that.controls.headerListPoints.find(".i3 span")[0].innerText = selectedSourceType === app.sourceTypes.point ? window.stringResources["Value"] : "";
         },
