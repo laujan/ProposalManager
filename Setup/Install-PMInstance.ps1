@@ -123,6 +123,15 @@ foreach($module in $modules)
 Write-Information "Installation of Proposal Manager will begin. You need to be a Global Administrator to continue."
 $credential = Get-Credential -Message "Enter your Office 365 tenant global administrator credentials"
 
+if(!$ApplicationName)
+{
+    $ApplicationName = "propmgr-$OfficeTenantName"
+}
+
+# must be lower case
+$ApplicationName = $ApplicationName.ToLower()
+$PMSiteAlias = $PMSiteAlias.ToLower()
+
 $applicationDomain = "$ApplicationName.azurewebsites.net"
 $applicationUrl = "https://$applicationDomain"
 
@@ -135,11 +144,6 @@ if(!$AdminSharePointSiteUrl)
 $pmSiteUrl = New-PMSharePointSite -AdminSiteUrl $AdminSharePointSiteUrl -Credential $credential -PMAdminUpn $PMAdminUpn -PMSiteAlias $PMSiteAlias -OfficeTenantName $OfficeTenantName -Force:$Force
 
 New-PMGroupStructure -Credential $Credential -Force:$Force
-
-if(!$ApplicationName)
-{
-    $ApplicationName = "propmgr-$OfficeTenantName"
-}
 
 $preAuthorizedAppIds = @()
 

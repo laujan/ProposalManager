@@ -701,15 +701,24 @@ namespace Infrastructure.Services
                     _logger.LogError($"RequestId: {requestId} - CreateTeamAndChannels_AddAppToTeamAsync Service Exception: {ex}");
                 }
 
-                try
+                // Invoke Dynamics webhook setup
+                // TODO: this condition is temporarly added to the OpportunityFactory in order to avoid invoking the DynamicsController unless the Dynamics configuration
+                // if available, otherwise it blows up in the ctor.
+                if (!string.IsNullOrWhiteSpace(opportunity.Reference))
                 {
-                    // Call to AddIn helper once team has been created
-                     var resCallAddIn = await _addInHelper.CallAddInWebhookAsync(opportunity, requestId);
+                    try
+                    {
+                        // Call to AddIn helper once team has been created
+                        await _addInHelper.CallAddInWebhookAsync(opportunity, requestId);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError($"RequestId: {requestId} -_addInHelper.CallAddInWebhookAsync(opportunity, requestId): {ex}");
+                    }
                 }
-                catch (Exception ex)
-                {
-                    _logger.LogError($"RequestId: {requestId} -_addInHelper.CallAddInWebhookAsync(opportunity, requestId): {ex}");
-                }
+
+                // Activate Document Id Service
+                await _addInHelper.ActivateDocumentId(opportunity);
 
                 return generalChannelId;
             }

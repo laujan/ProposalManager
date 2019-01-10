@@ -3,10 +3,12 @@
 //
 // Licensed under the MIT license. See LICENSE file in the solution root folder for full license information.
 
+using System.Threading.Tasks;
+
 namespace ApplicationCore.Interfaces.SmartLink
 {
     public interface IDocumentIdService
     {
-        void ActivateForSite(string site);
+        Task ActivateForSite(string site);
     }
 }

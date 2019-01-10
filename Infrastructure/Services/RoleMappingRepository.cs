@@ -89,18 +89,24 @@ namespace Infrastructure.Services
             bool flag = false;
             try
             {
-                var options = new List<QueryParam>();
-                //Granular Permission Change :  Start
-                options.Add(new QueryParam("filter", $"startswith(displayName,'{adGroupName}')"));
-                var groupIdJson = await _graphUserAppService.GetGroupAsync(options, "", requestId);
-                dynamic jsonDyn = groupIdJson;
-                if (jsonDyn.value.HasValues)
+                //bug fix
+                if ("aud" == adGroupName.Substring(0, 3).ToLower())
+                    flag = true;
+                else
                 {
-                    var id = "";
-                    id = jsonDyn.value[0].id.ToString();
-                    if (!string.IsNullOrEmpty(id))
-                        flag = true;
+                    var options = new List<QueryParam>();
+                    //Granular Permission Change :  Start
+                    options.Add(new QueryParam("filter", $"startswith(displayName,'{adGroupName}')"));
+                    var groupIdJson = await _graphUserAppService.GetGroupAsync(options, "", requestId);
+                    dynamic jsonDyn = groupIdJson;
+                    if (jsonDyn.value.HasValues)
+                    {
+                        var id = "";
+                        id = jsonDyn.value[0].id.ToString();
+                        if (!string.IsNullOrEmpty(id))
+                            flag = true;
 
+                    }
                 }
             }
             catch (Exception ex)

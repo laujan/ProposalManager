@@ -14,5 +14,6 @@ namespace ApplicationCore.Interfaces
     public interface IAddInHelper
     {
         Task<StatusCodes> CallAddInWebhookAsync(Opportunity opportunity, string requestId = "");
+        Task<StatusCodes> ActivateDocumentId(Opportunity opportunity, string requestId = "");
     }
 }

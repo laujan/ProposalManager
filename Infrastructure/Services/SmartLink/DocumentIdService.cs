@@ -9,6 +9,7 @@ using Microsoft.Extensions.Configuration;
 using System;
 using System.Net;
 using System.Text;
+using System.Threading.Tasks;
 using System.Web;
 
 namespace Infrastructure.Services.SmartLink
@@ -25,24 +26,23 @@ namespace Infrastructure.Services.SmartLink
             configuration.Bind(DocumentIdActivatorConfiguration.ConfigurationName, documentIdActivatorConfiguration);
         }
 
-        public void ActivateForSite(string site)
+        public async Task ActivateForSite(string site)
         {
-            var webhookAddress = $"{documentIdActivatorConfiguration.WebhookAddress}?arguments={HttpUtility.UrlEncode(site)}";
-            var request = (HttpWebRequest)WebRequest.Create(webhookAddress);
-            request.Method = "POST";
-            var byteArray = Encoding.ASCII.GetBytes($"{documentIdActivatorConfiguration.WebhookUsername}:{documentIdActivatorConfiguration.WebhookPassword}");
-            request.Headers.Add("Authorization", "Basic " + Convert.ToBase64String(byteArray));
-            request.ContentLength = 0;
             try
             {
-                var response = (HttpWebResponse)request.GetResponse();
+                var webhookAddress = $"{documentIdActivatorConfiguration.WebhookAddress}?arguments={HttpUtility.UrlEncode(site)}";
+                var request = (HttpWebRequest)WebRequest.Create(webhookAddress);
+                request.Method = "POST";
+                var byteArray = Encoding.ASCII.GetBytes($"{documentIdActivatorConfiguration.WebhookUsername}:{documentIdActivatorConfiguration.WebhookPassword}");
+                request.Headers.Add("Authorization", "Basic " + Convert.ToBase64String(byteArray));
+                request.ContentLength = 0;
+
+                await request.GetResponseAsync();
             }
             catch (Exception e)
             {
                 throw e;
             }
         }
-
     }
-
 }

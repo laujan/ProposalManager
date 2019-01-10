@@ -32,7 +32,6 @@ namespace WebReact.Api
 		private readonly IOneDriveLinkService oneDriveLinkService;
 		private readonly IDynamicsLinkService dynamicsLinkService;
 		private readonly IOpportunityService opportunityService;
-        private readonly IDocumentIdService documentIdService;
 		private readonly IGraphClientAppContext graphClientAppContext;
 		private readonly IProposalManagerClientFactory proposalManagerClientFactory;
 		private readonly OneDriveConfiguration oneDriveConfiguration;
@@ -43,7 +42,6 @@ namespace WebReact.Api
 			ILogger<DocumentController> logger,
 			IOptions<AppOptions> appOptions,
 			IDocumentService documentService,
-            IDocumentIdService documentIdService,
 			IOpportunityService opportunityService,
 			IGraphClientAppContext graphClientAppContext,
 			IOneDriveLinkService oneDriveLinkService,
@@ -52,7 +50,6 @@ namespace WebReact.Api
 			IProposalManagerClientFactory proposalManagerClientFactory) : base(logger, appOptions)
 		{
 			this.oneDriveLinkService = oneDriveLinkService;
-            this.documentIdService = documentIdService;
 			this.graphClientAppContext = graphClientAppContext;
 			this.dynamicsLinkService = dynamicsLinkService;
 			this.opportunityService = opportunityService;
@@ -235,7 +232,7 @@ namespace WebReact.Api
                     _logger.LogInformation($"Locations detected for opportunity {opportunity.DisplayName}: {string.Join(", ", locations)}");
                     await dynamicsLinkService.CreateLocationsForOpportunityAsync(opportunity.Reference, opportunity.DisplayName, locations);
                 }
-                documentIdService.ActivateForSite($"https://{_appOptions.SharePointHostName}/sites/{opportunity.DisplayName.Replace(" ", string.Empty)}");
+
 				return Ok();
 			}
 			catch (Exception ex)
