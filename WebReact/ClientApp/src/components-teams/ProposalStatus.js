@@ -427,22 +427,7 @@ export class ProposalStatus extends Component {
         return (
             <div className='ms-List-itemCell' data-is-focusable='true'>
                 <div className='ms-List-itemContent'>
-                    {
-                        item.displayName.match(/\./g) === null ? <div className='ms-List-itemSections'>
-                            {item.displayName}
-                        </div> :
-                            item.displayName.match(/\./g).length === 1 ?
-                                <div className='ms-List-itemSections ms-padding-1'>
-                                    {item.displayName}
-                                </div> : item.displayName.match(/\./g).length === 2 ?
-                                    <div className='ms-List-itemSections ms-padding-2'>
-                                        {item.displayName}
-                                    </div> : item.displayName.match(/\./g).length === 3 ?
-                                        <div className='ms-List-itemSections ms-padding-3'>
-                                            {item.displayName}
-                                        </div> : ""
-
-                    }
+                    <div className='ms-List-itemSections'>{item.displayName}</div>
                     <div className='ms-List-itemOwner'>
                         <PeoplePickerTeamMembers teamMembers={this.state.peopleList} onChange={(e) => this.fnChangeOwnerNew(e, idx)} itemLimit='1' defaultSelectedUsers={[item.owner]} />
                     </div>

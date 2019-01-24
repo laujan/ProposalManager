@@ -38,7 +38,7 @@ namespace Infrastructure.OfficeApi
         /// </summary>
         /// <param name="fileStream">stream containing the docx file contents</param>
         /// <returns>List of DocumentSection objects</returns>
-        public async Task<IList<DocumentSection>> RetrieveTOCAsync(Stream fileStream, string requestId = "")
+        public IList<DocumentSection> RetrieveTOC(Stream fileStream, string requestId = "")
         {
             _logger.LogInformation($"RequestId: {requestId} - RetrieveTOC called.");
 
@@ -48,7 +48,7 @@ namespace Infrastructure.OfficeApi
                 using (PresentationDocument presentationDocument =
                     PresentationDocument.Open(fileStream, false))
                 {
-                    return await GetSlideTitlesAsync(presentationDocument);
+                    return GetSlideTitles(presentationDocument);
                 }
             }
             catch(Exception ex)
@@ -58,7 +58,7 @@ namespace Infrastructure.OfficeApi
             }
         }
         // Get a list of the titles of all the slides in the presentation.
-        private async Task<IList<DocumentSection>> GetSlideTitlesAsync(PresentationDocument presentationDocument)
+        private IList<DocumentSection> GetSlideTitles(PresentationDocument presentationDocument)
         {
             if (presentationDocument == null)
             {
@@ -89,7 +89,7 @@ namespace Infrastructure.OfficeApi
                         {
                             Id = currentSecId,
                             SubSectionId = slideId.Id,
-                            DisplayName = await GetSlideTitleAsync(slidePart),
+                            DisplayName = GetSlideTitle(slidePart),
                             LastModifiedDateTime = DateTimeOffset.MinValue,
                             Owner = new UserProfile
                             {
@@ -109,7 +109,7 @@ namespace Infrastructure.OfficeApi
             return null;
         }
         // Get the title string of the slide.
-        private async Task<string> GetSlideTitleAsync(SlidePart slidePart)
+        private string GetSlideTitle(SlidePart slidePart)
         {
             if (slidePart == null)
             {

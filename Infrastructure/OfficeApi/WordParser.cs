@@ -3,23 +3,20 @@
 //
 // Licensed under the MIT license. See LICENSE file in the solution root folder for full license information.
 
-using System;
-using System.Collections.Generic;
+using ApplicationCore;
+using ApplicationCore.Entities;
+using ApplicationCore.Helpers.Exceptions;
+using ApplicationCore.Interfaces;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
-using System.IO;
-using System.Linq;
-using ApplicationCore.Entities;
-using Newtonsoft.Json.Linq;
-using System.Xml.Linq;
-using ApplicationCore;
 using Infrastructure.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using ApplicationCore.Helpers.Exceptions;
-using System.Threading.Tasks;
-using ApplicationCore.Interfaces;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 
 namespace Infrastructure.OfficeApi
 {
@@ -34,110 +31,98 @@ namespace Infrastructure.OfficeApi
         /// </summary>
         /// <param name="fileStream">stream containing the docx file contents</param>
         /// <returns>List of DocumentSection objects</returns>
-        public Task<IList<DocumentSection>> RetrieveTOCAsync(Stream fileStream, string requestId = "")
+        public IList<DocumentSection> RetrieveTOC(Stream fileStream, string requestId = "")
         {
             _logger.LogInformation($"RequestId: {requestId} - RetrieveTOC called.");
 
+            const string TOCHEADING = "TOCHeading";
+            const string TOC = "Table of Contents";
             try
             {
-                List<DocumentSection> documentSections = new List<DocumentSection>();
-
-                XElement TOC = null;
+                var documentSections = new List<DocumentSection>();
 
                 using (var document = WordprocessingDocument.Open(fileStream, false))
                 {
-                    string currentSection1Id = String.Empty;
-                    string currentSection2Id = String.Empty;
-                    string currentSection3Id = String.Empty;
-
                     var docPart = document.MainDocumentPart;
                     var doc = docPart.Document;
 
                     OpenXmlElement block = doc.Descendants<DocPartGallery>().
                         Where(b => b.Val.HasValue &&
-                        (b.Val.Value == "Table of Contents")).FirstOrDefault();
+                        (b.Val.Value.Equals(TOC, StringComparison.InvariantCultureIgnoreCase))).FirstOrDefault();
 
-
-                    if (block != null)
+                    if (block == null)
                     {
-                        // Back up to the enclosing SdtBlock and return that XML.
-                        while ((block != null) && (!(block is SdtBlock)))
-                        {
-                            block = block.Parent;
-                        }
-                        TOC = new XElement("TOC", block.OuterXml);
+                        throw new InvalidOperationException("The document doesn't contain a Table of Contents.");
                     }
 
-
                     // Extract the Table of Contents section information and create the list
+                    DocumentSection parent = null;
                     foreach (var tocPart in document.MainDocumentPart.Document.Body.Descendants<SdtContentBlock>().First())
                     {
-                        // Locate each section and add them to the list
-                        if (tocPart.InnerXml.Contains("TOC1"))
-                        {
-                            currentSection1Id = Guid.NewGuid().ToString();
+                        var styles = tocPart.Descendants<ParagraphStyleId>();
 
-                            // Create a new DocumentSection object and add it to the list
-                            documentSections.Add(new DocumentSection
-                            {
-                                Id = currentSection1Id,
-                                SubSectionId = String.Empty,  // TOC1 has no parent
-                                DisplayName = tocPart.Descendants<Text>().ToArray()[0].InnerText,
-                                LastModifiedDateTime = DateTimeOffset.MinValue,
-                                Owner = new UserProfile
-                                {
-                                    Id = String.Empty,
-                                    DisplayName = String.Empty,
-                                    Fields = new UserProfileFields()
-                                },
-                                SectionStatus = ActionStatus.NotStarted
-                            });
-                        }
-                        else if (tocPart.InnerXml.Contains("TOC2"))
+                        if (styles.Count() == 0 || styles.First().Val.Value.Equals(TOCHEADING, StringComparison.InvariantCultureIgnoreCase))
                         {
-                            currentSection2Id = Guid.NewGuid().ToString();
-
-                            // Create a new DocumentSection object and add it to the list
-                            documentSections.Add(new DocumentSection
-                            {
-                                Id = currentSection2Id,
-                                SubSectionId = currentSection1Id,
-                                DisplayName = tocPart.Descendants<Text>().ToArray()[0].InnerText,
-                                LastModifiedDateTime = DateTimeOffset.MinValue,
-                                Owner = new UserProfile
-                                {
-                                    Id = String.Empty,
-                                    DisplayName = String.Empty,
-                                    Fields = new UserProfileFields()
-                                },
-                                SectionStatus = ActionStatus.NotStarted
-                            });
+                            continue;
                         }
-                        else if (tocPart.InnerXml.Contains("TOC3"))
+
+                        var tocStyle = styles.First().Val.Value;
+                        var level = int.Parse(tocStyle.Last().ToString());
+
+                        var section = new DocumentSection()
                         {
-                            currentSection3Id = Guid.NewGuid().ToString();
-
-                            // Create a new DocumentSection object and add it to the list
-                            documentSections.Add(new DocumentSection
+                            Id = Guid.NewGuid().ToString(),
+                            Level = level,
+                            LastModifiedDateTime = DateTimeOffset.MinValue,
+                            DisplayName = tocPart.Descendants<Text>().ToArray()[0].InnerText,
+                            Owner = new UserProfile
                             {
-                                Id = currentSection3Id,
-                                SubSectionId = currentSection2Id,
-                                DisplayName = tocPart.Descendants<Text>().ToArray()[0].InnerText,
-                                LastModifiedDateTime = DateTimeOffset.MinValue,
-                                Owner = new UserProfile
-                                {
-                                    Id = String.Empty,
-                                    DisplayName = String.Empty,
-                                    Fields = new UserProfileFields()
-                                },
-                                SectionStatus = ActionStatus.NotStarted
-                            });
+                                Id = string.Empty,
+                                DisplayName = string.Empty,
+                                Fields = new UserProfileFields()
+                            },
+                            SectionStatus = ActionStatus.NotStarted
+                        };
+
+                        if (level == 1)
+                        {
+                            section.SubSectionId = string.Empty;
                         }
+                        else if (level > parent.Level)
+                        {
+                            section.SubSectionId = parent.Id;
+                        }
+                        else if (level == parent.Level)
+                        {
+                            section.SubSectionId = parent.SubSectionId;
+                        }
+                        else // search for parent level
+                        {
+                            var copy = new DocumentSection[documentSections.Count];
+                            documentSections.CopyTo(copy);
+                            var reversed = copy.Reverse().ToArray();
+
+                            string parentId = null;
+
+                            for (int i = 0; i < reversed.Length; i++)
+                            {
+                                if (reversed[i].Level == level)
+                                {
+                                    parentId = reversed[i].SubSectionId;
+                                    break;
+                                }
+                            }
+
+                            section.SubSectionId = parentId;
+                        }
+
+                        documentSections.Add(section);
+                        parent = section;
                     }
                 }
 
                 // Return the list of DocumentSections
-                return Task.FromResult<IList<DocumentSection>>(documentSections);
+                return documentSections;
             }
             catch (Exception ex)
             {

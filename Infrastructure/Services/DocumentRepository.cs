@@ -3,27 +3,22 @@
 //
 // Licensed under the MIT license. See LICENSE file in the solution root folder for full license information
 
+using ApplicationCore;
+using ApplicationCore.Artifacts;
+using ApplicationCore.Entities;
+using ApplicationCore.Helpers;
+using ApplicationCore.Helpers.Exceptions;
+using ApplicationCore.Interfaces;
+using ApplicationCore.Services;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using ApplicationCore.Artifacts;
-using ApplicationCore.Interfaces;
-using ApplicationCore.Entities;
-using ApplicationCore.Services;
-using ApplicationCore;
-using ApplicationCore.Helpers;
-using ApplicationCore.Entities.GraphServices;
-using Newtonsoft.Json.Linq;
-using Newtonsoft.Json;
-using Infrastructure.OfficeApi;
-using Microsoft.AspNetCore.Http;
-using ApplicationCore.Helpers.Exceptions;
 using System.Linq;
-using DocumentFormat.OpenXml.Packaging;
+using System.Threading.Tasks;
 
 namespace Infrastructure.Services
 {
@@ -96,7 +91,7 @@ namespace Infrastructure.Services
                 if (docType == DocumentContext.ProposalTemplate.Name)
                 {
                     // If docType is proposal document template, try to extract sections before upload so if fails, upload is skipped
-                    sections = (await ExtractSectionsAsync(file.OpenReadStream(), file.FileName, requestId)).ToList();
+                    sections = (ExtractSections(file.OpenReadStream(), file.FileName, requestId)).ToList();
                     Guard.Against.Null(sections, "UploadDocumentTeamAsync_sections", requestId);
 
                     folder = "Formal Proposal";
@@ -295,7 +290,7 @@ namespace Infrastructure.Services
 
 
         // Private methods
-        private async Task<IList<DocumentSection>> ExtractSectionsAsync(Stream fileStream, string fileName, string requestId = "")
+        private IList<DocumentSection> ExtractSections(Stream fileStream, string fileName, string requestId = "")
         {
             _logger.LogInformation($"RequestId: {requestId} - GetItemByIdAsync called.");
 
@@ -303,11 +298,11 @@ namespace Infrastructure.Services
             {
                 if (fileName.Contains(".pptx"))
                 {
-                    return await _powerPointParser.RetrieveTOCAsync(fileStream);
+                    return _powerPointParser.RetrieveTOC(fileStream);
                 }
                 else
                 {
-                    return await _wordParser.RetrieveTOCAsync(fileStream);
+                    return _wordParser.RetrieveTOC(fileStream);
                 }
             }
             catch (Exception ex)

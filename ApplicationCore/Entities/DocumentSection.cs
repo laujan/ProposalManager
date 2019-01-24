@@ -6,8 +6,6 @@
 using ApplicationCore.Serialization;
 using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace ApplicationCore.Entities
 {
@@ -56,6 +54,12 @@ namespace ApplicationCore.Entities
         /// </summary>
         [JsonProperty("task", Order = 8)]
         public string Task { get; set; }
+
+        /// <summary>
+        /// The section level
+        /// </summary>
+        [JsonIgnore]
+        public int Level { get; set; }
 
         /// <summary>
         /// Represents the empty opportunity. This field is read-only.
