@@ -13,7 +13,9 @@
         [Parameter(Mandatory=$false)]
         [string[]]$ApplicationPermissions,
         [Parameter(Mandatory=$false)]
-        [string[]]$AdditionalPreAuthorizedAppIds
+        [string[]]$AdditionalPreAuthorizedAppIds,
+        [Parameter(Mandatory=$false)]
+        [string]$AddTo
     )
 
     if(!$RelativeReplyUrls)
@@ -164,6 +166,24 @@
     }"
 
     Invoke-RestMethod -Uri "$($uri)/$($result.id)" -Headers $authHeader -Body $addPreAuth -Method PATCH
+
+    if($AddTo)
+    {
+
+        $resultAddTo = Invoke-RestMethod -Uri "$($uri)/?filter=appId eq '$AddTo'" -Headers $authHeader
+
+        $authScope = $resultAddTo.value.api.oauth2PermissionScopes[0].id
+
+        $newPreAuthorized = $resultAddTo.value.api.preAuthorizedApplications + @{ appId = $appId; permissionIds = @(, $authScope)}
+                
+        $addPreAuth = "{
+        `"api`": { 
+                `"preAuthorizedApplications`": $($newPreAuthorized | ConvertTo-Json)
+            }
+        }"
+
+        Invoke-RestMethod -Uri "$($uri)/$($resultAddTo.value.id)" -Headers $authHeader -Body $addPreAuth -Method PATCH
+    }
 
     Disconnect-AzureAD
 

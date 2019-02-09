@@ -8,6 +8,10 @@
         "siteLocation": {
             "type": "string"
         },
+        "includeProposalManager": {
+            "type": "bool",
+            "defaultValue": "true"
+        },
         "includeProposalCreation": {
             "type": "bool",
             "defaultValue": "false"
@@ -17,10 +21,12 @@
             "defaultValue": "false"
         },
         "sqlServerAdminUsername": {
-            "type": "string"
+            "type": "string",
+            "defaultValue": "undefined"
         },
         "sqlServerAdminPassword": {
-            "type": "securestring"
+            "type": "securestring",
+            "defaultValue": "undefined"
         }
     },
     "variables": {
@@ -40,6 +46,7 @@
             "properties": {}
         },
         {
+            "condition": "[parameters('includeProposalManager')]",
             "dependsOn": ["[variables('appServicePlanId')]"],
             "type": "Microsoft.Web/sites",
             "apiVersion": "2018-02-01",

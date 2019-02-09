@@ -6,12 +6,14 @@
 
 **Important**: after installing any of the pre-requisites displayed above, you will need to exit powershell and re-launch it to make sure all the environment variables are correctly picked up by the shell.
 
+**Important**: when you run any of these scripts, a free-tiered app service plan will be created. If your subscription already hit the 10 free app service plans limit, either change subscriptions, delete a free app service plan or move it to a different pricing tier so the setup can be completed.
+
 # Installing Proposal Manager
 Proposal Manager can be easily installed using PowerShell. In this folder, a script called `Install-PMInstance.ps1` is included for your convenience.
 
 This script is intended to run in that folder, with the whole repo downloaded to your machine. Trying to download only the scripts and running them without the code **will not work**.
 
-Refer to this Automated Deployment Process [walk-through video](https://youtu.be/Pd62rhF6Cy0) for an overview of the process before you start. After this deployment process refer to [configure-proposalmanager video](https://youtu.be/WmOT6D2mQPs) to configure the system or see the Getting Started guide.
+Refer to this Automated Deployment Process [walk-through video](https://youtu.be/Pd62rhF6Cy0) for an overview of the process before you start. After this deployment process refer to [configure-proposalmanager video](https://youtu.be/WmOT6D2mQPs) to configure the system or see the Getting Started guide. Refer [this video](https://youtu.be/_Y_SAhd3sBc) for a comprehensive walk-through including add-ins.
 
 Before running the script, please execute the following:
 
@@ -30,7 +32,7 @@ AzureResourceLocation|The azure region in which you want the resources to be all
 AzureSubscription|The name (id also works) of the azure subscription you want the resource group to be deployed to.
 ApplicationName|The name of the application (for example, "proposalmanager").
 IncludeBot|FLAG; Include this parameter only if you also want the bot to be deployed by this script. Otherwise, don't include it.
-IncludeAddins|FLAG; Specify only if you want the addins (Proposal Creation & Project Smart Link) to be deployed alongside the application. **Important: if you include this parameter, a SQL database will be created for the Project Smart Link add-in. To avoid incurring in costs, this db will be deployed in the free tier. Azure only allows for a single free db to be provisioned in the same subscription for each region, so if you already have another free db in that region and subscription, either change the subscription, change the region, or delete the existing free database before running the script.** **Important: for the time being, addins cannot be installed on an existing installation of proposal manager; this might be supported in the future, but for now the workaround is to use the manual steps included in each of the add-ins' getting started guides.**
+IncludeAddins|FLAG; Specify only if you want the addins (Proposal Creation & Project Smart Link) to be deployed alongside the application. **Important: if you include this parameter, a SQL database will be created for the Project Smart Link add-in. To avoid incurring in costs, this db will be deployed in the free tier. Azure only allows for a single free db to be provisioned in the same subscription for each region, so if you already have another free db in that region and subscription, either change the subscription, change the region, or delete the existing free database before running the script.** **Important: to install addins on an existing Proposal Manager instance, please refer to the "Installing Add-Ins only" section.**
 SqlServerAdminUsername|If IncluddeAddins was specified, this is the sql server admin username for the project smart link sql server. This sql server is created by this script; it does not exist beforehand. Therefore, you don't need to look up the value for this parameter but rather invent it now and take note of what you input. If IncludeAddins was not specified, this parameter is ignored.
 SqlServerAdminPassword|If IncluddeAddins was specified, this is the sql server admin password for the project smart link sql server. This sql server is created by this script; it does not exist beforehand. Therefore, you don't need to look up the value for this parameter but rather invent it now and take note of what you input. If IncludeAddins was not specified, this parameter is ignored.
 BotAzureSubscription|OPTIONAL; The name or id of the Azure subscription to register the bot in; it has to belong to the tenant identified by the OfficeTenantName parameter; if not included, you have to register the bot by hand by following the getting started guide and provide the bot name when prompted so.
@@ -79,3 +81,41 @@ After deploying the app, the script will do 3 things to help you get started:
     4.7) Finally click on the OK button.
     
 Note: The automated setup will add the O365 Global Administrator as the owner and member of all the created groups. If required, please login into https://portal.office.com and remove the user to enhance security.
+
+# Installing Add-Ins only
+
+If you only want to install Proposal Creation or Project Smart Link to an existing instance of Proposal Manager, you can now do so using the additional scripts `Install-PMProposalCreationInstance` and `Install-PMProjectSmartLinkInstance`.
+
+**Important: when you install Project Smart Link, a SQL database will be created for the add-in. To avoid incurring in costs, this db will be deployed in the free tier. Azure only allows for a single free db to be provisioned in the same subscription for each region, so if you already have another free db in that region and subscription, either change the subscription, change the region, or delete the existing free database before running the script.**
+
+To run the `Install-PMProjectSmartLinkInstance`, you need to provide the following parameters:
+
+Parameter|Meaning
+---------|-------
+OfficeTenantName|The name of the office tenant. For example, if your mail domain is @contoso.onmicrosoft.com, then the name of the tenant is "contoso".
+AzureResourceLocation|The azure region in which you want the resources to be allocated (for example, "East US").
+AzureSubscription|The name (id also works) of the azure subscription you want the resource group to be deployed to.
+ApplicationName|The name of the application (for example, "proposalmanager").
+SqlServerAdminUsername|This is the sql server admin username for the project smart link sql server. This sql server is created by this script; it does not exist beforehand. Therefore, you don't need to look up the value for this parameter but rather invent it now and take note of what you input.
+SqlServerAdminPassword|This is the sql server admin password for the project smart link sql server. This sql server is created by this script; it does not exist beforehand. Therefore, you don't need to look up the value for this parameter but rather invent it now and take note of what you input.
+ProposalManagerAppId|The app id of the existing Proposal Manager Instance to attach this instance of Project Smart Link to.
+
+Here is an example of how to invoke the script:
+
+`.\Install-PMProjectSmartLinkInstance.ps1 -OfficeTenantName contoso -ApplicationName contosopm -ProposalManagerAppId '5ba0f5f3-66e0-4826-becb-02988ca3f911' -AzureResourceLocation "South Central US" -AzureSubscription "Pay-As-You-Go Dev/Test" -SqlServerAdminUsername 'contosoSa' -SqlServerAdminPassword 'tattoine'`
+
+To run the `Install-PMProposalCreationInstance`, you need to provide the following parameters:
+
+Parameter|Meaning
+---------|-------
+OfficeTenantName|The name of the office tenant. For example, if your mail domain is @contoso.onmicrosoft.com, then the name of the tenant is "contoso".
+AzureResourceLocation|The azure region in which you want the resources to be allocated (for example, "East US").
+AzureSubscription|The name (id also works) of the azure subscription you want the resource group to be deployed to.
+ApplicationName|The name of the application (for example, "proposalmanager").
+ProposalManagerDomain|The domain of the existing Proposal Manager instance (for example, propmgr-contoso5.azurewebsites.net)
+ProjectSmartLinkUrl|The url of an existing instance of Project Smart Link. This will enable opening Project Smart Link from the Proposal Creation section on the ribbon in Word.
+ProposalManagerAppId|The app id of the existing Proposal Manager Instance to attach this instance of Proposal Creation to.
+
+Here is an example of how to invoke the script:
+
+`.\Install-PMProposalCreationInstance.ps1 -OfficeTenantName contoso -ApplicationName contosopm -ProposalManagerAppId '5ba0f5f3-66e0-4826-becb-02988ca3f911' -AzureResourceLocation 'South Central US' -AzureSubscription 'Pay-As-You-Go Dev/Test'  -ProposalManagerDomain "contosopm.azurewebsites.net" -ProjectSmartLinkUrl "https://contosopm-projectsmartlink.azurewebsites.net"`

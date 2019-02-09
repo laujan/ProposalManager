@@ -115,6 +115,8 @@ function New-PMSite {
         [Parameter(Mandatory = $true)]
         [string]$Subscription,
         [Parameter(Mandatory = $false)]
+        [switch]$ExcludeProposalManager,
+        [Parameter(Mandatory = $false)]
         [switch]$IncludeProposalCreation,
         [Parameter(Mandatory = $false)]
         [switch]$IncludeProjectSmartLink,
@@ -144,18 +146,37 @@ function New-PMSite {
             }
         }
         New-AzureRmResourceGroup -Name $ApplicationName -Location $PMSiteLocation
-        New-AzureRmResourceGroupDeployment -ResourceGroupName $ApplicationName -TemplateFile .\ProposalManagerARMTemplate.json `
+
+        if($IncludeProjectSmartLink)
+        {
+            $sqlPassword = ($SqlServerAdminPassword | ConvertTo-SecureString -AsPlainText -Force)
+            New-AzureRmResourceGroupDeployment -ResourceGroupName $ApplicationName -TemplateFile .\ProposalManagerARMTemplate.json -includeProposalManager $(if($ExcludeProposalManager) {$false} else {$true})`
             -siteName $ApplicationName -siteLocation $PMSiteLocation -includeProposalCreation $(if($IncludeProposalCreation) {$true} else {$false}) `
-            -includeProjectSmartLink $(if($IncludeProjectSmartLink) {$true} else {$false}) -sqlServerAdminUsername $SqlServerAdminUsername -sqlServerAdminPassword ($SqlServerAdminPassword | ConvertTo-SecureString -AsPlainText -Force)
+            -includeProjectSmartLink $true -sqlServerAdminUsername $SqlServerAdminUsername -sqlServerAdminPassword $sqlPassword
+        }
+        else
+        {
+            New-AzureRmResourceGroupDeployment -ResourceGroupName $ApplicationName -TemplateFile .\ProposalManagerARMTemplate.json -includeProposalManager $(if($ExcludeProposalManager) {$false} else {$true})`
+            -siteName $ApplicationName -siteLocation $PMSiteLocation -includeProposalCreation $(if($IncludeProposalCreation) {$true} else {$false}) `
+            -includeProjectSmartLink $false
+        }
+
+        
         Write-Information "Resource group deployment succeeded"
         Write-Information "Retrieving deployment credentials..."
-        $xml = [xml](Get-AzureRmWebAppPublishingProfile -ResourceGroupName $ApplicationName -Name $ApplicationName -OutputFile .\settings.xml)
-        # Extract connection information from publishing profile
-        $username = [System.Linq.Enumerable]::Last($xml.SelectNodes("//publishProfile[@publishMethod=`"FTP`"]/@userName").value.Split('\'))
-        $password = $xml.SelectNodes("//publishProfile[@publishMethod=`"FTP`"]/@userPWD").value
-        $url = $xml.SelectNodes("//publishProfile[@publishMethod=`"FTP`"]/@publishUrl").value
+
+        $returnedInformation = @{}
+
+        if(!$ExcludeProposalManager)
+        {
+            $xml = [xml](Get-AzureRmWebAppPublishingProfile -ResourceGroupName $ApplicationName -Name $ApplicationName -OutputFile .\settings.xml)    
+            # Extract connection information from publishing profile
+            $username = [System.Linq.Enumerable]::Last($xml.SelectNodes("//publishProfile[@publishMethod=`"FTP`"]/@userName").value.Split('\'))
+            $password = $xml.SelectNodes("//publishProfile[@publishMethod=`"FTP`"]/@userPWD").value
+            $url = $xml.SelectNodes("//publishProfile[@publishMethod=`"FTP`"]/@publishUrl").value
+            $returnedInformation = @{ Username = $username; Password = $password; Url = $url }
+        }
         
-        $returnedInformation = @{ Username = $username; Password = $password; Url = $url }
         if($IncludeProposalCreation)
         {
             $pcxml = [xml](Get-AzureRmWebAppPublishingProfile -ResourceGroupName $ApplicationName -Name "$ApplicationName-propcreation" -OutputFile .\settings-propcreation.xml)

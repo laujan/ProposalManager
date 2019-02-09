@@ -43,6 +43,7 @@ namespace ProjectSmartLink.Web.Extensions
 				
 				options.TokenValidationParameters = new TokenValidationParameters
 				{
+                    ValidateAudience = false,
 					ValidateIssuer = false,
 					SaveSigninToken = true
 				};
