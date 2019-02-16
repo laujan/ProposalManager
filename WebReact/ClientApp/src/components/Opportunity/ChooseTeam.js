@@ -270,7 +270,7 @@ export class ChooseTeam extends Component {
     }
 
     handleFileUpload(file) {
-        this.setState({ selectorFiles: this.state.selectorFiles.concat([file]) });
+        this.setState({ selectorFiles: [file]});
     }
 
     onFinalizeTeam() {
@@ -499,18 +499,13 @@ export class ChooseTeam extends Component {
                                                 fileUri={this.state.oppData.proposalDocument !== null ? this.state.oppData.proposalDocument.documentUri : ""}
                                                 //Bug Fix, proposaldocument coming as null end
                                                 file={uploadedFile}
-                                                //Bug Fix, proposaldocument coming as null start
-                                                showBrowse={
-                                                    this.state.oppData.proposalDocument !== null ?
-                                                        this.state.oppData.proposalDocument.documentUri ? false : true : false
-                                                }
-                                                //Bug Fix, proposaldocument coming as null end
+                                                showBrowse='true'
                                                 showLabel='true'
                                                 onChange={(e) => this.handleFileUpload(e)}
                                                 //Bug Fix, proposaldocument coming as null start
                                                 btnCaption={this.state.oppData.proposalDocument !== null ?
                                                     this.state.oppData.proposalDocument.documentUri ? "Change File" : "" : ""}
-                                            //Bug Fix, proposaldocument coming as null end
+                                                //Bug Fix, proposaldocument coming as null end
                                             />
                                         </div>
                                         <div className='ms-Grid-col ms-sm12 ms-md6 ms-lg3 '>
@@ -521,13 +516,8 @@ export class ChooseTeam extends Component {
                                             }
 
 
-                                            <PrimaryButton className='pull-right' onClick={this.saveFile} disabled={
-                                                //Bug Fix, proposaldocument coming as null start
-                                                this.state.IsfileUpload ||
-                                                (this.state.oppData.proposalDocument !== null ?
-                                                    this.state.oppData.proposalDocument.documentUri ? true : false : false)
-                                                //Bug Fix, proposaldocument coming as null end
-                                            }
+                                            <PrimaryButton className='pull-right' onClick={this.saveFile}
+                                                disabled={ this.state.IsfileUpload }
                                             >
                                                 <Trans>save</Trans>
                                             </PrimaryButton >

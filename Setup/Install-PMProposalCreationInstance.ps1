@@ -135,6 +135,18 @@ New-Item -Path $proposalCreationManifestFilePath -Name $proposalCreationManifest
     Replace('<PROJECT_SMARTLINK_URL>', $ProjectSmartLinkUrl) `
     | Set-Content $proposalCreationManifestFullName
 
+$proposalCreationManifestTemplateFilePath = "..\Addins\ProposalCreation\Manifest\proposal-creation-powerpoint-manifest.xml"
+$proposalCreationManifestFileName = "$ApplicationName-proposal-creation-powerpoint-manifest.xml"
+$proposalCreationManifestFilePath = "..\Addins\ProposalCreation\Manifest\"
+$proposalCreationManifestFullName = "$proposalCreationManifestFilePath$proposalCreationManifestFileName"
+
+New-Item -Path $proposalCreationManifestFilePath -Name $proposalCreationManifestFileName -ItemType File
+(Get-Content $proposalCreationManifestTemplateFilePath).
+    Replace('<NEW_GUID>', (New-Guid)).
+    Replace('<PROPOSAL_CREATION_URL>', "$ApplicationName-propcreation.azurewebsites.net").
+    Replace('<PROJECT_SMARTLINK_URL>', "$ApplicationName-projectsmartlink.azurewebsites.net") `
+    | Set-Content $proposalCreationManifestFullName
+
 cd ..\Addins\ProposalCreation\UI
 
 $ErrorActionPreference = 'Inquire'

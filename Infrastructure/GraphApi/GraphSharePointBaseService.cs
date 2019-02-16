@@ -732,19 +732,27 @@ namespace Infrastructure.GraphApi
                 Guard.Against.NullOrEmpty(folder, nameof(folder), requestId);
                 Guard.Against.Null(file, nameof(file), requestId);
 
-                var requestUrl = $"{_appOptions.GraphRequestUrl}sites/{siteId}/drive/root:/{folder}/{file.FileName}:/content";
-
-                // Create the request message and add the content.
-                //HttpRequestMessage hrm = new HttpRequestMessage(HttpMethod.Put, requestUrl);
-
                 var path = $"{folder}/{file.FileName}";
 
-                var resp = await GraphClient.Sites[siteId].Drive.Root.ItemWithPath(path).Content.Request().PutAsync<DriveItem>(file.OpenReadStream());
+                // Check whether document exists, is so then make a copy of the existing one.
+                var response = await GraphClient.Sites[siteId].Drive.Root.Children[folder].Children.Request().Filter($"name eq '{file.FileName}'").GetAsync();
 
-                var responseJObject = JObject.FromObject(resp);
+                if (response.Count > 0)
+                {
+                    var newName = $"{Path.GetFileNameWithoutExtension(file.FileName)}-{DateTime.Now.Ticks}{Path.GetExtension(file.FileName)}";
+                    var copyResponse = await GraphClient.Sites[siteId].Drive.Root.ItemWithPath(path).Copy(newName).Request().PostAsync();
 
-                _logger.LogInformation($"RequestId: {requestId} - UploadFileAsync end.");
-                return responseJObject;
+                    _logger.LogInformation($"RequestId: {requestId} - UploadFileAsync old file created {newName}.");
+                }
+
+                using (var fileStream = file.OpenReadStream())
+                {
+                    var resp = await GraphClient.Sites[siteId].Drive.Root.ItemWithPath(path).Content.Request().PutAsync<DriveItem>(fileStream);
+                    var responseJObject = JObject.FromObject(resp);
+
+                    _logger.LogInformation($"RequestId: {requestId} - UploadFileAsync end.");
+                    return responseJObject;
+                }
             }
             catch (Exception ex)
             {

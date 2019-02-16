@@ -5,6 +5,7 @@
 
 using ApplicationCore;
 using ApplicationCore.Interfaces;
+using ApplicationCore.Interfaces.SmartLink;
 using ApplicationCore.Models;
 using ApplicationCore.ViewModels;
 using Infrastructure.Services;
@@ -301,12 +302,7 @@ namespace WebReact.Api
 		private JToken GetAttribute(Dictionary<JToken, JToken> input, string memberName)
 		{
 			input.TryGetValue(memberName, out var value);
-            try
-            {
-                value = value["Value"];
-            }
-            catch { }
-			return  value;
+			return value;
 		}
 	}
 }
