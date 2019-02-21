@@ -735,14 +735,20 @@ namespace Infrastructure.GraphApi
                 var path = $"{folder}/{file.FileName}";
 
                 // Check whether document exists, is so then make a copy of the existing one.
-                var response = await GraphClient.Sites[siteId].Drive.Root.Children[folder].Children.Request().Filter($"name eq '{file.FileName}'").GetAsync();
-
-                if (response.Count > 0)
+                try
                 {
-                    var newName = $"{Path.GetFileNameWithoutExtension(file.FileName)}-{DateTime.Now.Ticks}{Path.GetExtension(file.FileName)}";
-                    var copyResponse = await GraphClient.Sites[siteId].Drive.Root.ItemWithPath(path).Copy(newName).Request().PostAsync();
+                    var existingFile = await GraphClient.Sites[siteId].Drive.Root.ItemWithPath(path).Request().GetAsync();
 
-                    _logger.LogInformation($"RequestId: {requestId} - UploadFileAsync old file created {newName}.");
+                    if (existingFile != null)
+                    {
+                        var newName = $"{Path.GetFileNameWithoutExtension(file.FileName)}-{DateTime.Now.Ticks}{Path.GetExtension(file.FileName)}";
+                        await GraphClient.Sites[siteId].Drive.Root.ItemWithPath(path).Copy(newName).Request().PostAsync();
+                        _logger.LogInformation($"RequestId: {requestId} - UploadFileAsync old file created {newName}.");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogInformation($"RequestId: {requestId} - UploadFileAsync failed to create backup of file {file.FileName}: {ex.Message}.");
                 }
 
                 using (var fileStream = file.OpenReadStream())
