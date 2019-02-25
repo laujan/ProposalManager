@@ -264,7 +264,7 @@ if($IncludeAddins)
 
     $proposalCreationManifestTemplateFilePath = "..\Addins\ProposalCreation\Manifest\proposal-creation-manifest.xml"
     $proposalCreationManifestFileName = "$ApplicationName-proposal-creation-manifest.xml"
-    $proposalCreationManifestFilePath = "..\Addins\ProposalCreation\Manifest\"
+    $proposalCreationManifestFilePath = ".\"
     $proposalCreationManifestFullName = "$proposalCreationManifestFilePath$proposalCreationManifestFileName"
 
     (Get-Content $proposalCreationClientConfigFilePath).
@@ -280,7 +280,7 @@ if($IncludeAddins)
 
     $proposalCreationManifestTemplateFilePath = "..\Addins\ProposalCreation\Manifest\proposal-creation-powerpoint-manifest.xml"
     $proposalCreationManifestFileName = "$ApplicationName-proposal-creation-powerpoint-manifest.xml"
-    $proposalCreationManifestFilePath = "..\Addins\ProposalCreation\Manifest\"
+    $proposalCreationManifestFilePath = ".\"
     $proposalCreationManifestFullName = "$proposalCreationManifestFilePath$proposalCreationManifestFileName"
 
     New-Item -Path $proposalCreationManifestFilePath -Name $proposalCreationManifestFileName -ItemType File
@@ -330,7 +330,7 @@ if($IncludeAddins)
     
     $projectSmartLinkManifestTemplateFilePath = "..\Addins\ProjectSmartLink\ProjectSmartLinkExcel\ProjectSmartLinkExcelManifest\ProjectSmartLinkExcel.xml"
     $projectSmartLinkManifestFileName = "$ApplicationName-project-smart-link-excel-manifest.xml"
-    $projectSmartLinkManifestFilePath = "..\Addins\ProjectSmartLink\"
+    $projectSmartLinkManifestFilePath = ".\"
     $projectSmartLinkManifestFullName = "$projectSmartLinkManifestFilePath$projectSmartLinkManifestFileName"
     
     New-Item -Path $projectSmartLinkManifestFilePath -Name $projectSmartLinkManifestFileName -ItemType File
@@ -341,7 +341,7 @@ if($IncludeAddins)
 
     $projectSmartLinkManifestTemplateFilePath = "..\Addins\ProjectSmartLink\ProjectSmartLinkPowerPoint\ProjectSmartLinkPowerPointManifest\ProjectSmartLinkPowerPoint.xml"
     $projectSmartLinkManifestFileName = "$ApplicationName-project-smart-link-powerpoint-manifest.xml"
-    $projectSmartLinkManifestFilePath = "..\Addins\ProjectSmartLink\"
+    $projectSmartLinkManifestFilePath = ".\"
     $projectSmartLinkManifestFullName = "$projectSmartLinkManifestFilePath$projectSmartLinkManifestFileName"
     
     New-Item -Path $projectSmartLinkManifestFilePath -Name $projectSmartLinkManifestFileName -ItemType File

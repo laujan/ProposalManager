@@ -119,7 +119,7 @@ UpdateAppSettings -pathToJson ..\Addins\ProjectSmartLink\ProjectSmartLink.Web\ap
     
 $projectSmartLinkManifestTemplateFilePath = "..\Addins\ProjectSmartLink\ProjectSmartLinkExcel\ProjectSmartLinkExcelManifest\ProjectSmartLinkExcel.xml"
 $projectSmartLinkManifestFileName = "$ApplicationName-project-smart-link-excel-manifest.xml"
-$projectSmartLinkManifestFilePath = "..\Addins\ProjectSmartLink\"
+$projectSmartLinkManifestFilePath = ".\"
 $projectSmartLinkManifestFullName = "$projectSmartLinkManifestFilePath$projectSmartLinkManifestFileName"
     
 New-Item -Path $projectSmartLinkManifestFilePath -Name $projectSmartLinkManifestFileName -ItemType File
@@ -130,7 +130,7 @@ New-Item -Path $projectSmartLinkManifestFilePath -Name $projectSmartLinkManifest
 
 $projectSmartLinkManifestTemplateFilePath = "..\Addins\ProjectSmartLink\ProjectSmartLinkPowerPoint\ProjectSmartLinkPowerPointManifest\ProjectSmartLinkPowerPoint.xml"
 $projectSmartLinkManifestFileName = "$ApplicationName-project-smart-link-powerpoint-manifest.xml"
-$projectSmartLinkManifestFilePath = "..\Addins\ProjectSmartLink\"
+$projectSmartLinkManifestFilePath = ".\"
 $projectSmartLinkManifestFullName = "$projectSmartLinkManifestFilePath$projectSmartLinkManifestFileName"
     
 New-Item -Path $projectSmartLinkManifestFilePath -Name $projectSmartLinkManifestFileName -ItemType File

@@ -116,7 +116,7 @@ $proposalCreationClientConfigFilePath = "..\Addins\ProposalCreation\UI\src\confi
 
 $proposalCreationManifestTemplateFilePath = "..\Addins\ProposalCreation\Manifest\proposal-creation-manifest.xml"
 $proposalCreationManifestFileName = "$ApplicationName-proposal-creation-manifest.xml"
-$proposalCreationManifestFilePath = "..\Addins\ProposalCreation\Manifest\"
+$proposalCreationManifestFilePath = ".\"
 $proposalCreationManifestFullName = "$proposalCreationManifestFilePath$proposalCreationManifestFileName"
 
 (Get-Content $proposalCreationClientConfigFilePath).
@@ -137,7 +137,7 @@ New-Item -Path $proposalCreationManifestFilePath -Name $proposalCreationManifest
 
 $proposalCreationManifestTemplateFilePath = "..\Addins\ProposalCreation\Manifest\proposal-creation-powerpoint-manifest.xml"
 $proposalCreationManifestFileName = "$ApplicationName-proposal-creation-powerpoint-manifest.xml"
-$proposalCreationManifestFilePath = "..\Addins\ProposalCreation\Manifest\"
+$proposalCreationManifestFilePath = ".\"
 $proposalCreationManifestFullName = "$proposalCreationManifestFilePath$proposalCreationManifestFileName"
 
 New-Item -Path $proposalCreationManifestFilePath -Name $proposalCreationManifestFileName -ItemType File

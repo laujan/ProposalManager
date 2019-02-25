@@ -73,11 +73,11 @@ After deploying the app, the script will do 3 things to help you get started:
     5. Click on the Upload button
     6. Choose the manifest files of the add-ins:
        1. Proposal Creation:
-          1. Addins\ProposalCreation\Manifest\$ApplicationName-proposal-creation-manifest.xml
-          2. Addins\ProposalCreation\Manifest\$ApplicationName-proposal-creation-powerpoint-manifest.xml
+          1. Setup\$ApplicationName-proposal-creation-manifest.xml
+          2. Setup\$ApplicationName-proposal-creation-powerpoint-manifest.xml
        2. Project Smart Link:
-          1. Addins\ProjectSmartLink\$ApplicationName-project-smart-link-powerpoint-manifest.xml
-          2. Addins\ProjectSmartLink\$ApplicationName-project-smart-link-excel-manifest.xml
+          1. Setup\$ApplicationName-project-smart-link-powerpoint-manifest.xml
+          2. Setup\$ApplicationName-project-smart-link-excel-manifest.xml
     7. Finally click on the OK button.
     
 Note: The automated setup will add the O365 Global Administrator as the owner and member of all the created groups. If required, please login into https://portal.office.com and remove the user to enhance security.
