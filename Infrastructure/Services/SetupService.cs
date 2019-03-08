@@ -3,30 +3,21 @@
 //
 // Licensed under the MIT license. See LICENSE file in the solution root folder for full license information
 
+using ApplicationCore;
+using ApplicationCore.Entities;
+using ApplicationCore.Entities.GraphServices;
+using ApplicationCore.Helpers;
+using ApplicationCore.Interfaces;
+using Infrastructure.Helpers;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using ApplicationCore.ViewModels;
-using ApplicationCore.Interfaces;
-using ApplicationCore;
-using ApplicationCore.Artifacts;
-using Infrastructure.Services;
-using ApplicationCore.Helpers;
-using ApplicationCore.Models;
-using ApplicationCore.Entities;
-using Newtonsoft.Json.Linq;
-using Newtonsoft.Json;
-using Infrastructure.Authorization;
-using ApplicationCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using Infrastructure.Helpers;
-using ApplicationCore.Entities.GraphServices;
 using System.Net;
+using System.Threading.Tasks;
 using System.Xml;
-using System.Xml.Linq;
 
 namespace Infrastructure.Services
 {
@@ -35,7 +26,6 @@ namespace Infrastructure.Services
         private readonly GraphSharePointAppService _graphSharePointAppService;
         private readonly IWritableOptions<AppOptions> _writableOptions;
         private readonly IWritableOptions<DocumentIdActivatorConfiguration> documentIdActivatorConfigurationWritableOptions;
-        //protected readonly SharePointListsSchemaHelper _sharePointListsSchemaHelper;
         private readonly GraphTeamsAppService _graphTeamsAppService;
         private readonly GraphUserAppService _graphUserAppService;
         private readonly IUserContext _userContext;
@@ -62,12 +52,10 @@ namespace Infrastructure.Services
             _graphSharePointAppService = graphSharePointAppService;
             _writableOptions = writableOptions;
             this.documentIdActivatorConfigurationWritableOptions = documentIdActivatorConfigurationWritableOptions;
-            //_sharePointListsSchemaHelper = sharePointListsSchemaHelper;
             _graphTeamsAppService = graphTeamsAppService;
             _graphUserAppService = graphUserAppService;
             _userContext = userContext;
             _azureKeyVaultService = azureKeyVaultService;
-
         }
 
         public async Task<StatusCodes> UpdateAppOpptionsAsync(string key, string value, string requestId = "")
@@ -180,14 +168,13 @@ namespace Infrastructure.Services
                         dynamic itemJson = new JObject();
                         itemJson.fields = itemFieldsJson;
 
-                        var result = await _graphSharePointAppService.CreateListItemAsync(siteList, itemJson.ToString());
+                        await _graphSharePointAppService.CreateListItemAsync(siteList, itemJson.ToString());
                     }
                     catch (Exception ex)
                     {
                         _logger.LogWarning($"RequestId: {requestId} - SetupService_CreateSitePermissionsAsync warning: {ex}");
                     }
                 }
-
             }
             catch (Exception ex)
             {
@@ -220,7 +207,7 @@ namespace Infrastructure.Services
                         dynamic itemJson = new JObject();
                         itemJson.fields = itemFieldsJson;
 
-                        var result = await _graphSharePointAppService.CreateListItemAsync(siteList, itemJson.ToString());
+                        await _graphSharePointAppService.CreateListItemAsync(siteList, itemJson.ToString());
                     }
                     catch (Exception ex)
                     {
@@ -260,7 +247,7 @@ namespace Infrastructure.Services
                         dynamic itemJson = new JObject();
                         itemJson.fields = itemFieldsJson;
 
-                        var result = await _graphSharePointAppService.CreateListItemAsync(siteList, itemJson.ToString());
+                        await _graphSharePointAppService.CreateListItemAsync(siteList, itemJson.ToString());
                     }
                     catch (Exception ex)
                     {
@@ -301,7 +288,7 @@ namespace Infrastructure.Services
                 dynamic itemJson = new JObject();
                 itemJson.fields = itemFieldsJson;
 
-                var result = await _graphSharePointAppService.CreateListItemAsync(siteList, itemJson.ToString());
+                await _graphSharePointAppService.CreateListItemAsync(siteList, itemJson.ToString());
             }
             catch (Exception ex)
             {
@@ -386,35 +373,12 @@ namespace Infrastructure.Services
 
             try
             {
-                await _graphTeamsAppService.CreateTeamAsync(name, name + "team");
-                //get groupID
-                bool check = true;
-                dynamic jsonDyn = null;
-                var opportunityName = WebUtility.UrlEncode(name);
-                var options = new List<QueryParam>();
-                options.Add(new QueryParam("filter", $"startswith(displayName,'{opportunityName}')"));
-                while (check)
-                {
-                    var groupIdJson = await _graphUserAppService.GetGroupAsync(options, "", requestId);
-                    jsonDyn = groupIdJson;
-                    JArray jsonArray = JArray.Parse(jsonDyn["value"].ToString());
-                    if (jsonArray.Count() > 0)
-                    {
-                        if (!String.IsNullOrEmpty(jsonDyn.value[0].id.ToString()))
-                            check = false;
-                    }
-                }
-                var groupID = String.Empty;
-                groupID = jsonDyn.value[0].id.ToString();
-
-                //get user Id
-                string objectId = _userContext.User.FindFirst(AzureAdConstants.ObjectIdClaimType).Value;
-                await _graphUserAppService.AddGroupMemberAsync(objectId, groupID, requestId);
+                var response = await _graphTeamsAppService.CreateTeamAsync(name, name + "team");
+                var groupID = response["id"].ToString();
 
                 //Create channels
                 await _graphTeamsAppService.CreateChannelAsync(groupID, "Configuration", "Configuration Channel");
                 await _graphTeamsAppService.CreateChannelAsync(groupID, "Administration", "Administration Channel");
-
             }
             catch (Exception ex)
             {
@@ -430,29 +394,6 @@ namespace Infrastructure.Services
             try
             {
                 await _graphTeamsAppService.CreateGroupAsync(name, name + " Group");
-                //get groupID
-                bool check = true;
-                dynamic jsonDyn = null;
-                var groupName = WebUtility.UrlEncode(name);
-                var options = new List<QueryParam>();
-                options.Add(new QueryParam("filter", $"startswith(displayName,'{groupName}')"));
-                while (check)
-                {
-                    var groupIdJson = await _graphUserAppService.GetGroupAsync(options, "", requestId);
-                    jsonDyn = groupIdJson;
-                    JArray jsonArray = JArray.Parse(jsonDyn["value"].ToString());
-                    if (jsonArray.Count() > 0)
-                    {
-                        if (!String.IsNullOrEmpty(jsonDyn.value[0].id.ToString()))
-                            check = false;
-                    }
-                }
-                var groupID = String.Empty;
-                groupID = jsonDyn.value[0].id.ToString();
-
-                //get user Id
-                string objectId = _userContext.User.FindFirst(AzureAdConstants.ObjectIdClaimType).Value;
-                await _graphUserAppService.AddGroupMemberAsync(objectId, groupID, requestId);
             }
             catch (Exception ex)
             {

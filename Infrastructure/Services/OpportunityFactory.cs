@@ -3,35 +3,27 @@
 //
 // Licensed under the MIT license. See LICENSE file in the solution root folder for full license information
 
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
-using System.Net;
+using ApplicationCore;
+using ApplicationCore.Artifacts;
+using ApplicationCore.Authorization;
+using ApplicationCore.Entities;
+using ApplicationCore.Helpers;
+using ApplicationCore.Helpers.Exceptions;
+using ApplicationCore.Interfaces;
+using ApplicationCore.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using ApplicationCore.Artifacts;
-using ApplicationCore.Interfaces;
-using ApplicationCore.Entities;
-using ApplicationCore.Services;
-using ApplicationCore.Authorization;
-using ApplicationCore;
-using ApplicationCore.Helpers;
-using ApplicationCore.Entities.GraphServices;
 using Newtonsoft.Json.Linq;
-using Newtonsoft.Json;
-using Infrastructure.GraphApi;
-using ApplicationCore.Helpers.Exceptions;
-using Microsoft.Graph;
+using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text.RegularExpressions;
-using Infrastructure.DealTypeServices;
-using ApplicationCore.Models;
-using Infrastructure.Authorization;
+using System.Threading.Tasks;
 
 namespace Infrastructure.Services
 {
-	public class OpportunityFactory : BaseArtifactFactory<Opportunity>, IOpportunityFactory
+    public class OpportunityFactory : BaseArtifactFactory<Opportunity>, IOpportunityFactory
 	{
 		private readonly GraphSharePointAppService _graphSharePointAppService;
 		private readonly GraphUserAppService _graphUserAppService;
@@ -117,29 +109,24 @@ namespace Infrastructure.Services
         }
 
         public async Task<Opportunity> CreateWorkflowAsync(Opportunity opportunity, string requestId = "")
-		{
-			try
-			{
-				// Set initial opportunity state
-				opportunity.Metadata.OpportunityState = OpportunityState.Creating;
+        {
+            try
+            {
+                // Set initial opportunity state
+                opportunity.Metadata.OpportunityState = OpportunityState.Creating;
 
-				// Remove empty sections from proposal document
-				var porposalSectionList = new List<DocumentSection>();
-				foreach (var item in opportunity.Content.ProposalDocument.Content.ProposalSectionList)
-				{
-					if (!String.IsNullOrEmpty(item.DisplayName))
-					{
-						porposalSectionList.Add(item);
-					}
-				}
-				opportunity.Content.ProposalDocument.Content.ProposalSectionList = porposalSectionList;
-
+                // Remove empty sections from proposal document
+                opportunity.Content.ProposalDocument.Content.ProposalSectionList = opportunity.Content.ProposalDocument.Content.ProposalSectionList.Where(x => !string.IsNullOrWhiteSpace(x.DisplayName)).ToList();
 
                 // Delete empty ChecklistItems
-                opportunity.Content.Checklists = await RemoveEmptyFromChecklistAsync(opportunity.Content.Checklists, requestId);
+                opportunity.Content.Checklists = opportunity.Content.Checklists.Where(x => x.ChecklistTaskList.Any(y => !string.IsNullOrWhiteSpace(y.Id) && !string.IsNullOrWhiteSpace(y.ChecklistItem))).ToList();
 
                 //Granular Access : Start
                 _logger.LogError($"RequestId: {requestId} - Opportunityfactory_UpdateItemAsync CheckAccess CreateItemAsync");
+
+                // QUESTION:
+                // When an opportunity is created the DealType.ProcessList is always null, then why do we have the IF below, this is done in the UpdateWorkflowAsync
+
                 if (opportunity.Content.DealType.ProcessList != null)
                 {
                     //create team and channels
@@ -188,94 +175,83 @@ namespace Infrastructure.Services
                     }
                 }
 
-
                 // Update note created by (if one) and set it to relationship manager
-                if (opportunity.Content.Notes != null)
-				{
-					if (opportunity.Content.Notes?.Count > 0)
-					{
-						var currentUser = (_userContext.User.Claims).ToList().Find(x => x.Type == "preferred_username")?.Value;
-						var callerUser = await _userProfileRepository.GetItemByUpnAsync(currentUser, requestId);
-
-						if (callerUser != null)
-						{
-							opportunity.Content.Notes[0].CreatedBy = callerUser;
-							opportunity.Content.Notes[0].CreatedDateTime = DateTimeOffset.Now;
-
-						}
-						else
-						{
-							_logger.LogWarning($"RequestId: {requestId} - CreateWorkflowAsync can't find {currentUser} to set note created by");
-						}
-					}
-				}
-
-                // Send notification
-                // Define Sent To user profile
-                var loanOfficer = opportunity.Content.TeamMembers.ToList().Find(x => x.AssignedRole.DisplayName == "LoanOfficer");             
-
-                if (loanOfficer != null)
+                if (opportunity.Content.Notes?.Count > 0)
                 {
-                    try
+                    var currentUser = (_userContext.User.Claims).ToList().Find(x => x.Type == "preferred_username")?.Value;
+                    var callerUser = await _userProfileRepository.GetItemByUpnAsync(currentUser, requestId);
+
+                    if (callerUser != null)
                     {
-                        _logger.LogInformation($"RequestId: {requestId} - CreateWorkflowAsync sendNotificationCardAsync new opportunity notification.");
-                        var sendAccount = UserProfile.Empty;
-                        sendAccount.Id = loanOfficer.Id;
-                        sendAccount.DisplayName = loanOfficer.DisplayName;
-                        sendAccount.Fields.UserPrincipalName = loanOfficer.Fields.UserPrincipalName;
-                        var sendNotificationCard = await _cardNotificationService.sendNotificationCardAsync(opportunity, sendAccount, $"New opportunity {opportunity.DisplayName} has been assigned to ", requestId);
+                        opportunity.Content.Notes[0].CreatedBy = callerUser;
+                        opportunity.Content.Notes[0].CreatedDateTime = DateTimeOffset.Now;
                     }
-                    catch (Exception ex)
+                    else
                     {
-                        _logger.LogError($"RequestId: {requestId} - CreateWorkflowAsync sendNotificationCardAsync Action error: {ex}");
+                        _logger.LogWarning($"RequestId: {requestId} - CreateWorkflowAsync can't find {currentUser} to set note created by");
                     }
                 }
 
                 //Adding RelationShipManager and LoanOfficer into ProposalManager Team
-                foreach (var item in opportunity.Content.TeamMembers)
+                dynamic jsonDyn = null;
+                foreach (var item in opportunity.Content.TeamMembers.Where(item => item.AssignedRole.DisplayName.Equals("LoanOfficer", StringComparison.OrdinalIgnoreCase)
+                            || item.AssignedRole.DisplayName.Equals("RelationshipManager", StringComparison.OrdinalIgnoreCase)))
                 {
                     try
                     {
-                        if (item.AssignedRole.DisplayName == "LoanOfficer" || item.AssignedRole.DisplayName == "RelationshipManager")
+                        if (jsonDyn == null)
                         {
-                            dynamic jsonDyn = null;
-                            var options = new List<QueryParam>();
-                            options.Add(new QueryParam("filter", $"startswith(displayName,'"+_appOptions.GeneralProposalManagementTeam+"')"));
-                            var groupIdJson = await _graphUserAppService.GetGroupAsync(options, "", requestId);
-                            jsonDyn = groupIdJson;
-                            if (!String.IsNullOrEmpty(jsonDyn.value[0].id.ToString()))
+                            var options = new List<QueryParam>() { new QueryParam("filter", $"startswith(displayName,'{_appOptions.GeneralProposalManagementTeam}')") };
+                            jsonDyn = await _graphUserAppService.GetGroupAsync(options, "", requestId);
+                        }
+
+                        if (!string.IsNullOrEmpty(jsonDyn.value[0].id.ToString()) && !string.IsNullOrEmpty(item.Fields.UserPrincipalName))
+                        {
+                            try
                             {
                                 var groupID = jsonDyn.value[0].id.ToString();
-                                if (!String.IsNullOrEmpty(item.Fields.UserPrincipalName))
-                                {
-                                    try
-                                    {
-                                        Guard.Against.NullOrEmpty(item.Id, $"OpportunityFactorty_{item.AssignedRole.DisplayName} Id NullOrEmpty", requestId);
-                                        var responseJson = await _graphUserAppService.AddGroupMemberAsync(item.Id, groupID, requestId);
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        _logger.LogError($"RequestId: {requestId} - userId: {item.Id} - OpportunityFactorty_AddGroupMemberAsync_{item.AssignedRole.DisplayName} error in CreateWorkflowAsync: {ex}");
-                                    }
-                                }
-
+                                Guard.Against.NullOrEmpty(item.Id, $"OpportunityFactorty_{item.AssignedRole.DisplayName} Id NullOrEmpty", requestId);
+                                await _graphUserAppService.AddGroupMemberAsync(item.Id, groupID, requestId);
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogError($"RequestId: {requestId} - userId: {item.Id} - OpportunityFactorty_AddGroupMemberAsync_{item.AssignedRole.DisplayName} error in CreateWorkflowAsync: {ex}");
                             }
                         }
                     }
-                    catch(Exception ex)
+                    catch (Exception ex)
                     {
                         _logger.LogError($"RequestId: {requestId} - userId: {item.Id} - OpportunityFactorty_AddGroupMemberAsync_{item.AssignedRole.DisplayName} error in CreateWorkflowAsync: {ex}");
                     }
+
+                    // Send notification
+                    // Define Sent To user profile
+                    if (item.AssignedRole.DisplayName.Equals("LoanOfficer", StringComparison.OrdinalIgnoreCase))
+                    {
+                        try
+                        {
+                            _logger.LogInformation($"RequestId: {requestId} - CreateWorkflowAsync sendNotificationCardAsync new opportunity notification.");
+                            var sendAccount = UserProfile.Empty;
+                            sendAccount.Id = item.Id;
+                            sendAccount.DisplayName = item.DisplayName;
+                            sendAccount.Fields.UserPrincipalName = item.Fields.UserPrincipalName;
+                            await _cardNotificationService.sendNotificationCardAsync(opportunity, sendAccount, $"New opportunity {opportunity.DisplayName} has been assigned to ", requestId);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError($"RequestId: {requestId} - CreateWorkflowAsync sendNotificationCardAsync Action error: {ex}");
+                        }
+                    }
                 }
-                //Adding RelationShipManager and LoanOfficer into ProposalManager Team
+
                 return opportunity;
-			}
-			catch (Exception ex)
-			{
-				_logger.LogError($"RequestId: {requestId} - CreateWorkflowAsync Service Exception: {ex}");
-				throw new ResponseException($"RequestId: {requestId} - CreateWorkflowAsync Service Exception: {ex}");
-			}
-		}
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"RequestId: {requestId} - CreateWorkflowAsync Service Exception: {ex}");
+                throw new ResponseException($"RequestId: {requestId} - CreateWorkflowAsync Service Exception: {ex}");
+            }
+        }
 
         public async Task<Opportunity> UpdateWorkflowAsync(Opportunity opportunity, string requestId = "")
 		{
@@ -296,12 +272,47 @@ namespace Infrastructure.Services
                         opportunity.Metadata.OpportunityChannelId = generalChannelId;
                     }
                 }
+                else if (opportunity.Metadata.OpportunityState == OpportunityState.Creating)
+                {
+                    // QUESTION: why are we trying to add the RelationshipManager when he was already added in the CreateWorkflowAsync? Also this shouldn't
+                    // be run on every update, only when the opportunity is being created and the LO is assigned (or updated)
+                    // ONLY add LoanOfficer
+                    //Adding RelationShipManager and LoanOfficer into ProposalManager Team
+
+                    var loanOfficer = opportunity.Content.TeamMembers.FirstOrDefault(item => item.AssignedRole.DisplayName.Equals("LoanOfficer", StringComparison.OrdinalIgnoreCase));
+
+                    if (loanOfficer != null)
+                    {
+                        try
+                        {
+                            var options = new List<QueryParam>() { new QueryParam("filter", $"startswith(displayName,'{_appOptions.GeneralProposalManagementTeam}')") };
+                            dynamic jsonDyn = await _graphUserAppService.GetGroupAsync(options, "", requestId);
+
+                            if (!string.IsNullOrEmpty(jsonDyn.value[0].id.ToString()) && !string.IsNullOrEmpty(loanOfficer.Fields.UserPrincipalName))
+                            {
+                                try
+                                {
+                                    var groupID = jsonDyn.value[0].id.ToString();
+                                    Guard.Against.NullOrEmpty(loanOfficer.Id, $"OpportunityFactorty_{loanOfficer.AssignedRole.DisplayName} Id NullOrEmpty", requestId);
+                                    await _graphUserAppService.AddGroupMemberAsync(loanOfficer.Id, groupID, requestId);
+                                }
+                                catch (Exception ex)
+                                {
+                                    _logger.LogError($"RequestId: {requestId} - userId: {loanOfficer.Id} - OpportunityFactorty_AddGroupMemberAsync_{loanOfficer.AssignedRole.DisplayName} error in CreateWorkflowAsync: {ex}");
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError($"RequestId: {requestId} - userId: {loanOfficer.Id} - OpportunityFactorty_AddGroupMemberAsync_{loanOfficer.AssignedRole.DisplayName} error in CreateWorkflowAsync: {ex}");
+                        }
+                    }
+                }
 
                 bool checklistPass = false;
 
                 if (opportunity.Metadata.OpportunityState != OpportunityState.Creating)
                 {
-
                     try
                     {
                         opportunity = await MoveTempFileToTeamAsync(opportunity, requestId);
@@ -313,10 +324,9 @@ namespace Infrastructure.Services
 
                     if (opportunity.Content.DealType.ProcessList != null)
                     {
-
                         foreach (var item in opportunity.Content.DealType.ProcessList)
                         {
-                            if (item.ProcessType.ToLower() == "checklisttab" && checklistPass == false)
+                            if (item.ProcessType.Equals("checklisttab", StringComparison.OrdinalIgnoreCase) && checklistPass == false)
                             {
                                 //DashBoard Create call Start.
                                 await UpdateDashBoardEntryAsync(opportunity, requestId);
@@ -324,28 +334,24 @@ namespace Infrastructure.Services
                                 opportunity = await _checkListProcessService.UpdateWorkflowAsync(opportunity, requestId);
                                 checklistPass = true;
                             }
-                            else if (item.ProcessType.ToLower() == "customerdecisiontab")
+                            else if (item.ProcessType.Equals("customerdecisiontab", StringComparison.OrdinalIgnoreCase))
                             {
                                 opportunity = await _customerDecisionProcessService.UpdateWorkflowAsync(opportunity, requestId);
                             }
-                            else if (item.ProcessType.ToLower() == "proposalstatustab")
+                            else if (item.ProcessType.Equals("proposalstatustab", StringComparison.OrdinalIgnoreCase))
                             {
                                 opportunity = await _proposalStatusProcessService.UpdateWorkflowAsync(opportunity, requestId);
                             }
-                            else if (item.ProcessStep.ToLower() == "start process")
+                            else if (item.ProcessStep.Equals("start process", StringComparison.OrdinalIgnoreCase))
                             {
                                 opportunity = await _startProcessService.UpdateWorkflowAsync(opportunity, requestId);
                             }
-                            else if (item.ProcessStep.ToLower() == "new opportunity")
+                            else if (item.ProcessStep.Equals("new opportunity", StringComparison.OrdinalIgnoreCase))
                             {
                                 opportunity = await _newOpportunityProcessService.UpdateWorkflowAsync(opportunity, requestId);
                             }
                         }
                     }
-
-
-                    var roleMappings = (await _roleMappingRepository.GetAllAsync(requestId)).ToList();
-
                 }
 
                 // Send notification
@@ -355,52 +361,13 @@ namespace Infrastructure.Services
                     try
                     {
                         _logger.LogInformation($"RequestId: {requestId} - CreateWorkflowAsync sendNotificationCardAsync opportunity state change notification.");
-                        var sendTo = UserProfile.Empty;
-                        var sendNotificationCard = await _cardNotificationService.sendNotificationCardAsync(opportunity, sendTo, $"Opportunity state for {opportunity.DisplayName} has been changed to {opportunity.Metadata.OpportunityState.Name}", requestId);
+                        await _cardNotificationService.sendNotificationCardAsync(opportunity, UserProfile.Empty, $"Opportunity state for {opportunity.DisplayName} has been changed to {opportunity.Metadata.OpportunityState.Name}", requestId);
                     }
                     catch (Exception ex)
                     {
                         _logger.LogError($"RequestId: {requestId} - CreateWorkflowAsync sendNotificationCardAsync OpportunityState error: {ex}");
                     }
                 }
-
-                //Adding RelationShipManager and LoanOfficer into ProposalManager Team
-                foreach (var item in opportunity.Content.TeamMembers)
-                {
-                    try
-                    {
-                        if (item.AssignedRole.DisplayName == "LoanOfficer" || item.AssignedRole.DisplayName == "RelationshipManager")
-                        {
-                            dynamic jsonDyn = null;
-                            var options = new List<QueryParam>();
-                            options.Add(new QueryParam("filter", $"startswith(displayName,'Proposal Manager Team')"));
-                            var groupIdJson = await _graphUserAppService.GetGroupAsync(options, "", requestId);
-                            jsonDyn = groupIdJson;
-                            if (!String.IsNullOrEmpty(jsonDyn.value[0].id.ToString()))
-                            {
-                                var groupID = jsonDyn.value[0].id.ToString();
-                                if (!String.IsNullOrEmpty(item.Fields.UserPrincipalName))
-                                {
-                                    try
-                                    {
-                                        Guard.Against.NullOrEmpty(item.Id, $"OpportunityFactorty_{item.AssignedRole.DisplayName} Id NullOrEmpty", requestId);
-                                        var responseJson = await _graphUserAppService.AddGroupMemberAsync(item.Id, groupID, requestId);
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        _logger.LogError($"RequestId: {requestId} - userId: {item.Id} - OpportunityFactorty_AddGroupMemberAsync_{item.AssignedRole.DisplayName} error in CreateWorkflowAsync: {ex}");
-                                    }
-                                }
-
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError($"RequestId: {requestId} - userId: {item.Id} - OpportunityFactorty_AddGroupMemberAsync_{item.AssignedRole.DisplayName} error in CreateWorkflowAsync: {ex}");
-                    }
-                }
-                //Adding RelationShipManager and LoanOfficer into ProposalManager Team
 
                 return opportunity;
 			}
@@ -411,22 +378,13 @@ namespace Infrastructure.Services
 			}
 		}
 
-        
-
         // Workflow Actions
         public async Task<Opportunity> MoveTempFileToTeamAsync(Opportunity opportunity, string requestId = "")
 		{
 			try
 			{
-
-				// Find entries that need to be moved
-				var moveFiles = false;
-				foreach(var itm in opportunity.DocumentAttachments)
-				{
-					if (itm.DocumentUri == "TempFolder") moveFiles = true;
-				}
-
-				if (moveFiles)
+                // Find entries that need to be moved
+				if (opportunity.DocumentAttachments.Any(x => x.DocumentUri.Equals("TempFolder", StringComparison.OrdinalIgnoreCase)))
 				{
 					var fromSiteId = _appOptions.ProposalManagementRootSiteId;
 					var toSiteId = String.Empty;
@@ -438,20 +396,18 @@ namespace Infrastructure.Services
 
 					Regex regEx = new Regex(pattern);
 					var path = regEx.Replace(opportunity.DisplayName, replacement);
-					//var path = WebUtility.UrlEncode(opportunity.DisplayName);
-					//var path = opportunity.DisplayName.Replace(" ", "");
 
 					var siteIdResponse = await _graphSharePointAppService.GetSiteIdAsync(_appOptions.SharePointHostName, path, requestId);
 					dynamic responseDyn = siteIdResponse;
 					toSiteId = responseDyn.id.ToString();
 
-					if (!String.IsNullOrEmpty(toSiteId))
+					if (!string.IsNullOrEmpty(toSiteId))
 					{
 						var updatedDocumentAttachments = new List<DocumentAttachment>();
 						foreach (var itm in opportunity.DocumentAttachments)
 						{
 							var updDoc = DocumentAttachment.Empty;
-							if (itm.DocumentUri == "TempFolder")
+							if (itm.DocumentUri.Equals("TempFolder", StringComparison.OrdinalIgnoreCase))
 							{
 								fromItemPath = $"TempFolder/{opportunity.DisplayName}/{itm.FileName}";
 								toItemPath = $"General/{itm.FileName}";
@@ -462,7 +418,6 @@ namespace Infrastructure.Services
 									resp = await _graphSharePointAppService.MoveFileAsync(fromSiteId, fromItemPath, toSiteId, toItemPath, requestId);
 									updDoc.Id = new Guid().ToString();
 									updDoc.DocumentUri = String.Empty;
-									//doc.Id = resp.id;
 								}
 								catch (Exception ex)
 								{
@@ -483,8 +438,7 @@ namespace Infrastructure.Services
 						opportunity.DocumentAttachments = updatedDocumentAttachments;
 
 						// Delete temp files
-						var result = await _graphSharePointAppService.DeleteFileOrFolderAsync(_appOptions.ProposalManagementRootSiteId, $"TempFolder/{opportunity.DisplayName}", requestId);
-
+						await _graphSharePointAppService.DeleteFileOrFolderAsync(_appOptions.ProposalManagementRootSiteId, $"TempFolder/{opportunity.DisplayName}", requestId);
 					}
 				}
 
@@ -509,7 +463,6 @@ namespace Infrastructure.Services
 					newChecklist.ChecklistChannel = item.ChecklistChannel;
 					newChecklist.ChecklistStatus = item.ChecklistStatus;
 					newChecklist.Id = item.Id;
-
 					
 					foreach (var sItem in item.ChecklistTaskList)
 					{
@@ -626,7 +579,7 @@ namespace Infrastructure.Services
                         }
                     }
 
-                    var result = await _dashboardService.UpdateOpportunityAsync(dashboardmodel, requestId);
+                    await _dashboardService.UpdateOpportunityAsync(dashboardmodel, requestId);
                 }
             }
             catch (Exception ex)
@@ -644,57 +597,23 @@ namespace Infrastructure.Services
                 //create team
                 var responce = await _graphTeamsAppService.CreateTeamAsync(opportunity.DisplayName, requestId);
                 
-                //get Group ID
-                bool check = true;
-                dynamic jsonDyn = null;
-                var opportunityName = WebUtility.UrlEncode(opportunity.DisplayName);
-                var options = new List<QueryParam>();
-                options.Add(new QueryParam("filter", $"startswith(displayName,'{opportunityName}')"));
-                while (check)
-                {
-                    var groupIdJson = await _graphUserAppService.GetGroupAsync(options, "", requestId);
-                    jsonDyn = groupIdJson;
-                    JArray jsonArray = JArray.Parse(jsonDyn["value"].ToString());
-                    if (jsonArray.Count() > 0)
-                    {
-                        if (!String.IsNullOrEmpty(jsonDyn.value[0].id.ToString()))
-                            check = false;
-                    }
-
-                }
-                var groupID = String.Empty;
-                groupID = jsonDyn.value[0].id.ToString();
-
+                var groupID = responce["id"].ToString();
 
                 //Get general channel id
-                var generalChannel = await _graphTeamsAppService.ListChannelAsync(groupID);
-                dynamic generalChannelObj = generalChannel;
+                dynamic generalChannelObj  = await _graphTeamsAppService.ListChannelAsync(groupID);
                 string generalChannelId = generalChannelObj.value[0].id.ToString();
 
-                foreach (var process in opportunity.Content.DealType.ProcessList)
+                foreach (var process in opportunity.Content.DealType.ProcessList.Where(x => !x.Channel.Equals("none", StringComparison.OrdinalIgnoreCase)))
                 {
-                    if (process.Channel.ToLower() != "none")
-                       await _graphTeamsAppService.CreateChannelAsync(groupID, process.Channel, process.Channel + " Channel");
+                    await _graphTeamsAppService.CreateChannelAsync(groupID, process.Channel, process.Channel + " Channel");
                 }
 
-                //adding app is currently not supported this code is there so that we can add the app to the team once
-                //graph api supports usercontext for this functionality
                 try
                 {
                     //Vault is no longer using so we will comment out this in the near future
                     Guard.Against.NullOrEmpty(await _azureKeyVaultService.GetValueFromVaultAsync(VaultKeys.Upn), "CreateWorkflowAsync_Admin_Ups Null or empty", requestId);
                     var responseJson = await _graphUserAppService.AddGroupOwnerAsync(await _azureKeyVaultService.GetValueFromVaultAsync(VaultKeys.Upn), groupID);
                     var response = await _graphUserAppService.AddGroupMemberAsync(await _azureKeyVaultService.GetValueFromVaultAsync(VaultKeys.Upn), groupID);
-                }
-                catch(Exception ex)
-                {
-                    _logger.LogError($"RequestId: {requestId} - CreateTeamAndChannels_AddAppToTeamAsync Service Exception: {ex}");
-                }
-
-                //adding addin to the app
-                try
-                {
-                    await _graphTeamsOnBehalfService.AddAppToTeamAsync(groupID);
                 }
                 catch(Exception ex)
                 {
@@ -731,20 +650,18 @@ namespace Infrastructure.Services
 
         private async Task<bool> GroupIdCheckAsync(string displayName, string requestId = "")
         {
-            bool check = true;
-            dynamic jsonDyn = null;
             var opportunityName = WebUtility.UrlEncode(displayName);
-            var options = new List<QueryParam>();
-            options.Add(new QueryParam("filter", $"startswith(displayName,'{opportunityName}')"));
-            var groupIdJson = await _graphUserAppService.GetGroupAsync(options, "", requestId);
-            jsonDyn = groupIdJson;
+            var options = new List<QueryParam>() { new QueryParam("filter", $"startswith(displayName,'{opportunityName}')")};
+
+            dynamic jsonDyn = await _graphUserAppService.GetGroupAsync(options, "", requestId);
+
             JArray jsonArray = JArray.Parse(jsonDyn["value"].ToString());
             if (jsonArray.Count() > 0)
             {
-                if (!String.IsNullOrEmpty(jsonDyn.value[0].id.ToString()))
-                    check = false;
+                if (!string.IsNullOrEmpty(jsonDyn.value[0].id.ToString()))
+                    return false;
             }
-            return check;
+            return true;
         } 
 	}
 }

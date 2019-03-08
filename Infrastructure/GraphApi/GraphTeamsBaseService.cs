@@ -3,22 +3,21 @@
 //
 // Licensed under the MIT license. See LICENSE file in the solution root folder for full license information.
 
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Net.Http;
+using ApplicationCore;
+using ApplicationCore.Helpers;
+using ApplicationCore.Interfaces;
+using Infrastructure.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Graph;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Infrastructure.Services;
-using ApplicationCore;
-using ApplicationCore.Interfaces;
-using ApplicationCore.Entities.GraphServices;
-using ApplicationCore.Helpers;
+using System;
+using System.Collections.Generic;
+using System.Net.Http;
+using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace Infrastructure.GraphApi
 {
@@ -57,36 +56,41 @@ namespace Infrastructure.GraphApi
                 Guard.Against.Null(displayName, nameof(displayName));
 
                 // Create JSON object with group settings
-                var groupTypesObject = new List<string>();
-                groupTypesObject.Add("Unified");
+                var groupTypesObject = new List<string> { "Unified" };
 
                 //get owner
                 string objectId = _userContext.User.FindFirst(AzureAdConstants.ObjectIdClaimType).Value;
-                string owner = ",\"owners@odata.bind\": [\"https://graph.microsoft.com/v1.0/Users/"+ objectId + "\"]";
-                //remove unsupported charachters
+                var userId = $"https://graph.microsoft.com/v1.0/Users/{objectId}";
+
                 Regex rx = new Regex(@"[^a-zA-Z0-9-.\/s]");
-                string mailNickname = rx.Replace(displayName,"");
+                string mailNickname = rx.Replace(displayName, "");
 
-                dynamic groupSettingsObject = new JObject();
-                groupSettingsObject.description = description;
-                groupSettingsObject.displayName = displayName;
-                groupSettingsObject.groupTypes = JToken.FromObject(groupTypesObject);
-                groupSettingsObject.mailEnabled = true;
-                groupSettingsObject.mailNickname = mailNickname;
-                groupSettingsObject.securityEnabled = false;                
-                var completeGroupSettingsObject = groupSettingsObject.ToString().Replace("}","") + owner + "}";
-                var requestUrl = _appOptions.GraphBetaRequestUrl + "groups";
+                var groupSettings = new GroupSettings()
+                {
+                    Description = description,
+                    DisplayName = displayName,
+                    GroupTypes = new[] { "Unified" },
+                    MailEnabled = true,
+                    MailNickname = mailNickname,
+                    Members = new[] { userId },
+                    Owners = new[] { userId },
+                    SecurityEnabled = false
+                };
+
+                var payload = JsonConvert.SerializeObject(groupSettings);
+                
+                var requestUrl = _appOptions.GraphRequestUrl + "groups";
                 // Create the request message and add the content.
-                HttpRequestMessage hrm = new HttpRequestMessage(HttpMethod.Post, requestUrl);
-                hrm.Content = new StringContent(completeGroupSettingsObject, Encoding.UTF8, "application/json");
-
-                var response = new HttpResponseMessage();
+                HttpRequestMessage hrm = new HttpRequestMessage(HttpMethod.Post, requestUrl)
+                {
+                    Content = new StringContent(payload, Encoding.UTF8, "application/json")
+                };
 
                 // Authenticate (add access token) our HttpRequestMessage
                 await GraphClient.AuthenticationProvider.AuthenticateRequestAsync(hrm);
 
                 // Send the request and get the response.
-                response = await GraphClient.HttpProvider.SendAsync(hrm);
+                var response = await GraphClient.HttpProvider.SendAsync(hrm);
 
                 // Get the status response and throw if is not 201.
                 if (response.StatusCode != System.Net.HttpStatusCode.Created)
@@ -97,7 +101,7 @@ namespace Infrastructure.GraphApi
                 else
                 {
                     var content = await response.Content.ReadAsStringAsync();
-                    JObject responseJObject = JObject.Parse(await response.Content.ReadAsStringAsync());
+                    JObject responseJObject = JObject.Parse(content);
 
                     _logger.LogInformation("CreateGroupAsync end.");
                     return responseJObject;
@@ -147,13 +151,11 @@ namespace Infrastructure.GraphApi
                 // Create the request message and add the content.
                 HttpRequestMessage hrm = new HttpRequestMessage(HttpMethod.Get, requestUrl);
 
-                var response = new HttpResponseMessage();
-
                 // Authenticate (add access token) our HttpRequestMessage
                 await GraphClient.AuthenticationProvider.AuthenticateRequestAsync(hrm);
 
                 // Send the request and get the response.
-                response = await GraphClient.HttpProvider.SendAsync(hrm);
+                var response = await GraphClient.HttpProvider.SendAsync(hrm);
 
                 // Get the status response and throw if is not 201.
                 if (response.StatusCode != System.Net.HttpStatusCode.Created)
@@ -164,7 +166,7 @@ namespace Infrastructure.GraphApi
                 else
                 {
                     var content = await response.Content.ReadAsStringAsync();
-                    JObject responseJObject = JObject.Parse(await response.Content.ReadAsStringAsync());
+                    JObject responseJObject = JObject.Parse(content);
 
                     _logger.LogInformation("ListGroupsAsync end.");
                     return responseJObject;
@@ -220,19 +222,19 @@ namespace Infrastructure.GraphApi
                 teamSettingsObject.messagingSettings = messagingSettingsObject;
                 teamSettingsObject.funSettings = funSettingsObject;
 
-                var requestUrl = _appOptions.GraphBetaRequestUrl + "/groups/" + groupId + "/team";
+                var requestUrl = _appOptions.GraphRequestUrl + "groups/" + groupId + "/team";
 
                 // Create the request message and add the content.
-                HttpRequestMessage hrm = new HttpRequestMessage(HttpMethod.Put, requestUrl);
-                hrm.Content = new StringContent(teamSettingsObject.ToString(), Encoding.UTF8, "application/json");
-
-                var response = new HttpResponseMessage();
+                HttpRequestMessage hrm = new HttpRequestMessage(HttpMethod.Put, requestUrl)
+                {
+                    Content = new StringContent(teamSettingsObject.ToString(), Encoding.UTF8, "application/json")
+                };
 
                 // Authenticate (add access token) our HttpRequestMessage
                 await GraphClient.AuthenticationProvider.AuthenticateRequestAsync(hrm);
 
                 // Send the request and get the response.
-                response = await GraphClient.HttpProvider.SendAsync(hrm);
+                var response = await GraphClient.HttpProvider.SendAsync(hrm);
 
                 // Get the status response and throw if is not 201.
                 if (response.StatusCode != System.Net.HttpStatusCode.Created)
@@ -243,7 +245,7 @@ namespace Infrastructure.GraphApi
                 else
                 {                
                     var content = await response.Content.ReadAsStringAsync();
-                    JObject responseJObject = JObject.Parse(await response.Content.ReadAsStringAsync());
+                    JObject responseJObject = JObject.Parse(content);
                     _logger.LogInformation("CreateTeamAsync end.");
                     return responseJObject;
                 }
@@ -270,26 +272,23 @@ namespace Infrastructure.GraphApi
 
         public async Task<JObject> GetTeamAsync(string groupId)
         {
-            // GET: https://graph.microsoft.com/beta/groups/{group-id-for-teams}/team
-            // EXAMPLE: https://graph.microsoft.com/beta/groups/4c60d18d-d796-4b51-976c-ea67c6ceb9c2/team
+            // GET: https://graph.microsoft.com/v1.0/teams/{group-id-for-teams}
 
             _logger.LogInformation("GetTeamAsync called.");
             try
             {
                 Guard.Against.Null(groupId, nameof(groupId));
 
-                var requestUrl = _appOptions.GraphBetaRequestUrl + "/groups/" + groupId + "/team";
+                var requestUrl = _appOptions.GraphRequestUrl + "teams/" + groupId;
 
                 // Create the request message and add the content.
                 HttpRequestMessage hrm = new HttpRequestMessage(HttpMethod.Get, requestUrl);
-
-                var response = new HttpResponseMessage();
 
                 // Authenticate (add access token) our HttpRequestMessage
                 await GraphClient.AuthenticationProvider.AuthenticateRequestAsync(hrm);
 
                 // Send the request and get the response.
-                response = await GraphClient.HttpProvider.SendAsync(hrm);
+                var response = await GraphClient.HttpProvider.SendAsync(hrm);
 
                 // Get the status response and throw if is not 200.
                 if (response.StatusCode != System.Net.HttpStatusCode.OK)
@@ -300,7 +299,7 @@ namespace Infrastructure.GraphApi
                 else
                 {
                     var content = await response.Content.ReadAsStringAsync();
-                    JObject responseJObject = JObject.Parse(await response.Content.ReadAsStringAsync());
+                    JObject responseJObject = JObject.Parse(content);
 
                     _logger.LogInformation("GetTeamAsync end.");
                     return responseJObject;
@@ -327,8 +326,7 @@ namespace Infrastructure.GraphApi
 
         public async Task<JObject> UpdateTeamAsync(string groupId)
         {
-            // PATCH: https://graph.microsoft.com/beta/groups/{group-id-for-teams}/team
-            // EXAMPLE: https://graph.microsoft.com/beta/groups/4c60d18d-d796-4b51-976c-ea67c6ceb9c2/team
+            // PATCH: https://graph.microsoft.com/v1.0/teams/{group-id-for-teams}
 
             _logger.LogInformation("UpdateTeamAsync called.");
             try
@@ -352,20 +350,18 @@ namespace Infrastructure.GraphApi
                 teamSettingsObject.messagingSettings = messagingSettingsObject;
                 teamSettingsObject.funSettings = funSettingsObject;
 
-                var requestUrl = _appOptions.GraphBetaRequestUrl + "/groups/" + groupId + "/team";
+                var requestUrl = _appOptions.GraphRequestUrl + "teams/" + groupId;
                 var method = new HttpMethod("PATCH");
 
                 // Create the request message and add the content.
                 HttpRequestMessage hrm = new HttpRequestMessage(method, requestUrl);
                 hrm.Content = new StringContent(teamSettingsObject.ToString(), Encoding.UTF8, "application/json");
 
-                var response = new HttpResponseMessage();
-
                 // Authenticate (add access token) our HttpRequestMessage
                 await GraphClient.AuthenticationProvider.AuthenticateRequestAsync(hrm);
 
                 // Send the request and get the response.
-                response = await GraphClient.HttpProvider.SendAsync(hrm);
+                var response = await GraphClient.HttpProvider.SendAsync(hrm);
 
                 // Get the status response and throw if is not 204.
                 if (response.StatusCode != System.Net.HttpStatusCode.NoContent)
@@ -376,7 +372,7 @@ namespace Infrastructure.GraphApi
                 else
                 {
                     var content = await response.Content.ReadAsStringAsync();
-                    JObject responseJObject = JObject.Parse(await response.Content.ReadAsStringAsync());
+                    JObject responseJObject = JObject.Parse(content);
 
                     _logger.LogInformation("UpdateTeamAsync end.");
                     return responseJObject;
@@ -403,8 +399,7 @@ namespace Infrastructure.GraphApi
 
         public async Task<JObject> CreateChannelAsync(string groupId, string displayName, string description = "")
         {
-            // POST: https://graph.microsoft.com/beta/groups/{group-id-for-teams}/channels
-            // EXAMPLE: https://graph.microsoft.com/beta/groups/69a940ef-b226-4ef2-9657-d27fab2f7cf9/team
+            // POST: https://graph.microsoft.com/1.0/teams/{group-id-for-teams}/channels
 
             _logger.LogInformation("CreateChannelAsync called.");
             try
@@ -417,19 +412,16 @@ namespace Infrastructure.GraphApi
                 channelSettingsObject.displayName = displayName;
                 channelSettingsObject.description = description;
 
-                var requestUrl = _appOptions.GraphBetaRequestUrl + "/groups/" + groupId + "/channels";
+                var requestUrl = _appOptions.GraphRequestUrl + "teams/" + groupId + "/channels";
 
                 // Create the request message and add the content.
-                HttpRequestMessage hrm = new HttpRequestMessage(HttpMethod.Post, requestUrl);
-                hrm.Content = new StringContent(channelSettingsObject.ToString(), Encoding.UTF8, "application/json");
-
-                var response = new HttpResponseMessage();
+                HttpRequestMessage hrm = new HttpRequestMessage(HttpMethod.Post, requestUrl) { Content = new StringContent(channelSettingsObject.ToString(), Encoding.UTF8, "application/json") };
 
                 // Authenticate (add access token) our HttpRequestMessage
                 await GraphClient.AuthenticationProvider.AuthenticateRequestAsync(hrm);
 
                 // Send the request and get the response.
-                response = await GraphClient.HttpProvider.SendAsync(hrm);
+                var response = await GraphClient.HttpProvider.SendAsync(hrm);
 
                 // Get the status response and throw if is not 201.
                 if (response.StatusCode != System.Net.HttpStatusCode.Created)
@@ -440,9 +432,10 @@ namespace Infrastructure.GraphApi
                 else
                 {
                     var content = await response.Content.ReadAsStringAsync();
-                    JObject responseJObject = JObject.Parse(await response.Content.ReadAsStringAsync());
+                    JObject responseJObject = JObject.Parse(content);
 
                     _logger.LogInformation("CreateChannelAsync end.");
+
                     return responseJObject;
                 }
             }
@@ -464,89 +457,26 @@ namespace Infrastructure.GraphApi
                 }
             }
         }
-        public async Task<JObject> AddAppToTeamAsync(string groupId)
-        {
-            // POST: https://graph.microsoft.com/beta/teams/{group-id-for-teams}/apps
-            // EXAMPLE: https://graph.microsoft.com/beta/teams/69a940ef-b226-4ef2-9657-d27fab2f7cf9/apps
 
-            _logger.LogInformation("AddAppToTeamAsync called.");
-            try
-            {
-                Guard.Against.Null(groupId, nameof(groupId));
-
-                // Create JSON object to with team settings
-                dynamic appId = new JObject();
-                appId.id = _appOptions.TeamsAppInstanceId;
-
-                var requestUrl = _appOptions.GraphBetaRequestUrl + "/teams/" + groupId + "/apps";
-
-                // Create the request message and add the content.
-                HttpRequestMessage hrm = new HttpRequestMessage(HttpMethod.Post, requestUrl);
-                hrm.Content = new StringContent(appId.ToString(), Encoding.UTF8, "application/json");
-
-                var response = new HttpResponseMessage();
-
-                // Authenticate (add access token) our HttpRequestMessage
-                await GraphClient.AuthenticationProvider.AuthenticateRequestAsync(hrm);
-
-                // Send the request and get the response.
-                response = await GraphClient.HttpProvider.SendAsync(hrm);
-
-                // Get the status response and throw if is not 201.
-                if (response.StatusCode != System.Net.HttpStatusCode.Created)
-                {
-                    _logger.LogError("CreateChannelAsync error status code: " + response.StatusCode);
-                    throw new ServiceException(new Error { Code = ErrorConstants.Codes.InvalidRequest, Message = response.StatusCode.ToString() });
-                }
-                else
-                {
-                    var content = await response.Content.ReadAsStringAsync();
-                    JObject responseJObject = JObject.Parse(await response.Content.ReadAsStringAsync());
-
-                    _logger.LogInformation("AddAppToTeamAsync end.");
-                    return responseJObject;
-                }
-            }
-            catch (ServiceException ex)
-            {
-                _logger.LogError("AddAppToTeamAsync Service Exception: " + ex.Message);
-                switch (ex.Error.Code)
-                {
-                    case "Request_ResourceNotFound":
-                    case "ResourceNotFound":
-                    case "ErrorItemNotFound":
-                    case "itemNotFound":
-                        throw;
-                    case "TokenNotFound":
-                        //await HttpContext.ChallengeAsync();
-                        throw;
-                    default:
-                        throw;
-                }
-            }
-        }
         public async Task<string> GetAppIdAsync(string groupId)
         {
-            // POST: https://graph.microsoft.com/beta/teams/{group-id-for-teams}/apps
-            // EXAMPLE: https://graph.microsoft.com/beta/teams/69a940ef-b226-4ef2-9657-d27fab2f7cf9/apps
+            // GET: https://graph.microsoft.com/v1.0/teams/{group-id-for-teams}/installedApps?$expand=teamsAppDefinition
 
             _logger.LogInformation("GetJObjectAsync called.");
             try
             {
                 Guard.Against.Null(groupId, nameof(groupId));
 
-                var requestUrl = _appOptions.GraphBetaRequestUrl + "/teams/" + groupId + "/apps";
+                var requestUrl = _appOptions.GraphRequestUrl + "teams/" + groupId + "/installedApps?$expand=teamsAppDefinition";
 
                 // Create the request message and add the content.
                 HttpRequestMessage hrm = new HttpRequestMessage(HttpMethod.Get, requestUrl);
-
-                var response = new HttpResponseMessage();
 
                 // Authenticate (add access token) our HttpRequestMessage
                 await GraphClient.AuthenticationProvider.AuthenticateRequestAsync(hrm);
 
                 // Send the request and get the response.
-                response = await GraphClient.HttpProvider.SendAsync(hrm);
+                var response = await GraphClient.HttpProvider.SendAsync(hrm);
 
                 // Get the status response and throw if is not 201.
                 if (response.StatusCode != System.Net.HttpStatusCode.Created)
@@ -557,7 +487,7 @@ namespace Infrastructure.GraphApi
                 else
                 {
                     var content = await response.Content.ReadAsStringAsync();
-                    JObject responseJObject = JObject.Parse(await response.Content.ReadAsStringAsync());
+                    JObject responseJObject = JObject.Parse(content);
 
                     _logger.LogInformation("GetJObjectAsync end.");
                     return responseJObject.ToString();
@@ -584,8 +514,7 @@ namespace Infrastructure.GraphApi
 
         public async Task<JObject> GetChannelAsync(string groupId, string channelId)
         {
-            // GET: https://graph.microsoft.com/beta/groups/{group-id-for-teams}/channels/{channel-id-for-teams}
-            // EXAMPLE: https://graph.microsoft.com/beta/groups/69a940ef-b226-4ef2-9657-d27fab2f7cf9/channels/2b520e06-83ec-414f-b898-966b871a46b1
+            // GET: https://graph.microsoft.com/1,0/teams/{group-id-for-teams}/channels/{channel-id-for-teams}
 
             _logger.LogInformation("GetChannelAsync called.");
             try
@@ -593,18 +522,16 @@ namespace Infrastructure.GraphApi
                 Guard.Against.Null(groupId, nameof(groupId));
                 Guard.Against.Null(channelId, nameof(channelId));
 
-                var requestUrl = _appOptions.GraphBetaRequestUrl + "/groups/" + groupId + "/channels/" + channelId;
+                var requestUrl = _appOptions.GraphRequestUrl + "teams/" + groupId + "/channels/" + channelId;
 
                 // Create the request message and add the content.
                 HttpRequestMessage hrm = new HttpRequestMessage(HttpMethod.Get, requestUrl);
-
-                var response = new HttpResponseMessage();
 
                 // Authenticate (add access token) our HttpRequestMessage
                 await GraphClient.AuthenticationProvider.AuthenticateRequestAsync(hrm);
 
                 // Send the request and get the response.
-                response = await GraphClient.HttpProvider.SendAsync(hrm);
+                var response = await GraphClient.HttpProvider.SendAsync(hrm);
 
                 // Get the status response and throw if is not 200.
                 if (response.StatusCode != System.Net.HttpStatusCode.OK)
@@ -615,7 +542,7 @@ namespace Infrastructure.GraphApi
                 else
                 {
                     var content = await response.Content.ReadAsStringAsync();
-                    JObject responseJObject = JObject.Parse(await response.Content.ReadAsStringAsync());
+                    JObject responseJObject = JObject.Parse(content);
 
                     _logger.LogInformation("GetChannelAsync end.");
                     return responseJObject;
@@ -642,26 +569,23 @@ namespace Infrastructure.GraphApi
 
         public async Task<JObject> ListChannelAsync(string groupId)
         {
-            // GET: https://graph.microsoft.com/beta/groups/{group-id-for-teams}/channels
-            // EXAMPLE: https://graph.microsoft.com/beta/groups/69a940ef-b226-4ef2-9657-d27fab2f7cf9/channels
+            // GET: https://graph.microsoft.com/1.0/teams/{group-id-for-teams}/channels
 
             _logger.LogInformation("ListChannelAsync called.");
             try
             {
                 Guard.Against.Null(groupId, nameof(groupId));
 
-                var requestUrl = _appOptions.GraphBetaRequestUrl + "/teams/" + groupId + "/channels";
+                var requestUrl = _appOptions.GraphRequestUrl + "teams/" + groupId + "/channels";
 
                 // Create the request message and add the content.
                 HttpRequestMessage hrm = new HttpRequestMessage(HttpMethod.Get, requestUrl);
-
-                var response = new HttpResponseMessage();
 
                 // Authenticate (add access token) our HttpRequestMessage
                 await GraphClient.AuthenticationProvider.AuthenticateRequestAsync(hrm);
 
                 // Send the request and get the response.
-                response = await GraphClient.HttpProvider.SendAsync(hrm);
+                var response = await GraphClient.HttpProvider.SendAsync(hrm);
 
                 // Get the status response and throw if is not 200.
                 if (response.StatusCode != System.Net.HttpStatusCode.OK)
@@ -672,7 +596,7 @@ namespace Infrastructure.GraphApi
                 else
                 {
                     var content = await response.Content.ReadAsStringAsync();
-                    JObject responseJObject = JObject.Parse(await response.Content.ReadAsStringAsync());
+                    JObject responseJObject = JObject.Parse(content);
 
                     _logger.LogInformation("ListChannelAsync end.");
                     return responseJObject;
@@ -699,8 +623,8 @@ namespace Infrastructure.GraphApi
 
         public async Task<JObject> AddMemberAsync(string groupId, string memberId)
         {
-            // POST: https://graph.microsoft.com/beta/groups/{group-id-for-teams}/members/$ref
-            // EXAMPLE: https://graph.microsoft.com/beta/groups/69a940ef-b226-4ef2-9657-d27fab2f7cf9/members/$ref
+            // POST https://graph.microsoft.com/v1.0/groups/{id}/members/$ref
+            // EXAMPLE: https://graph.microsoft.com/v1.0/groups/69a940ef-b226-4ef2-9657-d27fab2f7cf9/members/$ref
 
             _logger.LogInformation("AddMemberAsync called.");
             try
@@ -711,19 +635,19 @@ namespace Infrastructure.GraphApi
                 // Create JSON object to with team settings
                 var memberSettingsObject = "{ '@odata.id': 'https://graph.microsoft.com/beta/directoryObjects/" + memberId + "' }";
 
-                var requestUrl = _appOptions.GraphBetaRequestUrl + "/groups/" + groupId + "/members/$ref";
+                var requestUrl = _appOptions.GraphRequestUrl + "groups/" + groupId + "/members/$ref";
 
                 // Create the request message and add the content.
-                HttpRequestMessage hrm = new HttpRequestMessage(HttpMethod.Post, requestUrl);
-                hrm.Content = new StringContent(memberSettingsObject.ToString(), Encoding.UTF8, "application/json");
-
-                var response = new HttpResponseMessage();
+                HttpRequestMessage hrm = new HttpRequestMessage(HttpMethod.Post, requestUrl)
+                {
+                    Content = new StringContent(memberSettingsObject.ToString(), Encoding.UTF8, "application/json")
+                };
 
                 // Authenticate (add access token) our HttpRequestMessage
                 await GraphClient.AuthenticationProvider.AuthenticateRequestAsync(hrm);
 
                 // Send the request and get the response.
-                response = await GraphClient.HttpProvider.SendAsync(hrm);
+                var response = await GraphClient.HttpProvider.SendAsync(hrm);
 
                 // Get the status response and throw if is not 204.
                 if (response.StatusCode != System.Net.HttpStatusCode.NoContent)
@@ -734,7 +658,7 @@ namespace Infrastructure.GraphApi
                 else
                 {
                     var content = await response.Content.ReadAsStringAsync();
-                    JObject responseJObject = JObject.Parse(await response.Content.ReadAsStringAsync());
+                    JObject responseJObject = JObject.Parse(content);
 
                     _logger.LogInformation("AddMemberAsync end.");
                     return responseJObject;
@@ -782,8 +706,7 @@ namespace Infrastructure.GraphApi
 
         public async Task<JObject> RemoveMemberAsync(string groupId, string memberId)
         {
-            // DELETE: https://graph.microsoft.com/beta/groups/{group-id-for-teams}/members/{member-id-for-teams}/$ref
-            // EXAMPLE: https://graph.microsoft.com/beta/groups/69a940ef-b226-4ef2-9657-d27fab2f7cf9/members/ac738d44-8541-4fe5-9b01-f80202a5a908/$ref
+            // DELETE https://graph.microsoft.com/v1.0/groups/{id}/members/{id}/$ref
 
             _logger.LogInformation("RemoveMemberAsync called.");
             try
@@ -791,18 +714,16 @@ namespace Infrastructure.GraphApi
                 Guard.Against.Null(groupId, nameof(groupId));
                 Guard.Against.Null(memberId, nameof(memberId));
 
-                var requestUrl = _appOptions.GraphBetaRequestUrl + "/groups/" + groupId + "/members/" + memberId + "$ref";
+                var requestUrl = _appOptions.GraphRequestUrl + "groups/" + groupId + "/members/" + memberId + "$ref";
 
                 // Create the request message and add the content.
                 HttpRequestMessage hrm = new HttpRequestMessage(HttpMethod.Delete, requestUrl);
-
-                var response = new HttpResponseMessage();
 
                 // Authenticate (add access token) our HttpRequestMessage
                 await GraphClient.AuthenticationProvider.AuthenticateRequestAsync(hrm);
 
                 // Send the request and get the response.
-                response = await GraphClient.HttpProvider.SendAsync(hrm);
+                var response = await GraphClient.HttpProvider.SendAsync(hrm);
 
                 // Get the status response and throw if is not 204.
                 if (response.StatusCode != System.Net.HttpStatusCode.NoContent)
@@ -812,9 +733,7 @@ namespace Infrastructure.GraphApi
                 }
                 else
                 {
-                    var content = await response.Content.ReadAsStringAsync();
-                    JObject responseJObject = JObject.Parse(await response.Content.ReadAsStringAsync());
-
+                    JObject responseJObject = JObject.Parse(response.StatusCode.ToString());
                     _logger.LogInformation("RemoveMemberAsync end.");
                     return responseJObject;
                 }
@@ -875,13 +794,11 @@ namespace Infrastructure.GraphApi
                 // Create the request message and add the content.
                 HttpRequestMessage hrm = new HttpRequestMessage(HttpMethod.Get, requestUrl);
 
-                var response = new HttpResponseMessage();
-
                 // Authenticate (add access token) our HttpRequestMessage
                 await GraphClient.AuthenticationProvider.AuthenticateRequestAsync(hrm);
 
                 // Send the request and get the response.
-                response = await GraphClient.HttpProvider.SendAsync(hrm);
+                var response = await GraphClient.HttpProvider.SendAsync(hrm);
 
                 // Get the status response and throw if is not 200.
                 if (response.StatusCode != System.Net.HttpStatusCode.OK)
@@ -892,7 +809,7 @@ namespace Infrastructure.GraphApi
                 else
                 {
                     var content = await response.Content.ReadAsStringAsync();
-                    JObject responseJObject = JObject.Parse(await response.Content.ReadAsStringAsync());
+                    JObject responseJObject = JObject.Parse(content);
 
                     _logger.LogInformation("GetUserAsync end.");
                     return responseJObject;
@@ -934,13 +851,11 @@ namespace Infrastructure.GraphApi
                 // Create the request message and add the content.
                 HttpRequestMessage hrm = new HttpRequestMessage(HttpMethod.Get, requestUrl);
 
-                var response = new HttpResponseMessage();
-
                 // Authenticate (add access token) our HttpRequestMessage
                 await GraphClient.AuthenticationProvider.AuthenticateRequestAsync(hrm);
 
                 // Send the request and get the response.
-                response = await GraphClient.HttpProvider.SendAsync(hrm);
+                var response = await GraphClient.HttpProvider.SendAsync(hrm);
 
                 // Get the status response and throw if is not 200.
                 if (response.StatusCode != System.Net.HttpStatusCode.OK)
@@ -951,7 +866,7 @@ namespace Infrastructure.GraphApi
                 else
                 {
                     var content = await response.Content.ReadAsStringAsync();
-                    JObject responseJObject = JObject.Parse(await response.Content.ReadAsStringAsync());
+                    JObject responseJObject = JObject.Parse(content);
 
                     _logger.LogInformation("GetTeamAsync end.");
                     return responseJObject;
@@ -974,6 +889,26 @@ namespace Infrastructure.GraphApi
                         throw;
                 }
             }
+        }
+
+        private class GroupSettings
+        {
+            [JsonProperty(PropertyName = "description")]
+            public string Description { get; set; }
+            [JsonProperty(PropertyName = "displayName")]
+            public string DisplayName { get; set; }
+            [JsonProperty(PropertyName = "groupTypes")]
+            public string[] GroupTypes { get; set; }
+            [JsonProperty(PropertyName = "mailEnabled")]
+            public bool MailEnabled { get; set; }
+            [JsonProperty(PropertyName = "mailNickname")]
+            public string MailNickname { get; set; }
+            [JsonProperty(PropertyName = "securityEnabled")]
+            public bool SecurityEnabled { get; set; }
+            [JsonProperty(PropertyName = "owners@odata.bind")]
+            public string[] Owners { get; set; }
+            [JsonProperty(PropertyName = "members@odata.bind")]
+            public string[] Members { get; set; }
         }
     }
 }

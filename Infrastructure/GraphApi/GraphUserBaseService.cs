@@ -205,16 +205,13 @@ namespace Infrastructure.GraphApi
                 Guard.Against.NullOrEmpty(groupId, nameof(groupId), requestId);
 
                 // Create Json object for request body
-                var requestBody = "{'@odata.id': 'https://graph.microsoft.com/beta/directoryObjects/" + userId + "'}";
+                var requestBody = "{'@odata.id': 'https://graph.microsoft.com/v1.0/directoryObjects/" + userId + "'}";
 
-                var requestUrl = $"{_appOptions.GraphBetaRequestUrl}groups/{groupId}/members/$ref";
+                var requestUrl = $"{_appOptions.GraphRequestUrl}groups/{groupId}/members/$ref";
 
 
                 // Create the request message and add the content.
-                HttpRequestMessage hrm = new HttpRequestMessage(HttpMethod.Post, requestUrl);
-                hrm.Content = new StringContent(requestBody, Encoding.UTF8, "application/json");
-
-                var response = new HttpResponseMessage();
+                HttpRequestMessage hrm = new HttpRequestMessage(HttpMethod.Post, requestUrl) { Content = new StringContent(requestBody, Encoding.UTF8, "application/json") };
 
                 // Authenticate (add access token) our HttpRequestMessage
                 await GraphClient.AuthenticationProvider.AuthenticateRequestAsync(hrm);
@@ -222,7 +219,7 @@ namespace Infrastructure.GraphApi
                 _logger.LogInformation($"RequestId: {requestId} - AddGroupMemberAsync call to graph: " + requestUrl);
 
                 // Send the request and get the response.
-                response = await GraphClient.HttpProvider.SendAsync(hrm);
+                var response = await GraphClient.HttpProvider.SendAsync(hrm);
 
                 // Get the status response and throw if is not 200.
                 Guard.Against.NotStatus204NoContent(response.StatusCode, nameof(this.AddGroupMemberAsync), requestId);
@@ -253,16 +250,13 @@ namespace Infrastructure.GraphApi
                 Guard.Against.NullOrEmpty(groupId, nameof(groupId), requestId);
 
                 // Create Json object for request body
-                var requestBody = "{'@odata.id': 'https://graph.microsoft.com/beta/users/" + userId + "'}";
+                var requestBody = "{'@odata.id': 'https://graph.microsoft.com/v1.0/users/" + userId + "'}";
 
-                var requestUrl = $"{_appOptions.GraphBetaRequestUrl}groups/{groupId}/owners/$ref";
+                var requestUrl = $"{_appOptions.GraphRequestUrl}groups/{groupId}/owners/$ref";
 
 
                 // Create the request message and add the content.
-                HttpRequestMessage hrm = new HttpRequestMessage(HttpMethod.Post, requestUrl);
-                hrm.Content = new StringContent(requestBody, Encoding.UTF8, "application/json");
-
-                var response = new HttpResponseMessage();
+                HttpRequestMessage hrm = new HttpRequestMessage(HttpMethod.Post, requestUrl) { Content = new StringContent(requestBody, Encoding.UTF8, "application/json") };
 
                 // Authenticate (add access token) our HttpRequestMessage
                 await GraphClient.AuthenticationProvider.AuthenticateRequestAsync(hrm);
@@ -270,7 +264,7 @@ namespace Infrastructure.GraphApi
                 _logger.LogInformation($"RequestId: {requestId} - AddGroupOwnerAsync call to graph: " + requestUrl);
 
                 // Send the request and get the response.
-                response = await GraphClient.HttpProvider.SendAsync(hrm);
+                var response = await GraphClient.HttpProvider.SendAsync(hrm);
 
                 // Get the status response and throw if is not 200.
                 Guard.Against.NotStatus204NoContent(response.StatusCode, nameof(this.AddGroupMemberAsync), requestId);

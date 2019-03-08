@@ -110,6 +110,30 @@
                     <SourceLocation resid="Contoso.TaskPane.Url" />
                   </Action>
                 </Control>
+                
+                <!-- Control. It can be of type "Button" or "Menu". -->
+                <Control xsi:type="Button" id="SmartLink.TaskpaneButton">
+                  <Label resid="SmartLink.TaskpaneButton.Label" />
+                  <Supertip>
+                    <!-- ToolTip title. resid must point to a ShortString resource. -->
+                    <Title resid="SmartLink.TaskpaneButton.Label" />
+                    <!-- ToolTip description. resid must point to a LongString resource. -->
+                    <Description resid="SmartLink.TaskpaneButton.Tooltip" />
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="SmartLink.icon" />
+                    <bt:Image size="32" resid="SmartLink.icon" />
+                    <bt:Image size="80" resid="SmartLink.icon" />
+                  </Icon>
+
+                  <!-- This is what happens when the command is triggered (E.g. click on the Ribbon). Supported actions are ExecuteFunction or ShowTaskpane. -->
+                  <Action xsi:type="ShowTaskpane">
+                    <TaskpaneId>SmartLinkPane</TaskpaneId>
+                    <Title resid="SmartLink.TaskpaneButton.Label" />
+                    <!-- Provide a url resource id for the location that will be displayed on the task pane. -->
+                    <SourceLocation resid="SmartLink.TaskPane.Url" />
+                  </Action>
+                </Control>
                
               </Group>
             </OfficeTab>

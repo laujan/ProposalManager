@@ -113,7 +113,8 @@ export class AppTeams extends Component {
                 teamName: this.getQueryVariable('teamName'),
                 groupId: this.getQueryVariable('groupId'),
                 loginHint: this.getQueryVariable('loginHint'),
-                locale: locale
+                locale: locale,
+                appSettings: appSettings
             };
         }
     }
@@ -145,7 +146,13 @@ export class AppTeams extends Component {
                             reportId: res.PBIReportId,
                             workspaceId: res.PBIWorkSpaceId
                         };
-                        console.log("AppTeams_componentDidMount_getClientSettings  ==>", res);
+                        console.log("AppTeams_componentDidMount_getClientSettings  ==>", appSettings);
+                        //Need to review refresh issue
+                        if (this.state.appSettings.reportId.length === 0) {
+                            console.log("AppTeams_componentDidMount_getClientSettings inisde setstate:", appSettings);
+                            this.setState({ appSettings });
+                        }
+                        //Need to review refresh issue
                     })
                     .catch(err => {
                         console.log("AppTeams_componentDidMount_getClientSettings error:", err);
@@ -174,6 +181,12 @@ export class AppTeams extends Component {
                             workspaceId: res.PBIWorkSpaceId
                         };
                         console.log("AppTeams_componentDidUpdate_getClientSettings  ==>", res);
+                        //Need to review refresh issue
+                        if (this.state.appSettings.reportId.length === 0) {
+                            console.log("AppTeams_componentDidMount_getClientSettings inisde setstate:", appSettings);
+                            this.setState({ appSettings });
+                        }
+                        //Need to review refresh issue
                     })
                     .catch(err => {
                         console.log("AppTeams_componentDidUpdate_getClientSettings error:", err);
@@ -492,7 +505,7 @@ export class AppTeams extends Component {
         });
 
         const ConfigView = ({ match }) => {
-            return <Config teamsContext={teamsContext} appSettings={appSettings} />;
+            return <Config teamsContext={teamsContext} appSettings={this.state.appSettings} />;
         };
 
         const TabAuthView = ({ match }) => {
@@ -504,7 +517,7 @@ export class AppTeams extends Component {
         };
 
         const AdministrationView = ({ match }) => {
-            return <Administration teamsContext={teamsContext} appSettings={appSettings} />;
+            return <Administration teamsContext={teamsContext} appSettings={this.state.appSettings} />;
         };
 
         const ConfigurationView = ({ match }) => {
@@ -519,7 +532,7 @@ export class AppTeams extends Component {
         };
 
         const GeneralView = ({ match }) => {
-            return <General teamsContext={teamsContext} appSettings={appSettings} />;
+            return <General teamsContext={teamsContext} appSettings={this.state.appSettings} />;
         };
         const CustomerDecisionView = ({ match }) => {
             return <CustomerDecision teamsContext={teamsContext} />;

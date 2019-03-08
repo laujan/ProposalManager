@@ -1,7 +1,13 @@
 # Pre-requisites
+
+If running in _Full_, _BuildOnly_ or _NoDeploy_ mode:
+
 * .NET Core 2.1 (https://dotnet.microsoft.com/download/thank-you/dotnet-sdk-2.1.500-windows-x64-installer)
 * .NET Framework 4.6.1 Developer Pack (https://www.microsoft.com/en-us/download/details.aspx?id=49978)
 * Node.js (https://nodejs.org/en/download/)
+
+If including the bot in the setup:
+
 * Microsoft Azure CLI (https://docs.microsoft.com/en-us/cli/azure/install-azure-cli-windows?view=azure-cli-latest)
 
 **Important**: after installing any of the pre-requisites displayed above, you will need to exit powershell and re-launch it to make sure all the environment variables are correctly picked up by the shell.
@@ -21,6 +27,8 @@ Before running the script, please execute the following:
 
 **Important**: if you exited the shell and re-launched it, you will need to run the former command again; it is only good for the lifespan of the instance of the shell you're working with.
 
+## Parameters
+
 To run the script, you need to provide the following parameters:
 
 Parameter|Meaning
@@ -38,6 +46,72 @@ SqlServerAdminPassword|If IncluddeAddins was specified, this is the sql server a
 BotAzureSubscription|OPTIONAL; The name or id of the Azure subscription to register the bot in; it has to belong to the tenant identified by the OfficeTenantName parameter; if not included, you have to register the bot by hand by following the getting started guide and provide the bot name when prompted so.
 AdminSharePointSiteUrl|OPTIONAL; The url of the admin sharepoint site; if none is provided, the default one will be used.
 Force|FLAG; Specify only if you explicitly intend to overwrite an existing installation of Proposal Manager.
+Mode|The *mode* of execution determines what tasks get done during the execution of the script. This is useful when you need to decouple, for example, the build from the deploy, to be able to build the application offline and then deploy them from a different security context in a different machine. See "available modes" for more details. **The default mode is _FULL_.**
+
+### Execution modes
+
+The available running modes are:
+
+Mode|Builds the application|Registers the apps and generates manifests|Deploys to azure
+----|----------------------|------------------------------------------|----------------
+NoDeploy|Yes|Yes|No
+DeployOnly|No|No|Yes
+BuildOnly|Yes|No|No
+RegisterDeploy|No|Yes|Yes
+Full|Yes|Yes|Yes
+
+**Note**: If no mode is specified, the _FULL_ mode will be used.
+
+**Note**: The "Registers the apps and generates manifests" column also includes the bot registration, if the -IncludeBot flag is included in the call, and the Group and SharePoint sites creation.
+
+Execution modes allow you to build the application offline and then deploy them using an online machine.
+
+For example, you might run the script in _BuildOnly_ mode in your workstation, hand off the full folder of Proposal Manager as is to the Ops team (it will contain the built applications), and let them run the script in _RegisterDeploy_ mode from the datacenter. This way, they don't need compilers and SDKs such as .NET Framework or npm; they only need a powershell console and a connection to Azure.
+
+An alternative is to build and register the applications yourself, using the _NoDeploy_ mode, and then let the ops team deploy the already registered applications by running the script in _DeployOnly_ mode.
+
+Following are the required parameters for each execution mode.
+
+#### NoDeploy
+
+The required parameters for this mode are:
+- PMAdminUpn
+- PMSiteAlias
+- OfficeTenantName
+- ApplicationName
+
+#### DeployOnly
+
+The required parameters for this mode are:
+- AzureResourceLocation
+- AzureSubscription
+- ApplicationName
+
+#### BuildOnly
+
+The _BuildOnly_ mode requires no parameters. It simply builds the applications with no configuration attached, so the result will always be the same.
+
+#### RegisterDeploy
+
+The required parameters for this mode are:
+- PMAdminUpn
+- PMSiteAlias
+- OfficeTenantName
+- AzureResourceLocation
+- AzureSubscription
+- ApplicationName
+
+#### Full
+
+The required parameters for this mode are:
+- PMAdminUpn
+- PMSiteAlias
+- OfficeTenantName
+- AzureResourceLocation
+- AzureSubscription
+- ApplicationName
+
+## Procedure
 
 To find the subscription info, navigate to the [Azure Portal](https://portal.azure.com) and select Subscriptions. Pick the subscription  name or ID from the displayed list, for the subscription where you are planning to deploy the solution to.
 
@@ -45,12 +119,19 @@ You will be prompted for credentials two times. The first time, you need to log 
 
 Once the tenant is ready, you will be asked to enter your **Azure contributor** credentials to deploy the Proposal Manager application to your azure account. The application will be installed in the default subscription. This can be changed later from the portal.
 
-## Invocation example including all components
+## Examples
+
+### Invocation example including all components
 `.\Install-PMInstance.ps1 -PMAdminUpn admin@contoso.onmicrosoft.com -PMSiteAlias proposalmanager -OfficeTenantName contoso -AzureResourceLocation "Central US" -IncludeBot -IncludeAddins -SqlServerAdminUsername adminSL -SqlServerAdminPassword Pa$$w0rd1`
 Note: -SqlServerAdminUsername cannot be "admin" nor an UPN (user principal name) 
 
-## Invocation example only for Proposal Manager
+### Invocation example only for Proposal Manager
 `.\Install-PMInstance.ps1 -PMAdminUpn admin@contoso.onmicrosoft.com -PMSiteAlias proposalmanager -OfficeTenantName contoso -AzureResourceLocation "Central US"`
+
+### Invocation example in BuildOnly mode
+`.\Install-PMInstance.ps1 -Mode BuildOnly`
+
+## Further Steps
 
 After deploying the app, the script will do 3 things to help you get started:
 1. It will show you some useful data about the deployment, such as:
@@ -76,8 +157,7 @@ After deploying the app, the script will do 3 things to help you get started:
           1. Setup\$ApplicationName-proposal-creation-manifest.xml
           2. Setup\$ApplicationName-proposal-creation-powerpoint-manifest.xml
        2. Project Smart Link:
-          1. Setup\$ApplicationName-project-smart-link-powerpoint-manifest.xml
-          2. Setup\$ApplicationName-project-smart-link-excel-manifest.xml
+          1. Setup\$ApplicationName-project-smart-link-excel-manifest.xml
     7. Finally click on the OK button.
     
 Note: The automated setup will add the O365 Global Administrator as the owner and member of all the created groups. If required, please login into https://portal.office.com and remove the user to enhance security.
@@ -85,6 +165,8 @@ Note: The automated setup will add the O365 Global Administrator as the owner an
 # Installing Add-Ins only
 
 If you only want to install Proposal Creation or Project Smart Link to an existing instance of Proposal Manager, you can now do so using the additional scripts `Install-PMProposalCreationInstance` and `Install-PMProjectSmartLinkInstance`.
+
+## Project Smart Link
 
 **Important: when you install Project Smart Link, a SQL database will be created for the add-in. To avoid incurring in costs, this db will be deployed in the free tier. Azure only allows for a single free db to be provisioned in the same subscription for each region, so if you already have another free db in that region and subscription, either change the subscription, change the region, or delete the existing free database before running the script.**
 
@@ -103,6 +185,8 @@ ProposalManagerAppId|The app id of the existing Proposal Manager Instance to att
 Here is an example of how to invoke the script:
 
 `.\Install-PMProjectSmartLinkInstance.ps1 -OfficeTenantName contoso -ApplicationName contosopm -ProposalManagerAppId '5ba0f5f3-66e0-4826-becb-02988ca3f911' -AzureResourceLocation "South Central US" -AzureSubscription "Pay-As-You-Go Dev/Test" -SqlServerAdminUsername 'contosoSa' -SqlServerAdminPassword 'tattoine'`
+
+## Proposal Creation
 
 To run the `Install-PMProposalCreationInstance`, you need to provide the following parameters:
 

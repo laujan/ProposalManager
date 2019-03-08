@@ -1157,50 +1157,9 @@ export class Setup extends Component {
             <div>
                 <div className='ms-Grid-row ms-Grid bg-white ibox-content p-10'>
                     <h4 style={bold} className="pageheading"><Trans>Step2</Trans></h4>
-                    <h4 style={bold}><Trans>step2.1</Trans></h4>
                     <span>
                         <Trans style={normal}>labelforstep2</Trans> <br />
                     </span>
-                </div>
-                <div className="ms-Grid-row ms-Grid bg-white ibox-content p-10">
-                    <h4 style={bold}><Trans>step2.2</Trans></h4>
-                    <span>
-                        <Trans style={normal}>labelforstep2_1</Trans> <br />
-                    </span>
-                    <div className='ms-Grid-col ms-sm12 ms-md12 ms-lg6'>
-                        <TextField
-                            id='appKey'
-                            label={<Trans>setupProposalManager</Trans>}
-                            onBlur={(e) => this.onBlurSetPM(e, "PMAddinName")}
-                            required='true'
-                            value={
-                                this.state.ProposalManagement_Team.ProposalManagerAddInName ?
-                                    this.state.ProposalManagement_Team.ProposalManagerAddInName : this.state.PMAddinName}
-                            placeholder={`eg : < Proposal Manager >`}
-                            disabled={this.state.isUpdateOpp}
-                        />
-                    </div>
-                    <div className='ms-Grid-col ms-sm12'>
-                        <PrimaryButton style={margin}
-                            onClick={(e) => this.ConfigureAppIDAndGroupID()}
-                            disabled={this.state.isUpdateOpp}
-                        >{<Trans>addinbutton</Trans>}</PrimaryButton>
-                    </div>
-                    {this.state.renderStep_2 ? this.showSpinnerAndMessage(true) : null}
-                    <div className='ms-Grid-col ms-sm12 ms-md12 ms-lg6'>
-                        <TextField
-                            id='appKey'
-                            label={<Trans>step2AfterSuccessfullConfigMsg</Trans>}
-                            onBlur={(e) => this.onBlurSetPM(e, "APPID")}
-
-                            value={this.state.ProposalManagement_Team.TeamsAppInstanceId ?
-                                this.state.ProposalManagement_Team.TeamsAppInstanceId : this.state.appId}
-                            disabled='true'
-                        />
-                    </div>
-                    <div className='ms-Grid-col ms-sm12 ms-md12 ms-lg12'>
-                        <span><Trans>step2AfterSuccessfullConfigMsg1</Trans></span>
-                    </div>
                 </div>
             </div>);
     }
@@ -1321,10 +1280,10 @@ export class Setup extends Component {
                         {this.renderStep_4()}
                     </div>
                     <div className='ms-Grid bg-white ibox-content'>
-                        {this.renderStep_5()}
+                        {this.renderStep_9()}
                     </div>
                     <div className='ms-Grid bg-white ibox-content'>
-                        {this.renderStep_9()}
+                        {this.renderStep_5()}
                     </div>
                     <div className='ms-Grid bg-white ibox-content'>
                         {this.renderStep_6()}

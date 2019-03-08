@@ -1,50 +1,16 @@
 ﻿Function UpdateAppSettingsClient {
     [CmdletBinding()]
     param(
-        [Parameter(Mandatory = $true)][string]$pathToJson,
-        [Parameter(Mandatory = $true)] $appId,
-        [Parameter(Mandatory = $true)] $appUri,
-        [Parameter(Mandatory = $true)] $tenantId
+        [Parameter(Mandatory = $true, Position = 0)][string]$Path,
+        [Parameter(Mandatory = $true)] $AppId,
+        [Parameter(Mandatory = $true)] $AppUri,
+        [Parameter(Mandatory = $true)] $TenantId
     )
 
-    $appSettings = Get-Content -Path $pathToJson
+    (Get-Content $Path).
+    Replace('<CLIENT_ID>',$AppId).
+    Replace('<APP_URI>', $AppUri).
+    Replace('<TENANT_ID>', $TenantId) |
+    Set-Content $Path
 
-    $index = 0;
-    foreach($i in $appSettings.GetEnumerator())
-    {
-
-        if($i.StartsWith("export const clientId"))
-        {
-            $appSettings[$index] = "export const clientId = '$appId'; //Registered Application Id from apps.dev.microsoft.com."
-            Set-Content -Path $pathToJson $appSettings
-        }
-        else
-        { 
-            if($i.StartsWith("export const webApiScopes"))
-            {
-               $appSettings[$index] = "export const webApiScopes = [`"api://$appId/access_as_user`"];// web Api scope generated at app registration from apps.dev.microsoft.com."
-                Set-Content -Path $pathToJson $appSettings
-            }
-            else
-            {
-                if($i.StartsWith("export const appUri"))
-                {
-                   $appSettings[$index] = "export const appUri = '$appUri';"
-                   Set-Content -Path $pathToJson $appSettings
-                }
-                else
-                {
-                    if($i.StartsWith("export const authority"))
-                    {
-                        $appSettings[$index] = "export const authority = 'https://login.microsoftonline.com/$tenantId';"
-                        Set-Content -Path $pathToJson $appSettings
-                    }
-                }
-            }
-        }
-
-        $index++
-    }
-
-    Write-Information "AppSettings.js has been updated"
 }

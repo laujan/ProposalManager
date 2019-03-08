@@ -109,8 +109,9 @@ namespace Infrastructure.DealTypeServices
                 }
 
                 //adding of the team member
-                //if (item.AssignedRole.DisplayName != "LoanOfficer" && item.AssignedRole.DisplayName != "RelationshipManager")
-                //{
+                if (!item.AssignedRole.DisplayName.Equals("LoanOfficer", StringComparison.OrdinalIgnoreCase) 
+                    && !item.AssignedRole.DisplayName.Equals("RelationshipManager", StringComparison.OrdinalIgnoreCase))
+                {
                     //if (!String.IsNullOrEmpty(item.Fields.UserPrincipalName))
                     //{
                         try
@@ -123,7 +124,7 @@ namespace Infrastructure.DealTypeServices
                             _logger.LogError($"RequestId: {requestId} - userId: {item.Id} - UpdateStartProcessStatus_AddGroupMemberAsync_{item.AssignedRole.DisplayName} error in CreateWorkflowAsync: {ex}");
                         }
                     //}
-                //}
+                }
             }
             //check if all the processes in the deal type are assigned to at least one team member
             bool statusCheck = true;

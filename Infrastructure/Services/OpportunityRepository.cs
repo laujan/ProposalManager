@@ -97,24 +97,11 @@ namespace Infrastructure.Services
                 _logger.LogInformation($"RequestId: {requestId} - OpportunityRepository_CreateItemAsync creating SharePoint List for opportunity.");
 
                 //Get loan officer & relationship manager values
-                var loanOfficerId = String.Empty;
-                var relationshipManagerId = String.Empty;
-                var loanOfficerUpn = String.Empty;
-                var relationshipManagerUpn = String.Empty;
-                foreach (var item in opportunity.Content.TeamMembers)
-                {
-                    if (item.AssignedRole.DisplayName == "LoanOfficer" && !String.IsNullOrEmpty(item.Id))
-                    {
-                        loanOfficerId = item.Id;
-                        loanOfficerUpn = item.Fields.UserPrincipalName;
-                    }
-                    if (item.AssignedRole.DisplayName == "RelationshipManager" && !String.IsNullOrEmpty(item.Id))
-                    {
-                        relationshipManagerId = item.Id;
-                        relationshipManagerUpn = item.Fields.UserPrincipalName;
-                    }
-                }
+                var loanOfficer = opportunity.Content.TeamMembers.FirstOrDefault(x => x.AssignedRole.DisplayName.Equals("LoanOfficer", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrEmpty(x.Id));
+                var loanOfficerId = loanOfficer?.Id;
 
+                var relationShipManager = opportunity.Content.TeamMembers.FirstOrDefault(x => x.AssignedRole.DisplayName.Equals("RelationshipManager", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrEmpty(x.Id));
+                var relationshipManagerId = relationShipManager?.Id;
 
                 // Create Json object for SharePoint create list item
                 dynamic opportunityFieldsJson = new JObject();
@@ -194,24 +181,11 @@ namespace Infrastructure.Services
                 opportunity = await _opportunityFactory.UpdateWorkflowAsync(opportunity, requestId);
 
                 //Get loan officer & relationship manager values
-                var loanOfficerId = String.Empty;
-                var relationshipManagerId = String.Empty;
-                var loanOfficerUpn = String.Empty;
-                var relationshipManagerUpn = String.Empty;
-                foreach (var item in opportunity.Content.TeamMembers)
-                {
-                    if (item.AssignedRole.DisplayName == "LoanOfficer" && !String.IsNullOrEmpty(item.Id))
-                    {
-                        loanOfficerId = item.Id;
-                        loanOfficerUpn = item.Fields.UserPrincipalName;
-                    }
-                    if (item.AssignedRole.DisplayName == "RelationshipManager" && !String.IsNullOrEmpty(item.Id))
-                    {
-                        relationshipManagerId = item.Id;
-                        relationshipManagerUpn = item.Fields.UserPrincipalName;
-                    }
-                }
+                var loanOfficer = opportunity.Content.TeamMembers.FirstOrDefault(x => x.AssignedRole.DisplayName.Equals("LoanOfficer", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrEmpty(x.Id));
+                var loanOfficerId = loanOfficer?.Id;
 
+                var relationShipManager = opportunity.Content.TeamMembers.FirstOrDefault(x => x.AssignedRole.DisplayName.Equals("RelationshipManager", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrEmpty(x.Id));
+                var relationshipManagerId = relationShipManager?.Id;
 
                 var opportunityJObject = JObject.FromObject(opportunity);
 
@@ -229,7 +203,8 @@ namespace Infrastructure.Services
                     SiteId = _appOptions.ProposalManagementRootSiteId,
                     ListId = _appOptions.OpportunitiesListId
                 };
-                var result = await _graphSharePointAppService.UpdateListItemAsync(opportunitySiteList, opportunity.Id, opportunityJson.ToString(), requestId);
+
+                await _graphSharePointAppService.UpdateListItemAsync(opportunitySiteList, opportunity.Id, opportunityJson.ToString(), requestId);
 
                 _logger.LogInformation($"RequestId: {requestId} - OpportunityRepository_UpdateItemAsync finished SharePoint List for opportunity.");
                 //For DashBoard---
