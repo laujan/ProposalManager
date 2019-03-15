@@ -13,6 +13,8 @@
     The azure region in which you want the resources to be allocated (for example, "East US").
 .PARAMETER AzureSubscription
     The name or id of the Azure subscription to deploy the Proposal Manager web app to. It can belong to any tenant (you will be asked to log in to azure in that tenant).
+.PARAMETER ResourceGroupName
+    The name of the resource group to deploy to (for example "proposalmanager")
 .PARAMETER ApplicationName
     The name of the application (for example "proposalmanager")
 .PARAMETER IncludeBot
@@ -42,6 +44,8 @@ param(
     [string]$AzureResourceLocation,
     [Parameter(Mandatory = $false)]
     [string]$AzureSubscription,
+    [Parameter(Mandatory = $false)]
+    [string]$ResourceGroupName,
     [Parameter(Mandatory = $false)]
     [string]$ApplicationName,
     [Parameter(Mandatory = $false)]
@@ -150,23 +154,21 @@ if($registers -and $IncludeBot)
 }
 
 # Verify required modules are available
-Write-Information "Checking required PS modules"
-
-$modules = @("AzureRm", "Microsoft.Online.SharePoint.Powershell", "SharePointPnPPowerShellOnline", "Azure", "AzureAD")
-
-foreach($module in $modules)
-{
-    Verify-Module -ModuleName $module
-}
+Verify-RequiredModules
 
 if(!$ApplicationName)
 {
     $ApplicationName = "propmgr-$OfficeTenantName"
 }
 
-# must be lower case
+# Must be lower case
 $ApplicationName = $ApplicationName.ToLower()
 $PMSiteAlias = $PMSiteAlias.ToLower()
+
+if(!$ResourceGroupName)
+{
+    $ResourceGroupName = $ApplicationName
+}
 
 $applicationDomain = "$ApplicationName.azurewebsites.net"
 $applicationUrl = "https://$applicationDomain"
@@ -265,7 +267,8 @@ if($registers)
         Write-Information "Bot app registered. Creating bot..."
         if($BotAzureSubscription)
         {
-            $bot = New-PMBot -Subscription $BotAzureSubscription -ApplicationName $ApplicationName -Credential $credential -AppId $botRegistration.AppId -AppSecret $botRegistration.AppSecret
+            $bot = New-PMBot -Subscription $BotAzureSubscription -ResourceGroupName $ResourceGroupName -ApplicationName $ApplicationName ´
+                             -Credential $credential -AppId $botRegistration.AppId -AppSecret $botRegistration.AppSecret
             Write-Information "Bot created successfully."
             $botRegistration += @{ AppName = $bot.name }
         
@@ -295,8 +298,8 @@ if($registers)
 if($deploys)
 {
 
-    $deploymentCredentials = New-PMSite -PMSiteLocation $AzureResourceLocation -ApplicationName $ApplicationName -Subscription $AzureSubscription -Force:$Force `
-        -IncludeProposalCreation:$IncludeAddins -IncludeProjectSmartLink:$IncludeAddins `
+    $deploymentCredentials = New-PMSite -PMSiteLocation $AzureResourceLocation -ResourceGroupName $ResourceGroupName -ApplicationName $ApplicationName `
+        -Subscription $AzureSubscription -Force:$Force -IncludeProposalCreation:$IncludeAddins -IncludeProjectSmartLink:$IncludeAddins `
         -SqlServerAdminUsername $SqlServerAdminUsername -SqlServerAdminPassword $SqlServerAdminPassword
 
     $appSettings = @{

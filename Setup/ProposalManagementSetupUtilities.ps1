@@ -110,6 +110,8 @@ function New-PMSite {
     param(
         [Parameter(Mandatory = $true)]
         [string]$PMSiteLocation,
+        [Parameter(Mandatory = $false)]
+        [string]$ResourceGroupName,
         [Parameter(Mandatory = $true)]
         [string]$ApplicationName,
         [Parameter(Mandatory = $true)]
@@ -128,40 +130,70 @@ function New-PMSite {
         [switch]$Force
     )
     process {
+        if(!$ResourceGroupName)
+        {
+            $ResourceGroupName = $ApplicationName
+        }
+
         Write-Information "Starting resource group deployment in Azure..."
         Connect-AzureRmAccount -Subscription $Subscription
-        $existingResourceGroup = Get-AzureRmResourceGroup -Name $ApplicationName -ErrorAction SilentlyContinue
+
+        $existingResourceGroup = Get-AzureRmResourceGroup -Name $ResourceGroupName -ErrorAction SilentlyContinue
         if($existingResourceGroup)
         {
-            if($Force)
+            # Check if the group contains items
+            $resourceGroupContents = Get-AzureRmResource | Where-Object {$_.ResourceGroupName –eq $ResourceGroupName}
+            if($resourceGroupContents)
             {
-                Write-Warning "$ApplicationName resource group already exists. The -Force flag was specified so the existing resource group will be overwritten."
-                $existingResourceGroup | Remove-AzureRmResourceGroup -Force
-                ipconfig /flushdns #Doing this to ensure old ip address is not used when redeploying from this machine
-                Write-Information "The existing resource group was successfully deleted to be able to redeploy with the same resource group name."
+                if($Force)
+                {
+                    Write-Warning "$ResourceGroupName resource group already exists, and has resources associated. The -Force flag was specified so the existing resource group will be emptied."
+
+                    # Empty the resource group by deploying an empty template in Complete mode. This will automatically remove any resource without needing to iterate through all of them
+                    $cleaningResult = New-AzureRmResourceGroupDeployment -ResourceGroupName $ResourceGroupName -Mode Complete -TemplateFile .\ResourceGroupCleanup.json -Force
+
+                    if ($cleaningResult.ProvisioningState -eq "Failed") 
+                    { 
+                        Write-Error "Resource removal failed. Please check deployment status for deploy named 'ResourceGroupCleanup' in the Azure Portal for more details."
+                    }
+
+                    Write-Information "The existing resource group was successfully emptied to be able to redeploy to the same resource group."
+                }
+                else
+                {
+                    Write-Error "A resource group with the name $ResourceGroupName already exists, and has resources associated. If you want to overwrite an existing installation of Proposal Manager, use the -Force flag."
+                }
             }
-            else
+            else 
             {
-                Write-Error "A resource group with the name $ApplicationName already exists. If you want to overwrite an existing installation of Proposal Manager, use the -Force flag."
+                Write-Information "The resource group $ResourceGroupName already exists, but it is empty. Installation will continue."
             }
         }
-        New-AzureRmResourceGroup -Name $ApplicationName -Location $PMSiteLocation
+        else
+        {
+            New-AzureRmResourceGroup -Name $ResourceGroupName -Location $PMSiteLocation
+            Write-Information "The resource group $ResourceGroupName created."
+        }
 
         if($IncludeProjectSmartLink)
         {
             $sqlPassword = ($SqlServerAdminPassword | ConvertTo-SecureString -AsPlainText -Force)
-            New-AzureRmResourceGroupDeployment -ResourceGroupName $ApplicationName -TemplateFile .\ProposalManagerARMTemplate.json -includeProposalManager $(if($ExcludeProposalManager) {$false} else {$true})`
+            $deploymentResult = New-AzureRmResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateFile .\ProposalManagerARMTemplate.json -includeProposalManager $(if($ExcludeProposalManager) {$false} else {$true})`
             -siteName $ApplicationName -siteLocation $PMSiteLocation -includeProposalCreation $(if($IncludeProposalCreation) {$true} else {$false}) `
             -includeProjectSmartLink $true -sqlServerAdminUsername $SqlServerAdminUsername -sqlServerAdminPassword $sqlPassword
         }
         else
         {
-            New-AzureRmResourceGroupDeployment -ResourceGroupName $ApplicationName -TemplateFile .\ProposalManagerARMTemplate.json -includeProposalManager $(if($ExcludeProposalManager) {$false} else {$true})`
+            $deploymentResult = New-AzureRmResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateFile .\ProposalManagerARMTemplate.json -includeProposalManager $(if($ExcludeProposalManager) {$false} else {$true})`
             -siteName $ApplicationName -siteLocation $PMSiteLocation -includeProposalCreation $(if($IncludeProposalCreation) {$true} else {$false}) `
             -includeProjectSmartLink $false
         }
 
-        
+        if ($deploymentResult.ProvisioningState -eq "Failed") 
+        { 
+            Write-Error "Deployment failed. Please check deployment status in the Azure Portal for more details."
+        }
+
         Write-Information "Resource group deployment succeeded"
         Write-Information "Retrieving deployment credentials..."
 
@@ -169,7 +201,7 @@ function New-PMSite {
 
         if(!$ExcludeProposalManager)
         {
-            $xml = [xml](Get-AzureRmWebAppPublishingProfile -ResourceGroupName $ApplicationName -Name $ApplicationName -OutputFile .\settings.xml)    
+            $xml = [xml](Get-AzureRmWebAppPublishingProfile -ResourceGroupName $ResourceGroupName -Name $ApplicationName -OutputFile .\settings.xml)    
             # Extract connection information from publishing profile
             $username = [System.Linq.Enumerable]::Last($xml.SelectNodes("//publishProfile[@publishMethod=`"FTP`"]/@userName").value.Split('\'))
             $password = $xml.SelectNodes("//publishProfile[@publishMethod=`"FTP`"]/@userPWD").value
@@ -179,7 +211,7 @@ function New-PMSite {
         
         if($IncludeProposalCreation)
         {
-            $pcxml = [xml](Get-AzureRmWebAppPublishingProfile -ResourceGroupName $ApplicationName -Name "$ApplicationName-propcreation" -OutputFile .\settings-propcreation.xml)
+            $pcxml = [xml](Get-AzureRmWebAppPublishingProfile -ResourceGroupName $ResourceGroupName -Name "$ApplicationName-propcreation" -OutputFile .\settings-propcreation.xml)
             $pcusername = [System.Linq.Enumerable]::Last($pcxml.SelectNodes("//publishProfile[@publishMethod=`"FTP`"]/@userName").value.Split('\'))
             $pcpassword = $pcxml.SelectNodes("//publishProfile[@publishMethod=`"FTP`"]/@userPWD").value
             $pcurl = $pcxml.SelectNodes("//publishProfile[@publishMethod=`"FTP`"]/@publishUrl").value
@@ -189,7 +221,7 @@ function New-PMSite {
         }
         if($IncludeProjectSmartLink)
         {
-            $pslxml = [xml](Get-AzureRmWebAppPublishingProfile -ResourceGroupName $ApplicationName -Name "$ApplicationName-projectsmartlink" -OutputFile .\settings-projectsmartlink.xml)
+            $pslxml = [xml](Get-AzureRmWebAppPublishingProfile -ResourceGroupName $ResourceGroupName -Name "$ApplicationName-projectsmartlink" -OutputFile .\settings-projectsmartlink.xml)
             $pslusername = [System.Linq.Enumerable]::Last($pslxml.SelectNodes("//publishProfile[@publishMethod=`"FTP`"]/@userName").value.Split('\'))
             $pslpassword = $pslxml.SelectNodes("//publishProfile[@publishMethod=`"FTP`"]/@userPWD").value
             $pslurl = $pslxml.SelectNodes("//publishProfile[@publishMethod=`"FTP`"]/@publishUrl").value
@@ -244,6 +276,8 @@ function New-PMBot {
     param(
         [Parameter(Mandatory = $true)]
         [string]$Subscription,
+        [Parameter(Mandatory = $false)]
+        [string]$ResourceGroupName,
         [Parameter(Mandatory = $true)]
         [string]$ApplicationName,
         [Parameter(Mandatory = $true)]
@@ -254,10 +288,15 @@ function New-PMBot {
         [string]$AppSecret
     )
     process {
+        if(!$ResourceGroupName)
+        {
+            $ResourceGroupName = $ApplicationName
+        }
+        
         Write-Information "Beginning bot registration..."
         az login -u $Credential.UserName -p $Credential.GetNetworkCredential().Password
         az account set -s $Subscription
-        $botJson = az bot create -k registration -v v3 -n $ApplicationName -g $ApplicationName --appid $AppId -p $AppSecret -e https://smba.trafficmanager.net/amer-client-ss.msg/
+        $botJson = az bot create -k registration -v v3 -n $ApplicationName -g $ResourceGroupName --appid $AppId -p $AppSecret -e https://smba.trafficmanager.net/amer-client-ss.msg/
         $bot = $botJson | ConvertFrom-Json
         az bot msteams create -n $bot.name -g $bot.resourceGroup
         az logout

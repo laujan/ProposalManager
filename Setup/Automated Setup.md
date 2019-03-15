@@ -37,15 +37,17 @@ PMAdminUpn|The upn (user principal name, for example: john.doe@domain.com) of th
 PMSiteAlias|The name of the SharePoint site to create for Proposal Manager (`proposalmanager` is ok most of the times).
 OfficeTenantName|The name of the office tenant. For example, if your mail domain is @contoso.onmicrosoft.com, then the name of the tenant is "contoso".
 AzureResourceLocation|The azure region in which you want the resources to be allocated (for example, "East US").
-AzureSubscription|The name (id also works) of the azure subscription you want the resource group to be deployed to.
-ApplicationName|The name of the application (for example, "proposalmanager").
+AzureSubscription|The name (Id also works) of the Azure subscription you want the resource group to be deployed to.
+ResourceGroupName|OPTIONAL; The name of the resource group to deploy to. If nonexistent, one will be created. If not provided, defaults to the ApplicationName parameter value.
+ApplicationName|OPTIONAL; The name of the application (for example, "proposalmanager"). If not provided, defaults to `propmgr-<Tenant name>`.
 IncludeBot|FLAG; Include this parameter only if you also want the bot to be deployed by this script. Otherwise, don't include it.
 IncludeAddins|FLAG; Specify only if you want the addins (Proposal Creation & Project Smart Link) to be deployed alongside the application. **Important: if you include this parameter, a SQL database will be created for the Project Smart Link add-in. To avoid incurring in costs, this db will be deployed in the free tier. Azure only allows for a single free db to be provisioned in the same subscription for each region, so if you already have another free db in that region and subscription, either change the subscription, change the region, or delete the existing free database before running the script.** **Important: to install addins on an existing Proposal Manager instance, please refer to the "Installing Add-Ins only" section.**
-SqlServerAdminUsername|If IncluddeAddins was specified, this is the sql server admin username for the project smart link sql server. This sql server is created by this script; it does not exist beforehand. Therefore, you don't need to look up the value for this parameter but rather invent it now and take note of what you input. If IncludeAddins was not specified, this parameter is ignored.
-SqlServerAdminPassword|If IncluddeAddins was specified, this is the sql server admin password for the project smart link sql server. This sql server is created by this script; it does not exist beforehand. Therefore, you don't need to look up the value for this parameter but rather invent it now and take note of what you input. If IncludeAddins was not specified, this parameter is ignored.
+SqlServerAdminUsername|If IncluddeAddins was specified, this is the SQL Server admin username for the Project Smart Link SQL Server. This SQL Server is created by this script; it does not exist beforehand. Therefore, you don't need to look up the value for this parameter but rather invent it now and take note of what you input. If IncludeAddins was not specified, this parameter is ignored.
+SqlServerAdminPassword|If IncluddeAddins was specified, this is the SQL Server admin password for the Project Smart Link SQL Server. This SQL Server is created by this script; it does not exist beforehand. Therefore, you don't need to look up the value for this parameter but rather invent it now and take note of what you input. If IncludeAddins was not specified, this parameter is ignored.
 BotAzureSubscription|OPTIONAL; The name or id of the Azure subscription to register the bot in; it has to belong to the tenant identified by the OfficeTenantName parameter; if not included, you have to register the bot by hand by following the getting started guide and provide the bot name when prompted so.
-AdminSharePointSiteUrl|OPTIONAL; The url of the admin sharepoint site; if none is provided, the default one will be used.
+AdminSharePointSiteUrl|OPTIONAL; The URL of the admin SharePoint site; if none is provided, the default one will be used.
 Force|FLAG; Specify only if you explicitly intend to overwrite an existing installation of Proposal Manager.
+Verbose|FLAG; Specify only for troubleshooting purposes to include detailed information of the installation process.
 Mode|The *mode* of execution determines what tasks get done during the execution of the script. This is useful when you need to decouple, for example, the build from the deploy, to be able to build the application offline and then deploy them from a different security context in a different machine. See "available modes" for more details. **The default mode is _FULL_.**
 
 ### Execution modes
@@ -78,14 +80,12 @@ The required parameters for this mode are:
 - PMAdminUpn
 - PMSiteAlias
 - OfficeTenantName
-- ApplicationName
 
 #### DeployOnly
 
 The required parameters for this mode are:
 - AzureResourceLocation
 - AzureSubscription
-- ApplicationName
 
 #### BuildOnly
 
@@ -99,7 +99,6 @@ The required parameters for this mode are:
 - OfficeTenantName
 - AzureResourceLocation
 - AzureSubscription
-- ApplicationName
 
 #### Full
 
@@ -109,7 +108,6 @@ The required parameters for this mode are:
 - OfficeTenantName
 - AzureResourceLocation
 - AzureSubscription
-- ApplicationName
 
 ## Procedure
 
@@ -122,14 +120,20 @@ Once the tenant is ready, you will be asked to enter your **Azure contributor** 
 ## Examples
 
 ### Invocation example including all components
-`.\Install-PMInstance.ps1 -PMAdminUpn admin@contoso.onmicrosoft.com -PMSiteAlias proposalmanager -OfficeTenantName contoso -AzureResourceLocation "Central US" -IncludeBot -IncludeAddins -SqlServerAdminUsername adminSL -SqlServerAdminPassword Pa$$w0rd1`
+`.\Install-PMInstance.ps1 -PMAdminUpn admin@contoso.onmicrosoft.com -PMSiteAlias proposalmanager -OfficeTenantName contoso -AzureResourceLocation "Central US" -AzureSubscription "Subscription name" -IncludeBot -IncludeAddins -SqlServerAdminUsername adminSL -SqlServerAdminPassword Pa$$w0rd1`
 Note: -SqlServerAdminUsername cannot be "admin" nor an UPN (user principal name) 
 
 ### Invocation example only for Proposal Manager
-`.\Install-PMInstance.ps1 -PMAdminUpn admin@contoso.onmicrosoft.com -PMSiteAlias proposalmanager -OfficeTenantName contoso -AzureResourceLocation "Central US"`
+`.\Install-PMInstance.ps1 -PMAdminUpn admin@contoso.onmicrosoft.com -PMSiteAlias proposalmanager -OfficeTenantName contoso -AzureResourceLocation "Central US" -AzureSubscription "Subscription name"`
+
+### Invocation example for a Proposal Manager only reinstallation, with custom application and resource group names. 
+`.\Install-PMInstance.ps1 -PMAdminUpn admin@contoso.onmicrosoft.com -PMSiteAlias proposalmanager -OfficeTenantName contoso -AzureResourceLocation "Central US" -AzureSubscription "Subscription name" -ApplicationName proposalmanager-custom -ResourceGroupName proposalmanager-group -Force`
 
 ### Invocation example in BuildOnly mode
 `.\Install-PMInstance.ps1 -Mode BuildOnly`
+
+### Invocation example in DeployOnly mode
+`.\Install-PMInstance.ps1 -Mode DeployOnly -AzureResourceLocation "Central US" -AzureSubscription "Subscription name"`
 
 ## Further Steps
 
