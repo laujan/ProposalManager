@@ -1,15 +1,27 @@
 ﻿
 
 Function Verify-RequiredModules{
+    [CmdletBinding()]
+    param( 
+        [Parameter(Mandatory = $false)]
+        [switch]$AddInsOnly
+    )
+
     Write-Information "Checking required PS modules"
 
     $modules = [ordered]@{
         'Azure' = @{ Version = [System.Version]'5.3.0' }
         'AzureAD' = @{ Version = [System.Version]'2.0.2.4' }
         'AzureRM'  = @{ Version = [System.Version]'5.7.0' }
-        'Microsoft.Online.SharePoint.Powershell' = @{ Version = [System.Version]'16.0.8615.1200' }
-        'SharePointPnPPowerShellOnline' = @{ Version = [System.Version]'3.6.1902.2' }
-    }    
+    }
+    
+    # These modules are only required when installing the main PM instance
+    if (!$AddInsOnly)
+    {
+        $modules['Microsoft.Online.SharePoint.Powershell'] = @{ Version = [System.Version]'16.0.8615.1200' }
+        $modules['SharePointPnPPowerShellOnline'] = @{ Version = [System.Version]'3.6.1902.2' }
+    }
+
 
     foreach ($module in $modules.GetEnumerator()) {
         Verify-Module -ModuleName $module.Name -ModuleVersion $module.Value.Version

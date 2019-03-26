@@ -31,6 +31,8 @@
     OPTIONAL. The url of the admin sharepoint site. If none is provided, the default one will be used.
 .PARAMETER Force
     Specify only if you explicitly intend to overwrite an existing installation of Proposal Manager.
+.PARAMETER MFA
+    Specify only if your tenant's security configuration requires you to use Multi-Factor Authentication.
 #>
 [CmdletBinding()]
 param(
@@ -64,7 +66,9 @@ param(
     [ValidateSet('Full', 'NoDeploy', 'DeployOnly', 'BuildOnly', 'RegisterDeploy')]
     [string]$Mode = 'Full',
     [Parameter(Mandatory = $false)]
-    [switch]$Force
+    [switch]$Force,
+    [Parameter(Mandatory = $false)]
+    [switch]$MFA
 )
 
 $ErrorActionPreference = 'Stop'
@@ -189,7 +193,15 @@ if(!$registers -and $deploys)
 
 # Prompt the user one time for credentials to use across all necessary connections (like SSO)
 Write-Information "Installation of Proposal Manager will begin. You need to be a Global Administrator to continue."
-$credential = Get-Credential -Message "Enter your Office 365 tenant global administrator credentials"
+
+if(!$MFA)
+{
+    $credential = Get-Credential -Message "Enter your Office 365 tenant global administrator credentials"
+}
+else 
+{
+    Write-Information "MFA mode enabled. You will be required to enter credentials multiple times through the installation process."
+}
 
 Connect-AzureAD -Credential $credential
 $tenantId = (Get-AzureADTenantDetail).ObjectId
@@ -225,8 +237,8 @@ if($registers)
             'e1fe6dd8-ba31-4d61-89e7-88639da4683d'
         $applicationPermissions = @()
         $projectSmartLinkRegistration = RegisterApp -ApplicationName "$ApplicationName-projectsmartlink" -RelativeReplyUrls $replyUrls -DelegatedPermissions $delegatedPermissions -Credential $credential
-        #$preAuthorizedAppIds += $projectSmartLinkRegistration.AppId
-        Write-Information "Proposal Creation add-in successfully registered."
+        
+        Write-Information "Project Smart Link add-in successfully registered."
     }
 
     # Register Azure AD application (Endpoint v2)
@@ -234,7 +246,19 @@ if($registers)
 
     # Create Service Principal
     Write-Information "Creating Service Principal"
-    Connect-AzureRmAccount -Credential $credential
+
+    if($MFA)
+    {
+        Write-Information "Please enter your Office 365 credentials in the dialog."
+
+        # Unlike the others cmdlets, this one fails when passing a null Credential parameter
+        Connect-AzureRmAccount
+    }
+    else 
+    {        
+        Connect-AzureRmAccount -Credential $credential
+    }
+    
     [int]$retriesLeft = 3
     [bool]$success = $false
     while(!$success)
@@ -382,7 +406,6 @@ if($IncludeAddins)
         
     if($builds)
     {
-
         cd ..\Addins\ProposalCreation\UI
 
         $ErrorActionPreference = 'Inquire'
@@ -474,7 +497,7 @@ if($IncludeAddins)
 
         .\ZipDeploy.ps1 -sourcePath ..\Addins\ProjectSmartLink\ProjectSmartLink.Web\bin\Release\netcoreapp2.1\publish\* -username $deploymentCredentials.PSLUsername -password $deploymentCredentials.PSLPassword -appName "$ApplicationName-projectsmartlink"
 
-        Write-Information "Proposal Creation: Web app deployment has completed!"
+        Write-Information "Project Smart Link: Web app deployment has completed!"
 
     }
 

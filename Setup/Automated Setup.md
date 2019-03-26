@@ -46,6 +46,7 @@ SqlServerAdminUsername|If IncluddeAddins was specified, this is the SQL Server a
 SqlServerAdminPassword|If IncluddeAddins was specified, this is the SQL Server admin password for the Project Smart Link SQL Server. This SQL Server is created by this script; it does not exist beforehand. Therefore, you don't need to look up the value for this parameter but rather invent it now and take note of what you input. If IncludeAddins was not specified, this parameter is ignored.
 BotAzureSubscription|OPTIONAL; The name or id of the Azure subscription to register the bot in; it has to belong to the tenant identified by the OfficeTenantName parameter; if not included, you have to register the bot by hand by following the getting started guide and provide the bot name when prompted so.
 AdminSharePointSiteUrl|OPTIONAL; The URL of the admin SharePoint site; if none is provided, the default one will be used.
+MFA|FLAG; Specify only if your user login requires MFA. You will be required to enter your credentials multiple times throught the setup process.
 Force|FLAG; Specify only if you explicitly intend to overwrite an existing installation of Proposal Manager.
 Verbose|FLAG; Specify only for troubleshooting purposes to include detailed information of the installation process.
 Mode|The *mode* of execution determines what tasks get done during the execution of the script. This is useful when you need to decouple, for example, the build from the deploy, to be able to build the application offline and then deploy them from a different security context in a different machine. See "available modes" for more details. **The default mode is _FULL_.**
@@ -61,6 +62,8 @@ DeployOnly|No|No|Yes
 BuildOnly|Yes|No|No
 RegisterDeploy|No|Yes|Yes
 Full|Yes|Yes|Yes
+
+**Important**: If your user account login is enforced with Multi-Factor Authentication (MFA), you _must_ use the -MFA flag. Otherwise, the installation will fail.
 
 **Note**: If no mode is specified, the _FULL_ mode will be used.
 
@@ -181,14 +184,16 @@ Parameter|Meaning
 OfficeTenantName|The name of the office tenant. For example, if your mail domain is @contoso.onmicrosoft.com, then the name of the tenant is "contoso".
 AzureResourceLocation|The azure region in which you want the resources to be allocated (for example, "East US").
 AzureSubscription|The name (id also works) of the azure subscription you want the resource group to be deployed to.
+ResourceGroupName|OPTIONAL; The name of the resource group where the Proposal Manager main app resides.
 ApplicationName|The name of the application (for example, "proposalmanager").
 SqlServerAdminUsername|This is the sql server admin username for the project smart link sql server. This sql server is created by this script; it does not exist beforehand. Therefore, you don't need to look up the value for this parameter but rather invent it now and take note of what you input.
 SqlServerAdminPassword|This is the sql server admin password for the project smart link sql server. This sql server is created by this script; it does not exist beforehand. Therefore, you don't need to look up the value for this parameter but rather invent it now and take note of what you input.
-ProposalManagerAppId|The app id of the existing Proposal Manager Instance to attach this instance of Project Smart Link to.
+Mode|The *mode* of execution determines what tasks get done during the execution of the script. It has the same behavior and purpose as the main script detailed above.
+MFA|FLAG; Specify only if your user login is enforced with MFA. 
 
 Here is an example of how to invoke the script:
 
-`.\Install-PMProjectSmartLinkInstance.ps1 -OfficeTenantName contoso -ApplicationName contosopm -ProposalManagerAppId '5ba0f5f3-66e0-4826-becb-02988ca3f911' -AzureResourceLocation "South Central US" -AzureSubscription "Pay-As-You-Go Dev/Test" -SqlServerAdminUsername 'contosoSa' -SqlServerAdminPassword 'tattoine'`
+`.\Install-PMProjectSmartLinkInstance.ps1 -OfficeTenantName contoso -ResourceGroupName proposalmanager-group -ApplicationName contosopm -ProposalManagerAppId '5ba0f5f3-66e0-4826-becb-02988ca3f911' -AzureResourceLocation "South Central US" -AzureSubscription "Pay-As-You-Go Dev/Test" -SqlServerAdminUsername 'contosoSa' -SqlServerAdminPassword 'tattoine'`
 
 ## Proposal Creation
 
@@ -199,11 +204,14 @@ Parameter|Meaning
 OfficeTenantName|The name of the office tenant. For example, if your mail domain is @contoso.onmicrosoft.com, then the name of the tenant is "contoso".
 AzureResourceLocation|The azure region in which you want the resources to be allocated (for example, "East US").
 AzureSubscription|The name (id also works) of the azure subscription you want the resource group to be deployed to.
+ResourceGroupName|OPTIONAL; The name of the resource group where the Proposal Manager main app resides.
 ApplicationName|The name of the application (for example, "proposalmanager").
 ProposalManagerDomain|The domain of the existing Proposal Manager instance (for example, propmgr-contoso5.azurewebsites.net)
 ProjectSmartLinkUrl|The url of an existing instance of Project Smart Link. This will enable opening Project Smart Link from the Proposal Creation section on the ribbon in Word.
 ProposalManagerAppId|The app id of the existing Proposal Manager Instance to attach this instance of Proposal Creation to.
+Mode|The *mode* of execution determines what tasks get done during the execution of the script. It has the same behavior and purpose as the main script detailed above.
+MFA|FLAG; Specify only if your user login is enforced with MFA. 
 
 Here is an example of how to invoke the script:
 
-`.\Install-PMProposalCreationInstance.ps1 -OfficeTenantName contoso -ApplicationName contosopm -ProposalManagerAppId '5ba0f5f3-66e0-4826-becb-02988ca3f911' -AzureResourceLocation 'South Central US' -AzureSubscription 'Pay-As-You-Go Dev/Test'  -ProposalManagerDomain "contosopm.azurewebsites.net" -ProjectSmartLinkUrl "https://contosopm-projectsmartlink.azurewebsites.net"`
+`.\Install-PMProposalCreationInstance.ps1 -OfficeTenantName contoso -ResourceGroupName proposalmanager-group -ApplicationName contosopm -ProposalManagerAppId '5ba0f5f3-66e0-4826-becb-02988ca3f911' -AzureResourceLocation 'South Central US' -AzureSubscription 'Pay-As-You-Go Dev/Test'  -ProposalManagerDomain "contosopm.azurewebsites.net" -ProjectSmartLinkUrl "https://contosopm-projectsmartlink.azurewebsites.net"`

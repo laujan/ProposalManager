@@ -4,7 +4,7 @@
     (
         [Parameter(Mandatory=$false)]
         [string]$ApplicationName,
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false)]
         [pscredential]$Credential,
         [Parameter(Mandatory=$false)]
         [string[]]$RelativeReplyUrls,
@@ -197,16 +197,31 @@ Function GetAuthToken
     [CmdletBinding()]
     param
     (
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false)]
         [pscredential]$Credential
     )
     Import-Module Azure
-    $clientId = "1950a258-227b-4e31-a9cf-717495945fc2" 
-    $redirectUri = "urn:ietf:wg:oauth:2.0:oob"
+
+    $clientId = "1950a258-227b-4e31-a9cf-717495945fc2"     
     $resourceAppIdURI = "https://graph.microsoft.com"
     $authority = "https://login.microsoftonline.com/common"
     $authContext = New-Object "Microsoft.IdentityModel.Clients.ActiveDirectory.AuthenticationContext" -ArgumentList $authority
-    $AADCredential = New-Object "Microsoft.IdentityModel.Clients.ActiveDirectory.UserCredential" -ArgumentList $credential.UserName,$credential.Password
-    $authResult = $authContext.AcquireToken($resourceAppIdURI, $clientId,$AADCredential)
+
+    if(!$Credential)
+    {
+        Write-Information "Please enter your Office 365 credentials in the dialog to connect to Azure."
+
+        $redirectUri = "urn:ietf:wg:oauth:2.0:oob"
+        $promptBehavior = [Microsoft.IdentityModel.Clients.ActiveDirectory.PromptBehavior]::Always
+
+        $authResult = $authContext.AcquireToken($resourceAppIdURI, $clientId, $redirectUri, $promptBehavior)        
+    }
+    else 
+    {
+        $AADCredential = New-Object "Microsoft.IdentityModel.Clients.ActiveDirectory.UserCredential" -ArgumentList $credential.UserName,$credential.Password
+
+        $authResult = $authContext.AcquireToken($resourceAppIdURI, $clientId, $AADCredential)
+    }
+
     return $authResult
 }

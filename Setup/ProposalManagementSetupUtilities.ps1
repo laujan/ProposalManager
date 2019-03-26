@@ -11,12 +11,17 @@ function New-PMSharePointSite {
         [string]$PMSiteAlias,
         [Parameter(Mandatory = $true)]
         [string]$OfficeTenantName,
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false)]
         [pscredential]$Credential,
         [Parameter(Mandatory = $false)]
         [switch]$Force
     )
     process {
+        if(!$Credential)
+        {
+            Write-Information "Please enter your Office 365 credentials in the dialog to connect to Sharepoint Online."
+        }
+
         Connect-SPOService -Url $AdminSiteUrl -Credential $Credential
         try
         {
@@ -25,7 +30,16 @@ function New-PMSharePointSite {
         if(!$pmSiteUrl)
         {
             # We open a PnP connection and do all we need in sequence to avoid having many connections open unnecessarily
-            Connect-PnPOnline -Url $AdminSiteUrl -Credentials $Credential
+            if(!$Credential)
+            {
+                Write-Information "If necessary, enter again your Office 365 credentials in the web dialog to connect to Pattern and Practices API."
+                Connect-PnPOnline -Url $AdminSiteUrl -UseWebLogin
+            }
+            else 
+            {
+                Connect-PnPOnline -Url $AdminSiteUrl -Credentials $Credential
+            }
+            
             # First we create the site with the specified alias and store the url of the created site
             Write-Information "Creating the Proposal Manager SharePoint site..."
             $pmSiteUrl = New-PnPSite -Type TeamSite -Title "Proposal Management" -Alias $PMSiteAlias
@@ -59,18 +73,22 @@ function New-PMSharePointSite {
 function New-PMGroupStructure {
     [CmdletBinding()]
     param(
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false)]
         [pscredential]$Credential,
         [Parameter(Mandatory = $false)]
         [switch]$Force
     )
     process {
+        if(!$Credential)
+        {
+            Write-Information "Please enter your Office 365 credentials in the dialog to connect to Azure."
+        }
+        
+        Connect-AzureAD -Credential $Credential
+
         # Common attributes that should be applied to all Office 365 groups being created
         $groupsCommonAttributes = @{ }
-        # Then we create the Office 365 groups corresponding to the PM roles (as the Getting Started guide asks)
-        Write-Information "Connecting to Office 365 to create unified groups..."
-        $exchangeSession = New-PSSession -ConfigurationName Microsoft.Exchange -ConnectionUri https://outlook.office365.com/powershell-liveid/ -Credential $Credential -Authentication Basic -AllowRedirection
-        Import-PSSession $exchangeSession -DisableNameChecking
+        
         Write-Information "Group creation has started"
         $groups = @(
             "Relationship Managers",
@@ -82,10 +100,10 @@ function New-PMGroupStructure {
         foreach($group in $groups)
         {
             Write-Information "Checking pre-existance of the $group group."
-            if(!(Get-UnifiedGroup -Identity $group -ErrorAction SilentlyContinue))
+            if(!(Get-AzureADMSGroup -SearchString $group))
             {
                 Write-Information "$group group does not exist. Creating..."
-                New-UnifiedGroup @groupsCommonAttributes -DisplayName $group
+                New-AzureADMSGroup -DisplayName $group -MailEnabled $false -MailNickname "TestGroup" -SecurityEnabled $true -GroupTypes “Unified” 
                 Write-Information "$group group successfully created."
             }
             else
@@ -100,8 +118,8 @@ function New-PMGroupStructure {
                 }
             }
         }
+
         Write-Information "Group creation has been succesfully completed"
-        Remove-PSSession $exchangeSession
     }
 }
 
@@ -135,7 +153,7 @@ function New-PMSite {
             $ResourceGroupName = $ApplicationName
         }
 
-        Write-Information "Starting resource group deployment in Azure..."
+        Write-Information "Starting resource group deployment in Azure. Please provide credentials."
         Connect-AzureRmAccount -Subscription $Subscription
 
         $existingResourceGroup = Get-AzureRmResourceGroup -Name $ResourceGroupName -ErrorAction SilentlyContinue
@@ -145,23 +163,27 @@ function New-PMSite {
             $resourceGroupContents = Get-AzureRmResource | Where-Object {$_.ResourceGroupName –eq $ResourceGroupName}
             if($resourceGroupContents)
             {
-                if($Force)
+                # If we're installing the addins, it is to be expected that the resource group has items in it.
+                if(!$ExcludeProposalManager)
                 {
-                    Write-Warning "$ResourceGroupName resource group already exists, and has resources associated. The -Force flag was specified so the existing resource group will be emptied."
+                    if($Force)
+                    {
+                        Write-Warning "$ResourceGroupName resource group already exists, and has resources associated. The -Force flag was specified so the existing resource group will be emptied."
 
-                    # Empty the resource group by deploying an empty template in Complete mode. This will automatically remove any resource without needing to iterate through all of them
-                    $cleaningResult = New-AzureRmResourceGroupDeployment -ResourceGroupName $ResourceGroupName -Mode Complete -TemplateFile .\ResourceGroupCleanup.json -Force
+                        # Empty the resource group by deploying an empty template in Complete mode. This will automatically remove any resource without needing to iterate through all of them
+                        $cleaningResult = New-AzureRmResourceGroupDeployment -ResourceGroupName $ResourceGroupName -Mode Complete -TemplateFile .\ResourceGroupCleanup.json -Force
 
-                    if ($cleaningResult.ProvisioningState -eq "Failed") 
-                    { 
-                        Write-Error "Resource removal failed. Please check deployment status for deploy named 'ResourceGroupCleanup' in the Azure Portal for more details."
+                        if ($cleaningResult.ProvisioningState -eq "Failed") 
+                        { 
+                            Write-Error "Resource removal failed. Please check deployment status for deploy named 'ResourceGroupCleanup' in the Azure Portal for more details."
+                        }
+
+                        Write-Information "The existing resource group was successfully emptied to be able to redeploy to the same resource group."
                     }
-
-                    Write-Information "The existing resource group was successfully emptied to be able to redeploy to the same resource group."
-                }
-                else
-                {
-                    Write-Error "A resource group with the name $ResourceGroupName already exists, and has resources associated. If you want to overwrite an existing installation of Proposal Manager, use the -Force flag."
+                    else
+                    {
+                        Write-Error "A resource group with the name $ResourceGroupName already exists, and has resources associated. If you want to overwrite an existing installation of Proposal Manager, use the -Force flag."
+                    }
                 }
             }
             else 
@@ -172,7 +194,7 @@ function New-PMSite {
         else
         {
             New-AzureRmResourceGroup -Name $ResourceGroupName -Location $PMSiteLocation
-            Write-Information "The resource group $ResourceGroupName created."
+            Write-Information "The resource group $ResourceGroupName has been created."
         }
 
         if($IncludeProjectSmartLink)
@@ -280,7 +302,7 @@ function New-PMBot {
         [string]$ResourceGroupName,
         [Parameter(Mandatory = $true)]
         [string]$ApplicationName,
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false)]
         [pscredential]$Credential,
         [Parameter(Mandatory = $true)]
         [string]$AppId,
@@ -294,7 +316,18 @@ function New-PMBot {
         }
         
         Write-Information "Beginning bot registration..."
-        az login -u $Credential.UserName -p $Credential.GetNetworkCredential().Password
+
+        if(!$Credential)
+        {
+            Write-Information "Please enter your Office 365 credentials in the dialog to connect to Azure."
+
+            az login
+        }
+        else 
+        {
+            az login -u $Credential.UserName -p $Credential.GetNetworkCredential().Password
+        }
+        
         az account set -s $Subscription
         $botJson = az bot create -k registration -v v3 -n $ApplicationName -g $ResourceGroupName --appid $AppId -p $AppSecret -e https://smba.trafficmanager.net/amer-client-ss.msg/
         $bot = $botJson | ConvertFrom-Json
