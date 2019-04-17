@@ -103,7 +103,7 @@ function New-PMGroupStructure {
             if(!(Get-AzureADMSGroup -SearchString $group))
             {
                 Write-Information "$group group does not exist. Creating..."
-                New-AzureADMSGroup -DisplayName $group -MailEnabled $false -MailNickname "TestGroup" -SecurityEnabled $true -GroupTypes “Unified” 
+                New-AzureADMSGroup -DisplayName $group -MailEnabled $false -SecurityEnabled $true -GroupTypes “Unified” 
                 Write-Information "$group group successfully created."
             }
             else
