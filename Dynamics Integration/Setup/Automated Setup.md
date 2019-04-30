@@ -14,7 +14,7 @@ To run the script, you need to provide the following parameters:
 
 Parameter|Meaning|Example
 ---------|-------|-------
-OrganizationName|The name of the Dynamics 365 organization.|contoso
+OrganizationName|The name of the Dynamics 365 organization. The unique name can be found in Settings > Customizations > Developer Resources, Instance Reference Information section, in a field called "Unique Name".|contoso
 OrganizationRegion|The region of the Dynamics 365 instance. This information can be found either in the [Power Apps admin site](admin.powerplatform.microsoft.com) in the Enviroments section, or in the [Dynamics 365 admin site](https://port.crm.dynamics.com/G/Instances/InstancePicker.aspx?). |NorthAmerica
 TenantDomain|The domain of the tenant where the Dynamics 365 instance is located.|contoso.onmicrosoft.com
 BusinessUnitName|The name of the Dynamics 365 business unit.|contoso
@@ -34,9 +34,10 @@ Credential|*Optional*. A Credential object obtained with Get-Credential.|-
 ### 1. Script Execution
 The first thing to do is running the script with PowerShell. All the parameters, and how to acquire them, are explained in the previous section.
 
-When running the script, you will be prompted for credentials. Log in with your **Office 365 tenant global administrator credentials**. Once this is done, the script will start importing some necessary Dynamics 365 PowerShell modules, open a connection to the Dynamics 365 instance, and deploy the Proposal Manager package using the Deployer.
+When running the script, you will be prompted for credentials. Log in with your **Dynamics 365 global administrator credentials**. This is usually the Office 365 tenant global administrator, but it can vary in your organization. Make sure this user has both the System Administrator and System Customizer roles in Dynamics 365. 
+Once this is done, the script will start importing some necessary Dynamics 365 PowerShell modules, open a connection to the Dynamics 365 instance, and deploy the Proposal Manager package using the Deployer.
 
-The script responsibility ends there, as all remaining configuration is done via custom code in the package after the solution import finishes. This code will create a Proposal Manager Application user with all necessary permissions in the Dynamics 365 instance, register all necessary SharePoint sites, partially register the Webhooks, and generate an appsettings.json file with all the generated configuration that needs to be updated in the Proposal Manager solution.
+The script responsibility ends there, as all remaining configuration is done via custom code in the package after the solution import finishes. This code will create a Proposal Manager Application user with all required permissions in the Dynamics 365 instance, register all necessary SharePoint sites, partially register the Webhooks, and generate an appsettings.json file with all the generated configuration that needs to be updated in the Proposal Manager solution.
 
 ### 2. Webhook steps registration
 When the Deployer ends its execution successfully, you will need to manually register the Dynamics 365 Webhooks. Please reefer to the step 6 of the Setup Guide of the Integration. 

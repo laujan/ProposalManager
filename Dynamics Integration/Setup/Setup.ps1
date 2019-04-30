@@ -24,5 +24,5 @@ if(!$Credential)
 
 $crmConnection = Get-CrmConnection -OrganizationName $OrganizationName -DeploymentRegion $OrganizationRegion -OnLineType Office365 -Credential $Credential
 
-Import-CrmPackage -PackageDirectory (Resolve-Path .) -PackageName ProposalManager.dll -CrmConnection $crmConnection -LogWriteDirectory (Resolve-Path .) `
+Import-CrmPackage -PackageDirectory (Resolve-Path .) -PackageName ProposalManager.dll -CrmConnection $crmConnection `
     -RuntimePackageSettings "TenantDomain=$TenantDomain|BusinessUnit=$BusinessUnitName|ProposalManagerApplicationId=$ProposalManagerAppId|ProposalManagerApplicationUrl=$ProposalManagerApplicationUrl|SharePointDomain=$SharePointDomain|ProposalManagerSharePointSiteName=$ProposalManagerSharePointSiteName|DriveName=$DriveName"
