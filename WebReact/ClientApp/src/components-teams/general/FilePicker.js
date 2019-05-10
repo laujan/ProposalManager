@@ -5,12 +5,10 @@
 
 import React, { Component } from 'react';
 import { Link } from 'office-ui-fabric-react/lib/Link';
-import { DefaultButton, PrimaryButton, IconButton, IButtonProps } from 'office-ui-fabric-react/lib/Button';
-import { Label } from 'office-ui-fabric-react/lib/Label';
+import { DefaultButton } from 'office-ui-fabric-react/lib/Button';
 import { Icon } from 'office-ui-fabric-react/lib/Icon';
 import { TextField } from 'office-ui-fabric-react/lib/TextField';
 import { Trans } from "react-i18next";
-
 
 export class FilePicker extends Component {
     displayName = FilePicker.name

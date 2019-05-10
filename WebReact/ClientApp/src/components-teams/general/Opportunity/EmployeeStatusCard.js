@@ -4,17 +4,14 @@
 */
 
 import React, { Component } from 'react';
-import * as ReactDOM from 'react-dom';
 import { Label } from 'office-ui-fabric-react/lib/Label';
 import {
     Persona,
-    PersonaSize,
-    PersonaPresence
+    PersonaSize
 } from 'office-ui-fabric-react/lib/Persona';
 import '../../../Style.css';
 import { oppStatus, oppStatusText } from '../../../common';
 import { Trans } from "react-i18next";
-
 
 export class EmployeeStatusCard extends Component {
     displayName = EmployeeStatusCard.name

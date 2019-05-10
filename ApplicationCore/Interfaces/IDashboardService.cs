@@ -4,15 +4,15 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using ApplicationCore.Models;
 using ApplicationCore.ViewModels;
+using ApplicationCore.Artifacts;
 
 namespace ApplicationCore.Interfaces
 {
     public interface IDashboardService
     {
-        Task<StatusCodes> CreateOpportunityAsync(DashboardModel entity, string requestId = "");
-        Task<StatusCodes> UpdateOpportunityAsync(DashboardModel entity, string requestId = "");
+        Task<Opportunity> CreateWorkflowAsync(Opportunity opportunity, string requestId = "");
+
+        Task<Opportunity> UpdateWorkflowAsync(Opportunity opportunity, string requestId = "");
         Task<StatusCodes> DeleteOpportunityAsync(string id, string requestId = "");
-        Task<IList<DashboardModel>> GetAllAsync(string requestId = "");
-        Task<DashboardModel> GetAsync(string Id,string requestId = "");
     }
 }

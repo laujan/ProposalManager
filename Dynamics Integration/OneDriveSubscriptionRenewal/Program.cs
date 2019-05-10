@@ -53,7 +53,7 @@ namespace OneDriveSubscriptionRenewal
 			serviceCollection.AddScoped<IOpportunityRepository, OpportunityRepository>();
 			serviceCollection.AddSingleton<IOneDriveLinkService, OneDriveLinkService>();
 			serviceCollection.AddScoped<IUserProfileRepository, UserProfileRepository>();
-			serviceCollection.AddScoped<IRoleMappingRepository, RoleMappingRepository>();
+			serviceCollection.AddScoped<IRoleRepository, RoleRepository>();
 			serviceCollection.AddScoped<CardNotificationService>();
 			serviceCollection.AddScoped<CheckListProcessService>();
 			serviceCollection.AddScoped<CustomerDecisionProcessService>();

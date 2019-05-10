@@ -3,27 +3,23 @@
 //
 // Licensed under the MIT license. See LICENSE file in the solution root folder for full license information.
 
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Net.Http;
+using ApplicationCore;
+using ApplicationCore.Entities.GraphServices;
+using ApplicationCore.Helpers;
+using ApplicationCore.Helpers.Exceptions;
+using ApplicationCore.Interfaces;
+using Infrastructure.Services;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Graph;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Infrastructure.Services;
-using ApplicationCore;
-using ApplicationCore.Interfaces;
-using ApplicationCore.Entities.GraphServices;
-using ApplicationCore.Helpers;
-using Microsoft.Extensions.FileProviders;
+using System;
+using System.Collections.Generic;
 using System.IO;
-using Microsoft.AspNetCore.Http;
-using ApplicationCore.Helpers.Exceptions;
-using System.Net;
+using System.Net.Http;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace Infrastructure.GraphApi
 {
@@ -69,8 +65,7 @@ namespace Infrastructure.GraphApi
                 // Get the status response and throw if is not 200.
                 Guard.Against.NotStatus200OK(response.StatusCode, "GetDefaultSiteAsync", requestId);
 
-                var content = await response.Content.ReadAsStringAsync();
-                JObject responseJObject = JObject.Parse(await response.Content.ReadAsStringAsync());
+                JObject responseJObject = await response.Content.ReadAsAsync<JObject>();
 
                 _logger.LogInformation($"RequestId: {requestId} - GetDefaultSiteAsync end.");
                 return responseJObject;
@@ -109,8 +104,7 @@ namespace Infrastructure.GraphApi
                 // Get the status response and throw if is not 200.
                 Guard.Against.NotStatus200OK(response.StatusCode, "GetSiteIdAsync", requestId);
 
-                var content = await response.Content.ReadAsStringAsync();
-                JObject responseJObject = JObject.Parse(await response.Content.ReadAsStringAsync());
+                JObject responseJObject = await response.Content.ReadAsAsync<JObject>();
 
                 _logger.LogInformation($"RequestId: {requestId} - GetSiteIdAsync end.");
                 return responseJObject;
@@ -124,7 +118,7 @@ namespace Infrastructure.GraphApi
 
 
         // List Management
-        public async Task<JObject> CreateSiteListAsync(string htmlBody, string requestId = "")
+        public async Task<JObject> CreateSiteListAsync(string htmlBody, string rootId ,string requestId = "")
         {
             // POST: https://graph.microsoft.com/beta/sites/{site-id}/lists
             // EXAMPLE: https://graph.microsoft.com/v1.0/sites/onterawe.sharepoint.com,988079b1-450c-44ae-bad2-41aeffe2fadb,7028bf8f-4174-4578-96cc-e5a9f52e542c/lists
@@ -133,13 +127,13 @@ namespace Infrastructure.GraphApi
             try
             {
                 if (String.IsNullOrEmpty(htmlBody)) throw new ArgumentNullException(nameof(htmlBody));
-                if (String.IsNullOrEmpty(_appOptions.ProposalManagementRootSiteId)) throw new ArgumentNullException(nameof(_appOptions.ProposalManagementRootSiteId));
+                if (String.IsNullOrEmpty(rootId)) throw new ArgumentNullException(nameof(rootId));
 
-                var requestUrl = _appOptions.GraphRequestUrl + "/sites/" + _appOptions.ProposalManagementRootSiteId + "/lists";
+                var requestUrl = _appOptions.GraphRequestUrl + "/sites/" + rootId + "/lists";
 
                 // Create the request message and add the content.
                 HttpRequestMessage hrm = new HttpRequestMessage(HttpMethod.Post, requestUrl);
-                hrm.Content = new StringContent(htmlBody, System.Text.Encoding.UTF8, "application/json");
+                hrm.Content = new StringContent(htmlBody, Encoding.UTF8, "application/json");
 
                 var response = new HttpResponseMessage();
 
@@ -149,8 +143,7 @@ namespace Infrastructure.GraphApi
                 // Send the request and get the response.
                 response = await GraphClient.HttpProvider.SendAsync(hrm);
 
-                var content = await response.Content.ReadAsStringAsync();
-                JObject responseJObject = JObject.Parse(await response.Content.ReadAsStringAsync());
+                JObject responseJObject = await response.Content.ReadAsAsync<JObject>();
 
                 // Get the content from the response.
                 if (response.StatusCode != System.Net.HttpStatusCode.Created)
@@ -195,8 +188,7 @@ namespace Infrastructure.GraphApi
                 // Get the status response and throw if is not 200.
                 Guard.Against.NotStatus200OK(response.StatusCode, "GetSiteListAsync_siteId_listId", requestId);
 
-                var content = await response.Content.ReadAsStringAsync();
-                JObject responseJObject = JObject.Parse(await response.Content.ReadAsStringAsync());
+                JObject responseJObject = await response.Content.ReadAsAsync<JObject>();
 
                 _logger.LogInformation($"RequestId: {requestId} - GetSiteListAsync_siteId_listId end.");
                 return responseJObject;
@@ -248,8 +240,7 @@ namespace Infrastructure.GraphApi
                 // Get the status response and throw if is not 201.
                 Guard.Against.NotStatus201Created(response.StatusCode, "CreateListItemAsync", requestId);
 
-                var content = await response.Content.ReadAsStringAsync();
-                JObject responseJObject = JObject.Parse(await response.Content.ReadAsStringAsync());
+                JObject responseJObject = await response.Content.ReadAsAsync<JObject>();
 
                 _logger.LogInformation($"RequestId: {requestId} - CreateListItemAsync end.");
                 return responseJObject;
@@ -295,8 +286,7 @@ namespace Infrastructure.GraphApi
                 // Get the status response and throw if is not 200.
                 Guard.Against.NotStatus200OK(response.StatusCode, "UpdateListItemAsync", requestId);
 
-                var content = await response.Content.ReadAsStringAsync();
-                JObject responseJObject = JObject.Parse(await response.Content.ReadAsStringAsync());
+                JObject responseJObject = await response.Content.ReadAsAsync<JObject>();
 
                 _logger.LogInformation($"RequestId: {requestId} - UpdateListItemAsync end.");
                 return responseJObject;
@@ -380,10 +370,7 @@ namespace Infrastructure.GraphApi
                 Guard.Against.NotStatus200OK(response.StatusCode, "GetListItemsAsync", requestId);
 
                 //TODO: Handle SkipToken 
-
-
-                var content = await response.Content.ReadAsStringAsync();
-                JObject responseJObject = JObject.Parse(await response.Content.ReadAsStringAsync());
+                JObject responseJObject = await response.Content.ReadAsAsync<JObject>();
 
                 _logger.LogInformation($"RequestId: {requestId} - GetListItemsAsync end.");
                 return responseJObject;
@@ -431,8 +418,7 @@ namespace Infrastructure.GraphApi
                 // Get the status response and throw if is not 200.
                 Guard.Against.NotStatus200OK(response.StatusCode, "GetListItemByIdAsync", requestId);
 
-                var content = await response.Content.ReadAsStringAsync();
-                JObject responseJObject = JObject.Parse(await response.Content.ReadAsStringAsync());
+                JObject responseJObject = await response.Content.ReadAsAsync<JObject>();
 
                 _logger.LogInformation($"RequestId: {requestId} - GetListItemByIdAsync end.");
                 return responseJObject;
@@ -491,8 +477,7 @@ namespace Infrastructure.GraphApi
                 // Get the status response and throw if is not 200.
                 Guard.Against.NotStatus200OK(response.StatusCode, "GetListItemAsync", requestId);
 
-                var content = await response.Content.ReadAsStringAsync();
-                JObject responseJObject = JObject.Parse(await response.Content.ReadAsStringAsync());
+                JObject responseJObject = await response.Content.ReadAsAsync<JObject>();
 
                 _logger.LogInformation($"RequestId: {requestId} - GetListItemAsync end.");
                 return responseJObject;
@@ -574,8 +559,7 @@ namespace Infrastructure.GraphApi
                 // Get the status response and throw if is not 200.
                 Guard.Against.NotStatus200OK(response.StatusCode, "GetSiteDriveAsync", requestId);
 
-                var content = await response.Content.ReadAsStringAsync();
-                JObject responseJObject = JObject.Parse(await response.Content.ReadAsStringAsync());
+                JObject responseJObject = await response.Content.ReadAsAsync<JObject>();
 
                 _logger.LogInformation($"RequestId: {requestId} - GetSiteDriveAsync end.");
                 return responseJObject;
@@ -613,8 +597,7 @@ namespace Infrastructure.GraphApi
                 // Get the status response and throw if is not 200.
                 Guard.Against.NotStatus200OK(response.StatusCode, "GetSiteDriveChildrensAsync", requestId);
 
-                var content = await response.Content.ReadAsStringAsync();
-                JObject responseJObject = JObject.Parse(await response.Content.ReadAsStringAsync());
+                JObject responseJObject = await response.Content.ReadAsAsync<JObject>();
 
                 _logger.LogInformation($"RequestId: {requestId} - GetSiteDriveChildrensAsync end.");
                 return responseJObject;
@@ -737,6 +720,7 @@ namespace Infrastructure.GraphApi
                 // Check whether document exists, is so then make a copy of the existing one.
                 try
                 {
+                    //File upload Error
                     var existingFile = await GraphClient.Sites[siteId].Drive.Root.ItemWithPath(path).Request().GetAsync();
 
                     if (existingFile != null)

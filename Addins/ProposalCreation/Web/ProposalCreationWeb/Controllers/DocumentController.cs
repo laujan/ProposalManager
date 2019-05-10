@@ -31,16 +31,17 @@ namespace ProposalCreationWeb.Controllers
 			IRootConfigurationProvider rootConfigurationProvider) : base(graphSdkHelper)
 		{
 			// Get from config
-			var appOptions        = rootConfigurationProvider.GeneralConfiguration;
+			var appOptions = rootConfigurationProvider.GeneralConfiguration;
 
 			ProposalManagerApiUrl = appOptions.ProposalManagerApiUrl;
-			SiteId                = appOptions.SiteId;
+			SiteId = appOptions.SiteId;
 
 			httpHelper = graphSdkHelper;
 		}
 
 		[HttpPost]
-		public async Task<IActionResult> UpdateTask(string opportunityId, string documentData)
+        [ActionName("UpdateTask")]
+        public async Task<IActionResult> UpdateTaskAsync(string opportunityId, string documentData)
 		{
 			try
 			{
@@ -77,7 +78,8 @@ namespace ProposalCreationWeb.Controllers
 		}
 
 		[HttpGet]
-		public async Task<IActionResult> GetFormalProposal(string id)
+        [ActionName("GetFormalProposal")]
+        public async Task<IActionResult> GetFormalProposalAsync(string id)
 		{
 			try
 			{
@@ -112,7 +114,7 @@ namespace ProposalCreationWeb.Controllers
 
 				var client = await httpHelper.GetProposalManagerWebClientAsync();
 
-				var opportunity = await client.GetStringAsync($"{ProposalManagerApiUrl}/api/Opportunity?name={System.Web.HttpUtility.UrlEncode(opportunityName)}");
+				var opportunity = await client.GetStringAsync(new Uri($"{ProposalManagerApiUrl}/api/Opportunity?name={System.Web.HttpUtility.UrlEncode(opportunityName)}"));
 
 				return Ok(opportunity);
 			}
@@ -123,7 +125,8 @@ namespace ProposalCreationWeb.Controllers
 		}
 
 		[HttpGet]
-		public async Task<IActionResult> List(string id)
+        [ActionName("List")]
+		public async Task<IActionResult> ListAsync(string id)
 		{
 			//TODO: try to use graph client proxy entities
 			// if not feasible then filter in odata query by displayName eq 'Documents' to reduce payload
@@ -192,7 +195,5 @@ namespace ProposalCreationWeb.Controllers
 				return BadRequest($"An error occurred: {ex.Message}");
 			}
 		}
-
 	}
-
 }

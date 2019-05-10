@@ -32,10 +32,30 @@ namespace ApplicationCore.Models
         /// </summary>
         [JsonProperty("displayName", Order = 2)]
         public string DisplayName { get; set; }
+
+        /// <summary>
+        /// Role AdgroupName
+        /// </summary>
+        /// 
         [JsonProperty("adGroupName", Order = 3)]
         public string AdGroupName { get; set; }
+
         /// <summary>
-        /// Represents the empty client. This field is read-only.
+        /// Role permissions
+        /// </summary>
+        //WAVE-4 GENERIC ACCELERATOR Change : start
+        [JsonProperty("permissions", Order = 4)]
+        public IList<PermissionModel> UserPermissions { get; set; }
+
+        /// <summary>
+        /// Role teamsMembership
+        /// </summary>
+        [JsonProperty("teamsMembership", Order = 5)]
+        public TeamsMembership TeamsMembership { get; set; }
+        //WAVE-4 GENERIC ACCELERATOR Change : end
+
+        /// <summary>
+        /// Role empty object
         /// </summary>
         public static RoleModel Empty
         {
@@ -43,7 +63,9 @@ namespace ApplicationCore.Models
             {
                 Id = String.Empty,
                 DisplayName = String.Empty,
-                AdGroupName = String.Empty
+                AdGroupName = String.Empty,
+                TeamsMembership = TeamsMembership.None,
+                UserPermissions = new List<PermissionModel>()
             };
         }
     }

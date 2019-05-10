@@ -145,9 +145,24 @@ namespace ApplicationCore.Services
 
         public async Task<StatusCodes> sendNotificationCardAsync(Opportunity opportunity, IList<UserProfile> sendToList, string messageText, string requestId = "")
         {
+
             _logger.LogInformation($"RequestId: {requestId} - CardNotificationService_sendNotificationCardAsync opp-list called.");
 
-            return await sendNotificationCardAsync(opportunity.DisplayName, opportunity.Metadata.OpportunityChannelId, sendToList, messageText, requestId);
+            //WAVE-4 GENERIC ACCELERATOR Change : start
+            var channelId = string.Empty;
+
+            try
+            {
+                channelId = opportunity.Metadata.OpportunityChannelId ?? String.Empty;
+            }
+            catch
+            {
+                _logger.LogInformation($"RequestId: {requestId} - CardNotificationService_sendNotificationCardAsync opp-list error, channel id is empty.");
+                channelId = string.Empty;
+            }
+
+            return await sendNotificationCardAsync(opportunity.DisplayName, channelId, sendToList, messageText, requestId);
+            //WAVE-4 GENERIC ACCELERATOR Change : end
         }
 
         public async Task<StatusCodes> sendNotificationCardAsync(Opportunity opportunity, UserProfile sendTo, string messageText, string requestId = "")
@@ -157,7 +172,20 @@ namespace ApplicationCore.Services
             var sendToList = new List<UserProfile>();
             sendToList.Add(sendTo);
 
-            return await sendNotificationCardAsync(opportunity.DisplayName, opportunity.Metadata.OpportunityChannelId, sendToList, messageText, requestId);
+            //WAVE-4 GENERIC ACCELERATOR Change : start
+            var channelId = string.Empty;
+
+            try
+            {
+                channelId = opportunity.Metadata.OpportunityChannelId ?? String.Empty;
+            }
+            catch
+            {
+                _logger.LogInformation($"RequestId: {requestId} - CardNotificationService_sendNotificationCardAsync opp-list error, channel id is empty.");
+                channelId = string.Empty;
+            }
+            return await sendNotificationCardAsync(opportunity.DisplayName, channelId, sendToList, messageText, requestId);
+            //WAVE-4 GENERIC ACCELERATOR Change : end
         }
 
 

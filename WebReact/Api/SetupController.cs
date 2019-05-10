@@ -4,21 +4,15 @@
 // Licensed under the MIT license. See LICENSE file in the solution root folder for full license information
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using ApplicationCore;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using ApplicationCore.Interfaces;
 using ApplicationCore.Helpers;
-using ApplicationCore.Artifacts;
 using Newtonsoft.Json.Linq;
-using ApplicationCore.ViewModels;
 using Microsoft.AspNetCore.Authorization;
-using System.IO;
 
 namespace WebReact.Api
 {
@@ -48,12 +42,12 @@ namespace WebReact.Api
             _logger.LogInformation($"RequestID:{requestId} SetupController_UpdateAppSettings called.");
 
             // Check to see if setup is enabled and if not respond with bad request
-            var checkSetupState = await CheckSetupState(requestId);
-            if (checkSetupState != null) return BadRequest(checkSetupState);
+            //var checkSetupState = await CheckSetupState(requestId);
+            //if (checkSetupState != null) return BadRequest(checkSetupState);
 
             try
             {
-                var result = await _setupService.UpdateAppOpptionsAsync(key, value, requestId);
+                await _setupService.UpdateAppOpptionsAsync(key, value, requestId);
             }
             catch (Exception ex)
             {
@@ -77,7 +71,7 @@ namespace WebReact.Api
             
             try
             {
-                var result = await _setupService.UpdateDocumentIdActivatorOptionsAsync(data["key"].ToString(), data["value"].ToString(), requestId);
+                await _setupService.UpdateDocumentIdActivatorOptionsAsync(data["key"].ToString(), data["value"].ToString(), requestId);
             }
             catch (Exception ex)
             {
@@ -180,51 +174,6 @@ namespace WebReact.Api
             return NoContent();
         }
 
-        [HttpPost("CreateSiteRoles", Name = "CreateSiteRoles")]
-        public async Task<IActionResult> CreateSiteRoles()
-        {
-            var requestId = Guid.NewGuid().ToString();
-            _logger.LogInformation($"RequestID:{requestId} SetupController_CreateSiteRoles called.");
-
-            // Check to see if setup is enabled and if not respond with bad request
-            var checkSetupState = await CheckSetupState();
-            if (checkSetupState != null) return BadRequest(checkSetupState);
-
-            try
-            {
-                await _setupService.CreateSiteRolesAsync();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"RequestID:{requestId} SetupController_CreateSiteRoles error: {ex.Message}");
-                var errorResponse = JsonErrorResponse.BadRequest($"CreateSiteRoles error: {ex.Message}", requestId);
-                return BadRequest(errorResponse);
-            }
-            return NoContent();
-        }
-
-        [HttpPost("CreateSiteTasks", Name = "CreateSiteTasks")]
-        public async Task<IActionResult> CreateSiteTasks()
-        {
-            var requestId = Guid.NewGuid().ToString();
-            _logger.LogInformation($"RequestID:{requestId} SetupController_CreateSiteTasks called.");
-
-            // Check to see if setup is enabled and if not respond with bad request
-            var checkSetupState = await CheckSetupState();
-            if (checkSetupState != null) return BadRequest(checkSetupState);
-
-            try
-            {
-                await _setupService.CreateSiteTasksAsync();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"RequestID:{requestId} SetupController_CreateSiteTasks error: {ex.Message}");
-                var errorResponse = JsonErrorResponse.BadRequest($"CreateSiteTasks error: {ex.Message}", requestId);
-                return BadRequest(errorResponse);
-            }
-            return NoContent();
-        }
         [HttpPost("CreateProposalManagerTeam/{name}", Name = "CreateProposalManagerTeam")]
         public async Task<IActionResult> CreateProposalManagerTeam(string name)
         {
@@ -260,7 +209,9 @@ namespace WebReact.Api
 
             try
             {
+                await _setupService.CreateSiteAdminPermissionsAsync(name);
                 await _setupService.CreateAdminGroupAsync(name, requestId);
+
             }
             catch (Exception ex)
             {
@@ -327,19 +278,61 @@ namespace WebReact.Api
         // Private methods
         private Task<JObject> CheckSetupState(string requestId = "")
         {
-            var response = new JObject();
+            JObject response = new JObject();
 
             if (_appOptions.SetupPage.ToLower() != "enabled")
             {
                 _logger.LogError($"RequestID:{requestId} - SetupController_CheckSetupState error: Setup is not enabled");
                 response = JsonErrorResponse.BadRequest($"SetupController_CheckSetupState error: Setup is not enabled", requestId);
             }
-            else
-            {
-                response = null;
-            }
 
-            return Task.FromResult(response);
+            return Task.FromResult(response.Count > 0 ? response : null);
+        }
+
+        [HttpPost("CreateMetaDataList", Name = "CreateMetaDataList")]
+        public async Task<IActionResult> CreateMetaDataList()
+        {
+            var requestId = Guid.NewGuid().ToString();
+            _logger.LogInformation($"RequestID:{requestId} SetupController_CreateSiteProcesses called.");
+
+            // Check to see if setup is enabled and if not respond with bad request
+            var checkSetupState = await CheckSetupState();
+            if (checkSetupState != null) return BadRequest(checkSetupState);
+
+            try
+            {
+                await _setupService.CreateMetaDataList(requestId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"RequestID:{requestId} SetupController_CreateSiteProcesses error: {ex.Message}");
+                var errorResponse = JsonErrorResponse.BadRequest($"CreateSiteProcesses error: {ex.Message}", requestId);
+                return BadRequest(errorResponse);
+            }
+            return NoContent();
+        }
+
+        [HttpPost("CreateDefaultBusinessProcess", Name = "CreateDefaultBusinessProcess")]
+        public async Task<IActionResult> CreateDefaultBusinessProcess()
+        {
+            var requestId = Guid.NewGuid().ToString();
+            _logger.LogInformation($"RequestID:{requestId} SetupController_CreateSiteProcesses called.");
+
+            // Check to see if setup is enabled and if not respond with bad request
+            var checkSetupState = await CheckSetupState();
+            if (checkSetupState != null) return BadRequest(checkSetupState);
+
+            try
+            {
+                await _setupService.CreateDefaultBusinessProcess(requestId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"RequestID:{requestId} SetupController_CreateSiteProcesses error: {ex.Message}");
+                var errorResponse = JsonErrorResponse.BadRequest($"CreateSiteProcesses error: {ex.Message}", requestId);
+                return BadRequest(errorResponse);
+            }
+            return NoContent();
         }
     }
 }

@@ -9,10 +9,12 @@ import { TextField } from 'office-ui-fabric-react/lib/TextField';
 import { Dropdown } from 'office-ui-fabric-react/lib/Dropdown';
 import { DetailsList, DetailsListLayoutMode, SelectionMode } from 'office-ui-fabric-react/lib/DetailsList';
 import { Link } from 'office-ui-fabric-react/lib/Link';
-import { FilePicker } from '../../../components/FilePicker';
+import { FilePicker } from '../FilePicker';
 import Utils from '../../../helpers/Utils';
 import '../../../Style.css';
-import {  Trans } from "react-i18next";
+import { Trans } from "react-i18next";
+import { DatePicker } from 'office-ui-fabric-react/lib/DatePicker';
+import { DayPickerStrings } from '../../../common';
 
 
 export class NewOpportunityDocuments extends Component {
@@ -23,7 +25,10 @@ export class NewOpportunityDocuments extends Component {
 
         this.utils = new Utils();
         this.opportunity = this.props.opportunity;
-
+        this.metaData = this.props.metaDataList.length > 0 ? this.props.metaDataList.filter(prop => prop.screen === "Screen2") : [];
+        console.log(this.opportunity);
+        console.log("Step 2222222");
+        console.log(this.metaData);
         const columns = [
             {
                 key: 'column1',
@@ -154,6 +159,10 @@ export class NewOpportunityDocuments extends Component {
             columns: columns,
             isCompactMode: false
         };
+    }
+
+    componentWillMount() {
+        this.opportunity = this.props.opportunity;
     }
 
 
@@ -322,6 +331,136 @@ export class NewOpportunityDocuments extends Component {
         }
     }
 
+    onBlurProperty(e, key) {
+        if (e.target.value.length !== 0) {
+            this.opportunity.metaDataFields.forEach(obj => {
+                if (obj.id === key) {
+                    console.log("NewOpportunityDocuments_onBlurProperty : ", obj.id);
+                    obj.values = e.target.value;
+                }
+            });
+        }
+    }
+
+    _onSelectTargetDate = (date, key) => {
+        this.opportunity.metaDataFields.forEach(obj => {
+            if (obj.id === key) {
+                console.log("NewOpportunity_onChangeDropDown : ", obj.id, this._onFormatDate(date));
+                obj.values = this._onFormatDate(date);
+            }
+        });
+        this._checkNextEnabled();
+    }
+
+    _onFormatDate = (date) => {
+        return (
+            date.getMonth() + 1 +
+            '/' +
+            date.getDate() +
+            '/' +
+            date.getFullYear()
+        );
+    }
+
+    _onParseDateFromString = (value) => {
+        const date = this.state.value || new Date();
+        const values = (value || '').trim().split('/');
+        const day =
+            values.length > 0
+                ? Math.max(1, Math.min(31, parseInt(values[0], 10)))
+                : date.getDate();
+        const month =
+            values.length > 1
+                ? Math.max(1, Math.min(12, parseInt(values[1], 10))) - 1
+                : date.getMonth();
+        let year = values.length > 2 ? parseInt(values[2], 10) : date.getFullYear();
+        if (year < 100) {
+            year += date.getFullYear() - date.getFullYear() % 100;
+        }
+        return new Date(year, month, day);
+    }
+
+    _setItemDate(dt) {
+        let lmDate = new Date(dt);
+        if (lmDate.getFullYear() === 1 || lmDate.getFullYear() === 0) {
+            return new Date();
+        } else return new Date(dt);
+    }
+
+    onChangeDropDown(e, key) {
+        if (e.text.length > 0) {
+            this.opportunity.metaDataFields.forEach(obj => {
+                if (obj.id === key) {
+                    console.log("NewOpportunity_onChangeDropDown : ", obj.id);
+                    obj.values = e.text;
+                }
+            });
+        }
+    }
+
+    _rendermetaData() {
+        let metaDataComponents = null;
+        if (this.metaData.length > 0) {
+            this.metaData = this.metaData.filter(x => x.displayName !== "Category" && x.fieldType.name !== "DropDown");
+            metaDataComponents = this.metaData.map((metaDataObj) => {
+                let component = null;
+                let id = metaDataObj.displayName.toLowerCase().replace(/\s/g, '');
+                switch (metaDataObj.fieldType.name) {
+                    case "Date":
+                        let tardate = this.opportunity.metaDataFields.find(x => x.id === id).values;
+                        component = (<div className='docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg6' key={metaDataObj.id}>
+                            <DatePicker strings={DayPickerStrings}
+                                label={metaDataObj.displayName}
+                                showWeekNumbers={false}
+                                firstWeekOfYear={1}
+                                showMonthPickerAsOverlay='true'
+                                iconProps={{ iconName: 'Calendar' }}
+                                value={tardate ? this._setItemDate(tardate) : this._setItemDate(Date.now())}
+                                onSelectDate={(date) => this._onSelectTargetDate(date, id)}
+                                formatDate={this._onFormatDate}
+                                parseDateFromString={this._onParseDateFromString}
+                                minDate={new Date()}
+                                isRequired={true}
+                            />
+                        </div>);
+                        break;
+
+                    case "DropDown":
+                        let placeHolder = `Select ${metaDataObj.displayName}`;
+                        let dropvalue = this.opportunity.metaDataFields.find(x => x.id === id).values;
+                        component = (<div className='docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg6' key={metaDataObj.id}>
+                            <Dropdown
+                                placeHolder={placeHolder}
+                                label={metaDataObj.displayName}
+                                id={id}
+                                ariaLabel={metaDataObj.displayName}
+                                value={dropvalue}
+                                options={metaDataObj.values.map(x => { return { 'key': x.id, 'text': x.name }; })}
+                                defaultSelectedKey={metaDataObj.values.map(x => { if (x.name === dropvalue) return x.id; })}
+                                componentRef=''
+                                onChanged={(e) => this.onChangeDropDown(e, id)}
+                            />
+                        </div>);
+                        break;
+
+                    default:
+                        let textvalue = this.opportunity.metaDataFields.find(x => x.id === id).values;
+                        component = (<div className='docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg6' key={metaDataObj.id}>
+                            <TextField
+                                id={id}
+                                value={textvalue}
+                                label={metaDataObj.displayName}
+                                onBlur={(e) => this.onBlurProperty(e, id)}
+                            />
+                        </div>);
+                        break;
+                }
+                return component;
+            });
+        }
+        return metaDataComponents;
+    }
+
 
     render() {
         const { columns, isCompactMode, items, selectionDetails } = this.state;
@@ -338,6 +477,19 @@ export class NewOpportunityDocuments extends Component {
                     </div>
                 </div>
                 {documentsList}
+
+                {this.metaData.length > 1 ?
+                    <div className='ms-Grid-row'>
+                        <div className='ms-Grid-col ms-sm12 ms-md12 ms-lg6 pageheading'>
+                            <h3 className="pageheading"><Trans>opportunityProperties</Trans></h3>
+                        </div>
+                        <div className='ms-lg12 ibox-content pb20'>
+                            {this._rendermetaData()}
+                        </div>
+                    </div>
+                    : ""
+                }
+
                 <div className='ms-grid-row '>
                     <div className='ms-Grid-col ms-sm6 ms-md6 ms-lg6 pl0 pb20'><br />
                         <PrimaryButton className='backbutton pull-left' onClick={this.props.onClickBack}><Trans>back</Trans></PrimaryButton>

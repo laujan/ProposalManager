@@ -7,6 +7,8 @@ using ApplicationCore.Entities;
 using ApplicationCore.Interfaces;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System;
+using System.Net.Http;
 
 namespace ApplicationCore.Helpers
 {
@@ -26,7 +28,13 @@ namespace ApplicationCore.Helpers
 		private UserData GetDataById(string id)
 		{
 			var result = dynamicsClientFactory.GetDynamicsAuthorizedWebClientAsync().Result.GetAsync($"/api/data/v9.0/systemusers({id})?$select=domainname,azureactivedirectoryobjectid,fullname").Result;
-			var user = JsonConvert.DeserializeObject<JObject>(result.Content.ReadAsStringAsync().Result);
+            JObject user = result.Content.ReadAsAsync<JObject>().Result;
+
+            if (user == null || user["azureactivedirectoryobjectid"] == null)
+            {
+                throw new Exception($"Invalid or null response from Dynamics when querying for user id {id}.");
+            }
+
 			return new UserData
 			{
 				Email = user["domainname"].ToString(),

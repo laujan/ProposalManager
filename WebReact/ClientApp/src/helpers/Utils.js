@@ -3,14 +3,8 @@
 *  See LICENSE in the source repository root for complete license information. 
 */
 
-
-
 export default class Utils {
-    constructor(props) {
-
-    }
-
-
+    
     decimalToHex(number) {
         var hex = number.toString(16);
         while (hex.length < 2) {
@@ -129,10 +123,6 @@ export default class Utils {
         }
     }
 
-    sanitizeDisplayName(name) {
-        let re = /apples/gi;
-    }
-
     //generic error handling functions
     handleErrors(response) {
         console.log("handleErrors==>", response);
@@ -140,7 +130,6 @@ export default class Utils {
         if (!ok) {
             let status = response.status;
             let statusText = response.statusText;
-            let type = response.type;
             if (status === 404) {
                 // Items Not Found - so return the response
                 return response;
@@ -154,5 +143,58 @@ export default class Utils {
             throw new Error(`NetworkError: ErrorMsg ${statusText} & status code ${status}`);
         }
         return response;
+    }
+
+    //member selection based on deal type propoerties
+    getMembersWithTemplateProperties(userRoleList){
+        let teamlist = [];
+        userRoleList.forEach(element => {
+            element.userRoles.forEach((userrole)=>{
+                userrole.permissions.forEach((per)=>{
+                    if(per.name.toLowerCase()==="Opportunity_ReadWrite_Dealtype".toLocaleLowerCase()){
+                        console.log("getMembersWithTemplateProperties element : ", element);
+                        if(!teamlist.includes(element))teamlist.push(element);
+                    }
+                });
+            });
+        });
+
+        return teamlist;
+    }
+
+    getLoanOficers(teamMembers){
+        let teamlist = [];
+        let teamMemberIds = [];
+        teamMembers.forEach(function (teammembr) {
+            teammembr.permissions.forEach((per)=>{
+                if(per.name.toLowerCase()==="Opportunity_ReadWrite_Dealtype".toLocaleLowerCase()){
+                    console.log("Utils_getLoanOficers element : ", teammembr);
+                    if(!teamMemberIds.includes(teammembr.id)){
+                        teamlist.push(teammembr);
+                        teamMemberIds.push(teammembr.id);
+                    }
+                }
+            });
+        });
+        console.log("Utils_getLoanOficers : ",teamlist)
+        return teamlist
+    }
+
+    getRelationShipManagers(teamMembers){
+        let teamlist = [];
+        let teamMemberIds = [];
+        teamMembers.forEach(function (teammembr) {
+            teammembr.permissions.forEach((per)=>{
+                if(per.name.toLowerCase()==="Opportunity_Create".toLocaleLowerCase()){
+                    console.log("Utils_getLoanOficers element : ", teammembr);
+                    if(!teamMemberIds.includes(teammembr.id)){
+                        teamlist.push(teammembr);
+                        teamMemberIds.push(teammembr.id);
+                    }
+                }
+            });
+        });
+        console.log("Utils_getLoanOficers : ",teamlist)
+        return teamlist
     }
 }

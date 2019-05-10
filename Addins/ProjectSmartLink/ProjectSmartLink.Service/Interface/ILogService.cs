@@ -14,7 +14,7 @@ namespace ProjectSmartLink.Service
 {
     public interface ILogService
     {
-        Task WriteLog(LogEntity entity);
+        void WriteLog(LogEntity entity);
         void Flush();
     }
 }

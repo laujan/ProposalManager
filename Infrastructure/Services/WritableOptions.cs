@@ -1,15 +1,16 @@
-﻿using ApplicationCore;
+﻿// Copyright(c) Microsoft Corporation. 
+// All rights reserved.
+//
+// Licensed under the MIT license. See LICENSE file in the solution root folder for full license information
+
+using ApplicationCore;
 using ApplicationCore.Interfaces;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Infrastructure.Services
@@ -36,7 +37,7 @@ namespace Infrastructure.Services
         public T Value => _options.CurrentValue;
         public T Get(string name) => _options.Get(name);
 
-        public async Task<StatusCodes> UpdateAsync(string key, string value, string requestId = "")
+        public StatusCodes UpdateAsync(string key, string value, string requestId = "")
         {
             var fileProvider = _environment.ContentRootFileProvider;
             var fileInfo = fileProvider.GetFileInfo(_file);

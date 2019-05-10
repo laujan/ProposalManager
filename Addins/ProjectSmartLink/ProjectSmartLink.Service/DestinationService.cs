@@ -17,10 +17,10 @@ namespace ProjectSmartLink.Service
 {
     public class DestinationService : IDestinationService
     {
-        protected readonly SmartlinkDbContext _dbContext;
-        protected readonly IMapper _mapper;
-        protected readonly ILogService _logService;
-        protected readonly IUserProfileService _userProfileService;
+        private readonly SmartlinkDbContext _dbContext;
+        private readonly IMapper _mapper;
+        private readonly ILogService _logService;
+        private readonly IUserProfileService _userProfileService;
 
         public DestinationService(SmartlinkDbContext dbContext, IMapper mapper, ILogService logService, IUserProfileService userProfileService)
         {
@@ -54,7 +54,7 @@ namespace ProjectSmartLink.Service
                             Message = ".Net Error",
                         };
                         entity.Subject = $"{entity.LogId} - {entity.Action} - {entity.PointType} - Error";
-                        await _logService.WriteLog(entity);
+                        _logService.WriteLog(entity);
 
                         throw new ApplicationException("Add Source Catalog failed", ex);
                     }
@@ -81,7 +81,7 @@ namespace ProjectSmartLink.Service
 
                 if (addDestinationCatalog)
                 {
-                    await _logService.WriteLog(new LogEntity()
+                    _logService.WriteLog(new LogEntity()
                     {
                         LogId = "40001",
                         Action = Constant.ACTIONTYPE_ADD,
@@ -90,7 +90,7 @@ namespace ProjectSmartLink.Service
                         Message = $"Add destination catalog {destinationCatalog.Name}."
                     });
                 }
-                await _logService.WriteLog(new LogEntity()
+                _logService.WriteLog(new LogEntity()
                 {
                     LogId = "20001",
                     Action = Constant.ACTIONTYPE_ADD,
@@ -108,7 +108,7 @@ namespace ProjectSmartLink.Service
                 destinationPoint.ReferencedSourcePoint.Catalog.SerializeSourcePoints = false;
                 destinationPoint.DestinationPointCustomFormats = destinationPoint.DestinationPointCustomFormats;
 
-                await _logService.WriteLog(new LogEntity()
+                _logService.WriteLog(new LogEntity()
                 {
                     LogId = "30002",
                     Action = Constant.ACTIONTYPE_GET,
@@ -134,8 +134,8 @@ namespace ProjectSmartLink.Service
                     Detail = ex.ToString()
                 };
                 logEntity.Subject = $"{logEntity.LogId} - {logEntity.Action} - {logEntity.PointType} - Error";
-                await _logService.WriteLog(logEntity);
-                throw ex;
+                _logService.WriteLog(logEntity);
+                throw;
             }
         }
 
@@ -159,7 +159,7 @@ namespace ProjectSmartLink.Service
 
                     _dbContext.DestinationPoints.Remove(destinationPoint);
                     await _dbContext.SaveChangesAsync();
-                    await _logService.WriteLog(new LogEntity()
+                    _logService.WriteLog(new LogEntity()
                     {
                         LogId = "20002",
                         Action = Constant.ACTIONTYPE_DELETE,
@@ -181,7 +181,7 @@ namespace ProjectSmartLink.Service
                     Detail = ex.ToString()
                 };
                 logEntity.Subject = $"{logEntity.LogId} - {logEntity.Action} - {logEntity.PointType} - Error";
-                await _logService.WriteLog(logEntity);
+                _logService.WriteLog(logEntity);
                 throw;
             }
         }
@@ -208,7 +208,7 @@ namespace ProjectSmartLink.Service
 
                         _dbContext.DestinationPoints.Remove(destinationPoint);
                         await _dbContext.SaveChangesAsync();
-                        await _logService.WriteLog(new LogEntity()
+                        _logService.WriteLog(new LogEntity()
                         {
                             LogId = "20002",
                             Action = Constant.ACTIONTYPE_DELETE,
@@ -232,7 +232,7 @@ namespace ProjectSmartLink.Service
                     Detail = ex.ToString()
                 };
                 logEntity.Subject = $"{logEntity.LogId} - {logEntity.Action} - {logEntity.PointType} - Error";
-                await _logService.WriteLog(logEntity);
+                _logService.WriteLog(logEntity);
                 throw;
             }
         }
@@ -268,14 +268,14 @@ namespace ProjectSmartLink.Service
                         destinationPoint.DestinationPointCustomFormats = destinationPoint.DestinationPointCustomFormats.ToArray();
                     }
 
-                    if (!destinationCatalog.Name.Equals(fileName))
+                    if (!destinationCatalog.Name.Equals(fileName, StringComparison.OrdinalIgnoreCase))
                     {
                         destinationCatalog.Name = fileName;
                         await _dbContext.SaveChangesAsync();
                     }
                 }
 
-                await _logService.WriteLog(new LogEntity()
+                _logService.WriteLog(new LogEntity()
                 {
                     LogId = "20005",
                     Action = Constant.ACTIONTYPE_GET,
@@ -298,8 +298,8 @@ namespace ProjectSmartLink.Service
                     Detail = ex.ToString()
                 };
                 logEntity.Subject = $"{logEntity.LogId} - {logEntity.Action} - {logEntity.PointType} - Error";
-                await _logService.WriteLog(logEntity);
-                throw ex;
+                _logService.WriteLog(logEntity);
+                throw;
             }
         }
 
@@ -360,7 +360,7 @@ namespace ProjectSmartLink.Service
                     previousDestinationPoint.ReferencedSourcePoint.Catalog.SerializeSourcePoints = false;
                     previousDestinationPoint.DestinationPointCustomFormats.FirstOrDefault().CustomFormat = await _dbContext.CustomFormats.FirstOrDefaultAsync(x => x.Id == destinationPoint.DestinationPointCustomFormats.FirstOrDefault().CustomFormatId);
 
-                    await _logService.WriteLog(new LogEntity()
+                    _logService.WriteLog(new LogEntity()
                     {
                         LogId = "30002",
                         Action = Constant.ACTIONTYPE_EDIT,
@@ -388,8 +388,8 @@ namespace ProjectSmartLink.Service
                     Detail = ex.ToString()
                 };
                 logEntity.Subject = $"{logEntity.LogId} - {logEntity.Action} - {logEntity.PointType} - Error";
-                await _logService.WriteLog(logEntity);
-                throw ex;
+                _logService.WriteLog(logEntity);
+                throw;
             }
         }
     }

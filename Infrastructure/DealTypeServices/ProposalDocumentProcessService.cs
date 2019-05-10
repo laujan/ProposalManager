@@ -57,6 +57,9 @@ namespace Infrastructure.DealTypeServices
             //Granular Access : Start
             try
             {
+                // Remove empty sections from proposal document
+                opportunity.Content.ProposalDocument.Content.ProposalSectionList = opportunity.Content.ProposalDocument.Content.ProposalSectionList.Where(x => !string.IsNullOrWhiteSpace(x.DisplayName)).ToList();
+
                 //Granular Access : Start
                 var permissionsNeeded = new List<ApplicationCore.Entities.Permission>();
                 List<string> list = new List<string>();
@@ -362,16 +365,20 @@ namespace Infrastructure.DealTypeServices
                     // Section owner changed / assigned
                     try
                     {
+                        //WAVE-4 GENERIC ACCELERATOR Change : start
+                        //TODO: Remove harcoded part of opportunityChannelId                        
                         if (OwnerSendList.Count > 0)
                         {
+                            var opportunityChannelId = viewModel.OpportunityChannelId ?? String.Empty;
                             _logger.LogInformation($"RequestId: {requestId} - ProposalDocumentToEntityAsync sendNotificationCardAsync for owner changed notification.");
                             var notificationOwner = await _cardNotificationService.sendNotificationCardAsync(
                                 viewModel.DisplayName,
-                                viewModel.OpportunityChannelId,
+                                opportunityChannelId,
                                 OwnerSendList,
                                 $"Section(s) in the proposal document for opportunity {viewModel.DisplayName} has new/updated owners ",
                                 requestId);
                         }
+                        //WAVE-4 GENERIC ACCELERATOR Change : end
                     }
                     catch (Exception ex)
                     {
@@ -383,13 +390,17 @@ namespace Infrastructure.DealTypeServices
                     {
                         if (AssignedToSendList.Count > 0)
                         {
+                            //WAVE-4 GENERIC ACCELERATOR Change : start
+                            //TODO: Remove harcoded part of opportunityChannelId  
+                            var opportunityChannelId = viewModel.OpportunityChannelId ?? String.Empty;
                             _logger.LogInformation($"RequestId: {requestId} - ProposalDocumentToEntityAsync sendNotificationCardAsync for AssigedTo changed notification.");
                             var notificationAssignedTo = await _cardNotificationService.sendNotificationCardAsync(
                                 viewModel.DisplayName,
-                                viewModel.OpportunityChannelId,
+                                opportunityChannelId,
                                 AssignedToSendList,
                                 $"Task(s) in the proposal document for opportunity {viewModel.DisplayName} has new/updated assigments ",
                                 requestId);
+                            //WAVE-4 GENERIC ACCELERATOR Change : end
                         }
                     }
                     catch (Exception ex)

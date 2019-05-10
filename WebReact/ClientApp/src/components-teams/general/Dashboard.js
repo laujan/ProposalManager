@@ -26,6 +26,8 @@ export class Dashboard extends Component {
 		this.state = {
 			loading: true,
 			aadToken: "",
+			reportId : reportId,
+			workspaceId:workspaceId,
 			embedConfig: {
                 embedUrl: `https://app.powerbi.com/reportEmbed?reportId=${reportId}&groupId=${workspaceId}`,
                 accessToken: "" //this.authHelper.getWebApiToken(),
@@ -41,7 +43,26 @@ export class Dashboard extends Component {
             this.setState({
                 isAuthenticated: this.authHelper.isAuthenticated()
             });
-        }
+		}
+		
+		if(!this.state.reportId){
+
+			let clientSettings = await  this.getClientSettings();
+			console.log("Dashboard_componentDidMount clientSettings: " , clientSettings);
+			
+			let reportId = clientSettings.PBIReportId;
+			let workspaceId = clientSettings.PBIWorkSpaceId;
+
+			if(reportId && workspaceId){
+				let embedConfig =  {
+					embedUrl: `https://app.powerbi.com/reportEmbed?reportId=${reportId}&groupId=${workspaceId}`,
+					accessToken: "" //this.authHelper.getWebApiToken(),
+				};
+
+				this.setState({embedConfig,workspaceId,reportId})
+			}
+			
+		}
     }
 
     async componentDidUpdate() {
@@ -82,13 +103,33 @@ export class Dashboard extends Component {
 		}
 	}
 
+	//getting client settings
+	async getClientSettings() {
+		let clientSettings = { "reportId": "", "workspaceId": "", "teamsAppInstanceId": "" };
+		try {
+			console.log("AppTeams_getClientSettings");
+			let requestUrl = 'api/Context/GetClientSettings';
+
+			let data = await fetch(requestUrl, {
+				method: "GET",
+				headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() }
+			});
+			let response = await data.json();
+
+			return response;
+		} catch (error) {
+			console.log("AppTeams_getClientSettings error: ", error);
+			return error;
+		}
+	}
+
 	async getDataForDashboard() {
 		let requestUrl = "api/PowerBI";
 		console.log("Dashboard_from_PBI_Controller : ", this.authHelper.getWebApiToken());
 		try {
 			let response  = await fetch(requestUrl, {method: "GET", headers: { 'authorization': `Bearer ${this.authHelper.getWebApiToken()}`}});
 			let data = await response.json();
-			console.log("Dashboard_from_PBI_Controller data : ", data);
+			console.log("Dashboard_from_PBI_Controller data : ", this.state.reportId);
 			console.log("Dashboard_from_PBI_Controller data : ", this.state.embedConfig);
 
 			this.setState({
@@ -100,7 +141,7 @@ export class Dashboard extends Component {
 				tokenType: pbi.models.TokenType.Aad,
                 accessToken: data,
 				embedUrl: this.state.embedConfig.embedUrl,
-				id: this.props.appSettings.reportId,
+				id: this.state.reportId,
 				permissions: pbi.permissions,
 				height: "800px !important",
 				settings: {
@@ -125,7 +166,7 @@ export class Dashboard extends Component {
 			var reportContainer = this.refs.reportContainerRef;//document.getElementById('reportContainer');
 
 			console.log("Dashboard_getDataForDashboard reportContainer: " + reportContainer);
-			var report = powerbi.embed(reportContainer, config); //TODO: Do we need this?
+			powerbi.embed(reportContainer, config); //TODO: Do we need this?
 		} catch (error) {
 			console.log("Dashboard_getDataForDashboard error_fetch: ", error);
 		}

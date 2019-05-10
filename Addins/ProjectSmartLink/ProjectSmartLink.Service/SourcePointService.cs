@@ -16,10 +16,10 @@ namespace ProjectSmartLink.Service
 {
     public class SourceService : ISourceService
     {
-        protected readonly SmartlinkDbContext _dbContext;
-        protected readonly IMapper _mapper;
-        protected readonly ILogService _logService;
-        protected readonly IUserProfileService _userProfileService;
+        private readonly SmartlinkDbContext _dbContext;
+        private readonly IMapper _mapper;
+        private readonly ILogService _logService;
+        private readonly IUserProfileService _userProfileService;
 
         public SourceService(SmartlinkDbContext dbContext, IMapper mapper, ILogService logService, IUserProfileService userProfileService)
         {
@@ -39,8 +39,7 @@ namespace ProjectSmartLink.Service
                 {
                     try
                     {
-                        Guid guid;
-                        var isExternal = Guid.TryParse(documentId, out guid);
+                        var isExternal = Guid.TryParse(documentId, out Guid guid);
                         sourceCatalog = new SourceCatalog() { Name = fileName, DocumentId = documentId, IsExternal = isExternal };
                         _dbContext.SourceCatalogs.Add(sourceCatalog);
                     }
@@ -55,7 +54,7 @@ namespace ProjectSmartLink.Service
                             Message = ".Net Error",
                         };
                         entity.Subject = $"{entity.LogId} - {entity.Action} - {entity.PointType} - Error";
-                        await _logService.WriteLog(entity);
+                        _logService.WriteLog(entity);
 
                         throw new ApplicationException("Add Source Catalog failed", ex);
                     }
@@ -66,9 +65,9 @@ namespace ProjectSmartLink.Service
 
                 sourceCatalog.SourcePoints.Add(sourcePoint);
 
-				await _dbContext.SaveChangesAsync();
+                await _dbContext.SaveChangesAsync();
 
-				_dbContext.PublishedHistories.Add(new PublishedHistory()
+                _dbContext.PublishedHistories.Add(new PublishedHistory()
                 {
                     Name = sourcePoint.Name,
                     Position = sourcePoint.Position,
@@ -82,7 +81,7 @@ namespace ProjectSmartLink.Service
 
                 if (addSourceCatalog)
                 {
-                    await _logService.WriteLog(new LogEntity()
+                    _logService.WriteLog(new LogEntity()
                     {
                         LogId = "30003",
                         Action = Constant.ACTIONTYPE_ADD,
@@ -91,7 +90,7 @@ namespace ProjectSmartLink.Service
                         Message = $"Add Source Catalog named {sourceCatalog.Name}."
                     });
                 }
-                await _logService.WriteLog(new LogEntity()
+                _logService.WriteLog(new LogEntity()
                 {
                     LogId = "10001",
                     Action = Constant.ACTIONTYPE_ADD,
@@ -117,8 +116,8 @@ namespace ProjectSmartLink.Service
                     Detail = ex.ToString()
                 };
                 logEntity.Subject = $"{logEntity.LogId} - {logEntity.Action} - {logEntity.PointType} - Error";
-                await _logService.WriteLog(logEntity);
-                throw ex;
+                _logService.WriteLog(logEntity);
+                throw;
             }
             return sourcePoint;
         }
@@ -141,7 +140,7 @@ namespace ProjectSmartLink.Service
                 }
 
                 await _dbContext.SaveChangesAsync();
-                await _logService.WriteLog(new LogEntity()
+                _logService.WriteLog(new LogEntity()
                 {
                     LogId = "10002",
                     Action = Constant.ACTIONTYPE_EDIT,
@@ -165,8 +164,8 @@ namespace ProjectSmartLink.Service
                     Detail = ex.ToString()
                 };
                 logEntity.Subject = $"{logEntity.LogId} - {logEntity.Action} - {logEntity.PointType} - Error";
-                await _logService.WriteLog(logEntity);
-                throw ex;
+                _logService.WriteLog(logEntity);
+                throw;
             }
         }
         public async Task<int> DeleteSourcePoint(Guid sourcePointId)
@@ -187,7 +186,7 @@ namespace ProjectSmartLink.Service
                     sourcePoint.Status = SourcePointStatus.Deleted;
                 }
                 var task = await _dbContext.SaveChangesAsync();
-                await _logService.WriteLog(new LogEntity()
+                _logService.WriteLog(new LogEntity()
                 {
                     LogId = "10003",
                     Action = Constant.ACTIONTYPE_DELETE,
@@ -209,8 +208,8 @@ namespace ProjectSmartLink.Service
                     Detail = ex.ToString()
                 };
                 logEntity.Subject = $"{logEntity.LogId} - {logEntity.Action} - {logEntity.PointType} - Error";
-                await _logService.WriteLog(logEntity);
-                throw ex;
+                _logService.WriteLog(logEntity);
+                throw;
             }
 
         }
@@ -224,14 +223,14 @@ namespace ProjectSmartLink.Service
                     var sourcePoint = _dbContext.SourcePoints.Include(o => o.Catalog).FirstOrDefault(o => o.Id == sourcePointId);
                     if (sourcePoint == null)
                     {
-                        throw new NullReferenceException(string.Format("Sourcepoint: {0} is not existed", sourcePointId));
+                        throw new NullReferenceException($"Sourcepoint: {sourcePointId} is not existed");
                     }
                     if (sourcePoint.Status != SourcePointStatus.Deleted)
                     {
                         sourcePoint.Status = SourcePointStatus.Deleted;
                     }
                     var task = await _dbContext.SaveChangesAsync();
-                    await _logService.WriteLog(new LogEntity()
+                    _logService.WriteLog(new LogEntity()
                     {
                         LogId = "10003",
                         Action = Constant.ACTIONTYPE_DELETE,
@@ -253,8 +252,8 @@ namespace ProjectSmartLink.Service
                     Detail = ex.ToString()
                 };
                 logEntity.Subject = $"{logEntity.LogId} - {logEntity.Action} - {logEntity.PointType} - Error";
-                await _logService.WriteLog(logEntity);
-                throw ex;
+                _logService.WriteLog(logEntity);
+                throw;
             }
 
         }
@@ -280,13 +279,13 @@ namespace ProjectSmartLink.Service
                     }
                     sourceCatalog.SourcePoints = sourcePointArray;
 
-                    if (!sourceCatalog.Name.Equals(fileName))
+                    if (!sourceCatalog.Name.Equals(fileName, StringComparison.OrdinalIgnoreCase))
                     {
                         sourceCatalog.Name = fileName;
                         await _dbContext.SaveChangesAsync();
                     }
 
-                    await _logService.WriteLog(new LogEntity()
+                    _logService.WriteLog(new LogEntity()
                     {
                         LogId = "30001",
                         Action = Constant.ACTIONTYPE_GET,
@@ -309,8 +308,8 @@ namespace ProjectSmartLink.Service
                     Detail = ex.ToString()
                 };
                 logEntity.Subject = $"{logEntity.LogId} - {logEntity.Action} - {logEntity.PointType} - Error";
-                await _logService.WriteLog(logEntity);
-                throw ex;
+                _logService.WriteLog(logEntity);
+                throw;
             }
         }
 
@@ -333,8 +332,8 @@ namespace ProjectSmartLink.Service
                     Detail = ex.ToString()
                 };
                 logEntity.Subject = $"{logEntity.LogId} - {logEntity.Action} - {logEntity.PointType} - Error";
-                await _logService.WriteLog(logEntity);
-                throw ex;
+                _logService.WriteLog(logEntity);
+                throw;
             }
         }
 
@@ -359,7 +358,7 @@ namespace ProjectSmartLink.Service
                     }
                     sourceCatalog.SourcePoints = sourcePointArray;
 
-                    await _logService.WriteLog(new LogEntity()
+                    _logService.WriteLog(new LogEntity()
                     {
                         LogId = "30001",
                         Action = Constant.ACTIONTYPE_GET,
@@ -382,8 +381,8 @@ namespace ProjectSmartLink.Service
                     Detail = ex.ToString()
                 };
                 logEntity.Subject = $"{logEntity.LogId} - {logEntity.Action} - {logEntity.PointType} - Error";
-                await _logService.WriteLog(logEntity);
-                throw ex;
+                _logService.WriteLog(logEntity);
+                throw;
             }
         }
 
@@ -423,25 +422,6 @@ namespace ProjectSmartLink.Service
 
                 return new PublishSourcePointResult() { BatchId = new Guid(), SourcePoints = sourcePointList };
             }
-            catch (SourcePointException ex)
-            {
-                foreach (var sourcePoint in ex.ErrorSourcePoints)
-                {
-                    var logEntity = new LogEntity()
-                    {
-                        LogId = "10007",
-                        Action = Constant.ACTIONTYPE_PUBLISH,
-                        ActionType = ActionTypeEnum.ErrorLog,
-                        PointType = Constant.POINTTYPE_SOURCEPOINT,
-                        Message = ".Net Error",
-                        Detail = $"{sourcePoint.Id}-{sourcePoint.Name}-{ex.ToString()}"
-                    };
-                    logEntity.Subject = $"{logEntity.LogId} - {logEntity.Action} - {logEntity.PointType} - Error";
-                    await _logService.WriteLog(logEntity);
-                }
-
-                throw ex;
-            }
             catch (Exception ex)
             {
                 var logEntity = new LogEntity()
@@ -454,8 +434,8 @@ namespace ProjectSmartLink.Service
                     Detail = ex.ToString()
                 };
                 logEntity.Subject = $"{logEntity.LogId} - {logEntity.Action} - {logEntity.PointType} - Error";
-                await _logService.WriteLog(logEntity);
-                throw ex;
+                _logService.WriteLog(logEntity);
+                throw;
             }
         }
 
@@ -475,8 +455,8 @@ namespace ProjectSmartLink.Service
             var sourceCatalogs = await _dbContext.SourceCatalogs.Where(o => !string.IsNullOrEmpty(o.DocumentId)).ToListAsync();
             var destinationCatalogs = await _dbContext.DestinationCatalogs.Where(o => !string.IsNullOrEmpty(o.DocumentId)).ToListAsync();
             var catalog = new List<DocumentCheckResult>();
-            catalog.AddRange(sourceCatalogs.Select(o => new DocumentCheckResult() { DocumentId = o.DocumentId, DocumentType = DocumentTypes.SourcePoint }).ToList());
-            catalog.AddRange(destinationCatalogs.Select(o => new DocumentCheckResult() { DocumentId = o.DocumentId, DocumentType = DocumentTypes.DestinationPoint }).ToList());
+            catalog.AddRange(sourceCatalogs.Select(o => new DocumentCheckResult() { DocumentId = o.DocumentId, DocumentType = DocumentType.SourcePoint }).ToList());
+            catalog.AddRange(destinationCatalogs.Select(o => new DocumentCheckResult() { DocumentId = o.DocumentId, DocumentType = DocumentType.DestinationPoint }).ToList());
             return catalog;
         }
 
@@ -484,7 +464,7 @@ namespace ProjectSmartLink.Service
         {
             foreach (var document in documents)
             {
-                if (document.DocumentType == DocumentTypes.SourcePoint)
+                if (document.DocumentType == DocumentType.SourcePoint)
                 {
                     var catalog = await _dbContext.SourceCatalogs.Where(o => o.DocumentId == document.DocumentId).FirstOrDefaultAsync();
                     if (catalog != null)
@@ -497,7 +477,7 @@ namespace ProjectSmartLink.Service
                         }
                         else
                         {
-                            if (!catalog.Name.Equals(document.DocumentUrl, StringComparison.CurrentCultureIgnoreCase))
+                            if (!catalog.Name.Equals(document.DocumentUrl, StringComparison.OrdinalIgnoreCase))
                             {
                                 document.IsUpdated = true;
                                 document.Message = string.Format("DocumentId: {0}, Updated from {1} to {2}", document.DocumentId, catalog.Name, document.DocumentUrl);
@@ -515,7 +495,7 @@ namespace ProjectSmartLink.Service
                         }
                     }
                 }
-                else if (document.DocumentType == DocumentTypes.DestinationPoint)
+                else if (document.DocumentType == DocumentType.DestinationPoint)
                 {
                     var catalog = await _dbContext.DestinationCatalogs.Where(o => o.DocumentId == document.DocumentId).FirstOrDefaultAsync();
                     if (catalog != null)
@@ -523,15 +503,15 @@ namespace ProjectSmartLink.Service
                         if (document.IsDeleted)
                         {
                             document.IsUpdated = true;
-                            document.Message = string.Format("DocumentId: {0}, The file {1} has been deleted", document.DocumentId, catalog.Name);
+                            document.Message = $"DocumentId: {document.DocumentId}, The file {catalog.Name} has been deleted";
                             catalog.IsDeleted = true;
                         }
                         else
                         {
-                            if (!catalog.Name.Equals(document.DocumentUrl, StringComparison.CurrentCultureIgnoreCase))
+                            if (!catalog.Name.Equals(document.DocumentUrl, StringComparison.OrdinalIgnoreCase))
                             {
                                 document.IsUpdated = true;
-                                document.Message = string.Format("DocumentId: {0}, Updated from {1} to {2}", document.DocumentId, catalog.Name, document.DocumentUrl);
+                                document.Message = $"DocumentId: {document.DocumentId}, Updated from {catalog.Name} to {document.DocumentUrl}";
                                 catalog.Name = document.DocumentUrl;
                                 catalog.IsDeleted = false;
                             }
@@ -597,171 +577,5 @@ namespace ProjectSmartLink.Service
             }
             return files;
         }
-
-        public async Task CloneFiles(IEnumerable<CloneForm> files)
-        {
-            try
-            {
-                var filesWillClone = files.Where(o => o.Clone);
-                var clonedSourcePoints = new Dictionary<Guid, SourcePoint>();
-                foreach (var item in filesWillClone)
-                {
-                    if (item.IsExcel)
-                    {
-                        var catalog = await _dbContext.SourceCatalogs.Where(o => o.DocumentId.Equals(item.DocumentId, StringComparison.CurrentCultureIgnoreCase)).FirstOrDefaultAsync();
-                        if (catalog != null)
-                        {
-                            var sourcePoints = await _dbContext.SourcePoints.Where(o => o.Status == SourcePointStatus.Created && o.CatalogId == catalog.Id)
-                                .Include(o => o.DestinationPoints)
-                                .ToArrayAsync();
-
-                            var sourcePointIds = sourcePoints.Select(point => point.Id).ToArray();
-                            var publishedHistories = await (from pb in _dbContext.PublishedHistories
-                                                            where sourcePointIds.Contains(pb.SourcePointId)
-                                                            select pb).ToArrayAsync();
-
-                            #region Add new source catalog
-
-                            SourceCatalog newSourceCatalog = new SourceCatalog() { Name = item.DestinationFileUrl, DocumentId = item.DestinationFileDocumentId, IsDeleted = false };
-                            _dbContext.SourceCatalogs.Add(newSourceCatalog);
-
-                            #endregion
-
-                            #region Add new source point
-
-                            foreach (var sourcePoint in sourcePoints)
-                            {
-                                var lastPublishedValue = publishedHistories.Where(o => o.SourcePointId == sourcePoint.Id).OrderByDescending(o => o.PublishedDate).FirstOrDefault().Value;
-                                var newSourcePoint = new SourcePoint()
-                                {
-                                    Name = sourcePoint.Name,
-                                    RangeId = sourcePoint.RangeId,
-                                    Position = sourcePoint.Position,
-                                    Value = sourcePoint.Value,
-                                    Created = DateTime.Now.ToUniversalTime().ToPSTDateTime(),
-                                    Creator = _userProfileService.GetCurrentUser().Username,
-                                    Status = SourcePointStatus.Created,
-                                    NamePosition = sourcePoint.NamePosition,
-                                    NameRangeId = sourcePoint.NameRangeId,
-                                    SourceType = sourcePoint.SourceType
-                                };
-
-                                _dbContext.PublishedHistories.Add(new PublishedHistory()
-                                {
-                                    Name = sourcePoint.Name,
-                                    Position = sourcePoint.Position,
-                                    Value = "Cloned",
-                                    PublishedUser = _userProfileService.GetCurrentUser().Username,
-                                    PublishedDate = DateTime.Now.ToUniversalTime().ToPSTDateTime(),
-                                    SourcePointId = newSourcePoint.Id
-                                });
-
-                                _dbContext.PublishedHistories.Add(new PublishedHistory()
-                                {
-                                    Name = sourcePoint.Name,
-                                    Position = sourcePoint.Position,
-                                    Value = lastPublishedValue,
-                                    PublishedUser = _userProfileService.GetCurrentUser().Username,
-                                    PublishedDate = DateTime.Now.AddSeconds(1).ToUniversalTime().ToPSTDateTime(),
-                                    SourcePointId = newSourcePoint.Id
-                                });
-
-                                newSourceCatalog.SourcePoints.Add(newSourcePoint);
-
-                                clonedSourcePoints.Add(sourcePoint.Id, newSourcePoint);
-                            }
-
-                            #endregion
-                        }
-                    }
-                }
-
-                //foreach (var item in filesWillClone)
-                //{
-                //    if (item.IsWord)
-                //    {
-                //        var catalog = await _dbContext.DestinationCatalogs.Where(o => o.DocumentId.Equals(item.DocumentId, StringComparison.CurrentCultureIgnoreCase)).FirstOrDefaultAsync();
-                //        if (catalog != null)
-                //        {
-                //            var destinationPoints = await _dbContext.DestinationPoints.Where(o => o.CatalogId == catalog.Id)
-                //                .Include(o => o.CustomFormats)
-                //                .Include(o => o.ReferencedSourcePoint)
-                //                .Include(o => o.ReferencedSourcePoint.Catalog).ToArrayAsync();
-
-                //            var sourcePointDocumentIds = destinationPoints.Select(o => o.ReferencedSourcePoint.Catalog.DocumentId);
-                //            var clonedExcelDocumentIds = files.Where(o => o.Clone && o.IsExcel).Select(o => o.DocumentId);
-                //            if (sourcePointDocumentIds.Any(o => clonedExcelDocumentIds.Any(p => p.Equals(o, StringComparison.CurrentCultureIgnoreCase))))
-                //            {
-                //                #region Add new destination catalog
-
-                //                DestinationCatalog newDestinationCatalog = new DestinationCatalog() { Name = item.DestinationFileUrl, DocumentId = item.DestinationFileDocumentId, IsDeleted = false };
-                //                _dbContext.DestinationCatalogs.Add(newDestinationCatalog);
-
-                //                #endregion
-
-                //                #region Add new destination point
-
-                //                foreach (var destinationPoint in destinationPoints)
-                //                {
-                //                    var referencedSourcePoint = clonedSourcePoints.FirstOrDefault(o => o.Key == destinationPoint.ReferencedSourcePoint.Id).Value;
-                //                    if (referencedSourcePoint != null)
-                //                    {
-                //                        DestinationPoint newDestinationPoint = new DestinationPoint()
-                //                        {
-                //                            RangeId = destinationPoint.RangeId,
-                //                            Created = DateTime.Now.ToUniversalTime().ToPSTDateTime(),
-                //                            Creator = _userProfileService.GetCurrentUser().Username,
-                //                            DecimalPlace = destinationPoint.DecimalPlace,
-                //                            DestinationType = destinationPoint.DestinationType
-                //                        };
-
-                //                        var newCustomFormatIds = destinationPoint.CustomFormats.Select(o => o.Id);
-                //                        var newCustomFormats = _dbContext.CustomFormats.Where(o => newCustomFormatIds.Contains(o.Id));
-                //                        foreach (var format in newCustomFormats)
-                //                        {
-                //                            newDestinationPoint.CustomFormats.Add(format);
-                //                        }
-
-                //                        newDestinationCatalog.DestinationPoints.Add(newDestinationPoint);
-
-                //                        newDestinationPoint.ReferencedSourcePoint = referencedSourcePoint;
-                //                        _dbContext.DestinationPoints.Add(newDestinationPoint);
-                //                    }
-                //                }
-
-                //                #endregion
-                //            }
-                //        }
-                //    }
-                //}
-
-                await _dbContext.SaveChangesAsync();
-            }
-            catch (Exception ex)
-            {
-                var entity = new LogEntity()
-                {
-                    LogId = "50001",
-                    Action = Constant.ACTIONTYPE_CLONE,
-                    ActionType = ActionTypeEnum.ErrorLog,
-                    PointType = Constant.POINTTYPE_CLONE,
-                    Message = ".Net Error",
-                };
-                entity.Subject = $"{entity.LogId} - {entity.Action} - {entity.PointType} - Error";
-                await _logService.WriteLog(entity);
-
-                throw new ApplicationException("Clone folder failed", ex);
-            }
-        }
     }
-
-    class SourcePointException : Exception
-    {
-        public IList<SourcePoint> ErrorSourcePoints { get; protected set; }
-        public SourcePointException(IList<SourcePoint> errorSourcePoints, string message, Exception innerException) : base(message, innerException)
-        {
-            ErrorSourcePoints = errorSourcePoints;
-        }
-    }
-
 }

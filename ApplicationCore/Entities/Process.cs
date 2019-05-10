@@ -15,6 +15,10 @@ namespace ApplicationCore.Entities
         [JsonConverter(typeof(StatusConverter))]
         [JsonProperty("status", Order = 7)]
         public ActionStatus Status { get; set; }
+        [JsonProperty("processnumber", Order = 8)]
+        public int ProcessNumber { get; set; }
+        [JsonProperty("groupnumber", Order = 9)]
+        public int GroupNumber { get; set; }
         public new static Process Empty
         {
             get => new Process
@@ -25,7 +29,9 @@ namespace ApplicationCore.Entities
                 ProcessType = string.Empty,
                 Order = string.Empty,
                 DaysEstimate = string.Empty,
-                Status = ActionStatus.NotStarted
+                Status = ActionStatus.NotStarted,
+                ProcessNumber=0,
+                GroupNumber=0
             };
         }
     }

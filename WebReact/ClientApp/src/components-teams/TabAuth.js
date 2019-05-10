@@ -126,11 +126,10 @@ export class TabAuth extends Component {
                 const tabAuthSeq1 = await this.authHelper.acquireTokenSilentAsync();
 
                 if (tabAuthSeq1.includes("error")) {
-                    const tabAuthSeq2 = await this.logonInteractive();
+                    await this.logonInteractive();
                 } else {
                     const tabAuthSeq2 = await this.authHelper.acquireWebApiTokenSilentAsync();
 
-                    //localStorage.setItem("TabAuthState", tabAuthSeq2);
                     if (!tabAuthSeq2.includes("error")) {
                         this.notifySuccess(true);
                     }
@@ -139,7 +138,7 @@ export class TabAuth extends Component {
                 const tabAuthSeq1 = await this.authHelper.acquireTokenSilentAdminAsync();
 
                 if (tabAuthSeq1.includes("error")) {
-                    const tabAuthSeq2 = await this.logonInteractive();
+                    await this.logonInteractive();
                 } else {
                     const tabAuthSeq2 = await this.authHelper.acquireTokenSilentAsync();
 
@@ -179,7 +178,7 @@ export class TabAuth extends Component {
         const appTeamsRequest = localStorage.getItem(this.localStorePrefix + "appteams.request");
 
         try {
-            if (appTeamsRequest === "/tab/generalAdministrationTab") {
+            if (appTeamsRequest === "/tab/generalAdministrationTab" || appTeamsRequest === "/tab/setupTab") {
                 return "true";
             }
             else {

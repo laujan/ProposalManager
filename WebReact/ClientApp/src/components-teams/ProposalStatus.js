@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
-import * as microsoftTeams from '@microsoft/teams-js';
-import { TeamsComponentContext, Panel, PanelBody, PanelFooter, PanelHeader } from 'msteams-ui-components-react';
+import { TeamsComponentContext, Panel, PanelBody, PanelFooter, PanelHeader, ThemeStyle } from 'msteams-ui-components-react';
 import {
     Spinner,
     SpinnerSize
@@ -12,7 +11,7 @@ import { MessageBar, MessageBarType } from 'office-ui-fabric-react/lib/MessageBa
 
 import { FocusZone, FocusZoneDirection } from 'office-ui-fabric-react/lib/FocusZone';
 import { List } from 'office-ui-fabric-react/lib/List';
-import { PeoplePickerTeamMembers } from '../components/PeoplePickerTeamMembers';
+import { PeoplePickerTeamMembers } from '../components-teams/general/PeoplePickerTeamMembers';
 import './teams.css';
 import { Trans } from "react-i18next";
 import Accessdenied from '../helpers/AccessDenied';
@@ -93,6 +92,8 @@ export class ProposalStatus extends Component {
         this.sdkHelper = window.sdkHelper;
         this.accessGranted = false;
         this.state = {
+            fontSize: 16,
+            theme: ThemeStyle.Light,
             proposalDocumentList: [],
             loading: true,
             currentSelectedItems: [],
@@ -105,15 +106,10 @@ export class ProposalStatus extends Component {
         };
 
         this.ddlStatusChange = this.ddlStatusChange.bind(this);
-        //this.fnChangeOwner = this.fnChangeOwner.bind(this);
         this.toggleHiddenPicker = this.toggleHiddenPicker.bind(this);
         this._onSelectLastUpdated = this._onSelectLastUpdated.bind(this);
         this.fnUpdateFormalProposal = this.fnUpdateFormalProposal.bind(this);
         this._onRenderCell = this._onRenderCell.bind(this);
-    }
-
-    componentWillMount() {
-        console.log("FormalProposal_componentWillMount isauth: " + this.authHelper.isAuthenticated());
     }
 
     componentDidMount() {
@@ -140,7 +136,6 @@ export class ProposalStatus extends Component {
     }
 
     initialize({ groupId, channelName, teamName }) {
-        //this.setState({ groupId, channelName, teamName });
         let tc = {
             group: groupId,
             channel: channelName,
@@ -182,11 +177,12 @@ export class ProposalStatus extends Component {
                                         if (item.displayName !== "") {
                                             people.key = item.id;
                                             people.imageUrl = "";
+                                            people.text = item.displayName;
                                             people.displayName = item.displayName;
                                             people.primaryText = item.displayName;
                                             people.userPrincipalName = item.userPrincipalName;
-                                            people.secondaryText = item.assignedRole.adGroupName;
-                                            people.userRole = item.assignedRole.adGroupName;
+                                            people.secondaryText = item.adGroupName;
+                                            people.userRole = item.adGroupName;
                                             people.mail = item.mail;
                                             people.phoneNumber = "";
                                             peopleListAll.push(people);
@@ -196,8 +192,9 @@ export class ProposalStatus extends Component {
                                 let proposalSectionListArr = [];
                                 let proposalSectionList = data.proposalDocument.content.proposalSectionList;
                                 for (let p = 0; p < proposalSectionList.length; p++) {
-                                    proposalSectionList[p].ddlStatusChange = (event) => this.ddlStatusChange(p);
-                                    proposalSectionListArr.push(proposalSectionList[p]);
+                                        proposalSectionList[p].owner.text = proposalSectionList[p].owner.displayName;
+                                        proposalSectionList[p].ddlStatusChange = (event) => this.ddlStatusChange(p);
+                                        proposalSectionListArr.push(proposalSectionList[p]);
                                 }
 
                                 this.setState({
@@ -429,7 +426,7 @@ export class ProposalStatus extends Component {
                 <div className='ms-List-itemContent'>
                     <div className='ms-List-itemSections'>{item.displayName}</div>
                     <div className='ms-List-itemOwner'>
-                        <PeoplePickerTeamMembers teamMembers={this.state.peopleList} onChange={(e) => this.fnChangeOwnerNew(e, idx)} itemLimit='1' defaultSelectedUsers={[item.owner]} />
+                        <PeoplePickerTeamMembers teamMembers={this.state.peopleList} onChange={(e) => this.fnChangeOwnerNew(e, idx)} itemLimit='1' defaultSelectedUsers={item.owner.displayName.length > 0 ? [item.owner] : []} />
                     </div>
                     <div className='ms-List-itemStatus'>
                         <Dropdown
@@ -469,7 +466,7 @@ export class ProposalStatus extends Component {
         } else {
             return (
                 <div>
-                    <TeamsComponentContext>
+                    <TeamsComponentContext fontSize={this.state.fontSize} theme={this.state.theme}>
                         {
                             this.state.haveGranularAccess
                                 ?

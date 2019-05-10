@@ -24,6 +24,7 @@ export class OpportunityNotes extends Component {
 
         this.sdkHelper = window.sdkHelper;
         this.authHelper = window.authHelper;
+        this.utils = window.utils;
 
         const userProfile = this.props.userProfile;
 
@@ -57,7 +58,7 @@ export class OpportunityNotes extends Component {
     }
 
     async componentDidMount() {
-        console.log("OpportunityDetails_componentWillMount isauth: " + this.authHelper.isAuthenticated() + " this.accessGranted: " + this.accessGranted);
+        console.log("OpportunityDetails_componentDidMount isauth: " + this.authHelper.isAuthenticated() + " this.accessGranted: " + this.accessGranted);
 
         if (!this.state.isAuthenticated) {
             this.setState({
@@ -72,45 +73,32 @@ export class OpportunityNotes extends Component {
             if (this.state.isAuthenticated && !this.state.isComponentDidUpdate && this.state.oppData) {
                 console.log("OpportunityNotes_componentDidUpdate 1", this.state.loading, this.state.isComponentDidUpdate);
                 let userProfile = await this.authHelper.callGetUserProfile();
-                let value = await this.getOppDetails(userProfile);
+                await this.getOppDetails(userProfile);
             } else {
                 if (!this.state.oppData) {
                     console.log("OpportunityNotes_componentDidUpdate 2", this.state.loading, this.state.isComponentDidUpdate);
                 }
             }
-
         } catch (error) {
             console.log("OpportunitySummary_componentDidUpdate error : ", error);
         }
-
     }
-
-    
-    componentWillUnmount() {
-        console.log("componentWillUnmount");
-    }
-
 
     async getOppDetails(userDetails) {
-
         try {
-
-
             let data = this.state.oppData;
             if (data) {
                 let teamMembers = [];
                 teamMembers = data.teamMembers;
 
-                let loanOfficerObj = teamMembers.filter(function (k) {
-                    return k.assignedRole.displayName === "LoanOfficer";
-                });
+                let loanOfficerObj = this.utils.getLoanOficers(teamMembers);
 
                 let currentUserId = userDetails.id;
                 let teamMemberLODetails = loanOfficerObj.filter(function (k) {
                     return k.id === currentUserId;
                 });
 
-                let userAssignedRole = teamMemberLODetails.length > 0 ? teamMemberLODetails[0].assignedRole.displayName : "";
+                let userAssignedRole = teamMemberLODetails.length > 0 ? teamMemberLODetails[0].displayName : "";
 
                 this.setState({
                     NotesList: data.notes,

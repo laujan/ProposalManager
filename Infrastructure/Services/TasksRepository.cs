@@ -3,23 +3,20 @@
 //
 // Licensed under the MIT license. See LICENSE file in the solution root folder for full license information
 
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
+using ApplicationCore;
+using ApplicationCore.Entities;
+using ApplicationCore.Entities.GraphServices;
+using ApplicationCore.Helpers;
+using ApplicationCore.Interfaces;
+using ApplicationCore.Services;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using ApplicationCore.Artifacts;
-using ApplicationCore.Interfaces;
-using ApplicationCore.Entities;
-using ApplicationCore.Services;
-using ApplicationCore.Helpers;
-using ApplicationCore.Entities.GraphServices;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using ApplicationCore;
-using Infrastructure.Authorization;
-using Microsoft.Extensions.DependencyInjection;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Infrastructure.Services
 {

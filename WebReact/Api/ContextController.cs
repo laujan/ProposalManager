@@ -4,26 +4,19 @@
 // Licensed under the MIT license. See LICENSE file in the solution root folder for full license information
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using ApplicationCore;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using ApplicationCore.Interfaces;
 using ApplicationCore.Helpers;
-using ApplicationCore.Artifacts;
 using Newtonsoft.Json.Linq;
-using ApplicationCore.ViewModels;
 using Microsoft.AspNetCore.Authorization;
-using System.IO;
-using Microsoft.Extensions.Configuration;
 
 namespace WebReact.Api
 {
-	[Authorize(AuthenticationSchemes = "AzureAdBearer")]
+    [Authorize(AuthenticationSchemes = "AzureAdBearer")]
 	public class ContextController : BaseApiController<ContextController>
     {
         private readonly IContextService _contextService;
@@ -50,8 +43,7 @@ namespace WebReact.Api
             try
             {
                 var response = await _contextService.GetClientSetingsAsync();
-                var responseJObject = JObject.FromObject(response);
-                return Ok(responseJObject);
+                return Ok(JObject.FromObject(response));
             }
             catch (Exception ex)
             {
@@ -123,16 +115,14 @@ namespace WebReact.Api
 
 
 		[HttpGet("GetOpportunityStatusAll", Name = "GetOpportunityStatusAll")]
-		public async Task<IActionResult> GetOpportunityStatusAll()
+		public IActionResult GetOpportunityStatusAll()
 		{
 			var requestId = Guid.NewGuid().ToString();
 			_logger.LogInformation($"RequestID:{requestId} GetOpportunityStatusAll called.");
 
 			try
 			{
-				var response = await _contextService.GetOpportunityStatusAllAsync();
-
-				return Ok(response);
+				return Ok(_contextService.GetOpportunityStatusAllAsync());
 			}
 			catch (Exception ex)
 			{
@@ -144,16 +134,14 @@ namespace WebReact.Api
 		}
 
 		[HttpGet("GetActionStatusAll", Name = "GetActionStatusAll")]
-		public async Task<IActionResult> GetActionStatusAll()
+		public IActionResult GetActionStatusAll()
 		{
 			var requestId = Guid.NewGuid().ToString();
 			_logger.LogInformation($"RequestID:{requestId} GetActionStatusAll called.");
 
 			try
 			{
-				var response = await _contextService.GetActionStatusAllAsync();
-
-				return Ok(response);
+				return Ok(_contextService.GetActionStatusAllAsync());
 			}
 			catch (Exception ex)
 			{
@@ -164,25 +152,25 @@ namespace WebReact.Api
 			}
 		}
 
-        //[HttpGet("GetPermissionsAll", Name = "GetPermissionsAll")]
-        //public async Task<IActionResult> GetPermissionsAll()
-        //{
-        //    var requestId = Guid.NewGuid().ToString();
-        //    _logger.LogInformation($"RequestID:{requestId} GetPermissionsAll called.");
+        [HttpGet("GetProcessRolesList", Name = "GetProcessRolesList")]
+        public async Task<IActionResult> GetProcessRolesList()
+        {
+            var requestId = Guid.NewGuid().ToString();
+            _logger.LogInformation($"RequestID:{requestId} GetPermissionsAll called.");
 
-        //    try
-        //    {
-        //        var response = await _contextService.GetPermissionsAllAsync(requestId);
+            try
+            {
+                var response = await _contextService.GetProcessRolesList(requestId);
 
-        //        return Ok(response);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        _logger.LogError($"RequestID:{requestId} GetPermissionsAll error: {ex.Message}");
-        //        var errorResponse = JsonErrorResponse.BadRequest($"GetPermissionsAll error: {ex.Message}", requestId);
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"RequestID:{requestId} GetPermissionsAll error: {ex.Message}");
+                var errorResponse = JsonErrorResponse.BadRequest($"GetPermissionsAll error: {ex.Message}", requestId);
 
-        //        return BadRequest(errorResponse);
-        //    }
-        //}
+                return BadRequest(errorResponse);
+            }
+        }
     }
 }

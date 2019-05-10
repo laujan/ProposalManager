@@ -105,10 +105,6 @@ export class OpportunityListWithSelection extends Component {
         };
     }
 
-    componentWillMount() {
-
-    }
-
 
     // Class methods
     onActionItemClick(item) {

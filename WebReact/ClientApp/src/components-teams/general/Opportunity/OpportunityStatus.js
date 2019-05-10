@@ -23,6 +23,7 @@ export class OpportunityStatus extends Component {
 
         this.sdkHelper = window.sdkHelper;
         this.authHelper = window.authHelper;
+        this.utils =  window.utils;
 
         const userProfile = this.props.userProfile;
 
@@ -44,31 +45,25 @@ export class OpportunityStatus extends Component {
 
     }
 
-    componentWillMount() {
+    componentDidMount() {
+        console.log("code-review-comment implementation")
         this.getUserRoles();
-
-
-
     }
 
     getOppDetails() {
         let data = this.state.oppData;
-        let loanOfficerObj = data.teamMembers.filter(function (k) {
-            return k.assignedRole.displayName === "LoanOfficer"; // "loan officer";
-        });
+        let loanOfficerObj =this.utils.getLoanOficers(data.teamMembers);
 
-        let relManagerObj = data.teamMembers.filter(function (k) {
-            return k.assignedRole.displayName === "RelationshipManager"; // "relationshipmanager";
-        });
+        let relManagerObj = this.utils.getRelationShipManagers(data.teamMembers);
 
-        let isDealTypeExist = data.dealType !== null && data.dealType.id !== null ? true : false;
+        let isDealTypeExist = data.template !== null && data.template.id !== null ? true : false;
         if (!isDealTypeExist) {
             this.setState({ isDealTypeExist: false, teamMembers: data.teamMembers, loading: false });
             return false;
         }
 
         // Get Other role officers list
-        let processList = data.dealType.processes;
+        let processList = data.template.processes;
         // Get Other role officers list
         let otherRolesMapping = processList.filter(function (k) {
             return k.processType.toLowerCase() !== "new opportunity" && k.processType.toLowerCase() !== "start process" && k.processType.toLowerCase() !== "customerdecisiontab" && k.processType.toLowerCase() !== "proposalstatustab";
@@ -157,7 +152,8 @@ export class OpportunityStatus extends Component {
 
     getUserRoles() {
         // call to API fetch data
-        let requestUrl = 'api/RoleMapping';
+		//WAVE-4 : Changing RoleMappong to Roles:
+        let requestUrl = 'api/Roles';
         fetch(requestUrl, {
             method: "GET",
             headers: { 'authorization': 'Bearer ' + window.authHelper.getWebApiToken() }

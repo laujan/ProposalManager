@@ -47,6 +47,45 @@ namespace Infrastructure.DealTypeServices
             _permissionRepository = permissionRepository;
         }
 
+        private Task<IList<Checklist>> RemoveEmptyFromChecklistAsync(IList<Checklist> checklists, string requestId = "")
+        {
+            try
+            {
+                var newChecklists = new List<Checklist>();
+                foreach (var item in checklists)
+                {
+                    var newChecklist = new Checklist();
+                    newChecklist.ChecklistTaskList = new List<ChecklistTask>();
+                    newChecklist.ChecklistChannel = item.ChecklistChannel;
+                    newChecklist.ChecklistStatus = item.ChecklistStatus;
+                    newChecklist.Id = item.Id;
+
+
+                    foreach (var sItem in item.ChecklistTaskList)
+                    {
+                        var newChecklistTask = new ChecklistTask();
+                        if (!String.IsNullOrEmpty(sItem.Id) && !String.IsNullOrEmpty(sItem.ChecklistItem))
+                        {
+                            newChecklistTask.Id = sItem.Id;
+                            newChecklistTask.ChecklistItem = sItem.ChecklistItem;
+                            newChecklistTask.Completed = sItem.Completed;
+                            newChecklistTask.FileUri = sItem.FileUri;
+
+                            newChecklist.ChecklistTaskList.Add(newChecklistTask);
+                        }
+                    }
+
+                    newChecklists.Add(newChecklist);
+                }
+
+                return Task.FromResult<IList<Checklist>>(newChecklists);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"RequestId: {requestId} - RemoveEmptyFromChecklist Service Exception: {ex}");
+                throw new ResponseException($"RequestId: {requestId} - RemoveEmptyFromChecklist Service Exception: {ex}");
+            }
+        }   
         public async Task<Opportunity> CreateWorkflowAsync(Opportunity opportunity, string requestId = "")
         {
             return await UpdateCheckList(opportunity, requestId);
@@ -118,7 +157,15 @@ namespace Infrastructure.DealTypeServices
                                 }
 
                                 var sendToList = new List<UserProfile>();
-                                if (!String.IsNullOrEmpty(viewModel.OpportunityChannelId)) entity.Metadata.OpportunityChannelId = viewModel.OpportunityChannelId;
+
+                                //WAVE-4 GENERIC ACCELERATOR Change : start
+                                var opportunityChannelId = viewModel.OpportunityChannelId ?? String.Empty;
+                                if (!String.IsNullOrEmpty(opportunityChannelId))
+                                {
+                                    entity.Metadata.OpportunityChannelId = opportunityChannelId;
+
+                                }
+                                //WAVE-4 GENERIC ACCELERATOR Change : end
 
                                 _logger.LogInformation($"RequestId: {requestId} - UpdateWorkflowAsync sendNotificationCardAsync checklist status changed notification. Number of hecklists: {statusChangedChecklists.Count}");
                                 var sendNotificationCard = await _cardNotificationService.sendNotificationCardAsync(entity, sendToList, $"Status updated for opportunity checklist(s): {checkLists} ", requestId);
@@ -155,7 +202,7 @@ namespace Infrastructure.DealTypeServices
                 if (entity.Content.Checklists.Count == 0)
                 {
                     // Checklist empty create a default set
-                    foreach (var item in viewModel.DealType.ProcessList)
+                    foreach (var item in viewModel.Template.ProcessList)
                     {
                         if (item.ProcessType.ToLower() == "checklisttab")
                         {
@@ -263,9 +310,12 @@ namespace Infrastructure.DealTypeServices
         {
             try
             {
+                // Delete empty ChecklistItems
+                opportunity.Content.Checklists = await RemoveEmptyFromChecklistAsync(opportunity.Content.Checklists, requestId);
+
                 var oppCheckLists = opportunity.Content.Checklists.ToList();
                 var updatedDealTypeList = new List<Process>();
-                foreach (var process in opportunity.Content.DealType.ProcessList)
+                foreach (var process in opportunity.Content.Template.ProcessList)
                 {
                     if (opportunity.Content.CustomerDecision.Approved)
                     {
@@ -314,7 +364,7 @@ namespace Infrastructure.DealTypeServices
                     updatedDealTypeList.Add(process);
                 }
 
-                opportunity.Content.DealType.ProcessList = updatedDealTypeList;
+                opportunity.Content.Template.ProcessList = updatedDealTypeList;
 
                 return opportunity;
             }

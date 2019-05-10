@@ -16,7 +16,7 @@ namespace ProjectSmartLink.Service
     public class LogService : ILogService
     {
         private TelemetryClient _telemetry;
-        protected readonly IConfigService _configService;
+        private readonly IConfigService _configService;
         public LogService(IConfigService configService)
         {
             _telemetry = new TelemetryClient();
@@ -27,7 +27,7 @@ namespace ProjectSmartLink.Service
             _telemetry.Flush();
         }
 
-        public async Task WriteLog(LogEntity entity)
+        public void WriteLog(LogEntity entity)
         {
             var properties = new Dictionary<string, string>();
             properties.Add("Subject", entity.Subject);

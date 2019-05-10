@@ -8,9 +8,8 @@ import { oppStatusClassName } from '../../common';
 import { Pivot, PivotItem, PivotLinkFormat, PivotLinkSize } from 'office-ui-fabric-react/lib/Pivot';
 import '../teams.css';
 import { Trans } from "react-i18next";
-import { AdminArchivedOpportunities } from "./AdminArchivedOpportunities";
-import { AdminActionRequired } from "./AdminActionRequired";
-import { AdminAllOpportunities } from './AdminAllOpportunities';
+import { AdminArchivedOpportunities } from "./Administration/AdminArchivedOpportunities";
+import { AdminAllOpportunities } from './Administration/AdminAllOpportunities';
 import { Spinner, SpinnerSize } from 'office-ui-fabric-react/lib/Spinner';
 import Utils from '../../helpers/Utils';
 import Accessdenied from '../../helpers/AccessDenied';
@@ -24,7 +23,7 @@ export class Administration extends Component {
         this.authHelper = window.authHelper;
         this.sdkHelper = window.sdkHelper;
         this.utils = new Utils();
-
+        this.accessGranted = false;
         try {
             microsoftTeams.initialize();
             console.log('in try');
@@ -53,8 +52,25 @@ export class Administration extends Component {
         }
     }
 
-    componentWillMount() {
+    //async componentDidMount() {
+    //    console.log("Admin_componentDidMount isauth: " + this.authHelper.isAuthenticated());
+    //    if (this.authHelper.isAuthenticated() && !this.accessGranted) {
+    //        try {
+    //            let access = await this.authHelper.callCheckAccess(["Administrator", "Opportunity_ReadWrite_Template", "Opportunities_ReadWrite_All"]);
+    //            //console.log("MetaData_componentDidUpdate callCheckAccess success");
+    //            this.accessGranted = true;
+    //            await this.getMetaDataList();
 
+    //        } catch (error) {
+    //            this.accessGranted = false;
+    //            //console.log("MetaData_componentDidUpdate error_callCheckAccess:");
+    //            console.log(error);
+    //        }
+    //    }
+    //}
+
+    componentDidMount() {
+        console.log("MetaData_componentDidMount isauth: " + this.authHelper.isAuthenticated());
         if (this.authHelper.isAuthenticated()) {
 
             this.authHelper.callGetUserProfile()
@@ -73,7 +89,8 @@ export class Administration extends Component {
         });
 
         if (this.state.items.length === 0) {
-            console.log("Administration_componentWillMount getOpportunityIndex");
+            console.log("Administration_componentDidMount getOpportunityIndex");
+            this.getUserRoles().then(data => { console.log("getUserRoles..."); console.log(data); });
             this.getOpportunityIndex()
                 .then(data => {
                     if (data) {
@@ -84,7 +101,7 @@ export class Administration extends Component {
                 })
                 .catch(err => {
                     // TODO: Add error message
-                    this.errorHandler(err, "Administration_componentWillMount_getOpportunityIndex");
+                    this.errorHandler(err, "Administration_componentDidMount_getOpportunityIndex");
                 });
         }
 
@@ -218,7 +235,8 @@ export class Administration extends Component {
     getUserRoles() {
         // call to API fetch data
         return new Promise((resolve, reject) => {
-            let requestUrl = 'api/RoleMapping';
+			//WAVE-4 : Changing RoleMapping to Roles:
+            let requestUrl = 'api/Roles';
             fetch(requestUrl, {
                 method: "GET",
                 headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() }
@@ -227,16 +245,21 @@ export class Administration extends Component {
                 .then(data => {
                     try {
                         let userRoleList = [];
-                        //console.log(data);
+                        console.log(data);
                         for (let i = 0; i < data.length; i++) {
                             let userRole = {};
                             userRole.id = data[i].id;
                             userRole.adGroupName = data[i].adGroupName;
-                            userRole.roleName = data[i].roleName;
+                            userRole.displayName = data[i].displayName;
+                            userRole.permissions = data[i].permissions;
+                            userRole.teamsMembership = data[i].teamsMembership;
+                            /*
+                             * userRole.roleName = data[i].roleName;
                             userRole.processStep = data[i].processStep;
                             userRole.channel = data[i].channel;
                             userRole.adGroupId = data[i].adGroupId;
                             userRole.processType = data[i].processType;
+                            */
 
                             userRoleList.push(userRole);
                         }
@@ -255,27 +278,7 @@ export class Administration extends Component {
 
 
     render() {
-        const team = this.state.teamMembers;
-        const channelId = this.state.channelId;
-        let isAdmin = this.state.userProfile.roles.filter(x => x.displayName === "Administrator");
-
-        const AdminActionRequiredView = ({ match }) => {
-            return (
-                <AdminActionRequired
-                    appSettings={this.props.appSettings}
-                    items={this.state.items}
-                    userRoleList={this.state.userRoleList}
-                    userProfile={this.state.userProfile}
-                />
-            );
-        };
-
-        console.log("in render");
-        console.log(this.state);
-
         return (
-
-            //<TeamsComponentContext>
             <div className='ms-Grid'>
                 <div className='ms-Grid-row'>
                     <div className='ms-Grid-col ms-sm6 ms-md8 ms-lg12 bgwhite tabviewUpdates' >
@@ -288,26 +291,20 @@ export class Administration extends Component {
                                 </div>
                                 :
                                 <Pivot className='tabcontrols pt35' linkFormat={PivotLinkFormat.tabs} linkSize={PivotLinkSize.large}>
-                                    <PivotItem linkText={<Trans>requiresAction</Trans>} width='100%' >
-                                        <AdminActionRequiredView />
-                                    </PivotItem>
-                                    <PivotItem linkText={<Trans>allOpportunities</Trans>}>
+                                    <PivotItem linkText={<Trans>allOpportunities</Trans>} itemKey="allOpportunities">
                                         <AdminAllOpportunities items={this.state.items} userRoleList={this.state.userRoleList} />
                                     </PivotItem>
-                                    <PivotItem linkText={<Trans>archivedOpportunities</Trans>}>
+                                    <PivotItem linkText={<Trans>archivedOpportunities</Trans>} itemKey="archivedOpportunities">
                                         <AdminArchivedOpportunities items={this.state.items} userRoleList={this.state.userRoleList} />
                                     </PivotItem>
+                                    
                                 </Pivot>
-
-
                             :
                             <Accessdenied />
                         }
                     </div>
                 </div>
             </div>
-            //</TeamsComponentContext>
         );
     }
-
 }

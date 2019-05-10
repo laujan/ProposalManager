@@ -4,16 +4,11 @@
 // Licensed under the MIT license. See LICENSE file in the solution root folder for full license information
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using ApplicationCore.ViewModels;
 using ApplicationCore.Interfaces;
 using ApplicationCore;
-using ApplicationCore.Artifacts;
-using Infrastructure.Services;
 using ApplicationCore.Helpers;
 using Newtonsoft.Json.Linq;
 using Microsoft.AspNetCore.Http;
@@ -44,9 +39,7 @@ namespace Infrastructure.Services
                 Guard.Against.NullOrEmpty(folder, nameof(folder), requestId);
                 Guard.Against.Null(file, nameof(file), requestId);
 
-                var response = await _documentRepository.UploadDocumentAsync(siteId, folder, file, requestId);
-
-                return response;
+                return await _documentRepository.UploadDocumentAsync(siteId, folder, file, requestId);
             }
             catch (Exception ex)
             {
@@ -65,9 +58,8 @@ namespace Infrastructure.Services
                 Guard.Against.NullOrEmpty(docType, nameof(docType), requestId);
                 Guard.Against.Null(file, nameof(file), requestId);
 
-                var response = await _documentRepository.UploadDocumentTeamAsync(opportunityName, docType, file, requestId);
+                return await _documentRepository.UploadDocumentTeamAsync(opportunityName, docType, file, requestId);
 
-                return response;
             }
             catch (Exception ex)
             {

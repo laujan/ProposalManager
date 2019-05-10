@@ -29,7 +29,7 @@ namespace ProposalCreation.Tests
 			var mockGraphHelper = GetGraphSdkHelper(response).Object;
 
 			var controller = new DocumentController(mockGraphHelper, ConfigurationProvider);
-			var result = controller.List("param").GetAwaiter().GetResult() as BadRequestObjectResult;
+			var result = controller.ListAsync("param").GetAwaiter().GetResult() as BadRequestObjectResult;
 
 			Assert.IsNotNull(result);
 			StringAssert.StartsWith(result.Value.ToString(), "Error retrieving documents:");
@@ -46,7 +46,7 @@ namespace ProposalCreation.Tests
 			var mockGraphHelper = GetGraphSdkHelper(response).Object;
 
             var controller = new DocumentController(mockGraphHelper, ConfigurationProvider);
-			var result = controller.List("param").GetAwaiter().GetResult() as BadRequestObjectResult;
+			var result = controller.ListAsync("param").GetAwaiter().GetResult() as BadRequestObjectResult;
 
 			Assert.IsNotNull(result);
 			StringAssert.StartsWith(result.Value.ToString(), "An error occurred:");
@@ -61,7 +61,7 @@ namespace ProposalCreation.Tests
 
             var controller = new DocumentController(mockGraphHelper, ConfigurationProvider);
 
-            var result = controller.List(null).GetAwaiter().GetResult() as BadRequestObjectResult;
+            var result = controller.ListAsync(null).GetAwaiter().GetResult() as BadRequestObjectResult;
 
 			Assert.IsNotNull(result);
 			StringAssert.Equals(result.Value, "id is required.");
@@ -78,7 +78,7 @@ namespace ProposalCreation.Tests
 			var mockGraphHelper = GetGraphSdkHelper(response).Object;
 
             var controller = new DocumentController(mockGraphHelper, ConfigurationProvider);
-            var result = controller.List("param").GetAwaiter().GetResult() as OkObjectResult;
+            var result = controller.ListAsync("param").GetAwaiter().GetResult() as OkObjectResult;
 
 			Assert.IsNotNull(result);
 			var data = result.Value as IEnumerable<Document>;
@@ -96,7 +96,7 @@ namespace ProposalCreation.Tests
 			var mockGraphHelper = GetGraphSdkHelper(response).Object;
 
             var controller = new DocumentController(mockGraphHelper, ConfigurationProvider);
-            var result = controller.List("param").GetAwaiter().GetResult() as OkObjectResult;
+            var result = controller.ListAsync("param").GetAwaiter().GetResult() as OkObjectResult;
 
 			Assert.IsNotNull(result);
 			var data = result.Value as IEnumerable<Document>;
@@ -114,7 +114,7 @@ namespace ProposalCreation.Tests
 			var mockGraphHelper = GetGraphSdkHelper(response).Object;
 
             var controller = new DocumentController(mockGraphHelper, ConfigurationProvider);
-            var result = controller.UpdateTask(null, "data").GetAwaiter().GetResult() as BadRequestObjectResult;
+            var result = controller.UpdateTaskAsync(null, "data").GetAwaiter().GetResult() as BadRequestObjectResult;
 
 			Assert.IsNotNull(result);
 			StringAssert.Equals("opportunityId is required", result.Value.ToString());
@@ -131,7 +131,7 @@ namespace ProposalCreation.Tests
 			var mockGraphHelper = GetGraphSdkHelper(response).Object;
 
             var controller = new DocumentController(mockGraphHelper, ConfigurationProvider);
-            var result = controller.UpdateTask("id", null).GetAwaiter().GetResult() as BadRequestObjectResult;
+            var result = controller.UpdateTaskAsync("id", null).GetAwaiter().GetResult() as BadRequestObjectResult;
 
 			Assert.IsNotNull(result);
 			StringAssert.Equals("documentData is required", result.Value.ToString());
@@ -148,7 +148,7 @@ namespace ProposalCreation.Tests
 			var mockGraphHelper = GetGraphSdkHelper(response).Object;
 
             var controller = new DocumentController(mockGraphHelper, ConfigurationProvider);
-            var result = controller.GetFormalProposal(null).GetAwaiter().GetResult() as BadRequestObjectResult;
+            var result = controller.GetFormalProposalAsync(null).GetAwaiter().GetResult() as BadRequestObjectResult;
 
 			Assert.IsNotNull(result);
 			StringAssert.Equals("id is required", result.Value.ToString());
@@ -176,7 +176,7 @@ namespace ProposalCreation.Tests
 			var mockHttpClient = new HttpClient(new MockHttpMessageHandler(response));
 
             var controller = new DocumentController(mockGraphHelper, ConfigurationProvider);
-            var result = controller.GetFormalProposal("id").GetAwaiter().GetResult() as OkObjectResult;
+            var result = controller.GetFormalProposalAsync("id").GetAwaiter().GetResult() as OkObjectResult;
 
 			Assert.IsNotNull(result);
 			StringAssert.Equals(documentData, result.Value.ToString());
@@ -201,7 +201,7 @@ namespace ProposalCreation.Tests
 			var mockHttpClient = new HttpClient(new MockHttpMessageHandler(response));
 
             var controller = new DocumentController(mockGraphHelper, ConfigurationProvider);
-            var result = controller.UpdateTask("id", documentData).GetAwaiter().GetResult() as OkResult;
+            var result = controller.UpdateTaskAsync("id", documentData).GetAwaiter().GetResult() as OkResult;
 
 			Assert.IsNotNull(result);
 		}

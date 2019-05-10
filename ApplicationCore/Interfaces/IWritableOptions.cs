@@ -8,6 +8,6 @@ namespace ApplicationCore.Interfaces
 {
     public interface IWritableOptions<out T> : IOptionsSnapshot<T> where T : class, new()
     {
-        Task<StatusCodes> UpdateAsync(string key, string value, string requestId = "");
+        StatusCodes UpdateAsync(string key, string value, string requestId = "");
     }
 }

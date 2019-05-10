@@ -29,18 +29,11 @@ namespace ProposalCreation.Core.Providers
 
         public async Task<IEnumerable<string>> GetTasksAsync()
         {
-            try
-            {
-                var uri = $"{ProposalManagerApiUrl}/api/Tasks";
-                var client = await httpHelper.GetProposalManagerWebClientAsync();
-                var response = await client.GetAsync(uri);
-                return from t in JsonConvert.DeserializeObject<JArray>(await response.Content.ReadAsStringAsync())
-                       select t["name"].ToString();
-            }
-            catch(Exception e)
-            {
-                throw e;
-            }
+            var uri = new Uri($"{ProposalManagerApiUrl}/api/Tasks");
+            var client = await httpHelper.GetProposalManagerWebClientAsync();
+            var response = await client.GetAsync(uri);
+            return from t in JsonConvert.DeserializeObject<JArray>(await response.Content.ReadAsStringAsync())
+                    select t["name"].ToString();
         }
     }
 }

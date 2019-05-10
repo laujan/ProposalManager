@@ -22,7 +22,5 @@ namespace ApplicationCore.Interfaces
         Task<Opportunity> UpdateWorkflowAsync(Opportunity opportunity, string requestId = "");
 
         Task<Opportunity> MoveTempFileToTeamAsync(Opportunity opportunity, string requestId = "");
-
-        Task<IList<Checklist>> RemoveEmptyFromChecklistAsync(IList<Checklist> checklists, string requestId = "");
     }
 }

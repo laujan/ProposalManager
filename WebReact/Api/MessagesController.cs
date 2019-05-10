@@ -4,7 +4,6 @@
 // Licensed under the MIT license. See LICENSE file in the solution root folder for full license information
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ApplicationCore;
@@ -17,9 +16,9 @@ using ApplicationCore.Helpers;
 using Newtonsoft.Json.Linq;
 using Microsoft.AspNetCore.Authorization;
 using System.Net.Http;
-using Infrastructure.Services;
 using System.Net;
 using ApplicationCore.Services;
+using ApplicationCore.Artifacts;
 
 namespace WebReact.Api
 {
@@ -78,15 +77,20 @@ namespace WebReact.Api
                 //var teamsChannelData = (TeamsChannelData)activity.ChannelData;
                 _logger.LogInformation($"RequestID:{requestId} - MessagesController_Post activity.channelData: {channelDataJson["team"]["name"].ToString()} - {channelDataJson["team"]["id"].ToString()}");
 
-                var connector = new ConnectorClient(new Uri(activity.ServiceUrl), _microsoftAppCredentials);
-                var response = await _cardNotificationService.HandleIncomingRequestAsync(activity, _connectorClient);
+                await _cardNotificationService.HandleIncomingRequestAsync(activity, _connectorClient);
 
                 // Update the opportunity with the channelId
                 var opportunity = await _opportunityService.GetItemByNameAsync(channelDataJson["team"]["name"].ToString(), false, requestId);
                 if (opportunity != null)
                 {
-                    opportunity.OpportunityChannelId = channelDataJson["team"]["id"].ToString();
-                    var updateOpp = await _opportunityService.UpdateItemAsync(opportunity, requestId);
+                    //TODO : WAVE-4 GENERIC ACCELERATOR Change : start
+                    var obj = opportunity.MetaDataFields.FirstOrDefault(x => x.DisplayName == "OpportunityChannelId") ?? null;
+                    if (obj != null) obj.Values = channelDataJson["team"]["id"].ToString();
+                    else opportunity.MetaDataFields.Add(new OpportunityMetaDataFields { DisplayName = "DisbursementSchedule", Values = channelDataJson["team"]["id"].ToString(), FieldType = FieldType.String });
+
+                    //opportunity.OpportunityChannelId = channelDataJson["team"]["id"].ToString();
+                    //TODO : WAVE-4 GENERIC ACCELERATOR Change : end
+                    await _opportunityService.UpdateItemAsync(opportunity, requestId);
                 }
 
                 var resp = new HttpResponseMessage(HttpStatusCode.OK);

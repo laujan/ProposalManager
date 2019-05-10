@@ -4,6 +4,7 @@
 // Licensed under the MIT license. See LICENSE file in the solution root folder for full license information.
 
 using Microsoft.Extensions.Configuration;
+using System;
 
 namespace ProposalCreation.Core.Providers
 {
@@ -15,8 +16,8 @@ namespace ProposalCreation.Core.Providers
 
 		private void PerformBindings(IConfiguration configuration) => configuration.Bind(
 				typeof(T).Name
-					.Replace("Configuration", string.Empty)
-					.Replace("Options", string.Empty),
+					.Replace("Configuration", string.Empty, StringComparison.OrdinalIgnoreCase)
+					.Replace("Options", string.Empty, StringComparison.OrdinalIgnoreCase),
 				Configuration);
 	}
 

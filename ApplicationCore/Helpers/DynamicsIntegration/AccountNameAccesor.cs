@@ -6,6 +6,8 @@
 using ApplicationCore.Interfaces;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System;
+using System.Net.Http;
 
 namespace ApplicationCore.Helpers
 {
@@ -25,7 +27,14 @@ namespace ApplicationCore.Helpers
 		private string GetNameById(string id)
 		{
 			var result = dynamicsClientFactory.GetDynamicsAuthorizedWebClientAsync().Result.GetAsync($"/api/data/v9.0/accounts({id})?$select=name").Result;
-			return JsonConvert.DeserializeObject<JObject>(result.Content.ReadAsStringAsync().Result)["name"].ToString();
+            JObject responseJObject = result.Content.ReadAsAsync<JObject>().Result;
+
+            if (responseJObject == null || responseJObject["name"] == null)
+            {
+                throw new Exception($"Invalid or null response from Dynamics when querying for account id {id}.");
+            }
+
+            return responseJObject["name"].ToString();
 		}
 	}
 }

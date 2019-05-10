@@ -15,6 +15,7 @@ The professional performing the setup needs to have appropriate administrative p
       * The **name of the Proposal Manager SharePoint site root drive**. This is usually `Shared Documents`, but can vary depending on the tenant and the site.
       * The **group id of the Proposal Manager role that creates opportunities** (generally, this is the Relationship Managers group, but it depends on the Proposal Manager configuration).
       * The **name of the Azure AD group that corresponds to the Proposal Manager role that creates opportunities**.
+      * The **names of the Azure AD groups that corresponds to the Proposal Manager roles that leads opportunities** (generally, this is just the Loan Officer group, but it depends on the Proposal Manager configuration).
       * The **name of the Proposal Manager role that creates opportunities**.
 2. Install (import) the Proposal Manager solution (available in this repo) in the Dynamics 365 organization. For instructions on how to work with solutions in Dynamics 365 Customer Engagement, check [this doc](https://docs.microsoft.com/en-us/dynamics365/customer-engagement/customize/import-update-export-solutions).
 3. Create a user for the Proposal Manager application in the Dynamics 365 organization. For information on how to do that, please check [this doc](https://docs.microsoft.com/en-us/dynamics365/customer-engagement/developer/use-multi-tenant-server-server-authentication#manually-create-a--application-user)
@@ -26,6 +27,9 @@ The professional performing the setup needs to have appropriate administrative p
    Site|Proposal Manager Site|Default Site|-|**Proposal Manager SharePoint site relative url** (for example, `sites/proposalmanager`)
    Location|Proposal Manager Site Drive|Proposal Manager Site|-|**Name of the Proposal Manager SharePoint site root drive**
    Location|Proposal Manager Temporary Folder|Proposal Manager Site Drive|-|`TempFolder`
+
+**Important**: If your Dynamics 365 instance is configured with Unified Interface (UCI), as of May 2019 when invoking the new Sharepoint Site form, you will be informed with an error message that "the selected entity is read-only for this client", thus you will not be able to complete the steps of this guide. For now, until the Unified Interface allows edition of this entity, you will be forced to, at least temporally, revert to the legacy interface. Please refer to the Troubleshooting section of this guide for instruction on how to do so.
+
 5. Go to the `appsettings.json` file, in the _WebReact_ project, and fill the following keys with the specified values:
    1. In the `Dynamics365` section:
    
@@ -33,7 +37,7 @@ The professional performing the setup needs to have appropriate administrative p
       ---|-----
       `OrganizationUri`|**Organization's web API url**
       `RootDrive`|**Name of the Proposal Manager SharePoint site root drive**
-      `OpportunityMapping`|More documentation on this topic is coming. For the moment, the settings that ship with the solution will satisfy most of your needs.
+      `OpportunityMapping`|Please refer to the Mapping configuration document included in this repo for more details on this field. The settings that ship with the solution will satisfy most of your needs.
    2. In the `OneDrive` section:
    
       Key|Value
@@ -45,9 +49,10 @@ The professional performing the setup needs to have appropriate administrative p
    
       Key|Value
       ---|-----
-      `CreatorRole:Id`|**Group id of the Proposal Manager role that creates opportunities**
+      `CreatorRole:Id`|**Group ID of the Azure AD group that corresponds to the Proposal Manager role that creates opportunities**
       `CreatorRole:AdGroupName`|**Name of the Azure AD group that corresponds to the Proposal Manager role that creates opportunities**
       `CreatorRole:DisplayName`|**Name of the Proposal Manager role that creates opportunities**
+      `LeadRoles`|**Names of the Azure AD groups that corresponds to the Proposal Manager roles that leads opportunities**. Use array notation, for example: [ "Loan Officer", "Another Group" ]
    4. In the `WebHooks:DynamicsCrm:SecretKey` section:
    
       Key|Value
@@ -89,10 +94,53 @@ The professional performing the setup needs to have appropriate administrative p
    4. In the upper right corner of the tab, click on _"+ Add"_
    5. Fill the new row with the following values:
       * For _AD Group Name_, provide the string "aud_", followed by the **Proposal Manager app id** from its app registration. You can obtain it by going to the [app registration portal](apps.dev.microsoft.com). **Note**: this is not an _actual_ AD group name; it is the way that Proposal Manager has to authenticate applications instead of regular users.
-      * For _Role_, select "Administrator"
+      * For _Role_, type "Administrator"
       * For _Permissions_, select the following:
          * Opportunity_Create
          * Opportunities_ReadWrite_All
          * Opportunity_ReadWrite_Team
          * Opportunity_ReadWrite_Dealtype
-   6. Once you provided all the necessary values, click in the empty white portion at the top of the tab to save the changes. A green toast notification should appear below the list stating that the changes have been saved.
+      * For _Type_, select "Member"
+   6. Once you provided all the necessary values, click in the save icon to save the changes. A green toast notification should appear below the list stating that the changes have been saved.
+
+
+## Troubleshooting
+### SharePoint Site entity is read-only in Unified Interface mode (UCI)
+1. Open any notepad application, and paste the following code:
+
+```javascript
+var updateSetting = function(url, newValue) {
+    var baseUrl = (url.endsWith("/") ? url + "api/data/v9.0/organizations" : url + "/api/data/v9.0/organizations");
+
+    var xhrGet = new XMLHttpRequest();
+    xhrGet.open("GET", baseUrl + "?$select=organizationid", true);
+    xhrGet.onreadystatechange = function(e) {
+        if (this.readyState == 4 && this.status == 200) {
+            console.log('Recieved organization id');
+            var orgId = JSON.parse(this.responseText)["value"][0].organizationid;
+
+            var xhrPut = new XMLHttpRequest();
+            xhrPut.open("PUT", baseUrl + "(" + orgId + ")/allowlegacyclientexperience", true);
+            xhrPut.setRequestHeader('Content-type', 'application/json; charset=utf-8');
+            xhrPut.onreadystatechange = function(e) {}
+            xhrPut.send(JSON.stringify({
+                value: newValue
+            }));
+            if (this.readyState == 4 && this.status == 200) {
+                console.log('Succesfully updated setting');
+            }
+        }
+    }
+    xhrGet.send();
+};
+
+updateSetting("https://<YOUR_TENANT_NAME_HERE>.crm.dynamics.com", true);
+```
+
+2. Replace the <YOUR_TENANT_NAME_HERE> tag in the last line with the name of your tenant. The result should be something similar to https://contoso.crm.dynamics.com.
+3. Keep that code in handy. With a PC browser, login to your Dynamics 365 tenant as any user member of the System Administrator role.
+4. After the login, and after the main view has been loaded, open the JavaScript console of your browser. On Edge, this can be done pressing the F12 key; by default it should open a new window with the Console tab already open.
+5. Copy the entire code from your notepad, paste it onto the console, and execute the code by pressing ENTER.
+6. If everything went well, you should see both a *"Recieved organization id"* message, followed by a *"Succesfully updated setting message"*. If not, check that your user has permissions to update settings in your organization, and that the URL in the last line of the code points to your organization's Dynamics 365 instance.
+7. Refresh the application pressing F5; you should see now the legacy interface. You can perform now Step 4 of this guide. 
+8. When finished, you can go back to the new Interface perfoming these same steps but replacing the "true" of the last line of the code to a "false". The result should be something similar to `updateSetting("https://<YOUR_TENANT_NAME_HERE>.crm.dynamics.com",  false);`

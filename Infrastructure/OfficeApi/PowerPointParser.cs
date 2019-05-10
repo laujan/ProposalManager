@@ -11,19 +11,13 @@ using D = DocumentFormat.OpenXml.Drawing;
 using System.IO;
 using System.Linq;
 using ApplicationCore.Entities;
-using Newtonsoft.Json.Linq;
-using System.Xml.Linq;
 using ApplicationCore;
 using Infrastructure.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using ApplicationCore.Helpers.Exceptions;
-using System.Threading.Tasks;
 using ApplicationCore.Interfaces;
 using System.Text;
-using DocumentFormat.OpenXml.Wordprocessing;
-using DocumentFormat.OpenXml;
-using Text = DocumentFormat.OpenXml.Presentation.Text;
 
 namespace Infrastructure.OfficeApi
 {

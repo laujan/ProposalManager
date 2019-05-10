@@ -29,6 +29,7 @@ namespace Infrastructure.Services
         {
             Guard.Against.Null(graphSharePointAppService, nameof(graphSharePointAppService));
             _graphSharePointAppService = graphSharePointAppService;
+
         }
 
         public async Task<StatusCodes> CreateOpportunityAsync(Dashboard entity, string requestId = "")
@@ -46,25 +47,20 @@ namespace Infrastructure.Services
                 // Create Json object for SharePoint create list item
                 dynamic itemFieldsJson = new JObject();
                 dynamic itemJson = new JObject();
+
                 itemFieldsJson.Title = entity.Id;
                 itemFieldsJson.CustomerName = entity.CustomerName;
                 itemFieldsJson.Status = entity.Status;
-                itemFieldsJson.OpportunityID = entity.OpportunityId;
                 itemFieldsJson.StartDate = entity.StartDate;
-                itemFieldsJson.StatusChangedDate = entity.StatusChangedDate;
-                itemFieldsJson.TargetCompletionDate = entity.TargetCompletionDate;
-
                 itemFieldsJson.OpportunityName = entity.OpportunityName;
-                itemFieldsJson.LoanOfficer = entity.LoanOfficer;
-                itemFieldsJson.RelationshipManager = entity.RelationshipManager;
-                //itemFieldsJson.OpportunityStartDate = entity.StartDate;
 
-                //Giving days fields a 0 value @ inception
                 itemFieldsJson.TotalNoOfDays = entity.TotalNoOfDays;
-                itemFieldsJson.CreditCheckNoOfDays = entity.CreditCheckNoOfDays;
-                itemFieldsJson.ComplianceReviewNoOfDays = entity.ComplianceReviewNoOfDays;
-                itemFieldsJson.FormalProposalNoOfDays = entity.FormalProposalNoOfDays;
-                itemFieldsJson.RiskAssessmentNoOfDays = entity.RiskAssessmentNoOfDays;
+
+                itemFieldsJson.ProcessNoOfDays = JsonConvert.SerializeObject(entity.ProcessList, Formatting.Indented);
+
+                itemFieldsJson.ProcessEndDates = JsonConvert.SerializeObject(entity.ProcessEndDateList, Formatting.Indented);
+
+                itemFieldsJson.ProcessLoanOfficers = JsonConvert.SerializeObject(entity.ProcessLoanOfficerNames, Formatting.Indented);
 
                 itemJson.fields = itemFieldsJson;
 
@@ -129,7 +125,7 @@ namespace Infrastructure.Services
             }
         }
 
-        public async Task<Dashboard> GetAsync(string Id, string requestId = "")
+        public async Task<Dashboard> GetAsync(string Name, string requestId = "")
         {
             _logger.LogInformation($"RequestId: {requestId} - DashboardRepository_GetAsync called.");
 
@@ -140,18 +136,42 @@ namespace Infrastructure.Services
                     SiteId = _appOptions.ProposalManagementRootSiteId,
                     ListId = _appOptions.DashboardListId
                 };
-                var id = WebUtility.UrlEncode(Id);
+                var name = WebUtility.UrlEncode(Name);
                 var options = new List<QueryParam>();
-                options.Add(new QueryParam("filter", $"startswith(fields/OpportunityID,'{id}')"));
+                options.Add(new QueryParam("filter", $"startswith(fields/OpportunityName,'{name}')"));
 
                 var json = await _graphSharePointAppService.GetListItemsAsync(siteList, options, "all", requestId);
-                var dashboardObject = json["value"][0]["fields"].ToString();
 
-                var dashboard = JsonConvert.DeserializeObject<Dashboard>(dashboardObject, new JsonSerializerSettings
+                var obj = JObject.Parse(json["value"][0].ToString()).SelectToken("fields");
+                var dashboard = new Dashboard();
+
+                dashboard.Id = obj.SelectToken("id")?.ToString();
+                dashboard.OpportunityName = obj.SelectToken("OpportunityName")?.ToString();
+                dashboard.CustomerName = obj.SelectToken("CustomerName")?.ToString();
+                dashboard.OpportunityId = obj.SelectToken("OpportunityID")?.ToString();
+                dashboard.Status = obj.SelectToken("Status")?.ToString();
+                dashboard.StartDate = obj.SelectToken("StartDate").ToString();
+                dashboard.TotalNoOfDays = obj.SelectToken("TotalNoOfDays") != null ? Int32.Parse(obj.SelectToken("TotalNoOfDays").ToString()) : 0;
+                dashboard.TargetCompletionDate = obj.SelectToken("TargetCompletionDate")?.ToString();
+
+                dashboard.ProcessList = obj.SelectToken("ProcessNoOfDays") != null ? JsonConvert.DeserializeObject<IList<DashboardProcessList>>(obj.SelectToken("ProcessNoOfDays").ToString(), new JsonSerializerSettings
                 {
                     MissingMemberHandling = MissingMemberHandling.Ignore,
                     NullValueHandling = NullValueHandling.Ignore
-                });
+                }) : new List<DashboardProcessList>();
+
+                dashboard.ProcessEndDateList = obj.SelectToken("ProcessEndDates") != null ? JsonConvert.DeserializeObject<IList<DashboradProcessEndDateList>>(obj.SelectToken("ProcessEndDates").ToString(), new JsonSerializerSettings
+                {
+                    MissingMemberHandling = MissingMemberHandling.Ignore,
+                    NullValueHandling = NullValueHandling.Ignore
+                }) : new List<DashboradProcessEndDateList>();
+
+                dashboard.ProcessLoanOfficerNames = obj.SelectToken("ProcessLoanOfficers") != null ? JsonConvert.DeserializeObject<IList<DashboardLoanOfficers>>(obj.SelectToken("ProcessLoanOfficers").ToString(), new JsonSerializerSettings
+                {
+                    MissingMemberHandling = MissingMemberHandling.Ignore,
+                    NullValueHandling = NullValueHandling.Ignore
+                }) : new List<DashboardLoanOfficers>();
+
 
                 return dashboard;
             }
@@ -174,29 +194,19 @@ namespace Infrastructure.Services
 
                 dynamic dashboardJson = new JObject();
 
-                dashboardJson.Title = dashboard.Id;
+
                 dashboardJson.Status = dashboard.Status;
-                dashboardJson.StatusChangedDate = dashboard.StatusChangedDate;
-
-                if(dashboard.TargetCompletionDate != DateTimeOffset.MinValue) dashboardJson.TargetCompletionDate = dashboard.TargetCompletionDate;
-                if(dashboard.RiskAssesmentCompletionDate != DateTimeOffset.MinValue) dashboardJson.RiskAssesmentCompletionDate = dashboard.RiskAssesmentCompletionDate;
-                if(dashboard.RiskAssesmentStartDate != DateTimeOffset.MinValue) dashboardJson.RiskAssesmentStartDate = dashboard.RiskAssesmentStartDate;
-                if(dashboard.CreditCheckCompletionDate != DateTimeOffset.MinValue) dashboardJson.CreditCheckCompletionDate = dashboard.CreditCheckCompletionDate;
-                if(dashboard.CreditCheckStartDate != DateTimeOffset.MinValue) dashboardJson.CreditCheckStartDate = dashboard.CreditCheckStartDate;
-                if(dashboard.ComplianceReviewComplteionDate != DateTimeOffset.MinValue) dashboardJson.ComplianceRewiewCompletionDate = dashboard.ComplianceReviewComplteionDate;
-                if(dashboard.ComplianceReviewStartDate != DateTimeOffset.MinValue) dashboardJson.ComplianceRewiewStartDate = dashboard.ComplianceReviewStartDate;
-                if(dashboard.FormalProposalCompletionDate != DateTimeOffset.MinValue) dashboardJson.FormalProposalEndDateDate = dashboard.FormalProposalCompletionDate;
-                if(dashboard.FormalProposalStartDate != DateTimeOffset.MinValue) dashboardJson.FormalProposalStartDate = dashboard.FormalProposalStartDate;
-                if(dashboard.OpportunityEndDate != DateTimeOffset.MinValue) dashboardJson.OpportunityEndDate = dashboard.OpportunityEndDate;
-
-                if (!string.IsNullOrEmpty(dashboard.LoanOfficer)) dashboardJson.LoanOfficer = dashboard.LoanOfficer;
-                if (!string.IsNullOrEmpty(dashboard.RelationshipManager)) dashboardJson.RelationshipManager = dashboard.RelationshipManager;
-
+                dashboardJson.StartDate = dashboard.StartDate;
+                dashboardJson.OpportunityName = dashboard.OpportunityName;
+                dashboardJson.TargetCompletionDate = dashboard.TargetCompletionDate??String.Empty;
+                dashboardJson.OpportunityID = dashboard.OpportunityId;
                 dashboardJson.TotalNoOfDays = dashboard.TotalNoOfDays;
-                dashboardJson.CreditCheckNoOfDays = dashboard.CreditCheckNoOfDays;
-                dashboardJson.ComplianceReviewNoOfDays = dashboard.ComplianceReviewNoOfDays;
-                dashboardJson.FormalProposalNoOfDays = dashboard.FormalProposalNoOfDays;
-                dashboardJson.RiskAssessmentNoOfDays = dashboard.RiskAssessmentNoOfDays;
+
+                dashboardJson.ProcessNoOfDays = JsonConvert.SerializeObject(dashboard.ProcessList, Formatting.Indented);
+
+                dashboardJson.ProcessEndDates = JsonConvert.SerializeObject(dashboard.ProcessEndDateList, Formatting.Indented);
+
+                dashboardJson.ProcessLoanOfficers = JsonConvert.SerializeObject(dashboard.ProcessLoanOfficerNames, Formatting.Indented);
 
                 var siteList = new SiteList
                 {

@@ -4,7 +4,6 @@
 */
 
 import React, { Component } from 'react';
-import * as ReactDOM from 'react-dom';
 import { Label } from 'office-ui-fabric-react/lib/Label';
 import {
     Persona,
@@ -18,13 +17,7 @@ import { TooltipHost } from 'office-ui-fabric-react/lib/Tooltip';
 export class GroupEmployeeStatusCard extends Component {
     displayName = GroupEmployeeStatusCard.name
 
-    constructor(props) {
-        super(props);
-
-    }
-
-
-    getUsersDetails(users, role) {
+     getUsersDetails(users, role) {
         return (
             users.map((officer, ind) => {
                 return (

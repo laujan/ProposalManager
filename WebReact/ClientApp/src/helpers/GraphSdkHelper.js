@@ -227,7 +227,6 @@ export default class GraphSdkHelper {
             this.initClientAdmin();
             console.log("GraphSkHelper_createTeamGroup graph displayName: ", displayName);
             if (this.clientAdmin) {
-                //let mailNickname = displayName.replace(/[\s`~!@#$%^&*()_|+\-=?;:'",.<>{}[]\\\/]/gi, '');
                 const regExpr = /[^a-zA-Z0-9-.\/s]/g;
                 let mailNickname = displayName.replace(regExpr, "");
 
@@ -264,7 +263,7 @@ export default class GraphSdkHelper {
                             .version('beta')
                             .put(teamSettings)
                             .then(res => {
-                                console.log("vishnu GraphSdkHelper_createTeamGroup group created: " + JSON.stringify(res));
+                                
                                 resolve(res.id);
                             })
                             .catch(err => {
@@ -523,92 +522,92 @@ export default class GraphSdkHelper {
     
     //add user as onwer of the team.
     async addOwnerToTeam(userId,groupId){
-        console.log("SDKHELPER_addOwnerToTeam user & team", userId, groupId)
+        console.log("SDKHELPER_addOwnerToTeam user & team", userId, groupId);
         try {
 
             let response = "";
             if(userId && groupId && this.clientAdmin){
                 let requestBody = `{'@odata.id': 'https://graph.microsoft.com/beta/users/${userId}'}`;
                 response = await this.clientAdmin.api(`/groups/${groupId}/owners/$ref`).version('beta').post(requestBody);
-                console.log("SDKHELPER_addOwnerToTeam complete : ", response)
+                console.log("SDKHELPER_addOwnerToTeam complete : ", response);
                 return true;
             }else{
                 console.log("SDKHELPER_addOwnerToTeam params empty : ");
-                return false
+                return false;
             }
 
         } catch (error) {
-            console.log("SDKHELPER_addOwnerToTeam complete : ")
-            return false
+            console.log("SDKHELPER_addOwnerToTeam complete : ");
+            return false;
         }
     }
 
 
     //add user as members to the team.
     async addMemberToTeam(userId,groupId){
-        console.log("SDKHELPER_addMemberToTeam user & team", userId, groupId)
+        console.log("SDKHELPER_addMemberToTeam user & team", userId, groupId);
         try {
 
             let response = "";
             if(userId && groupId && this.clientAdmin){
                 let requestBody = `{'@odata.id': 'https://graph.microsoft.com/beta/directoryObjects/${userId}'}`;
                 response = await this.clientAdmin.api(`/groups/${groupId}/members/$ref`).version('beta').post(requestBody);
-                console.log("SDKHELPER_addMemberToTeam complete : ", response)
+                console.log("SDKHELPER_addMemberToTeam complete : ", response);
                 return true;
             }else{
                 console.log("SDKHELPER_addMemberToTeam params empty : ");
-                return false
+                return false;
             }
 
         } catch (error) {
-            console.log("SDKHELPER_addOwnerToTeam complete : ")
-            return false
+            console.log("SDKHELPER_addOwnerToTeam complete : ");
+            return false;
         }
     }
 
     //add user as onwer of the team.
     async delOwnerToTeam(userId,groupId){
-        console.log("SDKHELPER_delOwnerToTeam")
+        console.log("SDKHELPER_delOwnerToTeam");
         try {
 
             let response = "";
             if(userId && groupId && this.clientAdmin){
                 let requestBody = `{'@odata.id': 'https://graph.microsoft.com/beta/users/${userId}'`;
                 response = await this.clientAdmin.api(`/groups/${groupId}/owners/$ref`).version('beta').delete(requestBody);
-                console.log("SDKHELPER_delOwnerToTeam complete : ", response)
+                console.log("SDKHELPER_delOwnerToTeam complete : ", response);
             }else{
                 console.log("SDKHELPER_delOwnerToTeam params empty : ");
-                return false
+                return false;
             }
 
             return response;
 
         } catch (error) {
-            console.log("SDKHELPER_delOwnerToTeam complete : ")
-            return false
+            console.log("SDKHELPER_delOwnerToTeam complete : ");
+            return false;
         }
     }
 
 
     // GET /beta/teams/{id}/apps
     async getApps(teamId) {
-        console.log("SDKHELPER_getApps")
+        console.log("SDKHELPER_getApps");
         try {
 
             let response = "";
             if(teamId && this.clientAdmin){
                 response = await this.clientAdmin.api(`/teams/${teamId}/apps`).version('beta').get();
-                console.log("SDKHELPER_getApps complete : ", response)
+                console.log("SDKHELPER_getApps complete : ", response);
             }else{
                 console.log("SDKHELPER_getApps params empty : ");
-                return false
+                return false;
             }
 
             return response;
 
         } catch (error) {
-            console.log("SDKHELPER_getApps complete : ", error)
-            return false
+            console.log("SDKHELPER_getApps complete : ", error);
+            return false;
         }
     }
 
@@ -616,23 +615,23 @@ export default class GraphSdkHelper {
     // GET Sharepoint Root ID
     async getSharepointRootId(hostname,relativepath) {
         await this.initClientAdmin();
-        console.log("SDKHELPER_getSharepointRootId ",hostname,relativepath)
+        console.log("SDKHELPER_getSharepointRootId ", hostname, relativepath);
         try {
             ///https://graph.microsoft.com/v1.0/sites/onterawe.sharepoint.com:/sites/ProposalManager?$select=id
             let response = "";
             if(hostname && this.clientAdmin){
                 response = await this.clientAdmin.api(`/sites/${hostname}:/sites/${relativepath}?$select=id`).version('v1.0').get();
-                console.log("SDKHELPER_getSharepointRootId complete : ", response)
+                console.log("SDKHELPER_getSharepointRootId complete : ", response);
             }else{
                 console.log("SDKHELPER_getSharepointRootId params empty : ");
-                return false
+                return false;
             }
 
             return response;
 
         } catch (error) {
-            console.log("SDKHELPER_getSharepointRootId complete : ", error)
-            return false
+            console.log("SDKHELPER_getSharepointRootId complete : ", error);
+            return false;
         }
     }
 }

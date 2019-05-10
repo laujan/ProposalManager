@@ -32,6 +32,8 @@ namespace ApplicationCore
         public static ContentType Workflow = new ContentType(nameof(Workflow), 2);
         public static ContentType Document = new ContentType(nameof(Document), 3);
         public static ContentType ProposalDocument = new ContentType(nameof(ProposalDocument), 4);
+        //TODO : Wave-4 Change
+        public static ContentType Opportunityv2 = new ContentType(nameof(Opportunityv2), 5);
 
         [JsonConstructor]
         protected ContentType(string name, int value) : base(name, value)
@@ -50,6 +52,56 @@ namespace ApplicationCore
         {
         }
     }
+
+
+    public class OpportunityState : SmartEnum<OpportunityState, int>
+    {
+        public static OpportunityState NoneEmpty = new OpportunityState(nameof(NoneEmpty), 0);
+        public static OpportunityState Creating = new OpportunityState(nameof(Creating), 1);
+        public static OpportunityState InProgress = new OpportunityState(nameof(InProgress), 2);
+        public static OpportunityState Assigned = new OpportunityState(nameof(Assigned), 3);
+        public static OpportunityState Draft = new OpportunityState(nameof(Draft), 4);
+        public static OpportunityState NotStarted = new OpportunityState(nameof(NotStarted), 5);
+        public static OpportunityState InReview = new OpportunityState(nameof(InReview), 6);
+        public static OpportunityState Blocked = new OpportunityState(nameof(Blocked), 7);
+        public static OpportunityState Completed = new OpportunityState(nameof(Completed), 8);
+        public static OpportunityState Submitted = new OpportunityState(nameof(Submitted), 9);
+        public static OpportunityState Accepted = new OpportunityState(nameof(Accepted), 10);
+        public static OpportunityState Archived = new OpportunityState(nameof(Archived), 11);
+
+        [JsonConstructor]
+        protected OpportunityState(string name, int value) : base(name, value)
+        {
+        }
+    }
+
+    //WAVE-4 GENERIC ACCELERATOR Change : start
+    public class FieldType : SmartEnum<FieldType, int>
+    {
+        public static FieldType String = new FieldType(nameof(String), 0);
+        public static FieldType Int = new FieldType(nameof(Int), 1);
+        public static FieldType Date = new FieldType(nameof(Date), 2);
+        public static FieldType DropDown = new FieldType(nameof(DropDown), 3);
+        public static FieldType Double = new FieldType(nameof(Double), 5);
+        public static FieldType None = new FieldType(nameof(None), 5);
+        [JsonConstructor]
+        protected FieldType(string name, int value) : base(name, value)
+        {
+        }
+    }
+
+    public class TeamsMembership: SmartEnum<TeamsMembership, int>
+    {
+        public static TeamsMembership Owner = new TeamsMembership(nameof(Owner), 0);
+        public static TeamsMembership Member = new TeamsMembership(nameof(Member), 1);
+        public static TeamsMembership Guest = new TeamsMembership(nameof(Guest), 2);
+        public static TeamsMembership None = new TeamsMembership(nameof(None), 3);
+        [JsonConstructor]
+        protected TeamsMembership(string name, int value) : base(name, value)
+        {
+        }
+    }
+    //WAVE-4 GENERIC ACCELERATOR Change : end
 
     public class StatusCodes : SmartEnum<StatusCodes, int>
     {
@@ -130,5 +182,6 @@ namespace ApplicationCore
         protected StatusCodes(string name, int value) : base(name, value)
         {
         }
+
     }
 }

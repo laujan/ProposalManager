@@ -9,6 +9,7 @@ using ApplicationCore.Serialization;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using ApplicationCore.Artifacts;
 
 namespace ApplicationCore.ViewModels
 {
@@ -56,47 +57,16 @@ namespace ApplicationCore.ViewModels
         [JsonProperty("customer")]
         public CustomerModel Customer { get; set; }
 
-        [JsonProperty("dealSize")]
-        public double DealSize { get; set; }
+        [JsonProperty("metaDataFields")]
+        public IList<OpportunityMetaDataFields> MetaDataFields { get; set; }
 
-        [JsonProperty("annualRevenue")]
-        public double AnnualRevenue { get; set; }
-
-        [JsonProperty("openedDate")]
-        public DateTimeOffset OpenedDate { get; set; }
-
-        [JsonProperty("industry")]
-        public IndustryModel Industry { get; set; }
-
-        [JsonProperty("region")]
-        public RegionModel Region { get; set; }
-
-        [JsonProperty("margin")]
-        public double Margin { get; set; }
-
-        [JsonProperty("rate")]
-        public double Rate { get; set; }
-
-        [JsonProperty("debtRatio")]
-        public double DebtRatio { get; set; }
-
-        [JsonProperty("purpose")]
-        public string Purpose { get; set; }
-
-        [JsonProperty("disbursementSchedule")]
-        public string DisbursementSchedule { get; set; }
-
-        [JsonProperty("collateralAmount")]
-        public Double CollateralAmount { get; set; }
-
-        [JsonProperty("guarantees")]
-        public string Guarantees { get; set; }
-
-        [JsonProperty("riskRating")]
-        public int RiskRating { get; set; }
 
         [JsonProperty("opportunityChannelId")]
-        public String OpportunityChannelId { get; set; }
+        public string OpportunityChannelId { get; set; }
+
+        //templateLoaded
+        [JsonProperty("templateLoaded")]
+        public bool TemplateLoaded { get; set; }
 
         // Content
         [JsonProperty("teamMembers")]
@@ -122,11 +92,8 @@ namespace ApplicationCore.ViewModels
         public IList<DocumentAttachmentModel> DocumentAttachments { get; set; }
 
         // DealType
-        [JsonProperty("dealType")]
-        public TemplateViewModel DealType { get; set; }
-
-        [JsonProperty("targetdate")]
-        public DateTimeOffset TargetDate { get; set; }
+        [JsonProperty("template")]
+        public TemplateViewModel Template { get; set; }
     }
 
     public class OpportunityStateModel : SmartEnum<OpportunityStateModel, int>

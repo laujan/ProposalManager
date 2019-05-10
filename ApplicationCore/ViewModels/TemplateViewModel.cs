@@ -17,6 +17,9 @@ namespace ApplicationCore.ViewModels
             LastUsed = new DateTimeOffset();
             CreatedBy = new UserProfileViewModel();
             ProcessList = new List<ProcessViewModel>();
+            SelectProcessFlag = false;
+            DefaultTemplate = false;
+            Initilaltemplate = false;
         }
         [JsonProperty("id")]
         public string Id { get; set; }
@@ -30,5 +33,11 @@ namespace ApplicationCore.ViewModels
         public UserProfileViewModel CreatedBy { get; set; }
         [JsonProperty("processes", Order = 6)]
         public IList<ProcessViewModel> ProcessList { get; set; }
-    }
+        [JsonProperty("selectProcessFlag", Order = 7)]
+        public bool SelectProcessFlag { get; set; }
+        [JsonProperty("defaultTemplate", Order = 8)]
+        public bool DefaultTemplate { get; set; }
+        [JsonProperty("initilaltemplate", Order = 9)]
+        public bool Initilaltemplate { get; set; }
+    } 
 }

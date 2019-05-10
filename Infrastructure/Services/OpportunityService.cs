@@ -9,20 +9,16 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Newtonsoft.Json.Linq;
 using ApplicationCore.ViewModels;
 using ApplicationCore.Interfaces;
 using ApplicationCore;
-using ApplicationCore.Services;
 using ApplicationCore.Artifacts;
 using ApplicationCore.Entities;
-using Infrastructure.Services;
 using ApplicationCore.Helpers;
 using ApplicationCore.Models;
 using ApplicationCore.Helpers.Exceptions;
 using Infrastructure.Helpers;
 using ApplicationCore.Authorization;
-using Infrastructure.Authorization;
 
 namespace Infrastructure.Services
 {
@@ -30,8 +26,6 @@ namespace Infrastructure.Services
     {
         private readonly IOpportunityRepository _opportunityRepository;
         private readonly IUserProfileRepository _userProfileRepository;
-        private readonly IIndustryRepository _industryRepository;
-        private readonly IRegionRepository _regionRepository;
         private readonly OpportunityHelpers _opportunityHelpers;
         private readonly UserProfileHelpers _userProfileHelpers;
         private readonly IOpportunityFactory _opportunityFactory;
@@ -45,8 +39,6 @@ namespace Infrastructure.Services
             ILogger<OpportunityService> logger,
             IOptionsMonitor<AppOptions> appOptions,
             IUserProfileRepository userProfileRepository,
-            IIndustryRepository industryRepository,
-            IRegionRepository regionRepository,
             IOpportunityRepository opportunityRepository,
             OpportunityHelpers opportunityHelpers,
             IOpportunityFactory opportunityFactory,
@@ -64,8 +56,6 @@ namespace Infrastructure.Services
             Guard.Against.Null(userContext, nameof(userContext));
 
             _userProfileRepository = userProfileRepository;
-            _industryRepository = industryRepository;
-            _regionRepository = regionRepository;
             _opportunityRepository = opportunityRepository;
             _opportunityHelpers = opportunityHelpers;
             _userProfileHelpers = userProfileHelpers;
@@ -114,7 +104,7 @@ namespace Infrastructure.Services
             //Granular bug fix : End
 
             // Check if deal type is beign updated to check permissions
-            if (opportunityViewModel.DealType != currentOppModel.DealType)
+            if (opportunityViewModel.Template != currentOppModel.Template)
             {
                 //Check access HERE for permission: Opportunity_ReadWrite_Dealtype and throw accessdenied if permission not present for current user
                 //Granular Access : Start
@@ -217,27 +207,21 @@ namespace Infrastructure.Services
                     throw new NoItemsFound($"RequestId: {requestId} - Method name: GetAllAsync - No Items Found");
                 }
 
-                //Reduce to opportunityIndexModel
-                var vimListItems = new List<OpportunityIndexModel>();
-                foreach (var item in vmListItems)
-                {
-                    var vimItem = new OpportunityIndexModel
-                    {
-                        Id = item.Id,
-                        DisplayName = item.DisplayName,
-                        Customer = item.Customer,
-                        DealSize = item.DealSize,
-                        OpenedDate = item.OpenedDate,
-                        OpportunityState = item.OpportunityState,
-                        DealType = item.DealType
-                        
-                    };
-                    vimListItems.Add(vimItem);
-                }
 
-                var indexListItems = new OpportunityIndexViewModel
+                return new OpportunityIndexViewModel
                 {
-                    ItemsList = vimListItems,
+                    ItemsList = vmListItems.Select(item => new OpportunityIndexModel
+                                {
+                                    Id = item.Id,
+                                    DisplayName = item.DisplayName,
+                                    Customer = item.Customer,
+                                    OpportunityState = item.OpportunityState,
+                                    Template = item.Template,
+                                    Dealsize = item.MetaDataFields.ToList().Find(x => x.DisplayName == "Deal Size")?.Values.ToString(),
+                                    OpenedDate = item.MetaDataFields.ToList().Find(x => x.DisplayName == "Opened Date").Values.ToString()
+
+                                }).ToList(),
+
                     PaginationInfo = new PaginationInfoViewModel
                     {
                         ActualPage = 1,
@@ -247,11 +231,8 @@ namespace Infrastructure.Services
                         Next = String.Empty,
                         Previous = String.Empty
                     }
+
                 };
-
-                // TODO: foreach service to filter out data you don't have access
-
-                return indexListItems;
             }
             catch (Exception ex)
             {
@@ -279,20 +260,13 @@ namespace Infrastructure.Services
                     thisOpportunity = await _opportunityRepository.GetItemByIdAsync(id, requestId);
                 }
 
-                var opportunityViewModel = new OpportunityViewModel();
                 if (thisOpportunity.Id != id)
                 {
                     _logger.LogWarning($"RequestId: {requestId} - GetItemByIdAsync no items found");
                     throw new NoItemsFound($"RequestId: {requestId} - Method name: GetItemByIdAsync - No Items Found");
                 }
-                else
-                {
-                    opportunityViewModel = await _opportunityHelpers.ToOpportunityViewModelAsync(thisOpportunity, requestId);
-                }
 
-                // TODO: foreach service to filter out data you don't have access
-
-                return opportunityViewModel;
+                return await _opportunityHelpers.ToOpportunityViewModelAsync(thisOpportunity, requestId);
             }
             catch (Exception ex)
             {
@@ -350,25 +324,17 @@ namespace Infrastructure.Services
 
             try
             {
-                var thisOpportunity = new Opportunity();
+                var thisOpportunity =  await _opportunityRepository.GetItemByRefAsync(reference, requestId);
 
-                thisOpportunity = await _opportunityRepository.GetItemByRefAsync(reference, requestId);
-
-                var opportunityViewModel = new OpportunityViewModel();
                 reference = reference.Replace("'", "");
                 if (thisOpportunity.Reference != reference)
                 {
                     _logger.LogWarning($"RequestId: {requestId} - GetItemByRefAsync no items found");
                     throw new NoItemsFound($"RequestId: {requestId} - Method name: GetItemByRefAsync - No Items Found");
                 }
-                else
-                {
-                    opportunityViewModel = await _opportunityHelpers.ToOpportunityViewModelAsync(thisOpportunity, requestId);
-                }
 
-                // TODO: foreach service to filter out data you don't have access
-
-                return opportunityViewModel;
+                return await _opportunityHelpers.ToOpportunityViewModelAsync(thisOpportunity, requestId);
+                
             }
             catch (Exception ex)
             {
@@ -418,33 +384,36 @@ namespace Infrastructure.Services
         }
 
         // Private methods
-
+        //WAVE-4 GENERIC ACCELERATOR Change : start
         private Opportunity TestData()
         {
             var role1 = Role.Empty;
             role1.Id = new Guid().ToString();
             role1.DisplayName = "RelationshipManager";
-           // role1.AdGroupName = "Relationship Managers";
+            role1.AdGroupName = "Relationship Managers";
 
             var role2 = Role.Empty;
             role2.Id = new Guid().ToString();
             role2.DisplayName = "LoanOfficer";
-           // role2.AdGroupName = "Loan Officers";
+            role2.AdGroupName = "Loan Officers";
+            
 
             var role3 = Role.Empty;
             role3.Id = new Guid().ToString();
             role3.DisplayName = "CreditAnalyst";
-           // role3.AdGroupName = "Credit Analysts";
+            role3.AdGroupName = "Credit Analysts";
+            
 
             var role4 = Role.Empty;
             role4.Id = new Guid().ToString();
             role4.DisplayName = "LegalCounsel";
-           // role4.AdGroupName = "Legal Counsel";
-
+            role4.AdGroupName = "Legal Counsel";
+           
             var role5 = Role.Empty;
             role5.Id = new Guid().ToString();
             role5.DisplayName = "SeniorRiskOfficer";
-           // role5.AdGroupName = "Senior Risk Officers";
+            role5.AdGroupName = "Senior Risk Officers";
+            
 
             var tm2 = new List<Role>();
             tm2.Add(role2);
@@ -510,29 +479,25 @@ namespace Infrastructure.Services
                     {
                         Id = new Guid().ToString(),
                         DisplayName = "ZXY Motors",
-                        ReferenceId = String.Empty
+                        ReferenceId = String.Empty,
                     },
-                    DealSize = 1500000,
-                    AnnualRevenue = 7500100,
-                    OpenedDate = DateTime.Now,
-                    Industry = new Industry
+                    Fields = new List<OpportunityMetaDataFields>
                     {
-                        Id = "2",
-                        Name = "Industry ABC"
-                    },
-                    Region = new Region
-                    {
-                        Id = "3",
-                        Name = "US North East"
-                    },
-                    Margin = 10,
-                    Rate = 5,
-                    DebtRatio = 125,
-                    Purpose = "Purchase Real Estate",
-                    CollateralAmount = 139900000.0,
-                    Guarantees = "Primary Assets",
-                    RiskRating = 1,
-                    DisbursementSchedule = "12 monthly instalments"
+                        new OpportunityMetaDataFields{DisplayName="DealSize",Values=1500000,FieldType=FieldType.Double, Screen="Screen1"},
+                        new OpportunityMetaDataFields{DisplayName="AnnualRevenue",Values=7500100,FieldType=FieldType.Double, Screen="Screen1"},
+                        new OpportunityMetaDataFields{DisplayName="OpenedDate",Values=DateTime.Now,FieldType=FieldType.Date, Screen="Screen1"},
+                        new OpportunityMetaDataFields{DisplayName="Margin",Values= 10,FieldType=FieldType.Double, Screen="Screen1"},
+                        new OpportunityMetaDataFields{DisplayName="Rate",Values=5,FieldType=FieldType.Double, Screen="Screen1"},
+                        new OpportunityMetaDataFields{DisplayName="DebtRatio",Values=123,FieldType=FieldType.Double, Screen="Screen1"},
+                        new OpportunityMetaDataFields{DisplayName="Purpose",Values="Purchase Real Estate",FieldType=FieldType.String, Screen="Screen1"},
+                        new OpportunityMetaDataFields{DisplayName="DisbursementSchedule",Values="12 monthly instalments",FieldType=FieldType.String, Screen="Screen1"},
+                        new OpportunityMetaDataFields{DisplayName="CollateralAmount",Values=139900000.0,FieldType=FieldType.Double, Screen="Screen1"},
+                        new OpportunityMetaDataFields{DisplayName="Guarantees",Values="Primary Assets",FieldType=FieldType.String, Screen="Screen1"},
+                        new OpportunityMetaDataFields{DisplayName="RiskRating",Values=1,FieldType=FieldType.Int, Screen="Screen1"},
+                        new OpportunityMetaDataFields{DisplayName="Industry",Values="Industry 1",FieldType=FieldType.DropDown, Screen="Screen1"},
+                        new OpportunityMetaDataFields{DisplayName="Region",Values="Region 1",FieldType=FieldType.DropDown, Screen="Screen1"}
+                    }
+
                 },
                 Content = new OpportunityContent
                 {
@@ -543,60 +508,34 @@ namespace Infrastructure.Services
                         {
                             Id = user1.Id,
                             DisplayName = user1.DisplayName,
-                            AssignedRole = role2,
+                            RoleId = user1.Id,
                             Fields = new TeamMemberFields
                             {
                                 Mail = "robin@contoso.com",
                                 UserPrincipalName = "robin@contoso.com",
-                                Title = "Loan Officer"
-                            }
+                                Title = "Loan Officer",
+                                Permissions = new List<Permission>
+                                {
+                                    new Permission {Name="Permission 1" ,Id="1"},
+                                    new Permission {Name="Permission 2" ,Id="2"},
+                                }
+                            },
                         },
                         new TeamMember
                         {
                             Id = new Guid().ToString(),
                             DisplayName = "Carol Poland",
-                            AssignedRole = role1,
+                            RoleId = user1.Id,
                             Fields = new TeamMemberFields
                             {
                                 Mail = "carol@contoso.com",
                                 UserPrincipalName = "carol@contoso.com",
-                                Title = "Loan Officer"
-                            }
-                        },
-                        new TeamMember
-                        {
-                            Id = new Guid().ToString(),
-                            DisplayName = "Collin Ballinger",
-                            AssignedRole = role3,
-                            Fields = new TeamMemberFields
-                            {
-                                Mail = "collin@contoso.com",
-                                UserPrincipalName = "collin@contoso.com",
-                                Title = "Credit Analyst"
-                            }
-                        },
-                        new TeamMember
-                        {
-                            Id = new Guid().ToString(),
-                            DisplayName = "Carlos Doe",
-                            AssignedRole = role4,
-                            Fields = new TeamMemberFields
-                            {
-                                Mail = "carlos@contoso.com",
-                                UserPrincipalName = "carlos@contoso.com",
-                               Title = "Legal Counsel"
-                            }
-                        },
-                        new TeamMember
-                        {
-                            Id = new Guid().ToString(),
-                            DisplayName = "Henry Brill",
-                            AssignedRole = role5,
-                            Fields = new TeamMemberFields
-                            {
-                                Mail = "henry@contoso.com",
-                                UserPrincipalName = "henry@contoso.com",
-                                Title = "Senior Risk Officer"
+                                Title = "Loan Officer",
+                                Permissions = new List<Permission>
+                                {
+                                    new Permission {Name="Permission 1" ,Id="1"},
+                                    new Permission {Name="Permission 2" ,Id="2"},
+                                }
                             }
                         }
                     },
@@ -667,5 +606,6 @@ namespace Infrastructure.Services
 
             return opportunity;
         }
+        //WAVE-4 GENERIC ACCELERATOR Change : end
     }
 }

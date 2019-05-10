@@ -5,11 +5,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using ApplicationCore.Artifacts;
 using ApplicationCore.Interfaces;
 using ApplicationCore.Entities;
 using ApplicationCore.Services;
@@ -60,7 +58,7 @@ namespace Infrastructure.Services
                 dynamic itemJson = new JObject();
                 itemJson.fields = itemFieldsJson;
 
-                var result = await _graphSharePointAppService.CreateListItemAsync(siteList, itemJson.ToString(), requestId);
+                await _graphSharePointAppService.CreateListItemAsync(siteList, itemJson.ToString(), requestId);
 
                 _logger.LogInformation($"RequestId: {requestId} - PermissionRepo_CreateItemAsync finished creating SharePoint list item.");
 
@@ -90,7 +88,7 @@ namespace Infrastructure.Services
                     ListId = _appOptions.Permissions
                 };
 
-                var result = await _graphSharePointAppService.DeleteListItemAsync(siteList, id, requestId);
+                await _graphSharePointAppService.DeleteListItemAsync(siteList, id, requestId);
 
                 _logger.LogInformation($"RequestId: {requestId} - PermissionRepoo_DeleteItemAsync finished creating SharePoint list item.");
 
@@ -167,11 +165,9 @@ namespace Infrastructure.Services
                     ListId = _appOptions.Permissions
                 };
 
-                var json = await _graphSharePointAppService.GetListItemsAsync(siteList, "all", requestId);
-                JArray jsonArray = JArray.Parse(json["value"].ToString());
-
+                dynamic json = await _graphSharePointAppService.GetListItemsAsync(siteList, "all", requestId);
                 var itemsList = new List<Permission>();
-                foreach (var item in jsonArray)
+                foreach (var item in json.value)
                 {
                     itemsList.Add(JsonConvert.DeserializeObject<Permission>(item["fields"].ToString(), new JsonSerializerSettings
                     {
@@ -192,8 +188,7 @@ namespace Infrastructure.Services
         {
             try
             {
-                var permissionList = new List<Permission>();
-                permissionList = (await GetPermissionListAsync(requestId)).ToList();
+                var permissionList = (await GetPermissionListAsync(requestId)).ToList();
 
                 var cacheEntryOptions = new MemoryCacheEntryOptions()
                     .SetAbsoluteExpiration(TimeSpan.FromMinutes(_appOptions.UserProfileCacheExpiration));

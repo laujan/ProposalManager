@@ -15,10 +15,10 @@ namespace ProjectSmartLink.Service
 {
     public class RecentFileService : IRecentFileService
     {
-        protected readonly SmartlinkDbContext _dbContext;
-        protected readonly IMapper _mapper;
-        protected readonly ILogService _logService;
-        protected readonly IUserProfileService _userProfileService;
+        private readonly SmartlinkDbContext _dbContext;
+        private readonly IMapper _mapper;
+        private readonly ILogService _logService;
+        private readonly IUserProfileService _userProfileService;
 
         public RecentFileService(SmartlinkDbContext dbContext, IMapper mapper, ILogService logService, IUserProfileService userProfileService)
         {

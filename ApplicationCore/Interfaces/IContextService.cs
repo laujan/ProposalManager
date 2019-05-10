@@ -3,6 +3,7 @@
 //
 // Licensed under the MIT license. See LICENSE file in the solution root folder for full license information
 
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using ApplicationCore.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -18,13 +19,13 @@ namespace ApplicationCore.Interfaces
 
         Task<JObject> GetSiteIdAsync(string siteName);
 
-		Task<JArray> GetOpportunityStatusAllAsync();
+		JArray GetOpportunityStatusAllAsync();
 
-		Task<JArray> GetActionStatusAllAsync();
+		JArray GetActionStatusAllAsync();
 
         Task<ClientSettingsModel> GetClientSetingsAsync();
 
-        //Task<JArray> GetPermissionsAllAsync(string requestId);
+        Task<List<ProcessRoleModel>> GetProcessRolesList(string requestId);
     }
 
 }

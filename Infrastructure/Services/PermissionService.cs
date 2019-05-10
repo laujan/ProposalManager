@@ -1,14 +1,17 @@
-﻿using System;
+﻿// Copyright(c) Microsoft Corporation. 
+// All rights reserved.
+//
+// Licensed under the MIT license. See LICENSE file in the solution root folder for full license information
+
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using ApplicationCore.ViewModels;
 using ApplicationCore.Interfaces;
 using ApplicationCore;
-using ApplicationCore.Artifacts;
-using ApplicationCore.Services;
 using ApplicationCore.Helpers;
 using ApplicationCore.Models;
 using ApplicationCore.Entities;
@@ -78,14 +81,7 @@ namespace Infrastructure.Services
 
             try
             {
-                var listItems = (await _permissionRepository.GetAllAsync(requestId)).ToList();
-                Guard.Against.Null(listItems, nameof(listItems), requestId);
-
-                var modelListItems = new List<PermissionModel>();
-                foreach (var item in listItems)
-                {
-                    modelListItems.Add(MapToModel(item));
-                }
+                var modelListItems = (await _permissionRepository.GetAllAsync(requestId)).Select(item => MapToModel(item)).ToList();
 
                 if (modelListItems.Count == 0)
                 {
@@ -105,23 +101,22 @@ namespace Infrastructure.Services
         private PermissionModel MapToModel(Permission entity, string requestId = "")
         {
             // Perform mapping
-            var model = new PermissionModel();
+            return new PermissionModel
+            {
+                Id = entity.Id ?? String.Empty,
+                Name = entity.Name ?? String.Empty
+            };
 
-            model.Id = entity.Id ?? String.Empty;
-            model.Name = entity.Name ?? String.Empty;
-
-            return model;
         }
 
-        private Permission MapToEntity(PermissionModel model, string requestId = "")
+        private Permission MapToEntity(PermissionModel entity, string requestId = "")
         {
             // Perform mapping
-            var entity = Permission.Empty;
-
-            entity.Id = model.Id ?? String.Empty;
-            entity.Name = model.Name ?? String.Empty;
-
-            return entity;
+            return new Permission
+            {
+                Id = entity.Id ?? String.Empty,
+                Name = entity.Name ?? String.Empty
+            };
         }
     }
 }

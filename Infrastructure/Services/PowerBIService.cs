@@ -4,20 +4,13 @@
 // Licensed under the MIT license. See LICENSE file in the solution root folder for full license information
 
 using System;
-using System.Collections.Generic;
 using System.Text;
 using ApplicationCore;
-using ApplicationCore.Helpers;
 using ApplicationCore.Interfaces;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using ApplicationCore.Entities;
-using Microsoft.AspNetCore.Http;
 using System.Threading.Tasks;
-using Microsoft.IdentityModel.Clients.ActiveDirectory;
-using Microsoft.AspNetCore.Authentication;
 using System.Net.Http;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace Infrastructure.Services
@@ -39,8 +32,8 @@ namespace Infrastructure.Services
 
         public async Task<String> GenerateTokenAsync(string requestId = "")
         {
-            string _userName = await _azureKeyVaultService.GetValueFromVaultAsync(_appOptions.PBIUserName, requestId);
-            string _password = await _azureKeyVaultService.GetValueFromVaultAsync(_appOptions.PBIUserPassword, requestId);
+            string _userName = _appOptions.PBIUserName.ToString();//await _azureKeyVaultService.GetValueFromVaultAsync(_appOptions.PBIUserName, requestId);
+            string _password = _appOptions.PBIUserPassword.ToString();//await _azureKeyVaultService.GetValueFromVaultAsync(_appOptions.PBIUserPassword, requestId);
             string _applicationId = _appOptions.PBIApplicationId;
             string _workspaceId = _appOptions.PBIWorkSpaceId;
             string _reportId = _appOptions.PBIReportId;
@@ -63,11 +56,8 @@ namespace Infrastructure.Services
 
                 JObject jobject = JObject.Parse(result1);
 
-                var token = jobject["access_token"].Value<string>();
+                return jobject["access_token"].Value<string>();
 
-                //var (token, expiration) = await _webApiAuthProvider.GetUserAccessTokenWithUsernamePasswordAsync();
-
-                return token;
             }
             catch (Exception ex)
             {

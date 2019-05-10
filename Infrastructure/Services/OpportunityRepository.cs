@@ -5,7 +5,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 using System.Net;
 using Microsoft.Extensions.Logging;
@@ -20,13 +19,8 @@ using ApplicationCore.Authorization;
 using ApplicationCore.Entities.GraphServices;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
-using Infrastructure.GraphApi;
 using ApplicationCore.Helpers.Exceptions;
-using Microsoft.Graph;
 using System.Linq;
-using System.Text.RegularExpressions;
-using ApplicationCore.Models;
-using Infrastructure.Authorization;
 
 namespace Infrastructure.Services
 {
@@ -40,7 +34,7 @@ namespace Infrastructure.Services
         private readonly IDashboardService _dashboardService;
         private readonly IAuthorizationService _authorizationService;
         private readonly IPermissionRepository _permissionRepository;
-
+        private readonly ITemplateRepository _templateRepository;
         public OpportunityRepository(
             ILogger<OpportunityRepository> logger,
             IOptionsMonitor<AppOptions> appOptions,
@@ -51,6 +45,7 @@ namespace Infrastructure.Services
             IOpportunityFactory opportunityFactory,
             IAuthorizationService authorizationService,
             IPermissionRepository permissionRepository,
+            ITemplateRepository templateRepository,
             IDashboardService dashboardService) : base(logger, appOptions)
         {
             Guard.Against.Null(graphSharePointAppService, nameof(graphSharePointAppService));
@@ -70,6 +65,7 @@ namespace Infrastructure.Services
             _dashboardService = dashboardService;
             _authorizationService = authorizationService;
             _permissionRepository = permissionRepository;
+            _templateRepository = templateRepository;
         }
 
         public async Task<StatusCodes> CreateItemAsync(Opportunity opportunity, string requestId = "")
@@ -81,8 +77,14 @@ namespace Infrastructure.Services
                 Guard.Against.Null(opportunity, nameof(opportunity), requestId);
                 Guard.Against.NullOrEmpty(opportunity.DisplayName, nameof(opportunity.DisplayName), requestId);
 
-                var roles = new List<Role>();
-                roles.Add(new Role { DisplayName = "RelationshipManager" });
+                // Set initial opportunity state
+                opportunity.Metadata.OpportunityState = OpportunityState.Creating;
+
+                //add default business process, since this is coming from API (outside app)
+                if (opportunity.Content.Template == null)
+                {
+                    opportunity.Content.Template = (await _templateRepository.GetAllAsync(requestId)).ToList().Find(x => x.DefaultTemplate);
+                }
 
                 //Granular Access : Start
                 if (StatusCodes.Status401Unauthorized == await _authorizationService.CheckAccessFactoryAsync(PermissionNeededTo.Create, requestId)) return StatusCodes.Status401Unauthorized;
@@ -90,26 +92,24 @@ namespace Infrastructure.Services
                 // Ensure id is blank since it will be set by SharePoint
                 opportunity.Id = String.Empty;
 
-                // TODO: This section will be replaced with a workflow
                 opportunity = await _opportunityFactory.CreateWorkflowAsync(opportunity, requestId);
 
-
                 _logger.LogInformation($"RequestId: {requestId} - OpportunityRepository_CreateItemAsync creating SharePoint List for opportunity.");
-
-                //Get loan officer & relationship manager values
-                var loanOfficer = opportunity.Content.TeamMembers.FirstOrDefault(x => x.AssignedRole.DisplayName.Equals("LoanOfficer", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrEmpty(x.Id));
-                var loanOfficerId = loanOfficer?.Id;
-
-                var relationShipManager = opportunity.Content.TeamMembers.FirstOrDefault(x => x.AssignedRole.DisplayName.Equals("RelationshipManager", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrEmpty(x.Id));
-                var relationshipManagerId = relationShipManager?.Id;
 
                 // Create Json object for SharePoint create list item
                 dynamic opportunityFieldsJson = new JObject();
                 opportunityFieldsJson.Name = opportunity.DisplayName;
                 opportunityFieldsJson.OpportunityState = opportunity.Metadata.OpportunityState.Name;
-                opportunityFieldsJson.OpportunityObject = JsonConvert.SerializeObject(opportunity, Formatting.Indented);
-                opportunityFieldsJson.LoanOfficer = loanOfficerId;
-                opportunityFieldsJson.RelationshipManager = relationshipManagerId;
+                try
+                {
+                    opportunityFieldsJson.OpportunityObject = JsonConvert.SerializeObject(opportunity, Formatting.Indented);
+                    //TODO
+                    opportunityFieldsJson.TemplateLoaded = opportunity.TemplateLoaded.ToString();
+                }
+                catch(Exception ex)
+                {
+                    _logger.LogError($"RequestId: {requestId} - OpportunityRepository_CreateItemAsync create dashboard entry Exception: {ex}");
+                }
                 opportunityFieldsJson.Reference = opportunity.Reference ?? String.Empty;
 
                 dynamic opportunityJson = new JObject();
@@ -121,18 +121,8 @@ namespace Infrastructure.Services
                     ListId = _appOptions.OpportunitiesListId
                 };
 
-                var result = await _graphSharePointAppService.CreateListItemAsync(opportunitySiteList, opportunityJson.ToString(), requestId);
-                //DashBoard Create call Start.
-                try
-                {
-                    var id = JObject.Parse(result.ToString()).SelectToken("id").ToString();
-                    await CreateDashBoardEntryAsync(requestId, id, opportunity);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError($"RequestId: {requestId} - OpportunityRepository_CreateItemAsync create dashboard entry Exception: {ex}");
-                    //await CreateDashBoardEntryAsync(requestId, "1", opportunity);
-                }
+                await _graphSharePointAppService.CreateListItemAsync(opportunitySiteList, opportunityJson.ToString(), requestId);
+
                 //DashBoard Create call End.
                 _logger.LogInformation($"RequestId: {requestId} - OpportunityRepository_CreateItemAsync finished creating SharePoint List for opportunity.");
 
@@ -180,12 +170,6 @@ namespace Infrastructure.Services
                 // Workflow processor
                 opportunity = await _opportunityFactory.UpdateWorkflowAsync(opportunity, requestId);
 
-                //Get loan officer & relationship manager values
-                var loanOfficer = opportunity.Content.TeamMembers.FirstOrDefault(x => x.AssignedRole.DisplayName.Equals("LoanOfficer", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrEmpty(x.Id));
-                var loanOfficerId = loanOfficer?.Id;
-
-                var relationShipManager = opportunity.Content.TeamMembers.FirstOrDefault(x => x.AssignedRole.DisplayName.Equals("RelationshipManager", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrEmpty(x.Id));
-                var relationshipManagerId = relationShipManager?.Id;
 
                 var opportunityJObject = JObject.FromObject(opportunity);
 
@@ -194,9 +178,21 @@ namespace Infrastructure.Services
                 opportunityJson.OpportunityId = opportunity.Id;
                 opportunityJson.OpportunityState = opportunity.Metadata.OpportunityState.Name;
                 opportunityJson.OpportunityObject = JsonConvert.SerializeObject(opportunity, Formatting.Indented);
-                opportunityJson.LoanOfficer = loanOfficerId;
-                opportunityJson.RelationshipManager = relationshipManagerId;
                 opportunityJson.Reference = opportunity.Reference ?? String.Empty;
+
+                //TODO...
+                try
+                {
+                    if (opportunity.Content.Template.ProcessList.Count > 1 && !opportunity.TemplateLoaded)
+                    {
+                        opportunityJson.TemplateLoaded = "True";
+                    }else opportunityJson.TemplateLoaded = opportunity.TemplateLoaded.ToString();
+
+                }
+                catch
+                {
+                    opportunityJson.TemplateLoaded = opportunity.TemplateLoaded.ToString();
+                }
 
                 var opportunitySiteList = new SiteList
                 {
@@ -245,9 +241,9 @@ namespace Infrastructure.Services
                 var json = await _graphSharePointAppService.GetListItemByIdAsync(opportunitySiteList, id, "all", requestId);
                 Guard.Against.Null(json, nameof(json), requestId);
 
-                var opportunityJson = json["fields"]["OpportunityObject"].ToString();
+                var obj = JObject.Parse(json.ToString()).SelectToken("fields");
 
-                var oppArtifact = JsonConvert.DeserializeObject<Opportunity>(opportunityJson.ToString(), new JsonSerializerSettings
+                var oppArtifact = JsonConvert.DeserializeObject<Opportunity>(obj.SelectToken("OpportunityObject").ToString(), new JsonSerializerSettings
                 {
                     MissingMemberHandling = MissingMemberHandling.Ignore,
                     NullValueHandling = NullValueHandling.Ignore
@@ -264,10 +260,9 @@ namespace Infrastructure.Services
                         throw new AccessDeniedException($"RequestId: {requestId} - OpportunityRepository_GetItemByIdAsync current user: {currentUser} AccessDeniedException");
                     }
                 }
-                //Granular Access : End
-
-                oppArtifact.Id = json["fields"]["id"].ToString();
-
+    
+                oppArtifact.Id = obj.SelectToken("id")?.ToString();
+                oppArtifact.TemplateLoaded = obj.SelectToken("TemplateLoaded") != null ? obj.SelectToken("TemplateLoaded").ToString() == "True" : false;
                 return oppArtifact;
             }
             catch (Exception ex)
@@ -307,16 +302,15 @@ namespace Infrastructure.Services
                 var options = new List<QueryParam>();
                 options.Add(new QueryParam("filter", $"startswith(fields/Name,'{nameEncoded}')"));
 
-                var json = await _graphSharePointAppService.GetListItemAsync(opportunitySiteList, options, "all", requestId);
-                Guard.Against.Null(json, "OpportunityRepository_GetItemByNameAsync GetListItemAsync Null", requestId);
-
-                dynamic jsonDyn = json;
+                dynamic jsonDyn = await _graphSharePointAppService.GetListItemAsync(opportunitySiteList, options, "all", requestId);
 
                 if (jsonDyn.value.HasValues)
                 {
                     foreach (var item in jsonDyn.value)
                     {
-                        if (item.fields.Name == name)
+                        var obj = JObject.Parse(item.ToString()).SelectToken("fields");
+
+                        if (obj.SelectToken("Name").ToString() == name)
                         {
                             if (isCheckName)
                             {
@@ -326,17 +320,17 @@ namespace Infrastructure.Services
                                 return emptyOpportunity;
                             }
 
-                            var opportunityJson = item.fields.OpportunityObject.ToString();
-
-                            var oppArtifact = JsonConvert.DeserializeObject<Opportunity>(opportunityJson, new JsonSerializerSettings
+                            var oppArtifact = JsonConvert.DeserializeObject<Opportunity>(obj.SelectToken("OpportunityObject").ToString(), new JsonSerializerSettings
                             {
                                 MissingMemberHandling = MissingMemberHandling.Ignore,
                                 NullValueHandling = NullValueHandling.Ignore
                             });
 
-                            oppArtifact.Id = jsonDyn.value[0].fields.id.ToString();
+                            oppArtifact.Id = obj.SelectToken("id")?.ToString();
+                            oppArtifact.TemplateLoaded = obj.SelectToken("TemplateLoaded") != null ? obj.SelectToken("TemplateLoaded").ToString() == "True" : false;
+
                             //Granular Access : Start
-                               if (!access.haveSuperAcess)
+                            if (!access.haveSuperAcess)
                                {
                                    if (!CheckTeamMember(oppArtifact,currentUser))
                                    {
@@ -394,26 +388,25 @@ namespace Infrastructure.Services
                 var options = new List<QueryParam>();
                 options.Add(new QueryParam("filter", $"startswith(fields/Reference,'{nameEncoded}')"));
 
-                var json = await _graphSharePointAppService.GetListItemAsync(opportunitySiteList, options, "all", requestId);
-                Guard.Against.Null(json, "OpportunityRepository_GetItemByRefAsync GetListItemAsync Null", requestId);
+                dynamic json = await _graphSharePointAppService.GetListItemAsync(opportunitySiteList, options, "all", requestId);
 
-                dynamic jsonDyn = json;
-
-                if (jsonDyn.value.HasValues)
+                if (json.value.HasValues)
                 {
-                    foreach (var item in jsonDyn.value)
+                    foreach (var item in json.value)
                     {
-                        if (item.fields.Reference == reference)
-                        {
-                            var opportunityJson = item.fields.OpportunityObject.ToString();
+                        var obj = JObject.Parse(item.ToString()).SelectToken("fields");
 
-                            var oppArtifact = JsonConvert.DeserializeObject<Opportunity>(opportunityJson, new JsonSerializerSettings
+                        if (obj.SelectToken("Reference").ToString() == reference)
+                        {
+
+                            var oppArtifact = JsonConvert.DeserializeObject<Opportunity>(obj.SelectToken("OpportunityObject").ToString(), new JsonSerializerSettings
                             {
                                 MissingMemberHandling = MissingMemberHandling.Ignore,
                                 NullValueHandling = NullValueHandling.Ignore
                             });
 
-                            oppArtifact.Id = jsonDyn.value[0].fields.id.ToString();
+                            oppArtifact.Id = obj.SelectToken("id")?.ToString();
+                            oppArtifact.TemplateLoaded = obj.SelectToken("TemplateLoaded") != null ? obj.SelectToken("TemplateLoaded").ToString() == "True" : false;
 
                             //Granular Access : Start
                             if (!access.haveSuperAcess)
@@ -472,32 +465,8 @@ namespace Infrastructure.Services
                     throw new AccessDeniedException($"RequestId: {requestId} - OpportunityRepository_GetItemByIdAsync current user: {currentUser} AccessDeniedException");
                 }
 
-                var isLoanOfficer = false;
-                var isRelationshipManager = false;
-                var isAdmin = false;
-
-                if (callerUser.Fields.UserRoles.Find(x => x.DisplayName == "LoanOfficer") != null)
-                {
-                    isLoanOfficer = true;
-                }
-                if (callerUser.Fields.UserRoles.Find(x => x.DisplayName == "RelationshipManager") != null)
-                {
-                    isRelationshipManager = true;
-                }
-                if (callerUser.Fields.UserRoles.Find(x => x.DisplayName == "Administrator") != null)
-                {
-                    //Granular Access : Start
-                    //Admin access
-                    if (StatusCodes.Status200OK == await _authorizationService.CheckAccessFactoryAsync(PermissionNeededTo.Admin, requestId)) isAdmin = true;
-                    //Granular Access : End
-                }
-                if (currentUserScope != "access_as_user") //TODO: Temp conde while graular access control is finished in w3
-                {
-                    isAdmin = true;
-                }
-
                 //Granular Access : Start
-                if (access.haveAccess == false && access.haveSuperAcess == false && access.havePartial==false)
+                if (access.haveAccess == false && access.haveSuperAcess == false && access.havePartial == false)
                 {
                     // This user is not having any read permissions, so he won't be able to list of opportunities
                     _logger.LogError($"RequestId: {requestId} - OpportunityRepository_GetItemByIdAsync current user: {currentUser} AccessDeniedException");
@@ -505,105 +474,43 @@ namespace Infrastructure.Services
                 }
                 //Granular Access : End
 
-                var options = new List<QueryParam>();
-                var jsonLoanOfficer = new JObject();
-                var jsonRelationshipManager = new JObject();
-                var jsonAdmin = new JObject();
-                var itemsList = new List<Opportunity>();
-                var jsonArray = new JArray();
+                var isMember = false;
+                var isOwner = false;
 
-                if (isAdmin)
+
+                if (callerUser.Fields.UserRoles.Find(x => x.TeamsMembership == TeamsMembership.Owner) != null)
                 {
-                    jsonAdmin = await _graphSharePointAppService.GetListItemsAsync(siteList, "all", requestId);
-
-                    if (jsonAdmin.HasValues)
-                    {
-                        jsonArray = JArray.Parse(jsonAdmin["value"].ToString());
-                    }
-
-
-                    foreach (var item in jsonArray)
-                    {
-                        var opportunityJson = item["fields"]["OpportunityObject"].ToString();
-
-                        var oppArtifact = JsonConvert.DeserializeObject<Opportunity>(opportunityJson.ToString(), new JsonSerializerSettings
-                        {
-                            MissingMemberHandling = MissingMemberHandling.Ignore,
-                            NullValueHandling = NullValueHandling.Ignore
-                        });
-
-                        oppArtifact.Id = item["fields"]["id"].ToString();
-
-                        itemsList.Add(oppArtifact);
-                    }
+                    isOwner = true;
+                }else if(callerUser.Fields.UserRoles.Find(x => x.TeamsMembership == TeamsMembership.Member) != null)
+                {
+                    isMember = true;
                 }
-                else
+
+
+                var itemsList = new List<Opportunity>();
+
+                if (isOwner || isMember)
                 {
-                    if (isLoanOfficer)
+                    dynamic json = await _graphSharePointAppService.GetListItemsAsync(siteList, "all", requestId);
+
+                    if (json.value.HasValues)
                     {
-                        options.Add(new QueryParam("filter", $"startswith(fields/LoanOfficer,'{callerUser.Id}')"));
-                        jsonLoanOfficer = await _graphSharePointAppService.GetListItemsAsync(siteList, options, "all", requestId);
-                    }
-
-
-                    if (isRelationshipManager)
-                    {
-                        options.Add(new QueryParam("filter", $"startswith(fields/RelationshipManager,'{callerUser.Id}')"));
-                        jsonRelationshipManager = await _graphSharePointAppService.GetListItemsAsync(siteList, options, "all", requestId);
-                    }
-
-                    if (jsonLoanOfficer.HasValues)
-                    {
-                        jsonArray = JArray.Parse(jsonLoanOfficer["value"].ToString());
-                    }
-
-
-                    foreach (var item in jsonArray)
-                    {
-                        var opportunityJson = item["fields"]["OpportunityObject"].ToString();
-
-                        var oppArtifact = JsonConvert.DeserializeObject<Opportunity>(opportunityJson.ToString(), new JsonSerializerSettings
+                        foreach (var item in (JArray)json["value"])
                         {
-                            MissingMemberHandling = MissingMemberHandling.Ignore,
-                            NullValueHandling = NullValueHandling.Ignore
-                        });
+                            var obj = JObject.Parse(item.ToString()).SelectToken("fields");
 
-                        oppArtifact.Id = item["fields"]["id"].ToString();
+                            var oppArtifact = JsonConvert.DeserializeObject<Opportunity>(obj.SelectToken("OpportunityObject").ToString(), new JsonSerializerSettings
+                            {
+                                MissingMemberHandling = MissingMemberHandling.Ignore,
+                                NullValueHandling = NullValueHandling.Ignore
+                            });
 
-                        //Granular Access : Start
-                        if (access.haveSuperAcess)
-                            itemsList.Add(oppArtifact);
-                        else
-                        {
-                            if ((oppArtifact.Content.TeamMembers).ToList().Any
-                                (teamMember => teamMember.Fields.UserPrincipalName==currentUser))
-                                itemsList.Add(oppArtifact);
-                        }
-                        //Granular Access : end
-                    }
+                            oppArtifact.Id = obj.SelectToken("id")?.ToString();
+                            oppArtifact.TemplateLoaded = obj.SelectToken("TemplateLoaded") != null ? obj.SelectToken("TemplateLoaded").ToString() == "True" : false;
 
-                    if (jsonRelationshipManager.HasValues)
-                    {
-                        jsonArray = JArray.Parse(jsonRelationshipManager["value"].ToString());
-                    }
 
-                    foreach (var item in jsonArray)
-                    {
-                        var opportunityJson = item["fields"]["OpportunityObject"].ToString();
-
-                        var oppArtifact = JsonConvert.DeserializeObject<Opportunity>(opportunityJson.ToString(), new JsonSerializerSettings
-                        {
-                            MissingMemberHandling = MissingMemberHandling.Ignore,
-                            NullValueHandling = NullValueHandling.Ignore
-                        });
-
-                        oppArtifact.Id = item["fields"]["id"].ToString();
-
-                        var dupeOpp = itemsList.Find(x => x.DisplayName == oppArtifact.DisplayName);
-                        if (dupeOpp == null)
-                        {
                             //Granular Access : Start
-                            if (access.haveSuperAcess)
+                            if (access.haveSuperAcess || isOwner)
                                 itemsList.Add(oppArtifact);
                             else
                             {
@@ -685,9 +592,6 @@ namespace Infrastructure.Services
                 var json = await _graphSharePointAppService.DeleteListItemAsync(opportunitySiteList, id, requestId);
                 Guard.Against.Null(json, nameof(json), requestId);
 
-                //For DashBorad--delete opportunity
-                await DeleteOpportunityFrmDashboardAsync(id, requestId);
-
                 return StatusCodes.Status204NoContent;
             }
             catch (Exception ex)
@@ -699,35 +603,39 @@ namespace Infrastructure.Services
         
 
         // Private methods
-        private async Task CreateDashBoardEntryAsync(string requestId, string id, Opportunity opportunity)
+        private void CreateDashBoardEntryAsync(string requestId, string id, Opportunity opportunity)
         {
             _logger.LogInformation($"RequestId: {requestId} - CreateDashBoardEntryAsync called.");
-            try
-            {
-                if (opportunity.Metadata.TargetDate != null)
-                {
-                    if(opportunity.Metadata.TargetDate.Date != null && opportunity.Metadata.TargetDate.Date != DateTimeOffset.MinValue)
-                    {
-                        var dashboardmodel = new DashboardModel();
-                        dashboardmodel.CustomerName = opportunity.Metadata.Customer.DisplayName.ToString();
-                        dashboardmodel.OpportunityId = id;
-                        dashboardmodel.Status = opportunity.Metadata.OpportunityState.Name.ToString();
-                        dashboardmodel.TargetCompletionDate = opportunity.Metadata.TargetDate.Date;
-                        dashboardmodel.StartDate = opportunity.Metadata.OpenedDate.Date;
-                        dashboardmodel.StatusChangedDate = opportunity.Metadata.OpenedDate.Date;
-                        dashboardmodel.OpportunityName = opportunity.DisplayName.ToString();
+            //TODO : WAVE-4 GENERIC ACCELERATOR Change : start
 
-                        dashboardmodel.LoanOfficer = opportunity.Content.TeamMembers.ToList().Find(x => x.AssignedRole.DisplayName == "LoanOfficer").DisplayName ?? "";
-                        dashboardmodel.RelationshipManager = opportunity.Content.TeamMembers.ToList().Find(x => x.AssignedRole.DisplayName == "RelationshipManager").DisplayName ?? "";
+            //try
+            //{
+            //    if (opportunity.Metadata.TargetDate != null)
+            //    {
+            //        if(opportunity.Metadata.TargetDate.Date != null && opportunity.Metadata.TargetDate.Date != DateTimeOffset.MinValue)
+            //        {
+            //            var dashboardmodel = new DashboardModel();
+            //            dashboardmodel.CustomerName = opportunity.Metadata.Customer.DisplayName.ToString();
+            //            dashboardmodel.OpportunityId = id;
+            //            dashboardmodel.Status = opportunity.Metadata.OpportunityState.Name.ToString();
+            //            dashboardmodel.TargetCompletionDate = opportunity.Metadata.TargetDate.Date;
+            //            dashboardmodel.StartDate = opportunity.Metadata.OpenedDate.Date;
+            //            dashboardmodel.StatusChangedDate = opportunity.Metadata.OpenedDate.Date;
+            //            dashboardmodel.OpportunityName = opportunity.DisplayName.ToString();
 
-                        var result = await _dashboardService.CreateOpportunityAsync(dashboardmodel, requestId);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"RequestId: {requestId} - CreateDashBoardEntryAsync Service Exception: {ex}");
-            }
+            //            dashboardmodel.LoanOfficer = opportunity.Content.TeamMembers.ToList().Find(x => x.AssignedRole.DisplayName == "LoanOfficer").DisplayName ?? "";
+            //            dashboardmodel.RelationshipManager = opportunity.Content.TeamMembers.ToList().Find(x => x.AssignedRole.DisplayName == "RelationshipManager").DisplayName ?? "";
+
+            //            var result = await _dashboardService.CreateOpportunityAsync(dashboardmodel, requestId);
+            //        }
+            //    }
+            //}
+            //catch (Exception ex)
+            //{
+            //    _logger.LogError($"RequestId: {requestId} - CreateDashBoardEntryAsync Service Exception: {ex}");
+            //}
+
+            //TODO : WAVE-4 GENERIC ACCELERATOR Change : end
         }
 
         private bool CheckTeamMember(dynamic oppArtifact, string currentUser)
@@ -738,24 +646,6 @@ namespace Infrastructure.Services
                     return true;
             }
             return false;
-        }
-
-        private async Task DeleteOpportunityFrmDashboardAsync(string id, string requestId)
-        {
-            _logger.LogInformation($"RequestId: {requestId} - DeleteOpportunityFrmDashboardAsync called.");
-            try
-            {
-                _logger.LogInformation($"RequestId: {requestId} - DeleteOpportunityFrmDashboard called.");
-
-                var dashboardlist = (await _dashboardService.GetAllAsync(requestId)).ToList();
-                var dashboardId = dashboardlist.Find(x => x.OpportunityId == id).Id.ToString();
-                if (!string.IsNullOrEmpty(dashboardId))
-                    await _dashboardService.DeleteOpportunityAsync(dashboardId, requestId);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"RequestId: {requestId} - DeleteOpportunityFrmDashboardAsync Service Exception: {ex}");
-            }
         }
 
         private async Task<Opportunity> UpdateUsersAsync(Opportunity opportunity, string requestId = "")
@@ -775,7 +665,7 @@ namespace Infrastructure.Services
                     var updatedItem = TeamMember.Empty;
                     updatedItem.Id = item.Id;
                     updatedItem.DisplayName = item.DisplayName;
-                    updatedItem.AssignedRole = item.AssignedRole;
+                    updatedItem.RoleId = item.RoleId;
                     updatedItem.Fields = item.Fields;
 
                     var currMember = usersList.Find(x => x.Id == item.Id);
@@ -788,12 +678,12 @@ namespace Infrastructure.Services
                         updatedItem.Fields.Title = currMember.Fields.Title;
                         updatedItem.Fields.UserPrincipalName = currMember.Fields.UserPrincipalName;
 
-                        var hasAssignedRole = currMember.Fields.UserRoles.Find(x => x.DisplayName == item.AssignedRole.DisplayName);
+                        //var hasAssignedRole = currMember.Fields.UserRoles.Find(x => x.DisplayName == item.AssignedRole.DisplayName);
 
-                        if (opportunity.Metadata.OpportunityState == OpportunityState.InProgress && hasAssignedRole != null)
-                        {
-                            updatedTeamMembers.Add(updatedItem);
-                        }
+                        //if (opportunity.Metadata.OpportunityState == OpportunityState.InProgress && hasAssignedRole != null)
+                        //{
+                        //    updatedTeamMembers.Add(updatedItem);
+                        //}
                     }
                     else
                     {

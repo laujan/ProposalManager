@@ -11,7 +11,7 @@ import { Workflow } from './Proposal/Workflow';
 import { TeamUpdate } from './Proposal/TeamUpdate';
 import { TeamsComponentContext } from 'msteams-ui-components-react';
 import './teams.css';
-import { GroupEmployeeStatusCard } from '../components/Opportunity/GroupEmployeeStatusCard';
+import { GroupEmployeeStatusCard } from '../components-teams/general/Opportunity/GroupEmployeeStatusCard';
 import { Trans } from "react-i18next";
 import { Spinner, SpinnerSize } from 'office-ui-fabric-react/lib/Spinner';
 import { getQueryVariable } from '../common';
@@ -27,6 +27,7 @@ export class RootTab extends Component {
 
         this.authHelper = window.authHelper;
         this.sdkHelper = window.sdkHelper;
+        this.utils = window.utils;
         this.accessGranted = false;
 
         try {
@@ -49,10 +50,6 @@ export class RootTab extends Component {
             };
         }
         this.fnGetOpportunityData = this.fnGetOpportunityData.bind(this);
-    }
-
-    componentWillMount() {
-        console.log("Dashboard_componentWillMount isauth: " + this.authHelper.isAuthenticated());
     }
 
     componentDidMount() {
@@ -98,14 +95,17 @@ export class RootTab extends Component {
                     } else {
                         let loanOfficer = {};
                         let teamMembers = data.teamMembers;
-                        // Getting processtypes from opportunity dealtype object
-                        let processList = data.dealType.processes;
-                        //let oppChannels = new Array();
-                        //oppChannels = processList.filter(x => x.channel.toLowerCase() !== "none");
-                        // Get Other role officers list
+                        let processList = data.template.processes;
+
+                        console.log("RootTab_fnGetOpportunityData teamMembers : ", teamMembers);
+                        console.log("RootTab_fnGetOpportunityData processList : ", processList);
+
+                        //code refactored - display checklist page processtype users
                         let otherRolesMapping = processList.filter(function (k) {
-                            return k.processType.toLowerCase() !== "new opportunity" && k.processType.toLowerCase() !== "start process" && k.processType.toLowerCase() !== "customerdecisiontab" && k.processType.toLowerCase() !== "proposalstatustab";
+                            return k.processType.toLowerCase() === "checklisttab";
                         });
+
+                        console.log("RootTab_fnGetOpportunityData otherRolesMapping : ", otherRolesMapping);
 
                         let otherRolesArr1 = [];
                         for (let j = 0; j < otherRolesMapping.length; j++) {
@@ -114,9 +114,8 @@ export class RootTab extends Component {
                             //processTeamMember = data.teamMembers.filter(t => t.processStep.toLowerCase() === otherRolesMapping[j].processStep.toLowerCase());
                             processTeamMember = data.teamMembers.filter(function (k) {
                                 if (k.processStep.toLowerCase() === otherRolesMapping[j].processStep.toLowerCase()) {
-                                    //ProcessStep
                                     k.processStep = otherRolesMapping[j].processStep;
-                                    //ProcessStatus
+
                                     k.processStatus = otherRolesMapping[j].status;
                                     k.status = otherRolesMapping[j].status;
                                     return k.processStep.toLowerCase() === otherRolesMapping[j].processStep.toLowerCase();
@@ -126,7 +125,7 @@ export class RootTab extends Component {
                                 processTeamMember = [{
                                     "displayName": "",
                                     "assignedRole": {
-                                        "displayName": otherRolesMapping[j].roleName,
+                                        "displayName": otherRolesMapping[j].roleName ,
                                         "adGroupName": otherRolesMapping[j].adGroupName
                                     },
                                     "processStep": otherRolesMapping[j].processStep,
@@ -187,24 +186,16 @@ export class RootTab extends Component {
     }
 
     render() {
-        const team = this.state.teamMembers;
-        const channelId = this.props.teamsContext.channelId;
 
+        const channelId = this.props.teamsContext.channelId;
         let loanOfficerRealManagerArr = [];
 
-        let loanOfficerRealManagerArr1 = team.filter(x => x.assignedRole.displayName === "LoanOfficer");
-        if (loanOfficerRealManagerArr1.length === 0) {
-            loanOfficerRealManagerArr1 = [{
-                "displayName": "",
-                "assignedRole": {
-                    "displayName": "LoanOfficer"
-                }
-            }];
-        }
-        let loanOfficerRealManagerArr2 = team.filter(x => x.assignedRole.displayName === "RelationshipManager");
+        let loanOfficerRealManagerArr1 = this.utils.getLoanOficers(this.state.teamMembers);
+        let loanOfficerRealManagerArr2 = this.utils.getRelationShipManagers(this.state.teamMembers);
 
         loanOfficerRealManagerArr = loanOfficerRealManagerArr1.concat(loanOfficerRealManagerArr2);
-
+        console.log("RootTab_fnGetOpportunityData loanOfficerRealManagerArr : ", loanOfficerRealManagerArr);
+        console.log("RootTab_fnGetOpportunityData OtherRoleTeamMembers : ", this.state.OtherRoleTeamMembers);
         const OpportunitySummaryView = ({ match }) => {
             return <OpportunitySummary teamsContext={this.props.teamsContext} opportunityData={this.state.oppDetails} opportunityId={this.state.oppDetails.id} />;
         };
@@ -257,7 +248,7 @@ export class RootTab extends Component {
                                                                         this.state.OtherRoleTeamMembers.map((obj, ind) =>
                                                                             obj.length > 1 ?
                                                                                 <div className=' ms-Grid-col ms-sm12 ms-md8 ms-lg4 p-5' key={ind}>
-                                                                                    <GroupEmployeeStatusCard members={obj} status={obj[0].status} isDispOppStatus={false} role={obj[0].assignedRole.adGroupName} isTeam='true' />
+                                                                                    <GroupEmployeeStatusCard members={obj} status={obj[0].status} isDispOppStatus={false} role={obj[0].adGroupName} isTeam='true' />
                                                                                 </div>
                                                                                 :
                                                                                 obj.map((member, j) => {

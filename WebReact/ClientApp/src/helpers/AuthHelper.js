@@ -4,40 +4,30 @@
 */
 
 import { UserAgentApplication, Logger } from 'msal';
-import { appUri, clientId, redirectUri, graphScopes, webApiScopes, graphScopesAdmin, authority} from '../helpers/AppSettings';
+import { appUri, clientId , graphScopes, webApiScopes, graphScopesAdmin, authority} from '../helpers/AppSettings';
 import appSettingsObject from '../helpers/AppSettings';
 import Promise from 'promise';
-import { userPermissionsAll } from '../common';
-import { stat } from 'fs';
 
 const localStorePrefix = appSettingsObject.localStorePrefix;
 
 const graphTokenStoreKey = localStorePrefix + 'GraphToken';
 const webApiTokenStoreKey = localStorePrefix + 'WebApiToken';
 const graphAdminTokenStoreKey = localStorePrefix + 'AdminGraphToken';
-//Granular access start
 const userProfilPermissions = localStorePrefix + "UserProfilPermissions";
-//Granular access start
-//const logger = new Msal.Logger(loggerCallback, { level: Msal.LogLevel.Verbose });
-//const logger = new Msal.Logger({ level: Msal.LogLevel.Verbose, piiLoggingEnabled: true });
-
-const level = 3;
-const containsPII = false;
 
 const optionsUserAgentApp = {
     navigateToLoginRequestUrl: true,
 	cacheLocation: 'localStorage',
 	logger: new Logger((level, message, containsPII) => {
-		const logger = level === 0 ? console.error : level === 1 ? console.warn : console.log;
+		//const logger = level === 0 ? console.error : level === 1 ? console.warn : console.log;
 		//logger(`AD: ${message}`);
 		console.log(`AD: ${message}`);
     })
 	//redirectUri: redirectUri
 };
 
-
 // Initialize th library
-var userAgentApplication = new UserAgentApplication(
+let userAgentApplication = new UserAgentApplication(
 	clientId,
 	authority,
 	tokenReceivedCallback,
@@ -68,29 +58,11 @@ function handleGraphAdminToken(idToken) {
 		console.log("handleGraphAdminToken is empty");
 }
 
-//Granular access start
 function handleUserProfilPermissions(userProfile) {
 	if (userProfile) {
 		console.log("handleUserProfilPermissions-not empty");
 		localStorage.setItem(userProfilPermissions, userProfile);
 	}
-}
-
-function handleRemoveUsrProfliPermissions() {
-	localStorage.removeItem(userProfilPermissions);
-}
-//Granular access end
-
-function handleRemoveToken() {
-	localStorage.removeItem(graphTokenStoreKey);
-}
-
-function handleRemoveWebApiToken() {
-	localStorage.removeItem(webApiTokenStoreKey);
-}
-
-function handleRemoveGraphAdminToken() {
-	localStorage.removeItem(graphAdminTokenStoreKey);
 }
 
 function handleError(error) {
@@ -127,9 +99,10 @@ function tokenReceivedCallback(errorMessage, token, error, tokenType) {
 }
 
 
-export default class AuthClient {
-	constructor(props) {
-
+export default class AuthClient
+{
+    constructor()
+    {
 		// Get the instance of UserAgentApplication.
 		this.authClient = getUserAgentApplication();
 
@@ -150,7 +123,7 @@ export default class AuthClient {
 	}
 
 	loginPopupGraphAdmin() {
-		console.log("Admin: loginPopupGraphAdmin")
+        console.log("Admin: loginPopupGraphAdmin");
 		return new Promise((resolve, reject) => {
 			this.authClient.loginPopup(graphScopesAdmin)
 				.then(function (idToken) {
@@ -192,7 +165,6 @@ export default class AuthClient {
                 });
         });
     }
-
 
     loginRedirect() {
         localStorage.setItem("loginRedirect", "start");
@@ -297,96 +269,62 @@ export default class AuthClient {
         }
     }
 
-    async callGetUserProfileAsync() {
-        return new Promise((resolve, reject) => {
-            // Call the Web API with the AccessToken
-            //const accessToken = this.getWebApiToken();
+    async callGetUserProfile() {
+        let returnObj = {
+            roles: [],
+            id: "",
+            displayName: "",
+            mail:"",
+            userPrincipalName: "",
+            permissions: [], 
+            permissionsObj: [] 
+        };
+        console.log("AuthHelper_callGetUserProfile enter: ");
+        try {
             localStorage.setItem("AuthStatusUP", "AuthHelper_callGetUserProfile start");
-            const userPrincipalName = this.getUser();
+            const userPrincipalName = await this.getUser();
             console.log("AuthHelper_callGetUserProfile getUser: " + userPrincipalName.displayableId);
+
             if (userPrincipalName.displayableId.length > 0) {
-                const endpoint = appUri + "/api/UserProfile?upn=" + userPrincipalName.displayableId;
+				const endpoint = appUri + "/api/UserProfile?upn=" + userPrincipalName.displayableId;
                 let token = window.authHelper.getWebApiToken();
 
                 localStorage.setItem("AuthStatusUP", "AuthHelper_callGetUserProfile userPrincipalName: " + userPrincipalName.displayableId + " token: " + token);
 
-                this.callWebApiWithToken(endpoint, "GET")
-                    .then(data => {
-                        if (data) {
-                            this.userProfile = data;
-                            if (data.userRoles.length > 0) {
-                                // Get user permissions
-                                let requestUrl = 'api/RoleMapping';
-                                try {
-                                    fetch(requestUrl, {
-                                        method: "GET",
-                                        headers: { 'authorization': 'Bearer ' + token }
-                                    })
-                                        .then(response => response.json())
-                                        .then(rolesData => {
-                                            try {
-                                                let allRoleMapping = rolesData;
-                                                let permissionsList = [];
-                                                //Granular access start:
-                                                this.setUserProfilPermissions(rolesData);
-                                                //Granular access end;
-                                                for (let i = 0; i < allRoleMapping.length; i++) {
-                                                    let itemArray = [];
-                                                    if (this.userProfile.userRoles.filter(x => x.displayName === allRoleMapping[i].role.displayName.replace(/\s/g, '')).length > 0) {
-                                                        for (let p = 0; p < allRoleMapping[i].permissions.length; p++) {
-                                                            permissionsList.push(allRoleMapping[i].permissions[p].name);
-                                                        }
-                                                    }
+                let data =  await this.callWebApiWithToken(endpoint, "GET");
+                if(data){
+                    console.log("AuthHelper_callGetUserProfile data: ",data);
+                    this.userProfile = data;
+                    if (data.userRoles.length > 0) {
+                        let userpermissions = data.userRoles.map((userrole)=>{
+                            return userrole.permissions.map((per)=>{
+                                return per.name;
+                            });
+                        });
+                        
+                        let uniqueUserPermissions = userpermissions.filter((item, index)=>{
+                            return userpermissions.indexOf(item) >= index;
+                        });
+                        console.log("AuthHelper_callGetUserProfile userpermissions: ",uniqueUserPermissions);
+                        handleUserProfilPermissions(uniqueUserPermissions);
 
-                                                }
-                                                //console.log(permissionsList);
-                                                // unique permissions
-                                                let userPermissions = permissionsList.filter(function (value, index) { return permissionsList.indexOf(value) === index; });
-                                                //console.log(userPermissions);
-                                                resolve({
-                                                    roles: data.userRoles,
-                                                    id: data.id,
-                                                    displayName: data.displayName,
-                                                    mail: data.mail,
-                                                    userPrincipalName: data.userPrincipalName,
-                                                    permissions: userPermissions,
-                                                    permissionsObj: []
-                                                });
-                                            }
-                                            catch (err) {
-                                                //console.log(err);
-                                                reject("callGetUserProfile endpoint" + endpoint + "error : " + err);
-                                            }
+                        returnObj.roles = data.userRoles;
+                        returnObj.id    = data.id;
+                        returnObj.displayName = data.displayName;
+                        returnObj.mail = data.mail;
+                        returnObj.userPrincipalName = data.userPrincipalName;
+                        returnObj.permissions = uniqueUserPermissions;
+                        returnObj.permissionsObj = [];
+                    }
+                }
+			} else {
+				throw new Error("Error when calling endpoint in callGetUserProfile: no current user exists in context");
+			}
+        } catch (error) {
+            console.error("AuthHelper_callGetUserProfile error", error.message);
+        }
 
-                                        });
-                                } catch (err) {
-                                    // console.log(err);
-                                    reject("callGetUserProfile endpoint" + endpoint + "error : " + err);
-                                }
-                            } else {
-                                resolve({
-                                    roles: data.userRoles,
-                                    id: data.id,
-                                    displayName: data.displayName,
-                                    mail: data.mail,
-                                    userPrincipalName: data.userPrincipalName,
-                                    permissions: []
-                                });
-                            }
-                        } else {
-                            //console.log("Error callGetUserProfile: " + JSON.stringify(data));
-                            reject("callGetUserProfile error in data: " + data);
-                        }
-                    })
-                    .catch(function (err) {
-                        console.log("Error when calling endpoint in callGetUserProfile:");
-                        console.log(err);
-                        reject("callGetUserProfile error_callWebApiWithToken: " + err);
-                    });
-            } else {
-                reject("Error when calling endpoint in callGetUserProfile: no current user exists in context");
-            }
-        });
+        return returnObj;
     }
 
     getUserAsync() {
@@ -396,97 +334,6 @@ export default class AuthClient {
                 resolve(res);
             } else {
                 reject(res);
-            }
-        });
-    }
-
-    callGetUserProfile() {
-        return new Promise((resolve, reject) => {
-            // Call the Web API with the AccessToken
-            //const accessToken = this.getWebApiToken();
-            localStorage.setItem("AuthStatusUP", "AuthHelper_callGetUserProfile start");
-            const userPrincipalName = this.getUser();
-            console.log("AuthHelper_callGetUserProfile getUser: " + userPrincipalName.displayableId);
-            if (userPrincipalName.displayableId.length > 0) {
-                const endpoint = appUri + "/api/UserProfile?upn=" + userPrincipalName.displayableId;
-                let token = window.authHelper.getWebApiToken();
-
-                localStorage.setItem("AuthStatusUP", "AuthHelper_callGetUserProfile userPrincipalName: " + userPrincipalName.displayableId + " token: " + token);
-
-                this.callWebApiWithToken(endpoint, "GET")
-                    .then(data => {
-                        if (data) {
-                            this.userProfile = data;
-                            if (data.userRoles.length > 0) {
-                                // Get user permissions
-                                let requestUrl = 'api/RoleMapping';
-                                try {
-                                    fetch(requestUrl, {
-                                        method: "GET",
-                                        headers: { 'authorization': 'Bearer ' + token }
-                                    })
-                                        .then(response => response.json())
-                                        .then(rolesData => {
-                                            try {
-                                                let allRoleMapping = rolesData;
-                                                let permissionsList = [];
-                                                //Granular access start:
-                                                this.setUserProfilPermissions(rolesData);
-                                                //Granular access end;
-                                                for (let i = 0; i < allRoleMapping.length; i++) {
-                                                    let itemArray = [];
-                                                    if (this.userProfile.userRoles.filter(x => x.displayName === allRoleMapping[i].role.displayName.replace(/\s/g, '')).length > 0) {
-                                                        for (let p = 0; p < allRoleMapping[i].permissions.length; p++) {
-                                                            permissionsList.push(allRoleMapping[i].permissions[p].name);
-                                                        }
-                                                    }
-
-                                                }
-                                                //console.log(permissionsList);
-                                                // unique permissions
-                                                let userPermissions = permissionsList.filter(function (value, index) { return permissionsList.indexOf(value) === index; });
-                                                //console.log(userPermissions);
-                                                resolve({
-                                                    roles: data.userRoles,
-                                                    id: data.id,
-                                                    displayName: data.displayName,
-                                                    mail: data.mail,
-                                                    userPrincipalName: data.userPrincipalName,
-                                                    permissions: userPermissions,
-                                                    permissionsObj: []
-                                                });
-                                            }
-                                            catch (err) {
-                                                //console.log(err);
-                                                reject("callGetUserProfile endpoint" + endpoint + "error : " + err);
-                                            }
-
-                                        });
-                                } catch (err) {
-                                    // console.log(err);
-                                    reject("callGetUserProfile endpoint" + endpoint + "error : " + err);
-                                }
-                            } else {
-                                resolve({
-                                    roles: data.userRoles,
-                                    id: data.id,
-                                    displayName: data.displayName,
-                                    mail: data.mail,
-                                    userPrincipalName: data.userPrincipalName,
-                                    permissions: []
-                                });
-                            }
-                        } else {
-                            //console.log("Error callGetUserProfile: " + JSON.stringify(data));
-                            reject("callGetUserProfile error in data: " + data);
-                        }
-                    })
-                    .catch(function (err) {
-                        handleError('Error when calling endpoint in callGetUserProfile: ' + JSON.stringify(err));
-                        reject("callGetUserProfile error_callWebApiWithToken: " + err);
-                    });
-            } else {
-                reject("Error when calling endpoint in callGetUserProfile: no current user exists in context");
             }
         });
     }
@@ -571,17 +418,17 @@ export default class AuthClient {
 	}
 
 	acquireGraphAdminTokenSilent() {
-		console.log("Admin: acquireGraphAdminTokenSilent")
+        console.log("Admin: acquireGraphAdminTokenSilent");
 		return new Promise((resolve, reject) => {
-			console.log("Admin: acquireGraphAdminTokenSilent in promise")
+            console.log("Admin: acquireGraphAdminTokenSilent in promise");
 			this.authClient.acquireTokenSilent(graphScopesAdmin, authority)
 				.then(function (accessToken) {
-					console.log("Admin: acquireGraphAdminTokenSilent calling handleGraphAdminToken : ", accessToken.length)
+                    console.log("Admin: acquireGraphAdminTokenSilent calling handleGraphAdminToken : ", accessToken.length);
 					handleGraphAdminToken(accessToken);
 					resolve(accessToken);
 				})
 				.catch((err) => {
-					console.log("Admin: acquireGraphAdminTokenSilent err", err)
+                    console.log("Admin: acquireGraphAdminTokenSilent err", err);
 					reject(err);
 				});
 		});
@@ -622,81 +469,25 @@ export default class AuthClient {
 		});
 	}
 
-    getRoleMapping() {
-            let requestUrl = 'api/RoleMapping';
-            console.log("inside RoleMapping");
-            try {
-                fetch(requestUrl, {
-                    method: "GET",
-                    headers: { 'authorization': 'Bearer ' + this.getWebApiToken() }
-                })
-                    .then(response => response.json())
-                    .then(data => {
-                        try {
-                            let allRoleMapping = data;
-                            let permissionsList = [];
-                            for (let i = 0; i < allRoleMapping.length; i++) {
-                                let itemArray = [];
-                                itemArray = allRoleMapping[i].permissions;
-                                for (let j = 0; j < itemArray.length; j++) {
-
-                                    let item = {};
-                                    item.id = itemArray[j].id;
-                                    item.name = itemArray[j].name;
-                                    permissionsList.push(item);
-                                }
-                            }
-                            console.log(permissionsList);
-                            return permissionsList;
-
-                        }
-                        catch (err) {
-                            console.log(err);
-                        }
-
-                    });
-            } catch (err) {
-                console.log(err);
-            }
-	}
-
-	//Granular access start
 	getUserProfilPermissions() {
+        console.log("getUserProfilPermissions enter");
 		if (!this.isAuthenticated()) {
 			console.log("getUserProfilPermissions isAuth: false");
 			return "";
 		}
 		let permissions = localStorage.getItem(userProfilPermissions);
-
+        console.log("getUserProfilPermissions permissions : ", permissions);
 		return permissions;
-	}
-
-	setUserProfilPermissions(roleMapping){
-
-        let userpermissions = [];
-		this.getUserProfile().then(data=>{
-			let roles = data.userRoles;
-			roles.forEach(role => {
-                roleMapping.forEach(rolemap => {
-                    if (rolemap.role.displayName === role.displayName) {
-                        rolemap.permissions.forEach(permission => userpermissions.push(permission.name));
-                    }
-                });
-			});
-
-            handleUserProfilPermissions(userpermissions);
-		});
 	}
 
 	callCheckAccess(permissionRequested){
         return new Promise((resolve, reject) => {
-			let status = false;
 			let permissions  = this.getUserProfilPermissions();
 
             if (permissions) {
                 permissions = permissions.split(',').map(permission => permission.toLowerCase());
-                console.log("PermissionsUserHave: ", permissions);
-                console.log("PermissionsRequested: ", permissionRequested);
+                console.log("AuthHelper_callCheckAccess PermissionsUserHave: ", permissions);
+                console.log("AuthHelper_callCheckAccess PermissionsRequested: ", permissionRequested);
                 if (permissions.length > 0) {
                     for (let i = 0; i < permissionRequested.length; i++) {
                         if (permissions.indexOf(permissionRequested[i].toLowerCase()) > -1) {
@@ -761,98 +552,6 @@ export default class AuthClient {
             resolve(permission);
         });
     }
-	//Granular Access : End
-
-	callGetUserProfile() {
-		return new Promise((resolve, reject) => {
-			// Call the Web API with the AccessToken
-			//const accessToken = this.getWebApiToken();
-            localStorage.setItem("AuthStatusUP", "AuthHelper_callGetUserProfile start");
-			const userPrincipalName = this.getUser();
-			console.log("AuthHelper_callGetUserProfile getUser: " + userPrincipalName.displayableId);
-			if (userPrincipalName.displayableId.length > 0) {
-				const endpoint = appUri + "/api/UserProfile?upn=" + userPrincipalName.displayableId;
-                let token = window.authHelper.getWebApiToken();
-
-                localStorage.setItem("AuthStatusUP", "AuthHelper_callGetUserProfile userPrincipalName: " + userPrincipalName.displayableId + " token: " + token);
-
-				this.callWebApiWithToken(endpoint, "GET")
-					.then(data => {
-						if (data) {
-                            this.userProfile = data;
-                            if (data.userRoles.length > 0) {
-                                // Get user permissions
-                                let requestUrl = 'api/RoleMapping';
-                                try {
-                                    fetch(requestUrl, {
-                                        method: "GET",
-                                        headers: { 'authorization': 'Bearer ' + token }
-                                    })
-                                        .then(response => response.json())
-                                        .then(rolesData => {
-                                            try {
-                                                let allRoleMapping = rolesData;
-												let permissionsList = [];
-												//Granular access start:
-                                                this.setUserProfilPermissions(rolesData);
-												//Granular access end;
-                                                for (let i = 0; i < allRoleMapping.length; i++) {
-                                                    let itemArray = [];
-                                                    if (this.userProfile.userRoles.filter(x => x.displayName === allRoleMapping[i].role.displayName.replace(/\s/g, '')).length > 0) {
-                                                        for (let p = 0; p < allRoleMapping[i].permissions.length; p++) {
-                                                            permissionsList.push(allRoleMapping[i].permissions[p].name);
-                                                        }                                                        
-                                                    }
-
-                                                }
-                                                //console.log(permissionsList);
-                                                // unique permissions
-                                                let userPermissions = permissionsList.filter(function (value, index) { return permissionsList.indexOf(value) === index; });
-                                                //console.log(userPermissions);
-                                                resolve({
-                                                    roles: data.userRoles,
-                                                    id: data.id,
-                                                    displayName: data.displayName,
-                                                    mail: data.mail,
-                                                    userPrincipalName: data.userPrincipalName,
-                                                    permissions: userPermissions, 
-                                                    permissionsObj: [] 
-                                                });
-                                            }
-                                            catch (err) {
-                                                //console.log(err);
-                                                reject("callGetUserProfile endpoint" + endpoint + "error : " + err);
-                                            }
-
-                                        });
-                                } catch (err) {
-                                    // console.log(err);
-                                    reject("callGetUserProfile endpoint" + endpoint + "error : " + err);
-                                }
-                            } else {
-                                resolve({
-                                    roles: data.userRoles,
-                                    id: data.id,
-                                    displayName: data.displayName,
-                                    mail: data.mail,
-                                    userPrincipalName: data.userPrincipalName,
-                                    permissions: []
-                                });
-                            }
-						} else {
-							//console.log("Error callGetUserProfile: " + JSON.stringify(data));
-                            reject("callGetUserProfile error in data: " + data);
-						}
-					})
-					.catch(function (err) {
-						handleError('Error when calling endpoint in callGetUserProfile: ' + JSON.stringify(err));
-                        reject("callGetUserProfile error_callWebApiWithToken: " + err);
-					});
-			} else {
-				reject("Error when calling endpoint in callGetUserProfile: no current user exists in context");
-			}
-		});
-    }
 
     apiGetUserProfile(userPrincipalName) {
         return new Promise((resolve, reject) => {
@@ -860,7 +559,6 @@ export default class AuthClient {
 
             if (userPrincipalName.displayableId.length > 0) {
                 const endpoint = appUri + "/api/UserProfile?upn=" + userPrincipalName.displayableId;
-                let token = window.authHelper.getWebApiToken();
 
                 this.callWebApiWithToken(endpoint, "GET")
                     .then(data => {

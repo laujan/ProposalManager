@@ -19,32 +19,165 @@ namespace Infrastructure.Services
     public class DashboardService : BaseService<DashboardService>, IDashboardService
     {
         private readonly IDashboardRepository _dashboardRepository;
-        public DashboardService(ILogger<DashboardService> logger, IOptionsMonitor<AppOptions> appOptions,IDashboardRepository dashboardRepo) : base(logger, appOptions)
+        private readonly IProcessRepository _processRepository;
+
+        public DashboardService(ILogger<DashboardService> logger, IOptionsMonitor<AppOptions> appOptions,IDashboardRepository dashboardRepo, IProcessRepository processRepository) : base(logger, appOptions)
         {
             Guard.Against.Null(dashboardRepo, nameof(dashboardRepo));
             _dashboardRepository = dashboardRepo;
+            _processRepository = processRepository;
         }
-        public async Task<StatusCodes> CreateOpportunityAsync(DashboardModel modelObject, string requestId = "")
-        {
-            _logger.LogInformation($"RequestId: {requestId} - DashboardSvc_CreateOpportunityAsync called.");
 
-            Guard.Against.Null(modelObject, nameof(modelObject), requestId);
-            Guard.Against.NullOrEmpty(modelObject.CustomerName, nameof(modelObject.CustomerName), requestId);
+
+        public async Task<Opportunity> CreateWorkflowAsync(Opportunity opportunity, string requestId = "")
+        {
+            _logger.LogInformation($"RequestId: {requestId} - CreateDashBoardEntryAsync called.");
             try
             {
-                var entityObject = MapToEntity(modelObject, requestId);
+                var targetDate = opportunity.Metadata.Fields.ToList().Find(x => x.DisplayName == "Target Date")?.Values;
+                var openedDate = opportunity.Metadata.Fields.ToList().Find(x => x.DisplayName == "Opened Date")?.Values;
 
-                var result = await _dashboardRepository.CreateOpportunityAsync(entityObject, requestId);
+                if (targetDate != null && openedDate != null)
+                {
+                    var entity = new Dashboard();
+                    entity.CustomerName = opportunity.Metadata.Customer.DisplayName.ToString();
+                    entity.Status = opportunity.Metadata.OpportunityState.Name.ToString();
+                    entity.StartDate = openedDate ?? String.Empty;
+                    entity.OpportunityName = opportunity.DisplayName.ToString();
+                    entity.Id = String.Empty;
+                    entity.TotalNoOfDays = 0;
+                    entity.ProcessList = new List<DashboardProcessList>();
+                    entity.ProcessEndDateList = new List<DashboradProcessEndDateList>();
+                    entity.ProcessLoanOfficerNames = new List<DashboardLoanOfficers>();
 
-                Guard.Against.NotStatus200OK(result, "DashboardSvc_CreateOpportunityAsync", requestId);
+                    var processList = (await _processRepository.GetAllAsync(requestId)).ToList();
 
-                return result;
+                    foreach(var process in processList)
+                    {
+                        if (process.ProcessType.ToLower()== "checklisttab")
+                        {
+                            entity.ProcessList.Add(new DashboardProcessList
+                            {
+                                ProcessName = process.Channel.ToLower(),
+                                ProcessEndDate = string.Empty,
+                                ProcessStartDate = string.Empty,
+                                NoOfDays = 0
+                            });
+
+                            entity.ProcessEndDateList.Add(new DashboradProcessEndDateList
+                            {
+                                Process = process.Channel.ToLower() + "enddate",
+                                EndDate = string.Empty
+                            });
+                        }
+                    }
+
+
+                    var loanOfficerAdgroup = opportunity.Content.TeamMembers.FirstOrDefault(mem => mem.Fields.Permissions.Any(per => per.Name.ToLower() == "opportunity_readwrite_dealtype"));
+                    entity.ProcessLoanOfficerNames.Add(new DashboardLoanOfficers
+                    {
+                        AdGroupName = loanOfficerAdgroup != null ? loanOfficerAdgroup.RoleName.ToString():string.Empty,
+                        OfficerName = loanOfficerAdgroup != null ? loanOfficerAdgroup.DisplayName.ToString() : string.Empty
+                    });
+
+
+                    await _dashboardRepository.CreateOpportunityAsync(entity, requestId);
+
+                }
             }
             catch (Exception ex)
             {
-                _logger.LogError($"RequestId: {requestId} - DashboardSvc_CreateOpportunityAsync Service Exception: {ex}");
-                throw new ResponseException($"RequestId: {requestId} - DashboardSvc_CreateOpportunityAsync Service Exception: {ex}");
+                _logger.LogError($"RequestId: {requestId} - CreateDashBoardEntryAsync Service Exception: {ex}");
             }
+
+            return opportunity;
+        }
+
+        public async Task<Opportunity> UpdateWorkflowAsync(Opportunity opportunity, string requestId = "")
+        {
+            _logger.LogInformation($"RequestId: {requestId} - UpdateDashBoardEntryAsync called.");
+            try
+            {
+                var dashboard = await _dashboardRepository.GetAsync(opportunity.DisplayName.ToString(), requestId);
+
+                if (dashboard != null){
+                    dashboard.OpportunityId = opportunity.Id;
+                    var date = DateTimeOffset.Now.Date;
+
+                    if (dashboard.Status.ToLower() != opportunity.Metadata.OpportunityState.Name.ToLower()){
+                        dashboard.Status = opportunity.Metadata.OpportunityState.Name.ToString();
+                        if (dashboard.Status.ToLower().ToString() == "accepted" || dashboard.Status.ToLower().ToString() == "archived"){
+                            dashboard.TargetCompletionDate = date.ToString();
+                            dashboard.TotalNoOfDays = GetDateDifference(DateTime.Parse(dashboard.StartDate.ToString()), date);
+                        }
+
+                    }
+
+                    var oppCheckLists = opportunity.Content.Checklists.ToList();
+
+                    foreach (var process in opportunity.Content.Template.ProcessList)
+                    {
+                        if (process.ProcessType.ToLower() == "checklisttab")
+                        {
+                            var checklistItm = oppCheckLists.Find(x => x.ChecklistChannel.ToLower() == process.Channel.ToLower());
+                            if (checklistItm != null)
+                            {
+                                var dProcess = dashboard.ProcessList.ToList().Find(x => x.ProcessName.ToLower() == process.Channel.ToLower());
+                                if (dProcess != null)
+                                {
+                                    if (checklistItm.ChecklistStatus == ActionStatus.Completed)
+                                    {
+                                        dProcess.ProcessEndDate = date.ToString();
+                                        dProcess.NoOfDays = GetDateDifference(DateTime.Parse(dProcess.ProcessStartDate), date);
+                                    }
+                                }
+                                else
+                                {
+                                    dProcess = new DashboardProcessList();
+                                    dProcess.ProcessName = checklistItm.ChecklistChannel.ToLower();
+                                    dProcess.ProcessStartDate = date.ToString();
+                                    dProcess.NoOfDays = 0;
+                                    dashboard.ProcessList.Add(dProcess);
+
+                                }
+
+                                var processEndDateObj = dashboard.ProcessEndDateList.ToList().Find(x => x.Process.ToLower() == process.Channel.ToLower() + "enddate");
+                                if (processEndDateObj != null)
+                                {
+                                    if (checklistItm.ChecklistStatus == ActionStatus.Completed)
+                                    {
+                                        processEndDateObj.EndDate = date.ToString();                                     
+                                    }
+                                }
+                                else
+                                {
+                                    processEndDateObj = new DashboradProcessEndDateList();
+                                    processEndDateObj.Process = checklistItm.ChecklistChannel.ToLower() + "enddate";
+                                    processEndDateObj.EndDate = string.Empty;
+                                    dashboard.ProcessEndDateList.Add(processEndDateObj);
+
+                                }
+                            }
+                        }
+
+                    }
+
+                    var loanOfficerAdgroup = opportunity.Content.TeamMembers.FirstOrDefault(mem => mem.Fields.Permissions.Any(per => per.Name.ToLower() == "opportunity_readwrite_dealtype"));
+                    if (loanOfficerAdgroup !=null)
+                    {
+                        var obj = dashboard.ProcessLoanOfficerNames.ToList().Find(x => x.AdGroupName.ToLower() == loanOfficerAdgroup.RoleName.ToLower());
+                        if (obj != null) obj.OfficerName = loanOfficerAdgroup.DisplayName.ToString();
+                    }
+
+                    await _dashboardRepository.UpdateOpportunityAsync(dashboard, requestId);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"RequestId: {requestId} - UpdateDashBoardEntryAsync Service Exception: {ex}");
+            }
+
+            return opportunity;
         }
 
         public async Task<StatusCodes> DeleteOpportunityAsync(string id, string requestId = "")
@@ -59,148 +192,30 @@ namespace Infrastructure.Services
             return result;
         }
 
-        public async Task<IList<DashboardModel>> GetAllAsync(string requestId = "")
+        private int GetDateDifference(DateTimeOffset startDate, DateTimeOffset endDate)
         {
-            _logger.LogInformation($"RequestId: {requestId} - DashboardSvc_GetAllAsync called.");
-
+            //=VALUE(IF(ISBLANK(OpportunityEndDate),0,DATEDIF(StartDate,OpportunityEndDate,"d")))
+            //=IF(ISBLANK(CreditCheckCompletionDate),0,DATEDIF(CreditCheckStartDate,CreditCheckCompletionDate,"d"))
+            //=IF(ISBLANK(ComplianceRewiewCompletionDate),0,DATEDIF(ComplianceRewiewStartDate,ComplianceRewiewCompletionDate,"d"))
+            //=IF(ISBLANK(FormalProposalEndDateDate), 0, DATEDIF(FormalProposalStartDate, FormalProposalEndDateDate, "d"))
+            //=IF(ISBLANK(RiskAssesmentCompletionDate),0,DATEDIF(RiskAssesmentStartDate,RiskAssesmentCompletionDate,"d"))
+            int datediff = 0;
             try
             {
-                var listItems = (await _dashboardRepository.GetAllAsync(requestId)).ToList();
-                Guard.Against.Null(listItems, nameof(listItems), requestId);
-
-                var modelListItems = new List<DashboardModel>();
-                foreach (var item in listItems)
+                if (endDate != null && endDate != DateTimeOffset.MinValue)
                 {
-                    modelListItems.Add(MapToModel(item));
+                    if (startDate != null && startDate != DateTimeOffset.MinValue)
+                    {
+                        datediff = Convert.ToInt32((endDate - startDate).TotalDays);
+                    }
                 }
-
-                if (modelListItems.Count == 0)
-                {
-                    _logger.LogWarning($"RequestId: {requestId} - DashboardSvc_GetAllAsync no items found");
-                    throw new NoItemsFound($"RequestId: {requestId} - Method name: DashboardSvc_GetAllAsync - No Items Found");
-                }
-
-                return modelListItems;
             }
             catch (Exception ex)
             {
-                _logger.LogError($"RequestId: {requestId} - CategorySvc_GetAllAsync error: " + ex);
-                throw;
+                _logger.LogError($"DashBoardAnalysis_GetDateDifference Service Exception: {ex}");
             }
+            return datediff;
         }
 
-        private DashboardModel MapToModel(Dashboard entity)
-        {
-            var model = new DashboardModel();
-
-            model.Id = entity.Id;
-            model.CustomerName = entity.CustomerName ?? String.Empty;
-            model.OpportunityId = entity.OpportunityId ?? String.Empty;
-            model.Status = entity.Status ?? String.Empty;
-            model.OpportunityName = entity.OpportunityName ?? String.Empty;
-            model.LoanOfficer = entity.LoanOfficer ?? String.Empty;
-            model.RelationshipManager = entity.RelationshipManager ?? String.Empty;
-            if (entity.StartDate != null) model.StartDate = entity.StartDate;
-            if (entity.TargetCompletionDate != null) model.TargetCompletionDate = entity.TargetCompletionDate;
-            if (entity.StatusChangedDate != null) model.StatusChangedDate = entity.StatusChangedDate;
-            if (entity.OpportunityEndDate != null) model.OpportunityEndDate = entity.OpportunityEndDate;
-
-            if (entity.RiskAssesmentCompletionDate != null) model.RiskAssesmentCompletionDate = entity.RiskAssesmentCompletionDate;
-            if (entity.RiskAssesmentStartDate != null) model.RiskAssesmentStartDate = entity.RiskAssesmentStartDate;
-            if (entity.CreditCheckCompletionDate != null) model.CreditCheckCompletionDate = entity.CreditCheckCompletionDate;
-            if (entity.CreditCheckStartDate != null) model.CreditCheckStartDate = entity.CreditCheckStartDate;
-            if (entity.ComplianceReviewComplteionDate != null) model.ComplianceReviewComplteionDate = entity.ComplianceReviewComplteionDate;
-            if (entity.ComplianceReviewStartDate != null) model.ComplianceReviewStartDate = entity.ComplianceReviewStartDate;
-            if (entity.FormalProposalCompletionDate != null) model.FormalProposalCompletionDate = entity.FormalProposalCompletionDate;
-            if (entity.FormalProposalStartDate != null) model.FormalProposalStartDate = entity.FormalProposalStartDate;
-
-            //days mapping
-            if (entity.TotalNoOfDays != 0) model.TotalNoOfDays = entity.TotalNoOfDays;
-            if (entity.CreditCheckNoOfDays != 0) model.CreditCheckNoOfDays = entity.CreditCheckNoOfDays;
-            if (entity.ComplianceReviewNoOfDays != 0) model.ComplianceReviewNoOfDays = entity.ComplianceReviewNoOfDays;
-            if (entity.FormalProposalNoOfDays != 0) model.FormalProposalNoOfDays = entity.FormalProposalNoOfDays;
-            if (entity.RiskAssessmentNoOfDays != 0) model.RiskAssessmentNoOfDays = entity.RiskAssessmentNoOfDays;
-
-            return model;
-        }
-
-        public async Task<StatusCodes> UpdateOpportunityAsync(DashboardModel modelObject, string requestId = "")
-        {
-            _logger.LogInformation($"RequestId: {requestId} - DashboardSvc_UpdateOpportunityAsync called.");
-
-            Guard.Against.Null(modelObject, nameof(modelObject), requestId);
-            Guard.Against.NullOrEmpty(modelObject.OpportunityId, nameof(modelObject.OpportunityId), requestId);
-            try
-            {
-                var entityObject = MapToEntity(modelObject, requestId);
-
-                var result = await _dashboardRepository.UpdateOpportunityAsync(entityObject, requestId);
-
-                Guard.Against.NotStatus200OK(result, "DashboardSvc_CreateOpportunityAsync", requestId);
-
-                return result;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"RequestId: {requestId} - DashboardSvc_CreateOpportunityAsync Service Exception: {ex}");
-                throw new ResponseException($"RequestId: {requestId} - DashboardSvc_CreateOpportunityAsync Service Exception: {ex}");
-            }
-        }
-
-        private Dashboard MapToEntity(DashboardModel model, string requestId = "")
-        {
-            // Perform mapping
-            var entity = new Dashboard();
-
-            entity.Id = model.Id ?? String.Empty;
-            entity.CustomerName = model.CustomerName ?? String.Empty;
-            entity.OpportunityId = model.OpportunityId ?? String.Empty;
-            entity.Status = model.Status ?? String.Empty;
-            entity.OpportunityName = model.OpportunityName ?? String.Empty;
-            entity.LoanOfficer = model.LoanOfficer ?? String.Empty;
-            entity.RelationshipManager = model.RelationshipManager ?? String.Empty;
-            if (model.StartDate != null) entity.StartDate = model.StartDate;
-            if (model.TargetCompletionDate != null) entity.TargetCompletionDate = model.TargetCompletionDate;
-            if (model.StatusChangedDate != null) entity.StatusChangedDate = model.StatusChangedDate;
-            if (model.OpportunityEndDate != null) entity.OpportunityEndDate = model.OpportunityEndDate;
-
-            if (model.RiskAssesmentCompletionDate != null) entity.RiskAssesmentCompletionDate = model.RiskAssesmentCompletionDate;
-            if (model.RiskAssesmentStartDate != null) entity.RiskAssesmentStartDate = model.RiskAssesmentStartDate;
-            if (model.CreditCheckCompletionDate != null) entity.CreditCheckCompletionDate = model.CreditCheckCompletionDate;
-            if (model.CreditCheckStartDate != null) entity.CreditCheckStartDate = model.CreditCheckStartDate;
-            if (model.ComplianceReviewComplteionDate != null) entity.ComplianceReviewComplteionDate = model.ComplianceReviewComplteionDate;
-            if (model.ComplianceReviewStartDate != null) entity.ComplianceReviewStartDate = model.ComplianceReviewStartDate;
-            if (model.FormalProposalCompletionDate != null) entity.FormalProposalCompletionDate = model.FormalProposalCompletionDate;
-            if (model.FormalProposalStartDate != null) entity.FormalProposalStartDate = model.FormalProposalStartDate;
-
-
-            //days mapping
-            if (model.TotalNoOfDays != 0) entity.TotalNoOfDays = model.TotalNoOfDays;
-            if (model.CreditCheckNoOfDays != 0) entity.CreditCheckNoOfDays = model.CreditCheckNoOfDays;
-            if (model.ComplianceReviewNoOfDays != 0) entity.ComplianceReviewNoOfDays = model.ComplianceReviewNoOfDays;
-            if (model.FormalProposalNoOfDays != 0) entity.FormalProposalNoOfDays = model.FormalProposalNoOfDays;
-            if (model.RiskAssessmentNoOfDays != 0) entity.RiskAssessmentNoOfDays = model.RiskAssessmentNoOfDays;
-            return entity;
-        }
-
-        public async Task<DashboardModel> GetAsync(string Id, string requestId = "")
-        {
-            _logger.LogInformation($"RequestId: {requestId} - DashboardSvc_GetAsync called.");
-
-            try
-            {
-                var dashboard = await _dashboardRepository.GetAsync(Id, requestId);
-                Guard.Against.Null(dashboard, nameof(dashboard), requestId);
-
-                var dashboardmodel = MapToModel(dashboard);
-
-                return dashboardmodel;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"RequestId: {requestId} - CategorySvc_GetAsync error: " + ex);
-                throw;
-            }
-        }
     }
 }

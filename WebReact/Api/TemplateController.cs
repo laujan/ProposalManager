@@ -4,17 +4,13 @@
 // Licensed under the MIT license. See LICENSE file in the solution root folder for full license information
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using ApplicationCore;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using ApplicationCore.Interfaces;
 using ApplicationCore.Helpers;
-using ApplicationCore.Artifacts;
 using Newtonsoft.Json.Linq;
 using Microsoft.AspNetCore.Authorization;
 using Newtonsoft.Json;
@@ -86,9 +82,7 @@ namespace WebReact.Api
                     NullValueHandling = NullValueHandling.Ignore
                 });
 
-                //check for duplicate processes
-                bool check = await _templateService.ProcessCheckAsync(modelObject.ProcessList, requestId);
-                if (!check)
+                if (!(_templateService.ProcessCheckAsync(modelObject.ProcessList, requestId)))
                 {
                     _logger.LogError($"RequestID:{requestId} - Create error: Duplicate Process Types");
                     var errorResponse = JsonErrorResponse.BadRequest($"Create error: Duplicate Process Types", requestId);
@@ -174,9 +168,7 @@ namespace WebReact.Api
                     NullValueHandling = NullValueHandling.Ignore
                 });
 
-                //check for duplicate processes
-                bool check = await _templateService.ProcessCheckAsync(modelObject.ProcessList, requestId);
-                if (!check)
+                if (!(_templateService.ProcessCheckAsync(modelObject.ProcessList, requestId)))
                 {
                     _logger.LogError($"RequestID:{requestId} - Create error: Duplicate Process Types");
                     var errorResponse = JsonErrorResponse.BadRequest($"Create error: Duplicate Process Types", requestId);

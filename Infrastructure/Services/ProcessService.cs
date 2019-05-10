@@ -3,20 +3,17 @@
 //
 // Licensed under the MIT license. See LICENSE file in the solution root folder for full license information
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using ApplicationCore;
+using ApplicationCore.Entities;
+using ApplicationCore.Helpers;
+using ApplicationCore.Helpers.Exceptions;
+using ApplicationCore.Interfaces;
+using ApplicationCore.ViewModels;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using ApplicationCore.ViewModels;
-using ApplicationCore.Interfaces;
-using ApplicationCore;
-using ApplicationCore.Artifacts;
-using Infrastructure.Services;
-using ApplicationCore.Helpers;
-using ApplicationCore.Entities;
-using ApplicationCore.Helpers.Exceptions;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 
 namespace Infrastructure.Services
@@ -67,8 +64,8 @@ namespace Infrastructure.Services
                         Id = string.Empty,
                         Name = $"{channelName}_ReadWrite"
                     };
-                    var read = await _permissionRepository.CreateItemAsync(permissionReadObj, requestId);
-                    var readWrite = await _permissionRepository.CreateItemAsync(permissionReadWriteObj, requestId);
+                    await _permissionRepository.CreateItemAsync(permissionReadObj, requestId);
+                    await _permissionRepository.CreateItemAsync(permissionReadWriteObj, requestId);
                 }
                 catch(Exception ex)
                 {
@@ -85,7 +82,7 @@ namespace Infrastructure.Services
                         Id = string.Empty,
                         DisplayName = modelObject.ProcessStep
                     };
-                    var read = await _roleRepository.CreateItemAsync(roleObj, requestId);
+                    await _roleRepository.CreateItemAsync(roleObj, requestId);
                 }
                 catch (Exception ex)
                 {
@@ -120,14 +117,9 @@ namespace Infrastructure.Services
 
             try
             {
-                var listItems = (await _processRepository.GetAllAsync(requestId)).ToList();
-                Guard.Against.Null(listItems, nameof(listItems), requestId);
 
                 var processTypeListViewModel = new ProcessTypeListViewModel();
-                foreach (var item in listItems)
-                {
-                    processTypeListViewModel.ItemsList.Add(MapToProcessViewModel(item));
-                }
+                processTypeListViewModel.ItemsList = (await _processRepository.GetAllAsync(requestId)).Select(item => MapToProcessViewModel(item)).ToList();
 
                 if (processTypeListViewModel.ItemsList.Count == 0)
                 {
@@ -172,13 +164,16 @@ namespace Infrastructure.Services
 
             try
             {
-                var model = new ProcessTypeViewModel();
-                model.Id = entity.Id ?? string.Empty;
-                model.ProcessStep = entity.ProcessStep ?? string.Empty;
-                model.ProcessType = entity.ProcessType ?? string.Empty;
-                model.Channel = entity.Channel ?? string.Empty;
+                return new ProcessTypeViewModel
+                {
+                    Id = entity.Id ?? string.Empty,
+                    ProcessStep = entity.ProcessStep ?? string.Empty,
+                    ProcessType = entity.ProcessType ?? string.Empty,
+                    Channel = entity.Channel ?? string.Empty,
+                    RoleId = entity.RoleId ?? String.Empty,
+                    RoleName = entity.RoleName ?? String.Empty
+                };
 
-                return model;
             }
             catch (Exception ex)
             {
@@ -191,13 +186,16 @@ namespace Infrastructure.Services
 
             try
             {
-                var entity = new ProcessesType();
-                entity.Id = model.Id ?? string.Empty;
-                entity.ProcessStep = model.ProcessStep ?? string.Empty;
-                entity.ProcessType = model.ProcessType ?? string.Empty;
-                entity.Channel = model.Channel ?? string.Empty;
+                return new ProcessesType
+                {
+                    Id = model.Id ?? string.Empty,
+                    ProcessStep = model.ProcessStep ?? string.Empty,
+                    ProcessType = model.ProcessType ?? string.Empty,
+                    Channel = model.Channel ?? string.Empty,
+                    RoleId = model.RoleId ?? String.Empty,
+                    RoleName = model.RoleName ?? String.Empty
+                };
 
-                return entity;
             }
             catch (Exception ex)
             {

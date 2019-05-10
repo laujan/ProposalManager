@@ -27,9 +27,5 @@ namespace ProjectSmartLink.Service
 
         Task<IEnumerable<DocumentCheckResult>> GetAllCatalogs();
         Task<IEnumerable<DocumentCheckResult>> UpdateDocumentUrlById(IEnumerable<DocumentCheckResult> documents);
-
-        Task<IEnumerable<CloneForm>> CheckCloneFileStatus(IEnumerable<CloneForm> files);
-
-        Task CloneFiles(IEnumerable<CloneForm> files);
     }
 }

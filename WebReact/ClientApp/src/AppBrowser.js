@@ -5,55 +5,48 @@
 
 // Global imports
 import React, { Component } from 'react';
-import Promise from 'promise';
 import AuthHelper from './helpers/AuthHelper';
 import GraphSdkHelper from './helpers/GraphSdkHelper';
 import Utils from './helpers/Utils';
-import { Route } from 'react-router';
 import { CommandBar } from 'office-ui-fabric-react/lib/CommandBar';
 import { Spinner, SpinnerSize } from 'office-ui-fabric-react/lib/Spinner';
-import { Image } from 'office-ui-fabric-react/lib/Image';
-
-import  appSettingsObject  from './helpers/AppSettings';
-import { Layout } from './components/Layout';
-import { Opportunities } from './components/Opportunities';
-//import { Notifications } from './components/Notifications';
-import { Administration } from './components/Administration/Administration';
-import { Settings } from './components/Administration/Settings';
-import { Setup } from './components/Administration/Setup';
-import { OpportunityDetails } from './components/Opportunity/OpportunityDetails';
-
-import { OpportunityChooseTeam } from './components/OpportunityChooseTeam';
-
-// compoents-mobile
-import { getQueryVariable } from './common';
-
-import i18n from './i18n';
-import {  Trans } from "react-i18next";
+import { Link } from 'office-ui-fabric-react/lib/Link';
+import appSettingsObject from './helpers/AppSettings';
+import { Col, Grid, Row } from 'react-bootstrap';
+import { Trans } from "react-i18next";
 
 var appSettings;
 
 export class AppBrowser extends Component {
-	displayName = AppBrowser.name
+    displayName = AppBrowser.name
 
-	constructor(props) {
-		super(props);
+    constructor(props) {
+        super(props);
 
-		if (window.authHelper) {
-			this.authHelper = window.authHelper;
-		} else {
-			// Initilize the AuthService and save it in the window object.
-			this.authHelper = new AuthHelper();
-			window.authHelper = this.authHelper;
-		}
+        if (window.authHelper) {
+            this.authHelper = window.authHelper;
+        } else {
+            // Initilize the AuthService and save it in the window object.
+            this.authHelper = new AuthHelper();
+            window.authHelper = this.authHelper;
+        }
 
-		if (window.sdkHelper) {
-			this.sdkHelper = window.sdkHelper;
-		} else {
-			// Initialize the GraphService and save it in the window object.
-			this.sdkHelper = new GraphSdkHelper();
-			window.sdkHelper = this.sdkHelper;
-		}
+        if (window.sdkHelper) {
+            this.sdkHelper = window.sdkHelper;
+        } else {
+            // Initialize the GraphService and save it in the window object.
+            this.sdkHelper = new GraphSdkHelper();
+            window.sdkHelper = this.sdkHelper;
+        }
+
+        if (window.utils) {
+            this.utils = window.utils;
+        } else {
+            // Initilize the utils and save it in the window object.
+            this.utils = new Utils();
+            window.utils = this.utils;
+        }
+
 
         // Setting the default values
         appSettings = {
@@ -64,16 +57,14 @@ export class AppBrowser extends Component {
             workspaceId: appSettingsObject.workspaceId
         };
 
-		this.utils = new Utils();
-
         const userProfile = { id: "", displayName: "", mail: "", phone: "", picture: "", userPrincipalName: "", roles: [] };
 
-		this.state = {
-			isAuthenticated: false,
-			userProfile: userProfile,
+        this.state = {
+            isAuthenticated: false,
+            userProfile: userProfile,
             isLoading: false
-		};
-	}
+        };
+    }
 
     async componentDidMount() {
         console.log("AppBrowser_componentDidMount v1 window.location.pathname: " + window.location.pathname);
@@ -309,12 +300,11 @@ export class AppBrowser extends Component {
             console.log("AppBrowser_handleGraphAdminToken error: " + err);
             return false;
         }
-        
+
     }
 
     //getting client settings
     async getClientSettings() {
-        let clientSettings = { "reportId": "", "workspaceId": "", "teamsAppInstanceId": "" };
         try {
             console.log("AppBrowser_getClientSettings");
             let requestUrl = 'api/Context/GetClientSettings';
@@ -323,74 +313,43 @@ export class AppBrowser extends Component {
                 method: "GET",
                 headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() }
             });
-            let response = await data.json();
-
-            return response;
+            return await data.json();
         } catch (error) {
             console.log("AppBrowser_getClientSettings error: ", error);
             return error;
         }
     }
 
-	async login() {
+    async login() {
         const resAquireToken = await this.acquireToken();
         console.log("AppBrowser_login resAquireToken: ");
         console.log(resAquireToken);
         return resAquireToken;
-	}
+    }
 
-	// Sign the user out of the session.
+    // Sign the user out of the session.
     logout() {
         localStorage.removeItem("AppBrowserState");
-		this.authHelper.logout().then(() => {
-			this.setState({
-				isAuthenticated: false,
-				displayName: ''
-			});
-		});
-	}
+        this.authHelper.logout().then(() => {
+            this.setState({
+                isAuthenticated: false,
+                displayName: ''
+            });
+        });
+    }
 
 
     render() {
-		const userProfileData = this.state.userProfile;
         const userDisplayName = this.state.displayName;
-		const isAuthenticated = this.state.isAuthenticated;
+        const isAuthenticated = this.state.isAuthenticated;
 
-		const isLoading = this.state.isLoading;
+        const isLoading = this.state.isLoading;
 
-		//get opportunity details
-		const oppId = getQueryVariable('opportunityId') ? getQueryVariable('opportunityId') : "";
 
-		//Inject props to components
-		const OpportunitiesView = ({ match }) => {
-			return <Opportunities userProfile={userProfileData} />;
-		};
-
-		const AdministrationView = ({ match }) => {
-			return <Administration userProfile={userProfileData} />;
-        };
-
-        const SettingsView = ({ match }) => {
-            return <Settings userProfile={userProfileData} />;
-        };
-
-        const SetupView = ({ match }) => {
-            return <Setup userProfile={userProfileData} />;
-        };
-
-		const OppDetails = ({ match }) => {
-			return <OpportunityDetails userProfile={userProfileData} opportunityId={oppId} />;
-		};
-
-		const ChooseTeam = ({ match }) => {
-			return <OpportunityChooseTeam opportunityId={oppId} />;
-		};
-
-		// Route formatting:
-		// <Route path="/greeting/:name" render={(props) => <Greeting text="Hello, " {...props} />} />
         console.log("App browswer : render isAuthenticated", isAuthenticated);
-		return (
-			<div>
+
+        return (
+            <div>
                 <CommandBar farItems={
                     [
 
@@ -403,45 +362,81 @@ export class AppBrowser extends Component {
                             key: 'display-name',
                             name: userDisplayName
                         },
-						{
+                        {
                             key: 'log-in-out=button',
                             name: this.state.isAuthenticated ? <Trans>signout</Trans> : <Trans>signin</Trans>,
-							onClick: this.state.isAuthenticated ? this.logout.bind(this) : this.login.bind(this)
-						}
+                            onClick: this.state.isAuthenticated ? this.logout.bind(this) : this.login.bind(this)
+                        }
                     ]
                 }
                 />
-				
-				<div className="ms-font-m show">
-					{
-						isAuthenticated ?
-                            <Layout userProfile={userProfileData}>
-								<Route exact path='/' component={OpportunitiesView} />
-								
-                                <Route exact path='/Administration' component={AdministrationView} />
-                                <Route exact path='/Settings' component={SettingsView} />
-                                <Route exact path='/Setup' component={SetupView} />
 
-								<Route exact path='/OpportunityDetails' component={OppDetails} />
-								
-								<Route exact path='/OpportunityChooseTeam' component={ChooseTeam} />
-							</Layout>
-							:
-							<div className="BgImage">
+                <div className="ms-font-m show">
+                    {
+                        isAuthenticated ?
+                            <div>
+                                <Grid fluid>
+                                    <Row>
+                                        <Col sm={2}/>
+                                        <Col sm={8} className='p20ALL'><br />
+                                            <h2 className="ms-textAlignCenter">Welcome to Proposal Manager</h2>                                            
+                                            <div className="wrapper">
+                                                <p>As of now installation and basic configuration of proposal manager is complete.  You have given the required consent for the application. There are few more steps you need to complete before making proposal manager available to everyone in the organization</p>
+                                                <p>
+                                                    1. <b>Login</b> to Microsoft Teams as O365 Global Administrator (same credential used during installation) using the Teams link shown in the figure.
+                                                </p>
+                                                <p>
+                                                   2. After login,
+                                                </p>
+                                                <Link href="https://teams.microsoft.com" target="_blank">
+                                                    <img src={require('./Images/teamsLogin.png')} alt="" className="teamsLogo" />
+                                                </Link>
+                                                <p>
+                                                    <ul>
+                                                        <li>
+                                                            <b>Upload the Proposal Manager Teams Add-in package</b> in the Teams app store. Use "upload a custom app" option and select the proposal manager add-in zip file generated in the Setup folder.
+                                                        </li>
+                                                        <li>
+                                                            Go to the "proposal manager" team created in the MS Teams. There will be a <b>Setup channel</b>. <b>Add a Tab &#x2192; </b> search for "Proposal Manager" app.
+                                                        </li>
+                                                        <li>
+                                                            Now in "Proposal manager" tab app you can <b>complete the setup</b> for SharePoint site and add an administrator for proposal manager.  Other features can be configured later.<br />
+                                                            <span>Refer to <b>Help channel</b> or <b>Getting Started Guide</b> for guidance on above setup.</span>
+                                                        </li>
+                                                    </ul>
+                                                </p>
+                                                <p>
+                                                    <b>Proposal Manager is now ready.</b><br />
+                                                    You need to <b>restart the Proposal Manager Azure App </b>after setup changes.<br /><br/>
+                                                    Next you could login with the credentials of the proposal manager administrator you have added during the setup process.  After login, you can configure templates, and associate users and their roles. Refer to <b>Help channel</b> or <b>Getting Started Guide</b> for guidance on configuration.
+
+                                                </p>
+
+
+                                            </div>
+                                            
+                                        </Col>
+                                        <Col sm={2} />
+                                    </Row>
+                                </Grid>
+                            </div>
+
+                            :
+                            <div className="BgImage">
                                 <div className="Caption">
                                     <h3> <span> <Trans>empowerBanking</Trans> </span></h3>
                                     <h2> <Trans>proposalManager</Trans></h2>
-								</div>
-								{
-									isLoading &&
+                                </div>
+                                {
+                                    isLoading &&
                                     <div className='Loading-spinner'>
                                         <Spinner className="Homelaoder Homespinnner" size={SpinnerSize.medium} label={<Trans>loadingYourExperience</Trans>} ariaLive='assertive' />
-									</div>
-								}
-							</div>
-					}
-				</div>
-			</div>
-		);
-	}
+                                    </div>
+                                }
+                            </div>
+                    }
+                </div>
+            </div>
+        );
+    }
 }

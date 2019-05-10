@@ -85,7 +85,7 @@ BenchmarkDotNet.Artifacts/
 # .NET Core
 project.lock.json
 project.fragment.lock.json
-artifacts/
+
 **/Properties/launchSettings.json
 
 # StyleCop
@@ -371,3 +371,8 @@ ASALocalRun/
 .localhistory/
 /WebReact/app_data/jobs/triggered
 /Addins/ProjectSmartLink/ProjectSmartLink.Web/wwwroot/lib/bootstrap/dist/css
+/Setup/ProposalManager.zip
+/Dynamics Integration/Setup/appsettings-8374b417-5bd7-4a94-875b-e156eaefe6ff.json
+/Setup/ProposalManager
+/Dynamics Integration/Setup/appsettings-0f4da380-48ba-40ab-8e6c-08d03da60372.json
+/Setup/registrations.json

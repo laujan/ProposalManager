@@ -15,6 +15,6 @@ namespace ProjectSmartLink.Web.Models
 		public string ApplicationId { get; set; }
 		public string TenantId { get; set; }
         public IEnumerable<ResourceItem> Resources { get; set; }
-        public string ApplicationName => "Project Smart Link";
+        public static string ApplicationName => "Project Smart Link";
     }
 }

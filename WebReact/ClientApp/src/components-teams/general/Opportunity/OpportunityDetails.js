@@ -10,7 +10,6 @@ import {
     SpinnerSize
 } from 'office-ui-fabric-react/lib/Spinner';
 import { OpportunitySummary } from './OpportunitySummary';
-import { OpportunityNotes } from './OpportunityNotes';
 import { getQueryVariable } from '../../../common';
 import { Trans } from "react-i18next";
 
@@ -33,13 +32,8 @@ export class OpportunityDetails extends Component {
         };
     }
 
-    componentWillMount() {
-        console.log("OpportunityDetails_componentWillMount isauth: " + this.authHelper.isAuthenticated());
-    }
-
-
     async componentDidMount() {
-        console.log("OpportunityDetails_componentWillMount isauth: " + this.authHelper.isAuthenticated() + " this.accessGranted: " + this.accessGranted);
+        console.log("OpportunityDetails_componentDidMount isauth: " + this.authHelper.isAuthenticated() + " this.accessGranted: " + this.accessGranted);
 
         if (!this.state.isAuthenticated) {
             this.setState({

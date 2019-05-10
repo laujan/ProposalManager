@@ -26,7 +26,7 @@ namespace Infrastructure.Authorization
     public class AuthorizationService : BaseService<AuthorizationService>, IAuthorizationService
     {
         private readonly IUserProfileRepository _userProfileRepository;
-        private readonly IRoleMappingRepository _roleMappingRepository;
+        private readonly IRoleRepository _roleRepository;
         private readonly IPermissionRepository _permissionRepository;
 
         private readonly IUserContext _userContext;
@@ -37,16 +37,16 @@ namespace Infrastructure.Authorization
             ILogger<AuthorizationService> logger,
             IOptionsMonitor<AppOptions> appOptions,
             IUserProfileRepository userProfileRepository,
-            IRoleMappingRepository roleMappingRepository,
+            IRoleRepository roleRepository,
             IPermissionRepository permissionRepository,
             IMemoryCache cache,
             IConfiguration configuration,
             IUserContext userContext) : base(logger, appOptions)
         {
             Guard.Against.Null(userProfileRepository, nameof(userProfileRepository));
-            Guard.Against.Null(roleMappingRepository, nameof(roleMappingRepository));
+            Guard.Against.Null(roleRepository, nameof(roleRepository));
             _userProfileRepository = userProfileRepository;
-            _roleMappingRepository = roleMappingRepository;
+            _roleRepository = roleRepository;
             _permissionRepository = permissionRepository;
             _userContext = userContext;
             _cache = cache;
@@ -60,29 +60,8 @@ namespace Infrastructure.Authorization
         {
             _logger.LogInformation($"RequestId: {requestId} - AuthorizationService_CheckAdminAccessAsync called.");
 
-            //var currentUserScope = (_userContext.User.Claims).ToList().Find(x => x.Type == "http://schemas.microsoft.com/identity/claims/scope")?.Value;
-
-            //if (currentUserScope != "access_as_user")
-            //{
-            //    var app_permission = false;
-            //    app_permission = (await _permissionRepository.GetAllAsync(requestId)).ToList().Any(x => x.Name.ToLower() == currentUserScope.ToString().ToLower());
-            //    if (app_permission)
-            //        return StatusCodes.Status200OK;
-            //    else
-            //        return StatusCodes.Status401Unauthorized;
-            //}
-            //var currentUser = (_userContext.User.Claims).ToList().Find(x => x.Type == "preferred_username")?.Value;
-            //var selectedUserProfile = await _userProfileRepository.GetItemByUpnAsync(currentUser, requestId);
-
-            //var currentUserPermissionList = new List<Permission>();
-            //var rolemappinglist = new List<RoleMapping>();
-            //rolemappinglist = (await _roleMappingRepository.GetAllAsync(requestId)).ToList();
-            //currentUserPermissionList = (from curroles in selectedUserProfile.Fields.UserRoles
-            //                             from roles in rolemappinglist
-            //                             where curroles.DisplayName == roles.Role.DisplayName
-            //                             select roles.Permissions).SelectMany(x => x).ToList();
             var currentUserPermissionList = new List<Permission>();
-            var rolemappinglist = new List<RoleMapping>();
+            var roleList = new List<Role>();
 
             var currentUser = (_userContext.User.Claims).ToList().Find(x => x.Type == "preferred_username")?.Value;
 
@@ -90,10 +69,12 @@ namespace Infrastructure.Authorization
             {
 
                 var selectedUserProfile = await _userProfileRepository.GetItemByUpnAsync(currentUser, requestId);
-                rolemappinglist = (await _roleMappingRepository.GetAllAsync(requestId)).ToList();
+
+                roleList = (await _roleRepository.GetAllAsync(requestId)).ToList();
+
                 currentUserPermissionList = (from curroles in selectedUserProfile.Fields.UserRoles
-                                             from roles in rolemappinglist
-                                             where curroles.DisplayName == roles.Role.DisplayName
+                                             from roles in roleList
+                                             where curroles.DisplayName == roles.DisplayName
                                              select roles.Permissions).SelectMany(x => x).ToList();
             }
             else
@@ -103,9 +84,9 @@ namespace Infrastructure.Authorization
 
                 if (azp == _clientId)
                 {
-                    rolemappinglist = (await _roleMappingRepository.GetAllAsync(requestId)).
+                    roleList = (await _roleRepository.GetAllAsync(requestId)).
                         Where(x => x.AdGroupName == $"aud_{aud}").ToList();
-                    currentUserPermissionList = (from rolemapping in rolemappinglist
+                    currentUserPermissionList = (from rolemapping in roleList
                                                  select rolemapping.Permissions).SelectMany(x => x).ToList();
                 }else
                     return StatusCodes.Status401Unauthorized;
@@ -145,17 +126,17 @@ namespace Infrastructure.Authorization
                 }
  
                 var currentUserPermissionList = new List<Permission>();
-                var rolemappinglist = new List<RoleMapping>();
+                var roleList = new List<Role>();
 
                 var currentUser = (_userContext.User.Claims).ToList().Find(x => x.Type == "preferred_username")?.Value;
                 if (!(string.IsNullOrEmpty(currentUser)))
                 {
 
                     var selectedUserProfile = await _userProfileRepository.GetItemByUpnAsync(currentUser, requestId);
-                    rolemappinglist = (await _roleMappingRepository.GetAllAsync(requestId)).ToList();
+                    roleList = (await _roleRepository.GetAllAsync(requestId)).ToList();
                     currentUserPermissionList = (from curroles in selectedUserProfile.Fields.UserRoles
-                                                 from roles in rolemappinglist
-                                                 where curroles.DisplayName == roles.Role.DisplayName
+                                                 from roles in roleList
+                                                 where curroles.DisplayName == roles.DisplayName
                                                  select roles.Permissions).SelectMany(x => x).ToList();
                 }
                 else
@@ -165,9 +146,9 @@ namespace Infrastructure.Authorization
 
                     if (azp == _clientId)
                     {
-                        rolemappinglist = (await _roleMappingRepository.GetAllAsync(requestId)).
+                        roleList = (await _roleRepository.GetAllAsync(requestId)).
                             Where(x => x.AdGroupName == $"aud_{aud}").ToList();
-                        currentUserPermissionList = (from rolemapping in rolemappinglist
+                        currentUserPermissionList = (from rolemapping in roleList
                                                      select rolemapping.Permissions).SelectMany(x => x).ToList();
                     }
                     else
@@ -184,40 +165,6 @@ namespace Infrastructure.Authorization
             {
                 _logger.LogError($"RequestId: {requestId} - AuthorizationService_CheckAccessAsync Service Exception: {ex}");
                 throw new ResponseException($"RequestId: {requestId} - AuthorizationService_CheckAccessAsync Service Exception: {ex}");
-            }
-        }
-
-        private async Task<List<Permission>> CacheTryCurrentUserPermissiontAsync(string currentUser,string requestId = "")
-        {
-            try
-            {
-                var currentUserPermissionList = new List<Permission>();
-                var rolemappinglist = new List<RoleMapping>();
-                var isExist = _cache.TryGetValue("PM_CurntUserPermissionList", out currentUserPermissionList);
-
-                if (_appOptions.UserProfileCacheExpiration == 0 || !isExist)
-                {
-                    var selectedUserProfile = await _userProfileRepository.GetItemByUpnAsync(currentUser, requestId);
-                    rolemappinglist = (await _roleMappingRepository.GetAllAsync(requestId)).ToList();
-                    currentUserPermissionList = (from curroles in selectedUserProfile.Fields.UserRoles
-                            from roles in rolemappinglist
-                            where curroles.DisplayName == roles.Role.DisplayName
-                            select roles.Permissions).SelectMany(x => x).ToList();
-                    currentUserPermissionList = currentUserPermissionList.Select(x => new Permission { Id = x.Id, Name = x.Name.ToLower() }).ToList();
-                    currentUserPermissionList = currentUserPermissionList.GroupBy(x => x.Name).Select(x => x.First()).ToList();
-                    if (_appOptions.UserProfileCacheExpiration>0)
-                    {
-                        var cacheEntryOptions = new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(_appOptions.UserProfileCacheExpiration));
-                        _cache.Set("PM_CurntUserPermissionList", currentUserPermissionList, cacheEntryOptions);
-                    }
-                }
-
-                return currentUserPermissionList;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"RequestId: {requestId} - AuthorizationService_CacheTryCurrentUserPermissiontAsync Service Exception: {ex}");
-                throw new ResponseException($"RequestId: {requestId} - AuthorizationService_CacheTryCurrentUserPermissiontAsync Service Exception: {ex}");
             }
         }
 

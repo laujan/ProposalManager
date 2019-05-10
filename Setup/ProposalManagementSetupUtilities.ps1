@@ -57,15 +57,7 @@ function New-PMSharePointSite {
         else
         {
             Disconnect-SPOService
-            if($Force)
-            {
-                Write-Warning "SharePoint site for Proposal Manager already exists. The -Force flag was specified so the existing site will be used."
-                return $pmSiteUrl
-            }
-            else
-            {
-                Write-Error "A SharePoint site with the name $PMSiteAlias already exists in tenant $OfficeTenantName. If you want to overwrite an existing installation of Proposal Manager, use the -Force flag."
-            }
+            Write-Error "A SharePoint site with the name $PMSiteAlias already exists in tenant $OfficeTenantName. Please enter a different name for the -PMSiteAlias argument."
         }
     }
 }
@@ -103,7 +95,7 @@ function New-PMGroupStructure {
             if(!(Get-AzureADMSGroup -SearchString $group))
             {
                 Write-Information "$group group does not exist. Creating..."
-                New-AzureADMSGroup -DisplayName $group -MailEnabled $false -SecurityEnabled $true -GroupTypes “Unified” 
+                New-AzureADMSGroup -DisplayName $group -MailEnabled $false -MailNickname "TestGroup" -SecurityEnabled $true -GroupTypes “Unified” 
                 Write-Information "$group group successfully created."
             }
             else

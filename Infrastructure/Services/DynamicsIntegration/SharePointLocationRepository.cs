@@ -45,43 +45,99 @@ namespace Infrastructure.Services
 			this.dynamicsClientFactory = dynamicsClientFactory;
 			if(!Guid.TryParse(sharePointLocationsCache.ProposalManagerSiteId, out Guid existingSiteId))
 			{
-				var result = dynamicsClientFactory.GetDynamicsAuthorizedWebClientAsync().Result.GetAsync($"/api/data/v9.0/sharepointsites?$filter=absoluteurl eq 'https://{appOptions.SharePointHostName}'").Result;
-                if (!Guid.TryParse(
-                    sharePointLocationsCache.ProposalManagerSiteId =
-                        JsonConvert.DeserializeObject<JObject>(result.Content.ReadAsStringAsync().Result)["value"].AsJEnumerable()
-                        .Single()["sharepointsiteid"].ToString()
-                    , out existingSiteId))
+                var result = dynamicsClientFactory.GetDynamicsAuthorizedWebClientAsync().Result.GetAsync($"/api/data/v9.0/sharepointsites?$filter=absoluteurl eq 'https://{appOptions.SharePointHostName}'").Result;
+                JObject responseJObject = result.Content.ReadAsAsync<JObject>().Result;
+                
+                if (responseJObject == null || responseJObject["value"] == null)
+                {
+                    throw new Exception("DYNAMICS INTEGRATION ENGINE: Invalid or null response from Dynamics when querying for Tenant Site.");
+                }
+
+                var site = responseJObject["value"].AsJEnumerable().SingleOrDefault();
+
+                if (site == null)
+                {
                     throw new Exception("DYNAMICS INTEGRATION ENGINE: Tenant Site is not registered in Dynamics.");
+                }
+
+                sharePointLocationsCache.ProposalManagerSiteId = site["sharepointsiteid"].ToString();
+
+                if (!Guid.TryParse(sharePointLocationsCache.ProposalManagerSiteId, out existingSiteId))
+                {
+                    throw new Exception("DYNAMICS INTEGRATION ENGINE: Malformed GUID for Tenant Site.");
+                }
 			}
 			if(!Guid.TryParse(sharePointLocationsCache.ProposalManagerBaseSiteId, out Guid existingBaseSiteId))
 			{
 				var result = dynamicsClientFactory.GetDynamicsAuthorizedWebClientAsync().Result.GetAsync($"/api/data/v9.0/sharepointsites?$filter=parentsite/sharepointsiteid eq '{sharePointLocationsCache.ProposalManagerSiteId}' and relativeurl eq 'sites/{appOptions.SharePointSiteRelativeName}'").Result;
-                if (!Guid.TryParse(
-                    sharePointLocationsCache.ProposalManagerBaseSiteId =
-					    JsonConvert.DeserializeObject<JObject>(result.Content.ReadAsStringAsync().Result)["value"].AsJEnumerable()
-					    .Single()["sharepointsiteid"].ToString()
-                    , out existingSiteId))
+                JObject responseJObject = result.Content.ReadAsAsync<JObject>().Result;
+
+                if (responseJObject == null || responseJObject["value"] == null)
+                {
+                    throw new Exception("DYNAMICS INTEGRATION ENGINE: Invalid or null response from Dynamics when querying for Proposal Manager Site.");
+                }
+
+                var sites = responseJObject["value"].AsJEnumerable().SingleOrDefault();                
+
+                if (sites == null)
+                {
                     throw new Exception("DYNAMICS INTEGRATION ENGINE: Proposal Manager Site is not registered in Dynamics.");
+                }
+
+                sharePointLocationsCache.ProposalManagerBaseSiteId = sites["sharepointsiteid"].ToString();
+
+                if (!Guid.TryParse(sharePointLocationsCache.ProposalManagerBaseSiteId, out existingSiteId))
+                {
+                    throw new Exception("DYNAMICS INTEGRATION ENGINE: Malformed GUID for Proposal Manager Site.");
+                }
             }
 			if(!Guid.TryParse(sharePointLocationsCache.RootDriveLocationId, out Guid existingDriveId))
 			{
 				var result = dynamicsClientFactory.GetDynamicsAuthorizedWebClientAsync().Result.GetAsync($"/api/data/v9.0/sharepointdocumentlocations?$filter=parentsiteorlocation_sharepointsite/sharepointsiteid eq '{sharePointLocationsCache.ProposalManagerBaseSiteId}' and relativeurl eq '{dynamicsConfiguration.RootDrive}'").Result;
-                if (!Guid.TryParse(
-                    sharePointLocationsCache.RootDriveLocationId =
-					    JsonConvert.DeserializeObject<JObject>(result.Content.ReadAsStringAsync().Result)["value"].AsJEnumerable()
-					    .Single()["sharepointdocumentlocationid"].ToString()
-                    , out existingSiteId))
+                JObject responseJObject = result.Content.ReadAsAsync<JObject>().Result;
+
+                if (responseJObject == null || responseJObject["value"] == null)
+                {
+                    throw new Exception("DYNAMICS INTEGRATION ENGINE: Invalid or null response from Dynamics when querying for Proposal Manger Site Drive.");
+                }
+
+                var location = responseJObject["value"].AsJEnumerable().SingleOrDefault();
+
+                if (location == null)
+                {
                     throw new Exception("DYNAMICS INTEGRATION ENGINE: Proposal Manager Site Drive is not registered in Dynamics.");
+                }
+
+                sharePointLocationsCache.RootDriveLocationId = location["sharepointdocumentlocationid"].ToString();
+
+                if (!Guid.TryParse(sharePointLocationsCache.RootDriveLocationId, out existingSiteId))
+                {
+                    throw new Exception("DYNAMICS INTEGRATION ENGINE: Malformed GUID for Proposal Manager Site Drive.");
+                }
             }
 			if(!Guid.TryParse(sharePointLocationsCache.TempFolderLocationId, out Guid existingTempFolderId))
 			{
 				var result = dynamicsClientFactory.GetDynamicsAuthorizedWebClientAsync().Result.GetAsync($"/api/data/v9.0/sharepointdocumentlocations?$filter=parentsiteorlocation_sharepointdocumentlocation/sharepointdocumentlocationid eq '{sharePointLocationsCache.RootDriveLocationId}' and relativeurl eq '{TempFolderName}'").Result;
-                if (!Guid.TryParse(
-                    sharePointLocationsCache.TempFolderLocationId = 
-					    JsonConvert.DeserializeObject<JObject>(result.Content.ReadAsStringAsync().Result)["value"].AsJEnumerable()
-					    .Single()["sharepointdocumentlocationid"].ToString()
-                    , out existingSiteId))
+                JObject responseJObject = result.Content.ReadAsAsync<JObject>().Result;
+
+                if (responseJObject == null || responseJObject["value"] == null)
+                {
+                    throw new Exception("DYNAMICS INTEGRATION ENGINE: Invalid or null response from Dynamics when querying for Proposal Manager Temporary Folder.");
+                }
+
+                var location = responseJObject["value"].AsJEnumerable().SingleOrDefault();
+
+                if (location == null)
+                {
                     throw new Exception("DYNAMICS INTEGRATION ENGINE: Proposal Manager Temporary Folder is not registered in Dynamics.");
+                }
+
+                sharePointLocationsCache.TempFolderLocationId = location["sharepointdocumentlocationid"].ToString();
+
+                if (!Guid.TryParse(sharePointLocationsCache.TempFolderLocationId, out existingSiteId))
+                {
+                    throw new Exception("DYNAMICS INTEGRATION ENGINE: Malformed GUID for Proposal Manager Temporary Folder.");
+                }
             }
 		}
 
@@ -115,8 +171,14 @@ namespace Infrastructure.Services
 			var client = await dynamicsClientFactory.GetDynamicsAuthorizedWebClientAsync();
 
 			var result = dynamicsClientFactory.GetDynamicsAuthorizedWebClientAsync().Result.GetAsync($"/api/data/v9.0/sharepointdocumentlocations?$filter=parentsiteorlocation_sharepointdocumentlocation/sharepointdocumentlocationid eq '{sharePointLocationsCache.TempFolderLocationId}' and relativeurl eq '{opportunityName}'").Result;
-			var location = JsonConvert.DeserializeObject<JObject>(result.Content.ReadAsStringAsync().Result)["value"].AsJEnumerable()
-				.SingleOrDefault();
+            JObject responseJObject = result.Content.ReadAsAsync<JObject>().Result;
+
+            if (responseJObject == null || responseJObject["value"] == null)
+            {
+                throw new Exception($"Invalid or null response from Dynamics when querying for opportunity Temporary Location.");
+            }
+
+            var location = responseJObject["value"].AsJEnumerable().SingleOrDefault();
 
 			if (location != null)
 				await client.DeleteAsync($"/api/data/v9.0/sharepointdocumentlocations({location["sharepointdocumentlocationid"].ToString()})");

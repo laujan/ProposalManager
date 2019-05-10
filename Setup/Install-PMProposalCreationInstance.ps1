@@ -147,7 +147,7 @@ if($registers)
 
     # Register Azure AD application (Endpoint v2)
     $proposalCreationRegistration = RegisterApp -ApplicationName "$ApplicationName-propcreation" -RelativeReplyUrls $replyUrls -Credential $Credential `
-        -ApplicationPermissions $applicationPermissions -DelegatedPermissions $delegatedPermissions -AddTo $ProposalManagerAppId
+        -ApplicationPermissions $applicationPermissions -DelegatedPermissions $delegatedPermissions -AddTo $ProposalManagerAppId -Force:$Force
 
     $appSettings = @{
         SharePointHostName = "$OfficeTenantName.sharepoint.com";

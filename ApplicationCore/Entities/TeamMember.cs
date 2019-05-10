@@ -26,23 +26,30 @@ namespace ApplicationCore.Entities
         public TeamMemberFields Fields { get; set; }
 
         [JsonProperty("assignedRole", Order = 3)]
-        public Role AssignedRole { get; set; }
+        public string RoleId { get; set; }
 
         [JsonProperty("processStep", Order = 4)]
         public string ProcessStep { get; set; }
 
+        [JsonProperty("teamsMembership", Order = 5)]
+        public TeamsMembership TeamsMembership { get; set; }
         /// <summary>
         /// Represents the empty user profile. This field is read-only.
         /// </summary>
+        /// 
+        [JsonProperty("roleName", Order = 6)]
+        public string RoleName { get; set; }
         public static TeamMember Empty
         {
             get => new TeamMember
             {
                 Id = String.Empty,
                 DisplayName = String.Empty,
-                AssignedRole = Role.Empty,
+                RoleId = String.Empty,
                 Fields = TeamMemberFields.Empty,
-                ProcessStep = String.Empty
+                ProcessStep = String.Empty,
+                TeamsMembership = TeamsMembership.None,
+                RoleName= String.Empty
             };
         }  
     }
@@ -66,17 +73,24 @@ namespace ApplicationCore.Entities
         /// </summary>
         [JsonProperty("title")]
         public string Title { get; set; }
-
+        /// <summary>
+        /// List of permissions
+        /// </summary>
+        /// 
+        [JsonProperty("permissions")]
+        public IList<Permission> Permissions { get; set; }
         /// <summary>
         /// Represents the empty user profile. This field is read-only.
         /// </summary>
+        /// 
         public static TeamMemberFields Empty
         {
             get => new TeamMemberFields
             {
                 Mail = String.Empty,
                 UserPrincipalName = String.Empty,
-                Title = String.Empty
+                Title = String.Empty,
+                Permissions = new List<Permission>()
             };
         }
     }

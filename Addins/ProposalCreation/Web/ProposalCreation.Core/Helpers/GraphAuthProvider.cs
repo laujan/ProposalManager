@@ -3,17 +3,16 @@
 //
 // Licensed under the MIT license. See LICENSE file in the solution root folder for full license information.
 
-using ProposalCreation.Core.Providers;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Identity.Client;
+using ProposalCreation.Core.Providers;
 using System;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace ProposalCreation.Core.Helpers
 {
-	public class GraphAuthProvider : IGraphAuthProvider
+    public class GraphAuthProvider : IGraphAuthProvider
 	{
 		private readonly string appId;
 		private readonly ClientCredential credential;
@@ -22,14 +21,14 @@ namespace ProposalCreation.Core.Helpers
 		private readonly string secret;
 		private readonly string proposalManagerApiId;
 
-		public GraphAuthProvider(IRootConfigurationProvider rootConfigurationProvider, IMemoryCache memoryCache = null, IHttpContextAccessor contextAccessor = null)
+		public GraphAuthProvider(IRootConfigurationProvider rootConfigurationProvider, IHttpContextAccessor contextAccessor = null)
 		{
 			var azureOptions = rootConfigurationProvider.AzureAdConfiguration;
 
-			appId                = azureOptions.ClientId;
-			credential           = new ClientCredential(azureOptions.ClientSecret);
-			scopes               = azureOptions.GraphScopes.Split(new[] { ' ' });
-			secret               = azureOptions.ClientSecret;
+			appId = azureOptions.ClientId;
+			credential = new ClientCredential(azureOptions.ClientSecret);
+			scopes = azureOptions.GraphScopes.Split(new[] { ' ' });
+			secret = azureOptions.ClientSecret;
 			proposalManagerApiId = azureOptions.ProposalManagerApiId;
 
 			this.contextAccessor = contextAccessor;
@@ -58,9 +57,9 @@ namespace ProposalCreation.Core.Helpers
 				var result = await cca.AcquireTokenOnBehalfOfAsync(new[] { apiScope }, userAssertion, "https://login.microsoftonline.com/common/oauth2/v2.0");
 				return result.AccessToken;
 			}
-			catch (Exception ex)
+			catch (Exception)
 			{
-				throw ex;
+				throw;
 			}
 		}
 
@@ -86,9 +85,9 @@ namespace ProposalCreation.Core.Helpers
 				var result = await cca.AcquireTokenOnBehalfOfAsync(scopes, userAssertion, "https://login.microsoftonline.com/common/oauth2/v2.0");
 				return result.AccessToken;
 			}
-			catch (Exception ex)
+			catch (Exception)
 			{
-				throw ex;
+				throw;
 			}
 		}
 	}

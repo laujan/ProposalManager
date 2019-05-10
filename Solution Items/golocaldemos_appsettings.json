@@ -1,0 +1,88 @@
+{
+  "AzureAd": {
+    "ClientId": "30c3e41c-9722-485b-b93c-7cd0f4f38ca4",
+    "ClientSecret": "ZTA2ZWJkYjAtZWFkMy00NDE2LTk2ZDEtNjBlOTI1NTJjOTcw",
+    "Instance": "https://login.microsoftonline.com/",
+    "Domain": "golocaldemos.sharepoint.com",
+    "TenantId": "b57dde4f-d0a9-4044-971e-0dc136c593d8",
+    "CallbackPath": "/signin-oidc",
+    "Authority": "https://login.microsoftonline.com/b57dde4f-d0a9-4044-971e-0dc136c593d8",
+    "BaseUrl": "https://localhost:44385",//"https://pm-mfq.azurewebsites.net",
+    "Scopes": "https://graph.microsoft.com/.default",
+    "GraphResourceId": "https://graph.microsoft.com/",
+    "GraphScopes": "email User.Read.All",
+    "Audience": "30c3e41c-9722-485b-b93c-7cd0f4f38ca4"
+  },
+  "ProposalManagement": {
+    "SetupPage": "enabled",
+    "GraphRequestUrl": "https://graph.microsoft.com/v1.0/",
+    "GraphBetaRequestUrl": "https://graph.microsoft.com/beta/",
+    "BotServiceUrl": "https://smba.trafficmanager.net/amer-client-ss.msg/",
+    "SharePointHostName": "golocaldemos.sharepoint.com",
+    "TeamsAppInstanceId": "db6f140f-3fcf-4784-8126-ccc6818be350",
+    "ProposalManagementRootSiteId": "golocaldemos.sharepoint.com,285cf198-4cd9-4fd2-9c33-af0d5db78bc5,32497806-e272-47ec-a5ea-9aadde3d424e",
+    "OpportunityMetaDataId": "OpportunityMetaData",
+    "TemplateListId": "Templates",
+    "RoleListId": "Role",
+    "Permissions": "Permission",
+    "ProcessListId": "WorkFlow Items",
+    "TasksListId": "Tasks",
+    "DashboardListId": "DashBoard",
+    "OpportunitiesListId": "Opportunities",
+    "GroupsListId": "Groups",
+    "ServiceEmail": "",
+    "UserProfileCacheExpiration": "30",
+    "MicrosoftAppId": null,
+    "MicrosoftAppPassword": null,
+    "AllowedTenants": "b57dde4f-d0a9-4044-971e-0dc136c593d8",
+    "BotName": null,
+    "BotId": null,
+    "GeneralProposalManagementTeam": "Proposal Manager MFQ",
+    "PBIUserName": "",
+    "PBIUserPassword": "",
+    "PBIApplicationId": "",
+    "PBIWorkSpaceId": "",
+    "PBIReportId": "",
+    "PBITenantId": "",
+    "ProposalManagerAddInName": "Proposal Manager",
+    "SharePointSiteRelativeName": "pm-mfq",
+    "SharePointListsPrefix": "env1_",
+    "VaultBaseUrl": "",
+    "ProposalManagerGroupID": "c6dbac96-b694-46a3-82df-40f326539f41"
+  },
+  "DocumentIdActivator": {
+    "WebhookAddress": "https://pm-mfq.scm.azurewebsites.net/api/triggeredwebjobs/OpportunitySiteProvisioner/run",
+    "WebhookUsername": "$pm-mfq",
+    "WebhookPassword": "onJWbJfhi7arEe49vs6nKjPJYyYcLTaT7SFZMTlg3gdl2z19KrlSL8wHsM4j"
+  },
+  "WebHooks:DynamicsCrm:SecretKey": {
+    "opportunity": "",
+    "connection": ""
+  },
+  "Dynamics365": {
+    "OrganizationUri": "https://<name_of_organization>.api.crm<region_number>.dynamics.com/",
+    "ProposalManagerCategoryId": 741530000,
+    "RootDrive": "Shared Documents",
+    "OpportunityMapping": {
+      "DisplayName": "name",
+      "Status": "  "
+    }
+  },
+  "OneDrive": {
+    "WebhookSecret": "",
+    "FormalProposalCallbackRelativeUrl": "",
+    "AttachmentCallbackRelativeUrl": ""
+  },
+  "ProposalManager": {
+    "CreatorRole": {
+      "Id": "",
+      "AdGroupName": "",
+      "DisplayName": ""
+    }
+  },
+  "Logging": {
+    "LogLevel": {
+      "Default": "Warning"
+    }
+  }
+}

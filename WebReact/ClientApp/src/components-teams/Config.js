@@ -7,12 +7,10 @@ import React, { Component } from 'react';
 import * as microsoftTeams from '@microsoft/teams-js';
 import AuthHelper from '../helpers/AuthHelper';
 import GraphSdkHelper from '../helpers/GraphSdkHelper';
-import { appUri, appSettingsObject } from '../helpers/AppSettings';
+import { appUri } from '../helpers/AppSettings';
 import Utils from '../helpers/Utils';
 import { PrimaryButton } from 'office-ui-fabric-react/lib/Button';
 import { Trans } from "react-i18next";
-import { concatStyleSets } from '@uifabric/styling';
-import { TextField } from 'office-ui-fabric-react/lib/TextField';
 
 export class Config extends Component {
 	displayName = Config.name
@@ -73,7 +71,8 @@ export class Config extends Component {
 		// call to API fetch data
 		return new Promise((resolve, reject) => {
 			console.log("Config_getUserRoles userRoleList fetch");
-			let requestUrl = 'api/RoleMapping';
+			//WAVE-4 : Changing RoleMappong to Roles:
+			let requestUrl = 'api/Roles';
 			fetch(requestUrl, {
 				method: "GET",
 				headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() }
@@ -131,7 +130,7 @@ export class Config extends Component {
                         console.log("Config_getOpportunityByName userRoleList data length: " + data.length);
                         console.log(data);
                         
-                        let processList = data.dealType.processes;
+                        let processList = data.template.processes;
                         let oppChannels = processList.filter(x => x.channel.toLowerCase() !== "none");
                         if (oppChannels.length > 0) {
                             console.log(oppChannels);
@@ -170,8 +169,14 @@ export class Config extends Component {
                     case "Administration":
                         tabName = "generalAdministrationTab";
                         break;
+                    case "Setup":
+                        tabName = "setupTab";
+                        break;
+                    case "Help":
+                        tabName = "helpTab";
+                        break;
                     default:
-                        tabName = "generalDashboardTab";  //load the dashboard if the channel name is not handled
+                        tabName = "generalDashboardTab";  
                 }
                 console.log("Config_setChannelConfig generalSharePointSite tabName: " + tabName);
                 let self =this;
@@ -265,7 +270,6 @@ export class Config extends Component {
 	}
 
     render() {
-        const margin = { margin: '10px' };
         const userUpn = this.props.teamsContext.loginHint;
                 // TODO: Add a text field for localStorePrefix
                 // TODO: If you change this value, you must reload the tab by clicking the refresh button

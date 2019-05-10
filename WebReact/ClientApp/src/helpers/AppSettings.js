@@ -11,7 +11,7 @@ export const clientId = '<CLIENT_ID>'; //Registered Application Id from apps.dev
 export const redirectUri = appUri + "/"; //Redircet Url used at authentication.
 export const instanceId = 'https://login.microsoftonline.com/';
 export const graphScopes = ["offline_access", "profile", "User.ReadBasic.All", "mail.send"]; //User scopes defined at app registration.
-export const graphScopesAdmin = ["offline_access", "profile", "User.Read.All", "mail.send", "Sites.ReadWrite.All", "Files.ReadWrite.All", "Group.ReadWrite.All"]; //Application scopes defined at app registration.
+export const graphScopesAdmin = ["offline_access", "profile", "User.Read.All", "mail.send", "Sites.ReadWrite.All", "Files.ReadWrite.All", "Group.ReadWrite.All", "AppCatalog.ReadWrite.All"]; //Application scopes defined at app registration.
 export const webApiScopes = ["api://<CLIENT_ID>/access_as_user"];// web Api scope generated at app registration from apps.dev.microsoft.com.
 export const authority = "https://login.microsoftonline.com/<TENANT_ID>"; // Null for login as common (multi-tenant also) eg. https://login.microsoftonline.com/common/oauth2/v2.0/authorize
 
@@ -33,3 +33,6 @@ export const appSettingsObject = {
 };
 
 export default appSettingsObject;
+
+// Template tab enabled based on this falg in Configuration page
+export const isTemplateEnabled = false;

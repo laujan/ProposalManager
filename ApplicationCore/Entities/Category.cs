@@ -15,7 +15,7 @@ namespace ApplicationCore.Entities
         /// <summary>
         /// Category display name
         /// </summary>
-        [JsonProperty("name", Order = 2)]
+        [JsonProperty("displayName", Order = 2)]
         public string Name { get; set; }
 
         /// <summary>

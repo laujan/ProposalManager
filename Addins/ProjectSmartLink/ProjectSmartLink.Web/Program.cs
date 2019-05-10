@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Hosting;
 
 namespace ProjectSmartLink
 {
-    public class Program
+    public sealed class Program
     {
         public static void Main(string[] args)
         {

@@ -39,10 +39,11 @@ export class TeamsHelper extends Component {
         }
     }
 
-    componentWillMount() {
+    componentDidMount() {
         // If you are deploying your site as a MS Teams static or configurable tab, you should add ?theme={theme} to
         // your tabs URL in the manifest. That way you will get the current theme on start up (calling getContext on
         // the MS Teams SDK has a delay and may cause the default theme to flash before the real one is returned).
+        console.log("code-review commments implementation");
         this.updateTheme(this.getQueryVariable('theme'));
 
         this.setState({

@@ -50,8 +50,8 @@ namespace ProjectSmartLink.Web.Extensions
 
 				options.Events = new JwtBearerEvents
 				{
-					OnTokenValidated = TokenValidated,
-					OnAuthenticationFailed = AuthenticationFailed
+					OnTokenValidated = TokenValidatedAsync,
+					OnAuthenticationFailed = AuthenticationFailedAsync
 				};
 
 				options.Validate();
@@ -63,7 +63,7 @@ namespace ProjectSmartLink.Web.Extensions
 			}
 
 			// TokenValidated event
-			private Task TokenValidated(Microsoft.AspNetCore.Authentication.JwtBearer.TokenValidatedContext context)
+			private Task TokenValidatedAsync(Microsoft.AspNetCore.Authentication.JwtBearer.TokenValidatedContext context)
 			{
                 // Check if tenant is allowed
                 string tenantID = context.Principal.FindFirst("http://schemas.microsoft.com/identity/claims/tenantid").Value;
@@ -77,7 +77,7 @@ namespace ProjectSmartLink.Web.Extensions
 			}
 
 			// Handle sign-in errors differently than generic errors.
-			private Task AuthenticationFailed(Microsoft.AspNetCore.Authentication.JwtBearer.AuthenticationFailedContext context)
+			private Task AuthenticationFailedAsync(Microsoft.AspNetCore.Authentication.JwtBearer.AuthenticationFailedContext context)
 			{
                 context.Fail(context.Exception);
 				return Task.FromResult(0);

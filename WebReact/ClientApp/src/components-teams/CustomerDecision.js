@@ -3,7 +3,6 @@
 *  See LICENSE in the source repository root for complete license information. 
 */
 import React, { Component } from 'react';
-import * as microsoftTeams from '@microsoft/teams-js';
 import { TeamsComponentContext, Panel, PanelBody, PanelFooter, PanelHeader } from 'msteams-ui-components-react';
 import { DatePicker } from 'office-ui-fabric-react/lib/DatePicker';
 import {
@@ -103,10 +102,6 @@ export class CustomerDecision extends Component {
 
         this.onStatusChange = this.onStatusChange.bind(this);
 
-    }
-
-    componentWillMount() {
-        console.log("CustomerDecision_componentWillMount isauth: " + this.authHelper.isAuthenticated());
     }
 
     componentDidMount() {

@@ -23,8 +23,12 @@ namespace ApplicationCore.Models
             Mail = String.Empty;
             UserPrincipalName = String.Empty;
             Title = String.Empty;
-            AssignedRole = new RoleModel();
             ProcessStep = String.Empty;
+            Permissions = new List<PermissionModel>();
+            RoleId = String.Empty;
+            TeamsMembership = new TeamsMembershipModel();
+            AdGroupName = String.Empty;
+            RoleName = String.Empty;
         }
 
         /// <summary>
@@ -32,6 +36,12 @@ namespace ApplicationCore.Models
         /// </summary>
         [JsonProperty("id")]
         public string Id { get; set; }
+
+        /// <summary>
+        /// Unique identifier of the artifact
+        /// </summary>
+        [JsonProperty("adGroupName")]
+        public string AdGroupName { get; set; }
 
         /// <summary>
         /// User display name
@@ -57,10 +67,44 @@ namespace ApplicationCore.Models
         [JsonProperty("title")]
         public string Title { get; set; }
 
-        [JsonProperty("assignedRole")]
-        public RoleModel AssignedRole { get; set; }
+        [JsonProperty("permissions")]
+        public IList<PermissionModel> Permissions { get; set; }
+
+
+        [JsonProperty("teamsMembership")]
+        public TeamsMembershipModel TeamsMembership { get; set; }
 
         [JsonProperty("processStep")]
         public string ProcessStep { get; set; }
+
+        /// <summary>
+        /// Unique identifier of the RoleId
+        /// </summary>
+        [JsonProperty("roleId")]
+        public string RoleId { get; set; }
+
+        [JsonProperty("roleName")]
+        public string RoleName { get; set; }
+    }
+
+    public class TeamsMembershipModel
+    {
+        public TeamsMembershipModel()
+        {
+            Value = -1;
+            Name = String.Empty;
+        }
+        /// <summary>
+        /// Category identifier
+        /// </summary>
+        /// <value>Unique ID to identify the model data</value>
+        [JsonProperty("Name", Order = 1)]
+        public string Name { get; set; }
+
+        /// <summary>
+        /// Category display name
+        /// </summary>
+        [JsonProperty("Value", Order = 2)]
+        public int Value { get; set; }
     }
 }

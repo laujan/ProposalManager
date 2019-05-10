@@ -87,14 +87,8 @@ namespace Infrastructure.Helpers
                   'text': {'allowMultipleLines': true}
                 },
                 {
-                  'name': 'LoanOfficer',
+                  'name': 'TemplateLoaded',
                   'text': {},
-                  'indexed': true
-                },
-                {
-                  'name': 'RelationshipManager',
-                  'text': {},
-                  'indexed': true
                 },
                 {
                   'name': 'Reference',
@@ -118,17 +112,21 @@ namespace Infrastructure.Helpers
             }";
             return json;
         }
-        public static string RoleMappingsJsonSchema(string displayName)
+        public static string RoleJsonSchema(string displayName)
         {
             string json = @"{
               'displayName': '" + displayName + @"',
               'columns': [
                 {
-                  'name': 'ADGroupName',
+                  'name': 'AdGroupName',
                   'text': {}
                 },
                 {
                   'name': 'Role',
+                  'text': {}
+                },
+                {
+                  'name': 'TeamsMembership',
                   'text': {}
                 },
                 {
@@ -139,14 +137,18 @@ namespace Infrastructure.Helpers
             }";
             return json;
         }
-        public static string RoleJsonSchema(string displayName)
+        public static string GroupJsonSchema(string displayName)
         {
             string json = @"{
               'displayName': '" + displayName + @"',
               'columns': [
                 {
-                  'name': 'Name',
+                  'name': 'GroupName',
                   'text': {}
+                },
+                {
+                  'name': 'Process',
+                  'text': {'allowMultipleLines': true}
                 }
               ]
             }";
@@ -176,6 +178,10 @@ namespace Infrastructure.Helpers
                 {
                   'name': 'ProcessList',
                   'text': {'allowMultipleLines': true}
+                },
+                {
+                  'name': 'DefaultTemplate',
+                  'text': {}
                 }
               ]
             }";
@@ -197,6 +203,14 @@ namespace Infrastructure.Helpers
                 {
                   'name': 'ProcessType',
                   'text': {}
+                },
+                {
+                  'name': 'RoleId',
+                  'text': {}
+                },
+                {
+                  'name': 'RoleName',
+                  'text': {}
                 }
               ]
             }";
@@ -213,8 +227,7 @@ namespace Infrastructure.Helpers
                 },
                 {
                   'name': 'OpportunityID',
-                  'text': {},
-                  'indexed': true
+                  'text': {}
                 },
                 {
                   'name': 'Status',
@@ -227,83 +240,53 @@ namespace Infrastructure.Helpers
                 {
                   'name': 'TargetCompletionDate',
                   'dateTime': {}
-                },
-                {
-                  'name': 'ComplianceRewiewStartDate',
-                  'dateTime': {}
-                },
-                {
-                  'name': 'ComplianceRewiewCompletionDate',
-                  'dateTime': {}
-                },
-                {
-                  'name': 'CreditCheckStartDate',
-                  'dateTime': {}
-                },
-                {
-                  'name': 'CreditCheckCompletionDate',
-                  'dateTime': {}
-                },
-                {
-                  'name': 'RiskAssesmentStartDate',
-                  'dateTime': {}
-                },
-                {
-                  'name': 'RiskAssesmentCompletionDate',
-                  'dateTime': {}
-                },
-                {
-                  'name': 'FormalProposalStartDate',
-                  'dateTime': {}
-                },
-                {
-                  'name': 'FormalProposalEndDate',
-                  'dateTime': {}
-                },
-                {
-                  'name': 'StatusChangedDate',
-                  'dateTime': {}
-                },
-                {
-                  'name': 'OpportunityEndDate',
-                  'dateTime': {}
-                },
+                },           
                 {
                   'name': 'OpportunityName',
-                  'text': {}
-                },
-                {
-                  'name': 'LoanOfficer',
-                  'text': {}
-                },
-                {
-                  'name': 'RelationshipManager',
-                  'text': {}
+                  'text': {},
+                  'indexed': true
                 },
                 {
                   'name': 'TotalNoOfDays',
                   'number': {},
-                  'defaultValue': { 'value': '1' }
-                },
-                {
-                  'name': 'CreditCheckNoOfDays',
-                  'number': {},
                   'defaultValue': { 'value': '0' }
                 },
                 {
-                  'name': 'ComplianceReviewNoOfDays',
-                  'number': {},
-                  'defaultValue': { 'value': '0' }
+                  'name': 'ProcessNoOfDays',
+                  'text': {'allowMultipleLines': true}
                 },
                 {
-                  'name': 'FormalProposalNoOfDays',
-                  'number': {},
-                  'defaultValue': { 'value': '0' }
+                  'name': 'ProcessEndDates',
+                  'text': {'allowMultipleLines': true}
                 },
                 {
-                  'name': 'RiskAssessmentNoOfDays',
-                  'number': {},
-                  'defaultValue': { 'value': '0' }
+                  'name': 'ProcessLoanOfficers',
+                  'text': {'allowMultipleLines': true}
+                }
+              ]
+            }";
+            return json;
+        }
+        public static string OpportunityMetaDataJsonSchema(string displayName)
+        {
+            string json = @"{
+              'displayName': '" + displayName + @"',
+              'columns': [
+                {
+                  'name': 'FieldName',
+                  'text': {}
+                },
+                {
+                  'name': 'FieldType',
+                  'text': {}
+                },
+                {
+                  'name': 'FieldScreen',
+                  'text': {}
+                },
+                {
+                  'name': 'FieldValue',
+                  'text': {'allowMultipleLines': true}
                 }
               ]
             }";
@@ -313,16 +296,14 @@ namespace Infrastructure.Helpers
 
     public enum ListSchema
     {
-        CategoriesListId,
-        IndustryListId,
         OpportunitiesListId,
         ProcessListId,
-        RegionsListId,
         RoleListId,
-        RoleMappingsListId,
+        GroupsListId,
         TemplateListId,
         Permissions,
         DashboardListId,
+        OpportunityMetaDataId,
         TasksListId
     }
 }

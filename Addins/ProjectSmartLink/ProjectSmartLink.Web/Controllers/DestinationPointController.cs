@@ -6,25 +6,24 @@
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Identity.Client;
 using ProjectSmartLink.Entity;
 using ProjectSmartLink.Service;
 using ProjectSmartLink.Web.Models;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using System.Web;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Identity.Client;
 
 namespace ProjectSmartLink.Web.Controllers
 {
-	[Authorize]
+    [Authorize]
     public class DestinationPointController : BaseController
     {
-        protected readonly IDestinationService _destinationService;
-        protected readonly IMapper _mapper;
+        private readonly IDestinationService _destinationService;
+        private readonly IMapper _mapper;
 		private readonly string clientId;
 		private readonly string aadInstance;
 		private readonly string tenantId;
@@ -49,7 +48,7 @@ namespace ProjectSmartLink.Web.Controllers
 
         [HttpPost]
         [Route("api/DestinationPoint")]
-        public async Task<IActionResult> Post([FromForm]DestinationPointForm destinationPointAdded)
+        public async Task<IActionResult> PostAsync([FromForm]DestinationPointForm destinationPointAdded)
         {
             if (!ModelState.IsValid)
             {
@@ -71,7 +70,7 @@ namespace ProjectSmartLink.Web.Controllers
 
         [HttpDelete]
         [Route("api/DestinationPoint")]
-        public async Task<IActionResult> DeleteSourcePoint(string id)
+        public async Task<IActionResult> DeleteSourcePointAsync(string id)
         {
             await _destinationService.DeleteDestinationPoint(Guid.Parse(id));
             return Ok();
@@ -79,7 +78,7 @@ namespace ProjectSmartLink.Web.Controllers
 
         [HttpPost]
         [Route("api/DeleteSelectedDestinationPoint")]
-        public async Task<IActionResult> DeleteSelectedDestinationPoint([FromForm]IEnumerable<Guid> seletedIds)
+        public async Task<IActionResult> DeleteSelectedDestinationPointAsync([FromForm]IEnumerable<Guid> seletedIds)
         {
             await _destinationService.DeleteSelectedDestinationPoint(seletedIds);
             return Ok();
@@ -87,7 +86,7 @@ namespace ProjectSmartLink.Web.Controllers
 
         [HttpGet]
         [Route("api/DestinationPointCatalog")]
-        public async Task<IActionResult> GetDestinationPointCatalog(string fileName, string documentId)
+        public async Task<IActionResult> GetDestinationPointCatalogAsync(string fileName, string documentId)
         {
             var retValue = await _destinationService.GetDestinationCatalog(HttpUtility.UrlDecode(fileName), HttpUtility.UrlDecode(documentId));
             return Ok(retValue);
@@ -95,7 +94,7 @@ namespace ProjectSmartLink.Web.Controllers
 
         [HttpGet]
         [Route("api/DestinationPoint")]
-        public async Task<IActionResult> GetDestinationPointBySourcePoint(string sourcePointId)
+        public async Task<IActionResult> GetDestinationPointBySourcePointAsync(string sourcePointId)
         {
             var retValue = await _destinationService.GetDestinationPointBySourcePoint(Guid.Parse(sourcePointId));
             return Ok(retValue);
@@ -103,7 +102,7 @@ namespace ProjectSmartLink.Web.Controllers
 
 		[HttpGet]
 		[Route("api/GraphAccessToken")]
-		public async Task<IActionResult> GetGraphAccessToken()
+		public async Task<IActionResult> GetGraphAccessTokenAsync()
 		{
 			try
 			{
@@ -130,7 +129,7 @@ namespace ProjectSmartLink.Web.Controllers
 
         [HttpGet]
         [Route("api/CustomFormats")]
-        public async Task<IActionResult> GetCustomFormats()
+        public async Task<IActionResult> GetCustomFormatsAsync()
         {
             var retValue = await _destinationService.GetCustomFormats();
             return Ok(retValue);
@@ -138,7 +137,7 @@ namespace ProjectSmartLink.Web.Controllers
 
         [HttpPut]
         [Route("api/UpdateDestinationPointCustomFormat")]
-        public async Task<IActionResult> UpdateDestinationPointCustomFormat([FromForm]DestinationPointForm destinationPointAdded)
+        public async Task<IActionResult> UpdateDestinationPointCustomFormatAsync([FromForm]DestinationPointForm destinationPointAdded)
         {
             if (!ModelState.IsValid)
             {
@@ -158,7 +157,7 @@ namespace ProjectSmartLink.Web.Controllers
 
 		[HttpGet]
 		[Route("api/SharePointAccessToken")]
-		public async Task<IActionResult> GetSharePointAccessToken()
+		public async Task<IActionResult> GetSharePointAccessTokenAsync()
 		{
 			try
 			{
@@ -166,13 +165,11 @@ namespace ProjectSmartLink.Web.Controllers
 				string userAccessToken = ((ClaimsIdentity)HttpContext.User.Identity).BootstrapContext.ToString();
 				UserAssertion userAssertion = new UserAssertion(userAccessToken, "urn:ietf:params:oauth:grant-type:jwt-bearer");
 
-
 				const string siteUrl = "smartlink.azurewebsites.net";
 
 				ConfidentialClientApplication cca =
 					new ConfidentialClientApplication(clientId,
 														$"https://{siteUrl}", clientCred, null, null);
-
 
 				AuthenticationResult result = await cca.AcquireTokenOnBehalfOfAsync(new[] { sharePointUrl }, userAssertion, $"https://login.microsoftonline.com/{tenantId}/oauth2/v2.0");
 				return Ok(result.AccessToken);

@@ -18,7 +18,6 @@ import {
 import '../teams.css';
 import { Trans } from "react-i18next";
 
-
 export class Workflow extends Component {
     displayName = Workflow.name
 
@@ -26,6 +25,7 @@ export class Workflow extends Component {
         super(props);
         this.authHelper = window.authHelper;
         this.sdkHelper = window.sdkHelper;
+        this.utils = window.utils;
 
         this.state = {
             TeamMembers: [],
@@ -34,12 +34,14 @@ export class Workflow extends Component {
         };
     }
 
-    componentWillMount() {
+    componentDidMount() {
+        console.log("code-review commments implementation");
         this.getUserRoles();
     }
     getUserRoles() {
         // call to API fetch data
-        let requestUrl = 'api/RoleMapping';
+		//WAVE-4 : Changing RoleMappong to Roles:
+        let requestUrl = 'api/Roles';
         fetch(requestUrl, {
             method: "GET",
             headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() }
@@ -68,7 +70,6 @@ export class Workflow extends Component {
 
     displayPersonaCard(p) {
         let oppDetails = this.props.oppDetails;
-        let oppStatus = this.props.oppStaus;
         let userRole = "";
         let userRoleArry = [];
         let processRole = "";
@@ -77,7 +78,7 @@ export class Workflow extends Component {
         
         userRole = p.processStep;
         // filter from UserRole array
-        processRole = oppDetails.dealType.processes.filter(function (k) {
+        processRole = oppDetails.template.processes.filter(function (k) {
             return k.processStep.toLowerCase() === p.processStep.toLowerCase();
         });
         if (processRole.length > 0) {
@@ -86,9 +87,7 @@ export class Workflow extends Component {
             userRole = p.processStep;
         }
         if (p.processStep.toLowerCase() === "draft proposal") {
-            userRoleArry = this.props.memberslist.filter(function (k) {
-                return k.assignedRole.displayName.toLowerCase() === "loanofficer";
-            });
+            userRoleArry = this.utils.getLoanOficers(this.props.memberslist)
             processStatus = this.props.oppStaus;
             isDispOppStatus = true;
         } else {
@@ -117,7 +116,7 @@ export class Workflow extends Component {
                                                     id: officer.id,
                                                     name: officer.displayName,
                                                     image: "",
-                                                    role: officer.assignedRole.adGroupName,
+                                                    role: officer.adGroupName,
                                                     status: processStatus,
                                                     isDispOppStatus: isDispOppStatus
                                                 }
@@ -160,16 +159,10 @@ export class Workflow extends Component {
         );
     }
 
-
-
     render() {
         let loading = true;
         let oppDetails = this.props.oppDetails;
-        let oppStatus = this.props.oppStaus;
-        let teamMembersAll = [];
-        teamMembersAll = this.props.memberslist;
-
-        let dealTypeObj = oppDetails.dealType;
+        let dealTypeObj = oppDetails.template;
         let groupsArry = [];
 
         if (Object.keys(dealTypeObj).length > 0) {
@@ -190,13 +183,11 @@ export class Workflow extends Component {
             groupsArry = Object.keys(groups).map(i => groups[i]);
         }
 
-
         let otherRolesObj = [];
         if (otherRolesObj.length > 0) {
             loading = false;
         }
         loading = false;
-
 
         return (
             <div>
@@ -229,12 +220,9 @@ export class Workflow extends Component {
                                                                                     </div>
                                                                                 );
                                                                             }
-
                                                                             )
                                                                         }
                                                                     </div>
-
-
                                                                 </div>
                                                             </div>
                                                             :
@@ -253,16 +241,12 @@ export class Workflow extends Component {
                                                                     }
                                                                     )
                                                                 }
-
                                                             </div>
-
                                                     }
                                                 </div>
-
                                             </div>
                                         </div>
                                     </div>
-
                                 </div>
                             </div>
                             <div className='ms-Grid-row'>

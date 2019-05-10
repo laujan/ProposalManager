@@ -32,15 +32,14 @@ export class PeoplePickerTeamMembers extends Component {
 
         this.state = {
             teamMembers: filteredList,
-            defaultSelectedItems: [],
-            isLoadingPeople: false,
+            defaultSelectedItems: this.props.defaultSelectedUsers ? this.props.defaultSelectedUsers : [], isLoadingPeople: false,
             isLoadingPics: false,
             isDisableTextBox: isDisableTextBox
         };
     }
 
-    componentWillMount() {
-
+    componentDidMount() {
+        console.log("code-review-comment implementation");
         if (this.props.defaultSelectedUsers && this.props.defaultSelectedUsers.length > 0 && this.props.defaultSelectedUsers[0].displayName.length > 0) {
             this.mapDefaultSelectedItems();
         }

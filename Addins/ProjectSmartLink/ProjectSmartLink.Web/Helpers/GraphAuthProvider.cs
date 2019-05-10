@@ -22,7 +22,7 @@ namespace ProjectSmartLink.Web.Helpers
 		private readonly IHttpContextAccessor contextAccessor;
 		private readonly string secret;
 
-		public GraphAuthProvider(IMemoryCache memoryCache, IConfiguration configuration, IHttpContextAccessor contextAccessor)
+		public GraphAuthProvider(IConfiguration configuration, IHttpContextAccessor contextAccessor)
 		{
 			
 			var azureOptions = new AzureAdOptions();
@@ -34,7 +34,6 @@ namespace ProjectSmartLink.Web.Helpers
 			secret = azureOptions.ClientSecret;
 			this.contextAccessor = contextAccessor;
 		}
-
 
 		public async Task<string> GetTokenOnBehalfOfAsync()
 		{
@@ -58,9 +57,9 @@ namespace ProjectSmartLink.Web.Helpers
 				AuthenticationResult result = await cca.AcquireTokenOnBehalfOfAsync(scopes, userAssertion, "https://login.microsoftonline.com/common/oauth2/v2.0");
 				return result.AccessToken;
 			}
-			catch (Exception ex)
+			catch (Exception)
 			{
-				throw ex;
+				throw;
 			}
 		}
 	}

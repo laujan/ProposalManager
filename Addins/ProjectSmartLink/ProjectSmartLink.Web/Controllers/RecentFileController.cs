@@ -16,8 +16,8 @@ namespace ProjectSmartLink.Web.Controllers
 {
     public class RecentFileController : Controller
     {
-        protected readonly IRecentFileService _recentFileService;
-        protected readonly IMapper _mapper;
+        private readonly IRecentFileService _recentFileService;
+        private readonly IMapper _mapper;
         public RecentFileController(IRecentFileService recentFileService, IMapper mapper)
         {
             _recentFileService = recentFileService;
@@ -26,7 +26,7 @@ namespace ProjectSmartLink.Web.Controllers
 
         [HttpGet]
         [Route("api/RecentFiles")]
-        public async Task<IActionResult> GetRecentFiles()
+        public async Task<IActionResult> GetRecentFilesAsync()
         {
             var retValue = await _recentFileService.GetRecentFiles();
             return Ok(retValue);
@@ -34,7 +34,7 @@ namespace ProjectSmartLink.Web.Controllers
 
         [HttpPost]
         [Route("api/RecentFile")]
-        public async Task<IActionResult> Post([FromForm]CatalogViewModel catalogAdded)
+        public async Task<IActionResult> PostAsync([FromForm]CatalogViewModel catalogAdded)
         {
             if (!ModelState.IsValid)
             {

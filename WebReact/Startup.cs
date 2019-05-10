@@ -3,13 +3,9 @@
 //
 // Licensed under the MIT license. See LICENSE file in the solution root folder for full license information.
 
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
 using Microsoft.Bot.Connector;
 using Microsoft.Extensions.Configuration;
@@ -25,18 +21,9 @@ using Infrastructure.Services;
 using ApplicationCore.Services;
 using Infrastructure.OfficeApi;
 using ApplicationCore.Helpers;
-using Microsoft.AspNetCore.Authorization;
 using Infrastructure.DealTypeServices;
 using Infrastructure.Helpers;
 using Infrastructure.Authorization;
-using System.Collections.Generic;
-using System.Linq;
-using ApplicationCore.Models;
-using System.Reflection;
-using System.IO;
-using System;
-using Newtonsoft.Json.Linq;
-using WebReact.ModelExamples;
 using ApplicationCore.Interfaces.SmartLink;
 using Infrastructure.Services.SmartLink;
 using Microsoft.Extensions.Options;
@@ -109,10 +96,7 @@ namespace WebReact
 			services.AddScoped<IOpportunityRepository, OpportunityRepository>();
             services.AddScoped<IUserProfileRepository, UserProfileRepository>();
 			services.AddScoped<IDocumentRepository, DocumentRepository>();
-			services.AddScoped<IRegionRepository, RegionRepository>();
-			services.AddScoped<IIndustryRepository, IndustryRepository>();
-			services.AddScoped<ICategoryRepository, CategoryRepository>();
-			services.AddScoped<IRoleMappingRepository,RoleMappingRepository>();
+			services.AddScoped<IMetaDataRepository, MetaDataRepository>();
             services.AddScoped<ITemplateRepository, TemplateRepository>();
             services.AddScoped<IProcessRepository, ProcessRepository>();
             services.AddScoped<SharePointListsSchemaHelper>();
@@ -129,13 +113,8 @@ namespace WebReact
             services.AddScoped<IOpportunityService, OpportunityService>();
 			services.AddScoped<IDocumentService, DocumentService>();
 			services.AddScoped<IUserProfileService, UserProfileService>();
-			services.AddScoped<IRegionService, RegionService>();
-			services.AddScoped<IIndustryService, IndustryService>();
-			services.AddScoped<IRoleMappingService, RoleMappingService>();
-            services.AddScoped<ITasksService, TasksService>();
-            services.AddScoped<ITasksRepository, TasksRepository>();
             services.AddScoped<IContextService, ContextService>();
-            services.AddScoped<ICategoryService, CategoryService>();
+            services.AddScoped<IMetaDataService, MetaDataService>();
             services.AddScoped<ISetupService, SetupService>();
             services.AddScoped<UserProfileHelpers>();
             services.AddScoped<TemplateHelpers>();
@@ -148,6 +127,10 @@ namespace WebReact
             services.AddScoped<IPowerBIService, PowerBIService>();
             services.AddScoped<IPermissionRepository, PermissionRepository>();
             services.AddScoped<IPermissionService, PermissionService>();
+            services.AddScoped<IGroupsRepository, GroupsRepository>();
+            services.AddScoped<IGroupsService, GroupsService>();
+            services.AddScoped<ITasksService, TasksService>();
+            services.AddScoped<ITasksRepository, TasksRepository>();
 
             // DealType Services
             services.AddScoped<ICheckListProcessService, CheckListProcessService>();
@@ -155,6 +138,9 @@ namespace WebReact
             services.AddScoped<IProposalDocumentProcessService, ProposalDocumentProcessService>();
             services.AddScoped<INewOpportunityProcessService, NewOpportunityProcessService>();
             services.AddScoped<IStartProcessService, StartProcessService>();
+            services.AddScoped<ITeamChannelService, TeamChannelService>();
+            services.AddScoped<IMemberService, MemberService>();
+            services.AddScoped<INotesService, NotesService>();
 
             // SmartLink
             services.AddScoped<IDocumentIdService, DocumentIdService>();
@@ -163,7 +149,8 @@ namespace WebReact
 			services.AddScoped<IDynamicsClientFactory, DynamicsClientFactory>();
 			services.AddScoped<IProposalManagerClientFactory, ProposalManagerClientFactory>();
 			services.AddScoped<IAccountRepository, AccountRepository>();
-			services.AddScoped<IUserRepository, UserRepository>();
+            services.AddScoped<IContactRepository, ContactRepository>();
+            services.AddScoped<IUserRepository, UserRepository>();
 			services.AddScoped<IConnectionRoleRepository, ConnectionRoleRepository>();
 			services.AddScoped<ISharePointLocationRepository, SharePointLocationRepository>();
 			services.AddScoped<IOneDriveLinkService, OneDriveLinkService>();
@@ -195,6 +182,7 @@ namespace WebReact
 			// Add the console logger.
 			loggerFactory.AddConsole(Configuration.GetSection("Logging"));
 			loggerFactory.AddDebug();
+            loggerFactory.AddAzureWebAppDiagnostics();
 
 			// Configure error handling middleware.
             if (env.IsDevelopment())

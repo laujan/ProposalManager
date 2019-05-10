@@ -14,20 +14,23 @@ namespace Infrastructure.Services
 	{
 		private readonly IConnectionRoleRepository connectionRoleRepository;
 		private readonly IAccountRepository accountRepository;
-		private readonly IUserRepository userRepository;
+        private readonly IContactRepository contactRepository;
+        private readonly IUserRepository userRepository;
 		private readonly ISharePointLocationRepository sharePointLocationRepository;
 		private readonly IOneDriveLinkService oneDriveLinkService;
 
 		public DynamicsLinkService(
 			IConnectionRoleRepository connectionRoleRepository,
 			IAccountRepository accountRepository,
-			IUserRepository userRepository,
+            IContactRepository contactRepository,
+            IUserRepository userRepository,
 			ISharePointLocationRepository sharePointLocationRepository,
 			IOneDriveLinkService oneDriveLinkService)
 		{
 			this.connectionRoleRepository = connectionRoleRepository;
 			this.accountRepository = accountRepository;
-			this.userRepository = userRepository;
+            this.contactRepository = contactRepository;
+            this.userRepository = userRepository;
 			this.sharePointLocationRepository = sharePointLocationRepository;
 			this.oneDriveLinkService = oneDriveLinkService;
 		}
@@ -46,7 +49,9 @@ namespace Infrastructure.Services
 
 		public string GetAccountName(string id) => accountRepository.Accounts[id];
 
-		public UserData GetUserData(string id) => userRepository.Users[id];
+        public string GetContactName(string id) => contactRepository.Contacts[id];
+
+        public UserData GetUserData(string id) => userRepository.Users[id];
 
 		public async Task CreateTemporaryLocationForOpportunityAsync(string opportunityId, string opportunityName)
 		{

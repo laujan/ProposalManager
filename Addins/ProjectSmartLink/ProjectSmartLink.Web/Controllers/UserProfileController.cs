@@ -12,7 +12,7 @@ namespace ProjectSmartLink.Web.Controllers
 	[Authorize]
     public class UserProfileController : Controller
     {
-        protected readonly IUserProfileService _userProfileService;
+        private readonly IUserProfileService _userProfileService;
         public UserProfileController(IUserProfileService userProfileService)
         {
             _userProfileService = userProfileService;

@@ -8,10 +8,8 @@ import Utils from '../../../helpers/Utils';
 import { PrimaryButton } from 'office-ui-fabric-react/lib/Button';
 import { TextField } from 'office-ui-fabric-react/lib/TextField';
 import { Dropdown } from 'office-ui-fabric-react/lib/Dropdown';
-import { MessageBar, MessageBarType } from 'office-ui-fabric-react/lib/MessageBar';
 import {  Trans } from "react-i18next";
 import { DatePicker } from 'office-ui-fabric-react/lib/DatePicker';
-
 
 const DayPickerStrings = {
     months: [
@@ -80,117 +78,98 @@ export class NewOpportunity extends Component {
         this.sdkHelper = window.sdkHelper;
         this.authHelper = window.authHelper;
         this.utils = new Utils();
-
+        this.metaData = this.props.metaDataList.length > 0 ? this.props.metaDataList.filter(prop=>prop.screen ==="Screen1") : [];
         this.state = {
-            industryList: this.props.industries,
-            regionList: this.props.regions,
-            custNameError: false,
-            messagebarTextCust: "",
-            oppNameError: false,
-            messagebarTextOpp: "",
-            dealSizeError: false,
-            messagebarTextDealSize: "",
-            annualRevenueError: false,
-            messagebarTextAnnualRev: "",
-            nextDisabled: true
+            nextDisabled: false
         };
-    }
-
-    componentWillMount() {
         this.opportunity = this.props.opportunity;
         this.dashboardList = this.props.dashboardList;
     }
+    
 
+    onBlurProperty(e,key) {
+        if (e.target.value.length !== 0) {
+            switch (key) {
+                case "opportunity":
+                    this.opportunity.displayName = e.target.value;
+                    break;
+                case "customer":
+                    this.opportunity.customer.displayName = e.target.value;
 
-    // Class methods
-    onBlurCustomer(e) {
-        if (e.target.value.length === 0) {
-            this.setState({
-                messagebarTextCust: <Trans>customerNameNotEmpty</Trans>,
-                custNameError: false
-            });
-            this.opportunity.customer.displayName = "";
-        } else {
-            this.setState({
-                messagebarTextCust: "",
-                custNameError: false
-            });
-            this.opportunity.customer.displayName = e.target.value;
-        }
-    }
-
-    onBlurOpportunityName(e) {
-        if (e.target.value.length > 0) {
-            this.opportunity.displayName = e.target.value;
-            this.setState({
-                messagebarTextOpp: "",
-                oppNameError: false
-            });
-            // let uniqueResponse = this.oppNameIsUnique(e.target.value);
-        } else {
-            this.opportunity.displayName = "";
-            this.setState({
-                messagebarTextOpp: <Trans>opportunityNameNotEmpty</Trans>,
-                oppNameError: false
-            });
-        }
-    }
-
-    onBlurDealSize(e) {
-        this.opportunity.dealSize = e.target.value;
-    }
-
-    onBlurAnnualRevenue(e) {
-        this.opportunity.annualRevenue = e.target.value;
-    }
-
-    onChangeIndustry(e) {
-        this.opportunity.industry.id = e.key;
-        this.opportunity.industry.name = e.text;
-    }
-
-    onChangeRegion(e) {
-        this.opportunity.region.id = e.key;
-        this.opportunity.region.name = e.text;
-    }
-
-    onBlurNotes(e) {
-        // TODO: Add createdby propeties
-        let note = {
-            id: this.utils.guid(),
-            noteBody: e.target.value,
-            createdDateTime: "",
-            createdBy: {
-                id: "",
-                displayName: "",
-                userPrincipalName: "",
-                userRoles: []
+                    break;
+                case "notes":
+                    let note = {
+                        id: this.utils.guid(),
+                        noteBody: e.target.value,
+                        createdDateTime: "",
+                        createdBy: {
+                            id: "",
+                            displayName: "",
+                            userPrincipalName: "",
+                            userRoles: []
+                        }
+                    };
+            
+                    this.opportunity.notes.push(note);
+                    break;
+                default:
+                    break;
             }
-        };
-
-        this.opportunity.notes.push(note);
+            this.opportunity.metaDataFields.forEach(obj=>{
+                if(obj.id===key){
+                    console.log("NewOpportunity_onBlurProperty : ", obj.id);
+                    obj.values=e.target.value;
+                }
+            });
+            this._checkNextEnabled();
+            console.log("NewOpportunity_onBlurProperty : ", this.opportunity.metaDataFields);
+        } 
     }
 
-    oppNameIsUnique(name) {
-        if (this.opportunity.displayName.length > 0) {
-            if (this.dashboardList.find(itm => itm.opportunity === name)) {
-                this.setState({
-                    messagebarTextOpp: <Trans>opportunityNameUnique</Trans>,
-                    oppNameError: false
-                });
-                return true;
-            } else {
-                return false;
-            }
-        } else {
-            // If empty also return false
-            return false;
+    onChangeDropDown (e,key){
+        if(e.text.length>0){
+            this.opportunity.metaDataFields.forEach(obj=>{
+                if(obj.id===key){
+                    console.log("NewOpportunity_onChangeDropDown : ", obj.id);
+                    obj.values=e.text;
+                }
+            });
         }
     }
 
-    _onSelectTargetDate = (date) => {
-        this.opportunity.targetDate = date;
+    _checkNextEnabled(){
+        let count = 0;
+        this.opportunity.metaDataFields.forEach(element => {
+            if (["opportunity", "customer", "openeddate", "targetdate"].includes(element.id)) {
+                if(element.values.length>0) {
+                    console.log("_checkNextEnabled : ",count);
+                    ++count;
+                }
+            }
+        });
+        console.log("_checkNextEnabled : ",count);
+        if(["opportunity","customer","openeddate","targetdate"].length===count)this.setState({nextDisabled:true});
+    }
 
+    _onSelectTargetDate = (date,key) => {
+        this.opportunity.metaDataFields.forEach(obj=>{
+            if(obj.id===key){
+                console.log("NewOpportunity_onChangeDropDown : ", obj.id,this._onFormatDate(date));
+                obj.values=this._onFormatDate(date);
+            }
+        });
+
+        if(key==="targetdate"){
+            console.log("NewOpportunity_onChangeDropDown target date : ");
+            this.opportunity.metaDataFields.forEach(obj=>{
+                if(obj.id==="openeddate" && obj.values.length===0){
+                    console.log("NewOpportunity_onChangeDropDown opened data: ",this._onFormatDate(this._setItemDate(Date.now())));
+                    obj.values=this._onFormatDate(this._setItemDate(Date.now()));
+                }
+            });
+        }
+
+        this._checkNextEnabled();
     }
 
     _onFormatDate = (date) => {
@@ -228,142 +207,91 @@ export class NewOpportunity extends Component {
         } else return new Date(dt);
     }
 
-    render() {
-        let nextDisabled = true;
-        if (this.opportunity.customer.displayName.length > 0 && this.opportunity.displayName.length > 0) {
-            nextDisabled = false;
+    _rendermetaData(){
+        let metaDataComponents = null;
+        if(this.metaData.length>0){
+            metaDataComponents= this.metaData.map((metaDataObj)=>{
+                let component = null;
+                let id = metaDataObj.displayName.toLowerCase().replace(/\s/g, '');
+                switch (metaDataObj.fieldType.name) {
+                    case "Date":
+                        let tardate = this.opportunity.metaDataFields.find(x=>x.id===id).values;
+                        component = (<div className='docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg6' key={metaDataObj.id}>
+                            <DatePicker strings={DayPickerStrings}
+                                label={metaDataObj.displayName}
+                                showWeekNumbers={false}
+                                firstWeekOfYear={1}
+                                showMonthPickerAsOverlay='true'
+                                iconProps={{ iconName: 'Calendar' }}
+                                value={tardate ? this._setItemDate(tardate) : ""}
+                                onSelectDate={(date) => this._onSelectTargetDate(date, id)}
+                                formatDate={this._onFormatDate}
+                                parseDateFromString={this._onParseDateFromString}
+                                minDate={new Date()}
+                                isRequired={false}
+                            />
+                        </div>);
+                        break;
+
+                    case "DropDown":
+                        let placeHolder = `Select ${metaDataObj.displayName}`;
+                        let dropvalue = this.opportunity.metaDataFields.find(x => x.id === id).values;
+                        component = ( <div className='docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg6' key={metaDataObj.id}>
+                                <Dropdown
+                                    placeHolder={placeHolder}
+                                    label={metaDataObj.displayName}
+                                    id={id}
+                                    ariaLabel={metaDataObj.displayName}
+                                    value={dropvalue}
+                                    options={metaDataObj.values.map(x=>{return {'key':x.id,'text':x.name}})}
+                                    defaultSelectedKey={metaDataObj.values.map(x => { if (x.name === dropvalue) return x.id; })}
+                                    componentRef=''
+                                    onChanged={(e) => this.onChangeDropDown(e,id)}
+                                />
+                            </div>);
+                        break;
+
+                    default:
+                        let textvalue = this.opportunity.metaDataFields.find(x=>x.id===id).values;  
+                        component = (<div className='docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg6' key={metaDataObj.id}>
+                                <TextField
+                                    id={id}
+                                    value={textvalue}
+                                    label={metaDataObj.displayName}
+                                    onBlur={(e) => this.onBlurProperty(e,id)}
+                                />
+                            </div>);
+                        break;
+                }
+                return component;
+            });
         }
+        return metaDataComponents;
+    }
+
+    render() {
+
 
         //TODO: set focus on initial load of component: this.customerName.focusInput()
-
+        console.log("NewOpportunity_render: enter " , !this.state.nextDisabled)
         return (
             <div className='ms-Grid'>
                 <div className='ms-Grid-row'>
                     <h3 className='pageheading'><Trans>createNewOpportunity</Trans></h3>
                     <div className='ms-lg12 ibox-content'>
                         <div className="ms-Grid-row">
-                            <div className='docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg6'>
-                                <TextField
-                                    id='customerName'
-                                    label={<Trans>customerName</Trans>} value={this.opportunity.customer.displayName}
-                                    errorMessage={this.state.messagebarTextCust}
-                                    onBlur={(e) => this.onBlurCustomer(e)}
-                                />
-                                {this.state.custNameError ?
-                                    <MessageBar messageBarType={MessageBarType.error} isMultiline={false}>
-                                        {this.state.messagebarTextCust}
-                                    </MessageBar>
-                                    : ""
-                                }
-                            </div>
-
-
-                            <div className='docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg6'>
-                                <TextField
-                                    label={<Trans>opportunityName</Trans>} value={this.opportunity.displayName}
-                                    errorMessage={this.state.messagebarTextOpp}
-                                    onBlur={(e) => this.onBlurOpportunityName(e)}
-
-                                />
-                                {this.state.oppNameError ?
-                                    <MessageBar messageBarType={MessageBarType.error} isMultiline={false}>
-                                        {this.state.messagebarTextOpp}
-                                    </MessageBar>
-                                    : ""
-                                }
-                            </div>
-                        </div>
-                        <div className="ms-Grid-row">
-                            <div className='docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg6'>
-                                <TextField
-                                    label={<Trans>dealSize</Trans>} value={this.opportunity.dealSize}
-                                    onBlur={(e) => this.onBlurDealSize(e)}
-                                />
-                                {this.state.dealSizeError ?
-                                    <MessageBar messageBarType={MessageBarType.error} isMultiline={false}>
-                                        {this.state.messagebarTextDealSize}
-                                    </MessageBar>
-                                    : ""
-                                }
-                            </div>
-                            <div className='docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg6'>
-                                <TextField
-                                    label={<Trans>annualRevenue</Trans>} value={this.opportunity.annualRevenue}
-                                    onBlur={(e) => this.onBlurAnnualRevenue(e)}
-
-                                />
-                                {this.state.annualRevenueError ?
-                                    <MessageBar messageBarType={MessageBarType.error} isMultiline={false}>
-                                        {this.state.messagebarTextAnnualRev}
-                                    </MessageBar>
-                                    : ""
-                                }
-                            </div>
-                        </div>
-
-                        <div className="ms-Grid-row">
-                            <div className='docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg6'>
-                                <Dropdown
-                                    placeHolder={<Trans>selectIndustry</Trans>}
-                                    label={<Trans>industry</Trans>}
-                                    id='Basicdrop1'
-                                    ariaLabel={<Trans>industry</Trans>}
-                                    value={this.opportunity.industry.id}
-                                    options={this.state.industryList}
-                                    defaultSelectedKey={this.opportunity.industry.id}
-                                    componentRef={this.ddlIndustry}
-                                    onChanged={(e) => this.onChangeIndustry(e)}
-                                />
-                            </div>
-                            <div className='docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg6'>
-                                <Dropdown
-                                    placeHolder={<Trans>selectRegion</Trans>}
-                                    label={<Trans>region</Trans>}
-                                    id='ddlRegion'
-                                    ariaLabel={<Trans>region</Trans>}
-                                    value={this.opportunity.region.id}
-                                    options={this.state.regionList}
-                                    defaultSelectedKey={this.opportunity.region.id}
-                                    componentRef=''
-                                    onChanged={(e) => this.onChangeRegion(e)}
-                                />
-                            </div>
-                        </div>
-                        <div className="ms-Grid-row">
-                            <div className='docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg6'>
-                                <DatePicker strings={DayPickerStrings}
-                                    label={<Trans>targetDate</Trans>}
-                                    showWeekNumbers={false}
-                                    firstWeekOfYear={1}
-                                    showMonthPickerAsOverlay='true'
-                                    iconProps={{ iconName: 'Calendar' }}
-                                    value={this.opportunity.targetDate ? this._setItemDate(this.opportunity.targetDate) : ""}
-                                    onSelectDate={this._onSelectTargetDate}
-                                    formatDate={this._onFormatDate}
-                                    parseDateFromString={this._onParseDateFromString}
-                                    minDate={new Date()}
-                                />
-                            </div>
-                        </div>
-                        <div className="ms-Grid-row">
-                            <div className='docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg12'>
-                                <TextField
-                                    label={<Trans>notes</Trans>}
-                                    multiline
-                                    rows={6}
-                                    value={this.opportunity.notes.noteBody}
-                                    onBlur={(e) => this.onBlurNotes(e)}
-                                />
-                            </div>
+                            {this._rendermetaData()}
                         </div>
                     </div>
                 </div>
                 <div className='ms-Grid-row pb20'>
                     <div className='ms-Grid-col ms-sm6 ms-md6 ms-lg6 pl0'><br />
-                        <PrimaryButton className='backbutton pull-left' onClick={this.props.onClickCancel}>{<Trans>cancel</Trans>}</PrimaryButton>
+                        <PrimaryButton 
+                            className='backbutton pull-left' 
+                            onClick={this.props.onClickCancel}>{<Trans>cancel</Trans>}</PrimaryButton>
                     </div>
-                    <div className='ms-Grid-col ms-sm6 ms-md6 ms-lg6 pr0'><br />
-                        <PrimaryButton className='pull-right' onClick={this.props.onClickNext} disabled={nextDisabled}>{<Trans>next</Trans>}</PrimaryButton>
+                    <div className='ms-Grid-col ms-sm6 ms-md6 ms-lg6 pr0' ><br />
+                        <PrimaryButton className='pull-right' disabled = {!this.state.nextDisabled}  onClick={this.props.onClickNext} >{<Trans>next</Trans>}</PrimaryButton>
                     </div>
                 </div>
             </div>

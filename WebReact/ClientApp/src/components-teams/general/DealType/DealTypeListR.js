@@ -4,15 +4,11 @@
 */
 
 import React, { Component } from 'react';
-import * as ReactDOM from 'react-dom';
-import * as microsoftTeams from '@microsoft/teams-js';
 import {
     DetailsList,
     DetailsListLayoutMode,
     Selection,
-    SelectionMode,
-    IColumn,
-    IDetailsList
+    SelectionMode
 } from 'office-ui-fabric-react/lib/DetailsList';
 import { MarqueeSelection } from 'office-ui-fabric-react/lib/MarqueeSelection';
 import { DefaultButton, PrimaryButton, IconButton } from 'office-ui-fabric-react/lib/Button';
@@ -27,7 +23,6 @@ import { MessageBar, MessageBarType } from 'office-ui-fabric-react/lib/MessageBa
 import { LinkContainer } from 'react-router-bootstrap';
 import i18n from '../../../i18n';
 import Accessdenied from '../../../helpers/AccessDenied';
-
 
 export class DealTypeListR extends Component {
     displayName = DealTypeListR.name
@@ -74,6 +69,14 @@ export class DealTypeListR extends Component {
             },
             {
                 key: 'column4',
+                name: <Trans>Default Template</Trans>,
+                fieldName: 'defaultTemplate',
+                minWidth: 100,
+                maxWidth: 200,
+                isResizable: true
+            },
+            {
+                key: 'column5',
                 name: <Trans>action</Trans>,
                 headerClassName: 'ms-List-th dealTypeAction ',
                 className: 'DetailsListExample-cell--FileIcon actioniconAlign  ',
@@ -110,29 +113,20 @@ export class DealTypeListR extends Component {
         this.deleteTemplate = this.deleteTemplate.bind(this);
     }
 
-    async componentWillMount() {
-        console.log("Dealtypelist_componentWillMount isauth: " + this.authHelper.isAuthenticated());
+    async componentDidMount() {
+        console.log("Dealtypelist_componentDidMount isauth: " + this.authHelper.isAuthenticated() + this.accessGranted);
         if (this.authHelper.isAuthenticated() && !this.accessGranted) {
             try {
-                let access = await this.authHelper.callCheckAccess(["Administrator", "Opportunity_ReadWrite_Dealtype", "Opportunities_ReadWrite_All"]);
+                await this.authHelper.callCheckAccess(["Administrator", "Opportunity_ReadWrite_Dealtype", "Opportunities_ReadWrite_All"]);
                 console.log("Dealtypelist_componentDidUpdate callCheckAccess success");
                 this.accessGranted = true;
-                let obj = await this.getDealTypeLists();
+                await this.getDealTypeLists();
             } catch (error) {
                 this.accessGranted = false;
                 console.log("Dealtypelist_componentDidUpdate error_callCheckAccess:");
                 console.log(error);
             }
         }
-    }
-
-    componentDidMount() {
-        console.log("Dealtypelist_componentDidMount isauth: " + this.authHelper.isAuthenticated());
-    }
-
-
-    componentDidUpdate() {
-        console.log("Dealtypelist_componentDidUpdate isauth: " + this.authHelper.isAuthenticated() + " this.accessGranted: " + this.accessGranted);
     }
 
     async getDealTypeLists() {
@@ -149,11 +143,15 @@ export class DealTypeListR extends Component {
             if (response.ok) {
                 let data = await response.json();
                 for (let i = 0; i < data.itemsList.length; i++) {
-                    data.itemsList[i].createdDisplayName = data.itemsList[i].createdBy.displayName;
-                    dealTypeItemList.push(data.itemsList[i]);
+                    if (data.itemsList[i].defaultTemplate !== true) {
+                        data.itemsList[i].createdDisplayName = data.itemsList[i].createdBy.displayName;
+                        data.itemsList[i].defaultTemplate = data.itemsList[i].defaultTemplate.toString();
+                        dealTypeItemList.push(data.itemsList[i]);
+                    }
+                    
                 }
             }
-
+            console.log("DealTypeList getDealTypeLists: " , dealTypeItemList);
         } catch (err) {
             console.log("DealTypeList getDealTypeLists: " + err);
         } finally {
@@ -234,7 +232,7 @@ export class DealTypeListR extends Component {
     }
 
     render() {
-        const { columns, items, loading } = this.state;
+        const { columns } = this.state;
         let showDeleteButton = this._selection.getSelection().length > 0 ? true : false;
         if (this.state.loading) {
             return (
@@ -317,7 +315,7 @@ export class DealTypeListR extends Component {
                                             />
                                         </MarqueeSelection>
                                         :
-                                        <div><Trans>thereAreNoDealType</Trans></div>
+                                        <div><Trans>There Are No Business process</Trans></div>
                                 }
                             </div>
                         </div>

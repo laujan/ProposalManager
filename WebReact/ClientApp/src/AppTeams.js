@@ -10,21 +10,22 @@ import { Route } from 'react-router';
 import GraphSdkHelper from './helpers/GraphSdkHelper';
 import AuthHelper from './helpers/AuthHelper';
 import appSettingsObject from './helpers/AppSettings';
+import Utils from './helpers/Utils';
 // Teams Add-in imports
-import { ThemeStyle, Th } from 'msteams-ui-components-react';
+import { ThemeStyle } from 'msteams-ui-components-react';
 
 import { Home } from './components-teams/Home';
-
 import { Config } from './components-teams/Config';
 import { Privacy } from './components-teams/Privacy';
 import { TermsOfUse } from './components-teams/TermsOfUse';
-
-//import { Checklist } from './views-teams/Proposal/Checklist';
+import {Setup} from './components-teams/Setup';
+import {Help} from './components-teams/Help';
 import { Checklist } from './components-teams/Checklist';
-import { RootTab } from './components-teams/RootTab'; //'./views-teams/Proposal/RootTab';
+import { RootTab } from './components-teams/RootTab'; 
 import { TabAuth } from './components-teams/TabAuth';
 import { ProposalStatus } from './components-teams/ProposalStatus';
 import { CustomerDecision } from './components-teams/CustomerDecision';
+
 // Components mobile
 import { RootTab as RootTabMob } from './components-mobile/RootTab';
 import { initializeIcons } from 'office-ui-fabric-react/lib/Icons';
@@ -32,14 +33,13 @@ import { initializeIcons } from 'office-ui-fabric-react/lib/Icons';
 import { Administration } from './components-teams/general/Administration';
 import { General } from './components-teams/general/General';
 import { Configuration } from './components-teams/general/Configuration';
-import { AddDealType } from './components-teams/general/AddDealType';
 import { AddDealTypeR } from './components-teams/general/DealType/AddDealTypeR';
 import { OpportunityDetails } from './components-teams/general/Opportunity/OpportunityDetails';
 import { ChooseTeam } from './components-teams/general/Opportunity/ChooseTeam';
+import { AddTemplate } from './components-teams/general/Templates/AddTemplate';
 
 import i18n from './i18n';
 import { setTimeout } from 'timers';
-//import { clearInterval, setTimeout } from 'timers'; // This component causes a conflict with setTmeout206
 
 var appSettings;
 
@@ -79,6 +79,14 @@ export class AppTeams extends Component {
             window.sdkHelper = this.sdkHelper;
         }
 
+        if (window.utils) {
+            this.utils = window.utils;
+        } else {
+            // Initilize the utils and save it in the window object.
+            this.utils = new Utils();
+            window.utils = this.utils;
+        }
+
         try {
 			/* Initialize the Teams library before any other SDK calls.
 			 * Initialize throws if called more than once and hence is wrapped in a try-catch to perform a safe initialization.
@@ -89,18 +97,13 @@ export class AppTeams extends Component {
             console.log(err);
         }
         finally {
-            this.inTeamsClient = false;
-            if (navigator.userAgent.indexOf("Teams") !== -1) {
-                this.inTeamsClient = true;
-            }
-
-            this._isMounted = false;
-
-            let locale = "en-us";
-            if (this.getQueryVariable('locale') !== null && this.getQueryVariable('locale') !== undefined) {
+            let locale = (navigator.languages && navigator.languages[0]) || navigator.language || navigator.userLanguage;
+            
+            if (this.getQueryVariable('locale') !== null && this.getQueryVariable('locale') !== undefined)
+            {
                 locale = this.getQueryVariable('locale');
             }
-            locale = (navigator.languages && navigator.languages[0]) || navigator.language || navigator.userLanguage;
+
             console.log("App Teams Locale====" + locale + " ***** getQueryVarLocale **** " + this.getQueryVariable('locale'));
 
             this.state = {
@@ -113,8 +116,7 @@ export class AppTeams extends Component {
                 teamName: this.getQueryVariable('teamName'),
                 groupId: this.getQueryVariable('groupId'),
                 loginHint: this.getQueryVariable('loginHint'),
-                locale: locale,
-                appSettings: appSettings
+                locale: locale
             };
         }
     }
@@ -146,13 +148,7 @@ export class AppTeams extends Component {
                             reportId: res.PBIReportId,
                             workspaceId: res.PBIWorkSpaceId
                         };
-                        console.log("AppTeams_componentDidMount_getClientSettings  ==>", appSettings);
-                        //Need to review refresh issue
-                        if (this.state.appSettings.reportId.length === 0) {
-                            console.log("AppTeams_componentDidMount_getClientSettings inisde setstate:", appSettings);
-                            this.setState({ appSettings });
-                        }
-                        //Need to review refresh issue
+                        console.log("AppTeams_componentDidMount_getClientSettings  ==>", res);
                     })
                     .catch(err => {
                         console.log("AppTeams_componentDidMount_getClientSettings error:", err);
@@ -181,12 +177,6 @@ export class AppTeams extends Component {
                             workspaceId: res.PBIWorkSpaceId
                         };
                         console.log("AppTeams_componentDidUpdate_getClientSettings  ==>", res);
-                        //Need to review refresh issue
-                        if (this.state.appSettings.reportId.length === 0) {
-                            console.log("AppTeams_componentDidMount_getClientSettings inisde setstate:", appSettings);
-                            this.setState({ appSettings });
-                        }
-                        //Need to review refresh issue
                     })
                     .catch(err => {
                         console.log("AppTeams_componentDidUpdate_getClientSettings error:", err);
@@ -239,7 +229,7 @@ export class AppTeams extends Component {
             // Store the original request so we can detect the type of token in TabAuth
             if (window.location.pathname !== "/tab/tabauth") {
                 localStorage.setItem(this.localStorePrefix + "appteams.request", window.location.pathname);
-                if (window.location.pathname !== "/tab/generalAdministrationTab") {
+                if (window.location.pathname !== "/tab/generalAdministrationTab" && window.location.pathname !== "/tab/setupTab") {
                     // Clear GraphAdminToken in case user navigates to admin then to another non-admin tab
                     const graphAdminTokenStoreKey = this.localStorePrefix + "AdminGraphToken";
                     localStorage.removeItem(graphAdminTokenStoreKey);
@@ -257,7 +247,7 @@ export class AppTeams extends Component {
         const appTeamsRequest = localStorage.getItem(this.localStorePrefix + "appteams.request");
 
         try {
-            if (appTeamsRequest === "/tab/generalAdministrationTab") {
+            if (appTeamsRequest === "/tab/generalAdministrationTab" || appTeamsRequest=== "/tab/setupTab") {
                 return "true";
             }
             else {
@@ -270,7 +260,7 @@ export class AppTeams extends Component {
     }
 
     teamsAuthentication() {
-        let timerAuthWindow = setTimeout(() => {
+        setTimeout(() => {
             microsoftTeams.authentication.authenticate({
                 url: window.location.protocol + '//' + window.location.host + '/tab/tabauth' + "?channelName=" + this.state.channelName + "&teamName=" + this.state.teamName + "&channelId=" + this.state.channelId + "&locale=" + this.state.locale + "&loginHint=" + encodeURIComponent(this.state.loginHint),
                 height: 5000,
@@ -316,7 +306,7 @@ export class AppTeams extends Component {
             const tabAuthSeq1 = await this.authHelper.acquireTokenSilentAsync();
 
             if (tabAuthSeq1.includes("error")) {
-                const tabAuthSeq2 = await this.logonInteractive();
+                await this.logonInteractive();
             } else {
                 const tabAuthSeq2 = await this.authHelper.acquireWebApiTokenSilentAsync();
 
@@ -383,7 +373,6 @@ export class AppTeams extends Component {
 
     //getting client settings
     async getClientSettings() {
-        let clientSettings = { "reportId": "", "workspaceId": "", "teamsAppInstanceId": "" };
         try {
             console.log("AppTeams_getClientSettings");
             let requestUrl = 'api/Context/GetClientSettings';
@@ -392,9 +381,8 @@ export class AppTeams extends Component {
                 method: "GET",
                 headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() }
             });
-            let response = await data.json();
 
-            return response;
+            return await data.json();
         } catch (error) {
             console.log("AppTeams_getClientSettings error: ", error);
             return error;
@@ -505,7 +493,7 @@ export class AppTeams extends Component {
         });
 
         const ConfigView = ({ match }) => {
-            return <Config teamsContext={teamsContext} appSettings={this.state.appSettings} />;
+            return <Config teamsContext={teamsContext} appSettings={appSettings} />;
         };
 
         const TabAuthView = ({ match }) => {
@@ -517,22 +505,23 @@ export class AppTeams extends Component {
         };
 
         const AdministrationView = ({ match }) => {
-            return <Administration teamsContext={teamsContext} appSettings={this.state.appSettings} />;
+            return <Administration teamsContext={teamsContext} appSettings={appSettings} />;
         };
 
         const ConfigurationView = ({ match }) => {
             return <Configuration teamsContext={teamsContext} />;
         };
 
-        const AddDealTypeView = ({ match }) => {
-            return <AddDealType teamsContext={teamsContext} />;
-        };
         const AddDealTypeViewR = ({ match }) => {
             return <AddDealTypeR teamsContext={teamsContext} />;
         };
 
+        const AddTemplateView = ({ match }) => {
+            return <AddTemplate teamsContext={teamsContext} />;
+        };
+
         const GeneralView = ({ match }) => {
-            return <General teamsContext={teamsContext} appSettings={this.state.appSettings} />;
+            return <General teamsContext={teamsContext} appSettings={appSettings} />;
         };
         const CustomerDecisionView = ({ match }) => {
             return <CustomerDecision teamsContext={teamsContext} />;
@@ -551,6 +540,14 @@ export class AppTeams extends Component {
             return <RootTabMob teamsContext={teamsContext} />;
         };
 
+        const SetupView = ({ match }) => {
+            return <Setup teamsContext={teamsContext} />;
+        };
+
+        const HelpView = ({ match }) => {
+            return <Help teamsContext={teamsContext} />;
+        };
+
         return (
             <div className="ms-font-m show">
                 <Route exact path='/tabmob/rootTab' component={RootTabMobView} />
@@ -560,10 +557,10 @@ export class AppTeams extends Component {
                 <Route exact path='/tabmob/generalConfigurationTab' component={ConfigurationView} />
                 <Route exact path='/tabmob/generalAdministrationTab' component={AdministrationView} />
                 <Route exact path='/tabmob/generalDashboardTab' component={GeneralView} />
-                <Route exact path='/tabmob/generalAddDealType' component={AddDealTypeView} />
                 <Route exact path='/tabmob/OpportunityDetails' component={OpportunityDetails} />
                 <Route exact path='/tabmob/ChooseTeam' component={ChooseTeam} />
                 <Route exact path='/tabmob/tabauth' component={TabAuthView} />
+                <Route exact path='/tabmob/generalAddTemplate' component={AddTemplateView} />
 
                 <Route exact path='/tab' component={Home} />
                 <Route exact path='/tab/config' component={ConfigView} />
@@ -579,11 +576,13 @@ export class AppTeams extends Component {
                 <Route exact path='/tab/generalConfigurationTab' component={ConfigurationView} />
                 <Route exact path='/tab/generalAdministrationTab' component={AdministrationView} />
                 <Route exact path='/tab/generalDashboardTab' component={GeneralView} />
-                <Route exact path='/tab/generalAddDealType' component={AddDealTypeView} />
                 <Route exact path='/tab/generalAddDealTypeR' component={AddDealTypeViewR} />
                 <Route exact path='/tab/OpportunityDetails' component={OpportunityDetails} />
                 <Route exact path='/tab/ChooseTeam' component={ChooseTeam} />
+                <Route exact path='/tab/generalAddTemplate' component={AddTemplateView} />
 
+                <Route exact path='/tab/setupTab' component={SetupView} />
+                <Route exact path='/tab/helpTab' component={HelpView} />
             </div>
         );
     }

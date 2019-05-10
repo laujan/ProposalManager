@@ -6,8 +6,9 @@
 import React, { Component } from 'react';
 import { PrimaryButton } from 'office-ui-fabric-react/lib/Button';
 import { TextField } from 'office-ui-fabric-react/lib/TextField';
-import { PeoplePickerTeamMembers } from '../../../components/PeoplePickerTeamMembers';
-import {  Trans } from "react-i18next";
+import { PeoplePickerTeamMembers } from './PeoplePickerTeamMembers';
+import { Trans } from "react-i18next";
+import { Dropdown } from 'office-ui-fabric-react/lib/Dropdown';
 
 export class NewOpportunityOthers extends Component {
     displayName = NewOpportunityOthers.name
@@ -17,183 +18,215 @@ export class NewOpportunityOthers extends Component {
 
         this.sdkHelper = window.sdkHelper;
         this.authHelper = window.authHelper;
+        this.utils = window.utils;
+
+        let teamlist = [];
+        this.props.teamMembers.forEach(element => {
+            element.userRoles.forEach((userrole) => {
+                userrole.permissions.forEach((per) => {
+                    if (per.name.toLowerCase() === "Opportunity_ReadWrite_Dealtype".toLocaleLowerCase()) {
+                        console.log("NewOpportunityOther_filterUserProfiles_element : ", element);
+                        if (!teamlist.includes(element)) teamlist.push(element);
+                    }
+                });
+            });
+        });
 
         this.opportunity = this.props.opportunity;
-
+        this.metaData = this.props.metaDataList.length > 0 ? this.props.metaDataList.filter(prop=>prop.screen ==="Screen3") : [];
         this.state = {
             showModal: false,
             currentPicker: 1,
             delayResults: false,
-            teamMembers: [],
-            teamMembersAll: []
+
+            adGroupUsers: [],
+            templateList: this.props.templateList,
+            templateItems: this.props.templateItems ,// will have all template list with all process
+            disableSubmit: true,
+            teamMembers: teamlist,
+            teamMembersAll: this.props.teamMembers
         };
     }
-
-    componentWillMount() {
-        this.filterUserProfiles();
-    }
-
-    // Class methods
-    filterUserProfiles() {
-        let data = this.props.teamMembers;
-        let teamlist = [];
-
-        for (let i = 0; i < data.length; i++) {
-            let item = data[i];
-
-            if ((item.userRoles.filter(x => x.displayName === "LoanOfficer")).length > 0) {
-                teamlist.push(item);
-            }
-        }
-
-        this.setState({
-            teamMembers: teamlist,
-            teamMembersAll: data
-        });
-    }
-
+    
     getSelectedUsers() {
-        let selectedUsers = this.opportunity.teamMembers.filter(x => x.assignedRole.displayName === "LoanOfficer");
-
-        return selectedUsers;
-    }
-
-    onBlurMargin(e) {
-        this.opportunity.margin = e.target.value;
+        // Wave4 changes - who has "opportunity_edit_team_member" permission dispaly those user as selected in dropdown 
+        console.log(this.opportunity.teamMembers);
+        let selectedLO = [];
+        this.opportunity.teamMembers.forEach(element => {
+            element.permissions.forEach((userrole) => {
+                if (userrole.name.toLowerCase() === "Opportunity_ReadWrite_Dealtype".toLocaleLowerCase()) {
+                        console.log("NewOpportunityOther_filterUserProfiles_element : ", element);
+                    if (!selectedLO.includes(element)) selectedLO.push(element);
+                    }
+            });
+        });
+        let tempArray = [];
+        let filteredLoUser = JSON.parse(JSON.stringify(selectedLO));
+        filteredLoUser = filteredLoUser.filter(obj => {
+            console.log(obj);
+            let key = obj.displayName.toLowerCase() + obj.adGroupName.toLowerCase();
+            if (!tempArray.includes(key)) {
+                obj.text = obj.displayName;
+                tempArray.push(key);
+                return obj;
+            }
+        });
+        console.log(filteredLoUser);
+        return filteredLoUser; // this.opportunity.teamMembers.filter(x => x.permissions.includes("Opportunity_ReadWrite_Dealtype"));
     }
 
     onChangeLoanOfficer(value) {
+        console.log("NewOpportunityOther_filterUserProfiles : ", value);
+
+        let updatedTeamMembers = JSON.parse(JSON.stringify(this.opportunity.teamMembers));
+
+        updatedTeamMembers = this.opportunity.teamMembers.filter(x => {
+            if(!x.permissions.includes("Opportunity_ReadWrite_Dealtype"))
+                return x;
+        });
+
+        console.log("NewOpportunityOther_filterUserProfiles : ", updatedTeamMembers);
         if (value.length > 0) {
-            let updatedTeamMembers = this.opportunity.teamMembers.filter(x => x.assignedRole.displayName !== "LoanOfficer");
-
-            let newMember = {};
-            newMember.id = value[0].id;
-            newMember.displayName = value[0].text;
-            newMember.mail = value[0].mail;
-            newMember.userPrincipalName = value[0].userPrincipalName;
-            newMember.userRoles = value[0].userRoles;
-            newMember.status = 0;
-            newMember.assignedRole = value[0].userRoles.filter(x => x.displayName === "LoanOfficer")[0];
-            newMember.ProcessStep = "Start Process";
-
-            updatedTeamMembers.push(newMember);
-            this.opportunity.teamMembers = updatedTeamMembers;
+            
+           let role = value[0].userRoles.find(role => {
+                if (role.permissions.find(permission => permission.name === "Opportunity_ReadWrite_Dealtype"))
+                    return role.id;
+            });
+            
+            updatedTeamMembers.push(this.addBaseProcessPersonal(value,role,"Start Process"));
+            // "Customer Decision";
+            updatedTeamMembers.push(this.addBaseProcessPersonal(value,role,"Customer Decision"));
+			
+        }else if(value.length===0){
+            updatedTeamMembers.splice(-2,2);
         }
+        this.opportunity.teamMembers = updatedTeamMembers;
+        console.log(this.opportunity.teamMembers);
+        // let disableSubmit = this.utils.getLoanOficers(this.opportunity.teamMembers).length>0?false:true;
+        let selLO = [];
+        this.opportunity.teamMembers.forEach(element => {
+            element.permissions.forEach((userrole) => {
+                if (userrole.name.toLowerCase() === "Opportunity_ReadWrite_Dealtype".toLocaleLowerCase()) {
+                    if (!selLO.includes(element)) selLO.push(element);
+                }
+            });
+        });
+        let disableSubmit = selLO.length > 0 ? false : true;
+        console.log("NewOpportunityOther_filterUserProfiles : ", disableSubmit);
+        this.setState({ disableSubmit });
+        
     }
 
-    onBlurRate(e) {
-        this.opportunity.rate = e.target.value;
+    addBaseProcessPersonal(value,role,processstep){
+
+        let newMember = {};
+
+        newMember.status = 0;
+        newMember.id = value[0].id;
+        newMember.displayName = value[0].text;
+        newMember.mail = value[0].mail;
+        newMember.userPrincipalName = value[0].userPrincipalName;
+        newMember.roleId = role ? role.id : "";
+        newMember.permissions= role ? role.permissions:[];
+        newMember.teamsMembership = role ? role.teamsMembership:[];
+        newMember.ProcessStep =processstep;
+        newMember.roleName = role ? role.displayName : "";
+        newMember.adGroupName = role ? role.adGroupName : "";
+
+        return newMember;
     }
 
-    onBlurDebtRatio(e) {
-        this.opportunity.debtRatio = e.target.value;
+    onChangeTemplate(e) {
+        // templateItems
+        let selTemplate = this.state.templateItems.filter(function (d) {
+            return d.id === e.key;
+        });
+        console.log(selTemplate);
+        this.opportunity.template = selTemplate[0];
+        console.log(this.opportunity);
     }
 
-    onBlurPurpose(e) {
-        this.opportunity.purpose = e.target.value;
+    onBlurProperty(e,key) {
+        if (e.target.value.length !== 0) {
+            this.opportunity.metaDataFields.forEach(obj=>{
+                if(obj.id===key){
+                    console.log("NewOpportunityOthers_onBlurProperty : ", obj.id);
+                    obj.values=e.target.value;
+                }
+            });
+        } 
     }
 
-    onBlurDisbursementSchedule(e) {
-        this.opportunity.disbursementSchedule = e.target.value;
+    _rendermetaData(){
+        let metaDataComponents = null;
+        if(this.metaData.length>0){
+            metaDataComponents= this.metaData.map((metaDataObj)=>{
+                let component = null;
+                let id = metaDataObj.displayName.toLowerCase().replace(/\s/g, '');
+                let value = this.opportunity.metaDataFields.find(x=>x.id===id).values;
+                return (
+                    <div className='docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg4' key={metaDataObj.id}>
+                                <TextField
+                                    label={metaDataObj.displayName} 
+                                    value={value}
+                                    onBlur={(e) => this.onBlurProperty(e,id)}
+                                />
+                    </div>
+                );
+
+            });
+        }
+        return metaDataComponents;
     }
 
-    onBlurCollateralAmount(e) {
-        this.opportunity.collateralAmount = e.target.value;
-    }
-
-    onBlurGuarantees(e) {
-        this.opportunity.guarantees = e.target.value;
-    }
-
-    onBlurRiskRating(e) {
-        this.opportunity.riskRating = e.target.value;
-    }
-
-
-    
 
     render() {
+
         let selectedUsers = this.getSelectedUsers();
-        let loanOfficerADName = this.state.teamMembers[0].userRoles.length>0 ? (this.state.teamMembers[0].userRoles[0].adGroupName) : <Trans>loanOfficer</Trans>;
+        let disableSubmit = selectedUsers.length > 0 ? false : true;
+        console.log("NewOpportunityOther_getSelectedUser : ", disableSubmit);
+        disableSubmit = this.setState.disableSubmit ? this.setState.disableSubmit : disableSubmit;
+
+        let loanOfficerADName =  <Trans>loanOfficer</Trans>; //TODO from appsettings
+        if(this.state.teamMembers.length>0){
+            if(this.state.teamMembers[0].userRoles.length>0){
+                loanOfficerADName = this.state.teamMembers[0].userRoles[0].adGroupName;
+            }
+        }
+
+        let defaultTemplateAvailable = this.state.templateList.some(name=>name.defaultTemplate);
         return (
             <div>
                 <div className='ms-Grid'>
                     <div className='ms-grid-row'>
-                        <h3 className='pageheading'><Trans>customerInput</Trans></h3>
-                        <div className='ms-lg12 ibox-content'>
-                            <div className='docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg4'>
-                                <TextField
-                                    label={<Trans>margin</Trans>}
-                                    value={this.opportunity.margin}
-                                    onBlur={(e) => this.onBlurMargin(e)}
-                                />
-                            </div>
-                            <div className='docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg4'>
-                                <TextField
-                                    label={<Trans>rate</Trans>}
-                                    value={this.opportunity.rate}
-                                    onBlur={(e) => this.onBlurRate(e)}
-                                />
-                            </div>
-                            <div className='docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg4'>
-                                <TextField
-                                    label={<Trans>debtRatio</Trans>}
-                                    value={this.opportunity.debtRatio}
-                                    onBlur={(e) => this.onBlurDebtRatio(e)}
-                                />
-
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div className='ms-Grid'>
-                    <div className='ms-grid-row'>
-                        <h3 className="pageheading"><Trans>creditFacility</Trans></h3>
+                        <h3 className="pageheading"><Trans>opportunityProperties</Trans></h3>
                         <div className='ms-lg12 ibox-content pb20'>
-                            <div className='docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg6'>
-                                <TextField
-                                    label={<Trans>purpose</Trans>}
-                                    value={this.opportunity.purpose}
-                                    onBlur={(e) => this.onBlurPurpose(e)}
-                                />
-                            </div>
-                            <div className='docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg6'>
-                                <TextField
-                                    label={<Trans>disbursementSchedule</Trans>}
-                                    value={this.opportunity.disbursementSchedule}
-                                    onBlur={(e) => this.onBlurDisbursementSchedule(e)}
-                                />
-                            </div>
-
-                            <div className='ms-grid-row'>
-                                <div className='docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg6'>
-                                    <TextField
-                                        label={<Trans>collateralAmount</Trans>}
-                                        value={this.opportunity.collateralAmount}
-                                        onBlur={(e) => this.onBlurCollateralAmount(e)}
-                                    />
-                                </div>
-                                <div className='docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg6'>
-                                    <TextField
-                                        label={<Trans>guarantees</Trans>}
-                                        value={this.opportunity.guarantees}
-                                        onBlur={(e) => this.onBlurGuarantees(e)}
-                                    />
-                                </div>
-                            </div>
-                            <div className='ms-grid-row'>
-                                <div className='docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg6'>
-                                    <TextField
-                                        label={<Trans>riskRating</Trans>}
-                                        value={this.opportunity.riskRating}
-                                        onBlur={(e) => this.onBlurRiskRating(e)}
-                                    />
-                                </div>
-                            </div>
+                            {this._rendermetaData()}
                         </div>
                     </div>
                 </div>
+
+                {
+                    defaultTemplateAvailable ? null :             
+                        <div className='ms-Grid'>
+                            <div className='ms-grid-row'>
+                                <h3 className="pageheading"><Trans>template</Trans></h3>
+                                <div className='ms-lg12 ibox-content pb20'>
+                                    <div className='docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg6'>
+                                        <div className="dropdownContainer">
+                                            <Dropdown
+                                                placeHolder={<Trans>selectTemplate</Trans>}
+                                                defaultSelectedKey={this.opportunity.template.id}
+                                                options={this.state.templateList.filter(name=>name.defaultTemplate === false)}
+                                                onChanged={(e) => this.onChangeTemplate(e)}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                }
+
 
                 <div className='ms-Grid'>
                     <div className='ms-grid-row'>
@@ -205,8 +238,8 @@ export class NewOpportunityOthers extends Component {
                         </div>
 
                     </div>
-                    
-                    
+
+
                 </div>
 
                 <div className='ms-Grid'>
@@ -217,11 +250,11 @@ export class NewOpportunityOthers extends Component {
                             <PrimaryButton className='backbutton pull-left' onClick={this.props.onClickBack}><Trans>back</Trans></PrimaryButton>
                         </div>
                         <div className='ms-Grid-col ms-sm6 ms-md6 ms-lg6 pb20'><br />
-                            <PrimaryButton className='pull-right' onClick={this.props.onClickNext}><Trans>submit</Trans></PrimaryButton>
+                            <PrimaryButton disabled={disableSubmit} className='pull-right' onClick={this.props.onClickNext}><Trans>submit</Trans></PrimaryButton>
                         </div>
                     </div><br /><br />
                 </div>
-                
+
             </div>
         );
     }

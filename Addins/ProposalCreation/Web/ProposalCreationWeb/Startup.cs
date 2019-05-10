@@ -70,7 +70,6 @@ namespace ProposalCreationWeb
 			});
 
 			// Add application services.
-			//services.AddSingleton<IConfiguration>(Configuration);
 			services.AddSingleton<IGraphAuthProvider, GraphAuthProvider>();
 			services.AddTransient<IGraphSdkHelper, GraphSdkHelper>();
 			services.AddSingleton<IDaemonHelper, DaemonHelper>();
@@ -79,18 +78,19 @@ namespace ProposalCreationWeb
 			services.AddSingleton<IRootConfigurationProvider, RootConfigurationProvider>();
             services.AddSingleton<ITaskProvider, TaskProvider>();
 
-		}
+            services.AddLogging(logging =>
+            {
+                logging.AddConsole();
+                logging.AddDebug();
+            });
+        }
 
 		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-		public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
+		public static void Configure(IApplicationBuilder app, IHostingEnvironment env)
 		{
-			loggerFactory.AddConsole(Configuration.GetSection("Logging"));
-			loggerFactory.AddDebug();
-
 			if (env.IsDevelopment())
 			{
 				app.UseDeveloperExceptionPage();
-				app.UseBrowserLink();
 			}
 			else
 			{

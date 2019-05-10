@@ -5,11 +5,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using ApplicationCore.Artifacts;
 using ApplicationCore.Interfaces;
 using ApplicationCore.Entities;
 using ApplicationCore.Services;
@@ -18,7 +16,6 @@ using ApplicationCore.Helpers;
 using ApplicationCore.Entities.GraphServices;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System.Linq;
 using ApplicationCore.Helpers.Exceptions;
 
 namespace Infrastructure.Services
@@ -59,6 +56,7 @@ namespace Infrastructure.Services
                 //set todays date as the last used date
                 templateFieldsJson.LastUsed = DateTimeOffset.Now.Date;
                 templateFieldsJson.ProcessList = JsonConvert.SerializeObject(template.ProcessList, Formatting.Indented);
+                templateFieldsJson.DefaultTemplate = template.DefaultTemplate.ToString();
 
                 dynamic templateJson = new JObject();
                 templateJson.fields = templateFieldsJson;
@@ -69,7 +67,7 @@ namespace Infrastructure.Services
                     ListId = _appOptions.TemplateListId
                 };
 
-                var result = await _graphSharePointAppService.CreateListItemAsync(templateSiteList, templateJson.ToString(), requestId);
+                await _graphSharePointAppService.CreateListItemAsync(templateSiteList, templateJson.ToString(), requestId);
 
                 _logger.LogInformation($"RequestId: {requestId} - TemplateRepository_CreateItemAsync finished creating SharePoint List for template.");
                 // END TODO
@@ -121,36 +119,32 @@ namespace Infrastructure.Services
                     ListId = _appOptions.TemplateListId
                 };
 
-                var json = await _graphSharePointAppService.GetListItemsAsync(siteList, "all", requestId);
-                dynamic jsonDyn = json;
+                dynamic jsonDyn = await _graphSharePointAppService.GetListItemsAsync(siteList, "all", requestId); 
                 var itemsList = new List<Template>();
+
                 if (jsonDyn.value.HasValues)
                 {
                     foreach (var item in jsonDyn.value)
                     {
-                        var template = Template.Empty;
-                        template.Id = item.fields.id.ToString();
-                        var x = item.fields;
-                        template.TemplateName = item.fields.TemplateName.ToString();
-                        template.Description = item.fields.Description.ToString();
-                        template.LastUsed = Convert.ToDateTime(item.fields.LastUsed.ToString());
-                        //get the user profile object
-                        var createdBy = JsonConvert.DeserializeObject<UserProfile>(item.fields.CreatedBy.ToString(), new JsonSerializerSettings
+                        var obj = JObject.Parse(item.ToString()).SelectToken("fields");
+                        itemsList.Add(new Template
                         {
-                            MissingMemberHandling = MissingMemberHandling.Ignore,
-                            NullValueHandling = NullValueHandling.Ignore
+                            Id = obj.SelectToken("id")?.ToString(),
+                            TemplateName = obj.SelectToken("TemplateName")?.ToString(),
+                            Description = obj.SelectToken("Description")?.ToString(),
+                            LastUsed = Convert.ToDateTime(obj.SelectToken("LastUsed")?.ToString()),
+                            DefaultTemplate = obj.SelectToken("DefaultTemplate") != null ? obj.SelectToken("DefaultTemplate").ToString() == "True" : false,
+                            CreatedBy = obj.SelectToken("CreatedBy") != null ? JsonConvert.DeserializeObject<UserProfile>(obj.SelectToken("CreatedBy").ToString(), new JsonSerializerSettings
+                            {
+                                MissingMemberHandling = MissingMemberHandling.Ignore,
+                                NullValueHandling = NullValueHandling.Ignore
+                            }) : UserProfile.Empty,
+                            ProcessList = obj.SelectToken("ProcessList") != null ? JsonConvert.DeserializeObject<IList<Process>>(obj.SelectToken("ProcessList").ToString(), new JsonSerializerSettings
+                            {
+                                MissingMemberHandling = MissingMemberHandling.Ignore,
+                                NullValueHandling = NullValueHandling.Ignore
+                            }) : new List<Process>()
                         });
-                        template.CreatedBy = createdBy;
-                        //get processList
-                        var processList = JsonConvert.DeserializeObject<IList<Process>>(item.fields.ProcessList.ToString(), new JsonSerializerSettings
-                        {
-                            MissingMemberHandling = MissingMemberHandling.Ignore,
-                            NullValueHandling = NullValueHandling.Ignore
-                        });
-                        template.ProcessList = processList;
-
-                        itemsList.Add(template);
-
                     }
                 }
 

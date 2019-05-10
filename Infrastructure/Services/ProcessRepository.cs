@@ -55,6 +55,8 @@ namespace Infrastructure.Services
                 processFieldsJson.ProcessType = process.ProcessType;
                 processFieldsJson.ProcessStep = process.ProcessStep;
                 processFieldsJson.Channel = process.Channel;
+                processFieldsJson.RoleId = process.RoleId;
+                processFieldsJson.RoleName = process.RoleName;
 
                 dynamic processJson = new JObject();
                 processJson.fields = processFieldsJson;
@@ -65,7 +67,7 @@ namespace Infrastructure.Services
                     ListId = _appOptions.ProcessListId
                 };
 
-                var result = await _graphSharePointAppService.CreateListItemAsync(processSiteList, processJson.ToString(), requestId);
+                await _graphSharePointAppService.CreateListItemAsync(processSiteList, processJson.ToString(), requestId);
 
                 _logger.LogInformation($"RequestId: {requestId} - processRepository_CreateItemAsync finished creating SharePoint List for process.");
 
@@ -116,21 +118,22 @@ namespace Infrastructure.Services
                     ListId = _appOptions.ProcessListId
                 };
 
-                var json = await _graphSharePointAppService.GetListItemsAsync(siteList, "all", requestId);
-                dynamic jsonDyn = json;
+                dynamic json = await _graphSharePointAppService.GetListItemsAsync(siteList, "all", requestId);
                 var itemsList = new List<ProcessesType>();
-                if (jsonDyn.value.HasValues)
+                if (json.value.HasValues)
                 {
-                    foreach (var item in jsonDyn.value)
+                    foreach (var item in json.value)
                     {
-                        var process = ProcessesType.Empty;
-                        process.Id = item.fields.id.ToString();
-                        var x = item.fields;
-                        process.ProcessType = item.fields.ProcessType.ToString();
-                        process.ProcessStep = item.fields.ProcessStep.ToString();
-                        process.Channel = item.fields.Channel.ToString();
-
-                        itemsList.Add(process);
+                        var obj = JObject.Parse(item.ToString()).SelectToken("fields");
+                        itemsList.Add(new ProcessesType
+                        {
+                            Id = obj.SelectToken("id")?.ToString(),
+                            ProcessType = obj.SelectToken("ProcessType")?.ToString(),
+                            ProcessStep = obj.SelectToken("ProcessStep")?.ToString(),
+                            Channel = obj.SelectToken("Channel")?.ToString(),
+                            RoleId = obj.SelectToken("RoleId") != null? obj.SelectToken("RoleId").ToString() : String.Empty,
+                            RoleName = obj.SelectToken("RoleName") != null ? obj.SelectToken("RoleName").ToString() : String.Empty
+                        });
                     }
                 }
 

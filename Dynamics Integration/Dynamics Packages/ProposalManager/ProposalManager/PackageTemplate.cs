@@ -59,9 +59,14 @@ namespace ProposalManager
         private IDictionary<string, PrivilegeDepth> RequiredPrivileges => new Dictionary<string, PrivilegeDepth>
         {
             { "prvReadAccount", PrivilegeDepth.Global },
+            { "prvReadContact", PrivilegeDepth.Global },
             { "prvReadConnectionRole", PrivilegeDepth.Global },
             { "prvCreateSharePointDocumentLocation", PrivilegeDepth.Global },
             { "prvReadSharePointDocumentLocation", PrivilegeDepth.Global },
+            { "prvAppendSharePointDocumentLocation", PrivilegeDepth.Global },
+            { "prvAppendToSharePointDocumentLocation", PrivilegeDepth.Global },
+            { "prvWriteSharePointDocumentLocation", PrivilegeDepth.Global },
+            { "prvDeleteSharePointDocumentLocation", PrivilegeDepth.Global },
             { "prvCreateSharePointSite", PrivilegeDepth.Global },
             { "prvReadSharePointSite", PrivilegeDepth.Global },
             { "prvReadUser", PrivilegeDepth.Global }

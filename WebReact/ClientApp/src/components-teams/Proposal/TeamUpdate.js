@@ -42,8 +42,9 @@ export class TeamUpdate extends Component {
         }
 	}
 
-    componentWillMount() {
+    componentDidMount() {
         // Get the teams context
+        console.log("code-review commments implementation");
 		this.getTeamsContext();
 	
     }
@@ -78,7 +79,7 @@ export class TeamUpdate extends Component {
 
         let role = "";
 
-        role = this.props.memberslist.assignedRole.adGroupName;
+        role = this.props.memberslist.adGroupName;
         return (
             <div className='ms-Grid'>
                 <TeamsComponentContext>

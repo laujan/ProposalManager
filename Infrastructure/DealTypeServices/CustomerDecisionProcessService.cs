@@ -118,55 +118,56 @@ namespace Infrastructure.DealTypeServices
         {
             try
             {
-                if (opportunity.Content.CustomerDecision.Approved)
+
+                //Granular Access : Start
+                var permissionsNeeded = new List<ApplicationCore.Entities.Permission>();
+                List<string> list = new List<string>();
+                var access = true;
+                //going for super access
+                list.AddRange(new List<string> { Access.Opportunities_ReadWrite_All.ToString() });
+                permissionsNeeded = (await _permissionRepository.GetAllAsync(requestId)).ToList().Where(x => list.Any(x.Name.Contains)).ToList();
+                if (!(StatusCodes.Status200OK == await _authorizationService.CheckAccessAsync(permissionsNeeded, requestId)))
                 {
-                    //Granular Access : Start
-                    var permissionsNeeded = new List<ApplicationCore.Entities.Permission>();
-                    List<string> list = new List<string>();
-                    var access = true;
-                    //going for super access
-                    list.AddRange(new List<string> { Access.Opportunities_ReadWrite_All.ToString() });
-                    permissionsNeeded = (await _permissionRepository.GetAllAsync(requestId)).ToList().Where(x => list.Any(x.Name.Contains)).ToList();
-                    if (!(StatusCodes.Status200OK == await _authorizationService.CheckAccessAsync(permissionsNeeded, requestId)))
+                    //going for opportunity access
+                    access = await _authorizationService.CheckAccessInOpportunityAsync(opportunity, PermissionNeededTo.Write, requestId);
+                    if (!access)
                     {
-                        //going for opportunity access
-                        access = await _authorizationService.CheckAccessInOpportunityAsync(opportunity, PermissionNeededTo.Write, requestId);
-                        if (!access)
+                        access = await _authorizationService.CheckAccessInOpportunityAsync(opportunity, PermissionNeededTo.WritePartial, requestId);
+                        //going for partial accesss
+                        if (access)
                         {
-                            access = await _authorizationService.CheckAccessInOpportunityAsync(opportunity, PermissionNeededTo.WritePartial, requestId);
-                            //going for partial accesss
-                            if (access)
-                            {
-                                list.Clear();
-                                list.AddRange(new List<string> { "customerdecision_readwrite" });
-                                permissionsNeeded = (await _permissionRepository.GetAllAsync(requestId)).ToList().Where(x => list.Any(x.Name.Contains)).ToList();
-                                access = StatusCodes.Status200OK == await _authorizationService.CheckAccessAsync(permissionsNeeded, requestId) ? true : false;
-                            }
-                            else access = false;
-
+                            list.Clear();
+                            list.AddRange(new List<string> { "customerdecision_readwrite" });
+                            permissionsNeeded = (await _permissionRepository.GetAllAsync(requestId)).ToList().Where(x => list.Any(x.Name.Contains)).ToList();
+                            access = StatusCodes.Status200OK == await _authorizationService.CheckAccessAsync(permissionsNeeded, requestId) ? true : false;
                         }
-                    }
+                        else access = false;
 
-                    if (access)
+                    }
+                }
+
+                if (access)
+                {
+                    if (opportunity.Content.CustomerDecision.Approved)
                     {
                         //update the state of the opportunity
                         opportunity.Metadata.OpportunityState = OpportunityState.Accepted;
                         //update the state of the processes
-                        foreach (var process in opportunity.Content.DealType.ProcessList)
+                        foreach (var process in opportunity.Content.Template.ProcessList)
                             process.Status = ActionStatus.Completed;
+                    }else
+                    {
+                        foreach (var process in opportunity.Content.Template.ProcessList)
+                            if (process.ProcessStep.ToLower() == "customer decision")
+                                process.Status = ActionStatus.FromName(opportunity.Metadata.OpportunityState.Name);
                     }
-                    else
-                       throw new AccessDeniedException("Access Denied for updating customer decision");
-                    //else throw access denied exeception
                 }
-                //Granular Access : End
 
                 return opportunity;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _logger.LogError($"RequestId: {requestId} CustomerDecisionProcessService - UpdateCustomerDecision : {ex.Message} AccessDeniedException");
-                //throw new AccessDeniedException($"RequestId: {requestId} CustomerDecisionProcessService - UpdateCustomerDecision : {ex.Message} AccessDeniedException");
                 return opportunity;
             }
         }

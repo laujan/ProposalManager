@@ -3,13 +3,11 @@
 //
 // Licensed under the MIT license. See LICENSE file in the solution root folder for full license information.
 
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ProposalCreation.Core.Helpers;
 using ProposalCreation.Core.Interfaces;
-using ProposalCreation.Core.Models;
 using ProposalCreation.Core.Providers;
-using System.Collections.Generic;
+using System;
 using System.Threading.Tasks;
 
 namespace ProposalCreationWeb.Controllers
@@ -42,10 +40,18 @@ namespace ProposalCreationWeb.Controllers
             this.taskProvider = taskProvider;
         }
 
-        public async Task<IEnumerable<string>> GetTasks()
+        [HttpGet]
+        [ActionName("GetTasks")]
+        public async Task<IActionResult> GetTasksAsync()
         {
-            var result = await taskProvider.GetTasksAsync();
-            return result;
+            try
+            {
+                return Ok(await taskProvider.GetTasksAsync());
+            }
+            catch(Exception ex)
+            {
+                return BadRequest($"An error occurred: {ex.Message}");
+            }
         }
 
     }

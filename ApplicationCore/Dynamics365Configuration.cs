@@ -19,25 +19,20 @@ namespace ApplicationCore
 
 	public class OpportunityMappingConfiguration
 	{
-		public string DisplayName { get; set; }
-		public string DealSize { get; set; }
-		public string AnnualRevenue { get; set; }
-		public string OpenedDate { get; set; }
-		public string Margin { get; set; }
-		public string Rate { get; set; }
-		public string DebtRatio { get; set; }
-		public string Purpose { get; set; }
-		public string DisbursementSchedule { get; set; }
-		public string CollateralAmount { get; set; }
-		public string Guarantees { get; set; }
-		public string RiskRating { get; set; }
-		public ICollection<OpportunityStatusMapping> Status { get; set; }
-		public int MapStatusCode(int statusCode) => Status.First(s => s.From == statusCode).To;
+        public ICollection<OpportunityMapping> MetadataFields { get; set; }
+        public ICollection<OpportunityStatusMapping> Status { get; set; }
+		public int MapStatusCode(int statusCode) => Status?.FirstOrDefault(s => s.From == statusCode)?.To ?? statusCode;
 	}
 
-	public class OpportunityStatusMapping
+    public class OpportunityStatusMapping
+    {
+        public int From { get; set; }
+        public int To { get; set; }
+    }
+
+    public class OpportunityMapping
 	{
-		public int From { get; set; }
-		public int To { get; set; }
+		public string From { get; set; }
+		public string To { get; set; }
 	}
 }

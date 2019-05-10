@@ -64,5 +64,6 @@ namespace ApplicationCore.ViewModels
         //[JsonConverter(typeof(SmartEnumConverter))]
         [JsonProperty("userRoles")]
         public List<RoleModel> UserRoles { get; set; }
+
     }
 }

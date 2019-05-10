@@ -32,15 +32,15 @@ export class PeoplePickerTeamMembers extends Component {
 
         this.state = {
             teamMembers: filteredList,
-            defaultSelectedItems: [],
+            defaultSelectedItems: this.props.defaultSelectedUsers.length > 0 ? this.props.defaultSelectedUsers : [],
             isLoadingPeople: false,
             isLoadingPics: false,
             isDisableTextBox: isDisableTextBox
         };
     }
 
-    componentWillMount() {
-
+    componentDidMount() {
+        console.log("code-review-comment implementation");
         if (this.props.defaultSelectedUsers && this.props.defaultSelectedUsers.length > 0 && this.props.defaultSelectedUsers[0].displayName.length > 0) {
             this.mapDefaultSelectedItems();
         }
@@ -170,14 +170,16 @@ export class PeoplePickerTeamMembers extends Component {
 
     // Map user properties to persona properties.
     _mapUsersToPersonas(users, useMailProp) {
+        
         return users.map((p) => {
 
             // The email property is returned differently from the /users and /people endpoints.
             let email = p.mail ? p.mail : p.userPrincipalName;
-            
+            console.log("ChooseTeams_Log _mapUsersToPersonas : p",p)
             let persona = {
                 id: p.id,
-                text: p.displayName,
+                text: p.displayName ? p.displayName : "USER NAME",
+                text2: p.hasOwnProperty("adGroupName") ? p.adGroupName : "",
                 secondaryText: p.userPrincipalName,
                 presence: PersonaPresence.none,
                 imageInitials: p.displayName.substring(0, 2),

@@ -13,14 +13,13 @@ import {
 } from 'office-ui-fabric-react/lib/Pivot';
 import { Trans } from "react-i18next";
 import { DealTypeListR } from './DealType/DealTypeListR';
-import { Category } from '../../components/Administration/Category';
-import { Region } from '../../components/Administration/Region';
-import { Industry } from '../../components/Administration/Industry';
-import { Tasks } from '../../components/Administration/Tasks';
-import { ProcessTypesList } from './ProcessTypesList';
-import { Permissions } from './Permissions';
-import Accessdenied  from '../../helpers/AccessDenied';
-
+import { ProcessTypesList } from './Configuration/ProcessTypesList';
+import { Permissions } from './Configuration/Permissions';
+import { TemplateList } from './Templates/TemplateList';
+import Accessdenied from '../../helpers/AccessDenied';
+import { MetaData } from './Configuration/MetaData';
+import { isTemplateEnabled } from '../../helpers/AppSettings';
+import { Tasks } from './Configuration/Tasks';
 
 export class Configuration extends Component {
     displayName = Configuration.name
@@ -47,7 +46,7 @@ export class Configuration extends Component {
         }
     }
 
-    componentWillMount() {
+    componentDidMount() {
         let selectedTab = window.location.hash.substr(1).length > 0 ? window.location.hash.substr(1) : "";
         this.setState({
             selectedTabName: selectedTab
@@ -69,32 +68,32 @@ export class Configuration extends Component {
                             this.state.haveGranularAccess
                                 ?
                                 <Pivot className='tabcontrols pt35' linkFormat={PivotLinkFormat.tabs} linkSize={PivotLinkSize.large} selectedKey={this.state.selectedTabName}>
-                                    <PivotItem linkText={<Trans>category</Trans>} width='100%' itemKey="category" >
-                                        <Category />
-                                    </PivotItem>
-                                    <PivotItem linkText={<Trans>region</Trans>} itemKey="region">
-                                        <Region />
-                                    </PivotItem>
-                                    <PivotItem linkText={<Trans>industry</Trans>} itemKey="industry">
-                                        <Industry />
+                                    <PivotItem linkText={<Trans>permissions</Trans>} itemKey="permissions">
+                                        <Permissions />
                                     </PivotItem>
                                     <PivotItem linkText={<Trans>tasks</Trans>} itemKey="tasks">
                                         <Tasks />
                                     </PivotItem>
-                                    <PivotItem linkText={<Trans>permissions</Trans>} itemKey="permissions">
-                                        <Permissions />
-                                    </PivotItem>
-                                    <PivotItem linkText={<Trans>dealTypes</Trans>} itemKey="dealType">
-                                        <DealTypeListR />
-                                    </PivotItem>
                                     <PivotItem linkText={<Trans>processTypes</Trans>} itemKey="processType">
                                         <ProcessTypesList />
+                                    </PivotItem>
+                                    {
+                                        isTemplateEnabled ?
+                                            <PivotItem linkText={<Trans>templates</Trans>} itemKey="templates">
+                                                <TemplateList />
+                                            </PivotItem>
+                                            :<PivotItem linkText={<Trans>businessProcess</Trans>} itemKey="dealType">
+                                            <DealTypeListR />
+                                        </PivotItem>
+                                    }
+                                    <PivotItem linkText={<Trans>dataModel</Trans>} itemKey="metaData">
+                                        <MetaData />
                                     </PivotItem>
                                 </Pivot>
                                 :
                                 <Accessdenied />
                         }
-                        
+
                     </div>
                 </div>
             </div>

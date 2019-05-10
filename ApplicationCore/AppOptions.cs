@@ -19,7 +19,7 @@ namespace ApplicationCore
 
         public string ProposalManagementRootSiteId { get; set; }
 
-        public string CategoriesListId { get; set; }
+        public string OpportunityMetaDataId { get; set; }
 
         public string TemplateListId { get; set; }
 
@@ -27,14 +27,16 @@ namespace ApplicationCore
 
         public string ProcessListId { get; set; }
 
-        public string IndustryListId { get; set; }
+        //public string IndustryListId { get; set; }
         public string TasksListId { get; set; }
 
-        public string RegionsListId { get; set; }
+        //public string RegionsListId { get; set; }
 
-        public string RoleMappingsListId { get; set; }
+        //public string RoleMappingsListId { get; set; }
 
         public string OpportunitiesListId { get; set; }
+
+        public string GroupsListId { get; set; }
 
         public string SetupPage { get; set; }
 
@@ -93,5 +95,7 @@ namespace ApplicationCore
         public string Expiration { get; set; }
 
         public string VaultBaseUrl { get; set; }
+
+        public string Version { get; set; }
     }
 }

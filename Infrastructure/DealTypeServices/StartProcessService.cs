@@ -59,40 +59,7 @@ namespace Infrastructure.DealTypeServices
         }
         private async Task<Opportunity> UpdateStartProcessStatus(Opportunity opportunity, string requestId = "")
         {
-            //get groupID
-            //var opportunityName = WebUtility.UrlEncode(opportunity.DisplayName);
-            //var options = new List<QueryParam>();
-            //options.Add(new QueryParam("filter", $"startswith(displayName,'{opportunityName}')"));
-            //var groupIdJson = await _graphUserAppService.GetGroupAsync(options, "", requestId);
-            //dynamic jsonDyn = groupIdJson;
-
-            //var groupID = String.Empty;
-            //if (groupIdJson.HasValues)
-            //{
-            //    groupID = jsonDyn.value[0].id.ToString();
-            //}
-
-
-            bool check = true;
-            dynamic jsonDyn = null;
-            var opportunityName = WebUtility.UrlEncode(opportunity.DisplayName);
-            var options = new List<QueryParam>();
-            options.Add(new QueryParam("filter", $"startswith(displayName,'{opportunityName}')"));
-            while (check)
-            {
-                var groupIdJson = await _graphUserAppService.GetGroupAsync(options, "", requestId);
-                jsonDyn = groupIdJson;
-                JArray jsonArray = JArray.Parse(jsonDyn["value"].ToString());
-                if (jsonArray.Count() > 0)
-                {
-                    if (!String.IsNullOrEmpty(jsonDyn.value[0].id.ToString()))
-                        check = false;
-                }
-            }
-
-            var groupID = String.Empty;
-            groupID = jsonDyn.value[0].id.ToString();
-
+       
             //get the process steps that have been asigned at least member
             var teamMembersCheck = new List<string>();
             foreach (var item in opportunity.Content.TeamMembers)
@@ -100,7 +67,7 @@ namespace Infrastructure.DealTypeServices
                 //process steps check
                 if (!String.IsNullOrEmpty(item.ProcessStep))
                 {
-                    var process = opportunity.Content.DealType.ProcessList.ToList().Find(x => x.ProcessStep.ToLower() == item.ProcessStep.ToLower());
+                    var process = opportunity.Content.Template.ProcessList.ToList().Find(x => x.ProcessStep.ToLower() == item.ProcessStep.ToLower());
                     if (process != null)
                     {
                         if (process.ProcessType.ToLower() == "checklisttab")
@@ -108,27 +75,11 @@ namespace Infrastructure.DealTypeServices
                     }
                 }
 
-                //adding of the team member
-                if (!item.AssignedRole.DisplayName.Equals("LoanOfficer", StringComparison.OrdinalIgnoreCase) 
-                    && !item.AssignedRole.DisplayName.Equals("RelationshipManager", StringComparison.OrdinalIgnoreCase))
-                {
-                    //if (!String.IsNullOrEmpty(item.Fields.UserPrincipalName))
-                    //{
-                        try
-                        {
-                            Guard.Against.NullOrEmpty(item.Id, $"UpdateStartProcessStatus_{item.AssignedRole.DisplayName} Id NullOrEmpty", requestId);
-                            var responseJson = await _graphUserAppService.AddGroupMemberAsync(item.Id, groupID, requestId);
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogError($"RequestId: {requestId} - userId: {item.Id} - UpdateStartProcessStatus_AddGroupMemberAsync_{item.AssignedRole.DisplayName} error in CreateWorkflowAsync: {ex}");
-                        }
-                    //}
-                }
+
             }
             //check if all the processes in the deal type are assigned to at least one team member
             bool statusCheck = true;
-            foreach(var process in opportunity.Content.DealType.ProcessList)
+            foreach(var process in opportunity.Content.Template.ProcessList)
             {
                 if (process.ProcessType.ToLower() == "checklisttab")
                 {
@@ -139,13 +90,13 @@ namespace Infrastructure.DealTypeServices
             //update the status of the start process step if all processes are assigned to a member
             if(statusCheck)
             {
-                foreach (var process in opportunity.Content.DealType.ProcessList)
+                foreach (var process in opportunity.Content.Template.ProcessList)
                     if (process.ProcessStep.ToLower() == "start process")
                     {
                         if(process.Status != ActionStatus.Completed)
                             process.Status = ActionStatus.Completed;
                     }
-                        
+                      
             }
 
             return opportunity;

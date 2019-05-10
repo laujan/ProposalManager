@@ -9,40 +9,36 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using ApplicationCore.ViewModels;
 using ApplicationCore.Interfaces;
 using ApplicationCore;
-using ApplicationCore.Artifacts;
-using Infrastructure.Services;
 using ApplicationCore.Helpers;
 using ApplicationCore.Models;
-using ApplicationCore.Entities;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
-using Infrastructure.Authorization;
-using ApplicationCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 
 namespace Infrastructure.Services
 {
-	public class ContextService : BaseService<ContextService>, IContextService
+    public class ContextService : BaseService<ContextService>, IContextService
 	{
 		private readonly GraphSharePointAppService _graphSharePointAppService;
         private readonly DocumentIdActivatorConfiguration documentIdActivatorConfiguration;
         private readonly IAzureKeyVaultService _azureKeyVaultService;
+        public readonly IRoleService _roleService;
 
         public ContextService(
 			ILogger<ContextService> logger,
             IOptionsMonitor<AppOptions> appOptions,
             IConfiguration configuration,
             GraphSharePointAppService graphSharePointAppService,
+            IRoleService roleService,
             IAzureKeyVaultService azureKeyVaultService) : base(logger, appOptions)
 		{
 			Guard.Against.Null(graphSharePointAppService, nameof(graphSharePointAppService));
 
             _graphSharePointAppService = graphSharePointAppService;
             _azureKeyVaultService = azureKeyVaultService;
+            _roleService = roleService;
 
             documentIdActivatorConfiguration = new DocumentIdActivatorConfiguration();
             configuration.Bind(DocumentIdActivatorConfiguration.ConfigurationName, documentIdActivatorConfiguration);
@@ -53,16 +49,16 @@ namespace Infrastructure.Services
             var clientSettings = new ClientSettingsModel();
             clientSettings.SharePointHostName = _appOptions.SharePointHostName;
             clientSettings.ProposalManagementRootSiteId = _appOptions.ProposalManagementRootSiteId;
-            clientSettings.CategoriesListId = _appOptions.CategoriesListId;
+            //clientSettings.CategoriesListId = _appOptions.CategoriesListId;
             clientSettings.TemplateListId = _appOptions.TemplateListId;
             clientSettings.RoleListId = _appOptions.RoleListId;
             clientSettings.Permissions = _appOptions.Permissions;
             clientSettings.ProcessListId = _appOptions.ProcessListId;
             clientSettings.WorkSpaceId = _appOptions.PBIWorkSpaceId;
-            clientSettings.IndustryListId = _appOptions.IndustryListId;
-            clientSettings.RegionsListId = _appOptions.RegionsListId;
+            //clientSettings.IndustryListId = _appOptions.IndustryListId;
+            //clientSettings.RegionsListId = _appOptions.RegionsListId;
             clientSettings.DashboardListId = _appOptions.DashboardListId;
-            clientSettings.RoleMappingsListId = _appOptions.RoleMappingsListId;
+            //clientSettings.RoleMappingsListId = _appOptions.RoleMappingsListId;
             clientSettings.OpportunitiesListId = _appOptions.OpportunitiesListId;
             clientSettings.SharePointListsPrefix = _appOptions.SharePointListsPrefix;
 
@@ -124,9 +120,8 @@ namespace Infrastructure.Services
 				dynamic responseDyn = siteIdResponse;
 				var siteId = responseDyn.id.ToString();
 
-				var driveResponse = await _graphSharePointAppService.GetSiteDriveAsync(siteId);
+                return await _graphSharePointAppService.GetSiteDriveAsync(siteId);
 
-				return driveResponse;
 			}
 			catch (Exception ex)
 			{
@@ -145,12 +140,7 @@ namespace Infrastructure.Services
 
 			var siteIdResponse = await _graphSharePointAppService.GetSiteIdAsync(_appOptions.SharePointHostName, result);
 
-			// Response field id is composed as follows: {hostname},{spsite.id},{spweb.id}
-			var siteId = siteIdResponse["id"].ToString();
-
-			var driveResponse = await _graphSharePointAppService.GetSiteDriveAsync(siteId);
-
-			return driveResponse;
+            return await _graphSharePointAppService.GetSiteDriveAsync(siteIdResponse["id"].ToString());
 		}
 
 		public async Task<JObject> GetSiteIdAsync(string siteName)
@@ -160,32 +150,31 @@ namespace Infrastructure.Services
 			Guard.Against.NullOrEmpty(siteName, nameof(siteName));
 			string result = string.Concat(siteName.Where(c => !char.IsWhiteSpace(c)));
 
-			var siteIdResponse = await _graphSharePointAppService.GetSiteIdAsync(_appOptions.SharePointHostName, result);
-
-			return siteIdResponse;
+	        return await _graphSharePointAppService.GetSiteIdAsync(_appOptions.SharePointHostName, result);
 		}
 
-		public async Task<JArray> GetOpportunityStatusAllAsync()
+		public JArray GetOpportunityStatusAllAsync()
 		{
 			_logger.LogInformation("GetOpportunityStatusAllAsync called.");
 
-			var response = JsonConvert.SerializeObject(OpportunityState.List.ToArray());
+			return JArray.Parse(JsonConvert.SerializeObject(OpportunityState.List.ToArray()));
 
-			JArray oppStatusArray = JArray.Parse(response);
+        }
 
-			return oppStatusArray;
-
-		}
-
-		public async Task<JArray> GetActionStatusAllAsync()
+		public JArray GetActionStatusAllAsync()
 		{
 			_logger.LogInformation("GetActionStatusAllAsync called.");
 
-			var response = JsonConvert.SerializeObject(ActionStatus.List.ToArray());
+            return JArray.Parse(JsonConvert.SerializeObject(ActionStatus.List.ToArray()));
 
-			JArray actionStatusArray = JArray.Parse(response);
-
-			return actionStatusArray;
 		}
-	}
+
+        public async Task<List<ProcessRoleModel>> GetProcessRolesList(string requestId="")
+        {
+            _logger.LogInformation("GetProcessRolesList called.");
+            var processRolesList = (await _roleService.GetAllAsync(requestId)).Select(item => new ProcessRoleModel { Key = item.Id, RoleName = item.DisplayName }).ToList();
+            return processRolesList;
+        }
+        
+    }
 }

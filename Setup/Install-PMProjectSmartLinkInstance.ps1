@@ -147,7 +147,7 @@ if ($registers)
         '89fe6a52-be36-487e-b7d8-d061c450a026',
         'e1fe6dd8-ba31-4d61-89e7-88639da4683d'
     $applicationPermissions = @()
-    $projectSmartLinkRegistration = RegisterApp -ApplicationName "$ApplicationName-projectsmartlink" -RelativeReplyUrls $replyUrls -DelegatedPermissions $delegatedPermissions -Credential $Credential
+    $projectSmartLinkRegistration = RegisterApp -ApplicationName "$ApplicationName-projectsmartlink" -RelativeReplyUrls $replyUrls -DelegatedPermissions $delegatedPermissions -Credential $Credential -Force:$Force
     
     Write-Information "Project Smart Link add-in successfully registered."
 

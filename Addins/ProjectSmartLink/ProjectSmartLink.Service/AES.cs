@@ -3,14 +3,12 @@
 //
 // Licensed under the MIT license. See LICENSE file in the solution root folder for full license information.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Security.Cryptography;
-using System.IO;
-using System.Configuration;
 using Microsoft.Extensions.Configuration;
+using System;
+using System.IO;
+using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace ProjectSmartLink.Service
 {
@@ -18,7 +16,6 @@ namespace ProjectSmartLink.Service
     {
         private static byte[] _key;
         private UTF8Encoding _encoder = new UTF8Encoding();
-        private RijndaelManaged _rm = new RijndaelManaged();
 
         public AES(IConfiguration config)
         {
@@ -36,7 +33,7 @@ namespace ProjectSmartLink.Service
             return _encoder.GetString(Decrypt(Convert.FromBase64String(encrypted)));
         }
 
-        public byte[] Encrypt(byte[] buffer)
+        public static byte[] Encrypt(byte[] buffer)
         {
             byte[] retValue;
             using (var rm = new RijndaelManaged())
@@ -59,7 +56,7 @@ namespace ProjectSmartLink.Service
             return retValue;
         }
 
-        public byte[] Decrypt(byte[] buffer)
+        public static byte[] Decrypt(byte[] buffer)
         {
             byte[] iv = new byte[16];
             Array.Copy(buffer, iv, 16);

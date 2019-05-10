@@ -8,6 +8,7 @@ using ApplicationCore.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -35,7 +36,14 @@ namespace Infrastructure.Services
 			{
 				dynamicsClient = dynamicsClientFactory.GetDynamicsAuthorizedWebClientAsync().Result;
 				var result = dynamicsClient.GetAsync($"/api/data/v9.0/connectionroles?$filter=category eq {dynamicsConfiguration.ProposalManagerCategoryId}&$select=name").Result;
-				var connectionRoles = JsonConvert.DeserializeObject<JObject>(result.Content.ReadAsStringAsync().Result)["value"].AsJEnumerable();
+                JObject responseJObject = result.Content.ReadAsAsync<JObject>().Result;
+
+                if (responseJObject == null || responseJObject["value"] == null)
+                {
+                    throw new Exception("Invalid or null response from Dynamics when querying for connection roles.");
+                }
+
+                var connectionRoles = responseJObject["value"].AsJEnumerable();
 				connectionRolesCache.ConnectionRoles = new Dictionary<string, string>(from cr in connectionRoles
 																					  select new KeyValuePair<string, string>(cr["connectionroleid"].ToString(), cr["name"].ToString()));
 			}

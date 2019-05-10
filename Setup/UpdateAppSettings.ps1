@@ -11,7 +11,6 @@
     
     if($ProposalCreation)
     {
-        
         $appSettings.General.SiteId = $inputParams.SiteId
         $appSettings.General.ProposalManagerApiUrl = $inputParams.ProposalManagerUrl
 
@@ -35,7 +34,6 @@
     }
     else
     {
-    
         # AzureAd settings
         $appSettings.AzureAd.ClientId = $inputParams.ClientId
         $appSettings.AzureAd.ClientSecret = $inputParams.ClientSecret
@@ -53,6 +51,16 @@
         $appSettings.ProposalManagement.MicrosoftAppId = $inputParams.MicrosoftAppId
         $appSettings.ProposalManagement.MicrosoftAppPassword = $inputParams.MicrosoftAppPassword
         $appSettings.ProposalManagement.AllowedTenants = $inputParams.AllowedTenants
+        $appSettings.ProposalManagement.OpportunityMetaDataId = "OpportunityMetaData"
+        $appSettings.ProposalManagement.TemplateListId = "Templates"
+        $appSettings.ProposalManagement.RoleListId = "Role"
+        $appSettings.ProposalManagement.Permissions = "Permission"
+        $appSettings.ProposalManagement.ProcessListId = "WorkFlow Items"
+        $appSettings.ProposalManagement.TasksListId = "Tasks"
+        $appSettings.ProposalManagement.DashboardListId = "Dashboard"
+        $appSettings.ProposalManagement.OpportunitiesListId = "Opportunities"
+        $appSettings.ProposalManagement.GroupsListId = "Groups"
+        $appSettings.ProposalManagement.GeneralProposalManagementTeam = $inputParams.GeneralProposalManagementTeam
 
         # Opportunity site provisioner webjob settings
         $appSettings.DocumentIdActivator.WebhookAddress = $inputParams.WebhookAddress

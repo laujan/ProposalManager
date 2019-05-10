@@ -4,8 +4,6 @@
 // Licensed under the MIT license. See LICENSE file in the solution root folder for full license information
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using ApplicationCore;
 using Microsoft.AspNetCore.Http;
@@ -14,16 +12,11 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using ApplicationCore.Interfaces;
 using ApplicationCore.Helpers;
-using ApplicationCore.Artifacts;
-using Newtonsoft.Json.Linq;
-using ApplicationCore.ViewModels;
-using ApplicationCore.Models;
-using Newtonsoft.Json;
 using Microsoft.AspNetCore.Authorization;
 
 namespace WebReact.Api
 {
-	[Authorize(AuthenticationSchemes = "AzureAdBearer")]
+    [Authorize(AuthenticationSchemes = "AzureAdBearer")]
 	public class DocumentController : BaseApiController<DocumentController>
     {
         private readonly IDocumentService _documentService;

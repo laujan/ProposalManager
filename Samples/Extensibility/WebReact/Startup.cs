@@ -3,13 +3,9 @@
 //
 // Licensed under the MIT license. See LICENSE file in the solution root folder for full license information.
 
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
 using Microsoft.Bot.Connector;
 using Microsoft.Extensions.Configuration;
@@ -25,22 +21,13 @@ using Infrastructure.Services;
 using ApplicationCore.Services;
 using Infrastructure.OfficeApi;
 using ApplicationCore.Helpers;
-using Microsoft.AspNetCore.Authorization;
 using Infrastructure.DealTypeServices;
 using Infrastructure.Helpers;
 using Infrastructure.Authorization;
-using System.Collections.Generic;
-using System.Linq;
-using ApplicationCore.Models;
-using System.Reflection;
-using System.IO;
-using System;
-using Newtonsoft.Json.Linq;
-using WebReact.ModelExamples;
 using ApplicationCore.Interfaces.SmartLink;
 using Infrastructure.Services.SmartLink;
-
 using Microsoft.Extensions.Options;
+using IAuthorizationService = ApplicationCore.Interfaces.IAuthorizationService;
 
 namespace WebReact
 {
@@ -59,30 +46,6 @@ namespace WebReact
 		/// This method gets called by the runtime. Use this method to add services to the container.
 		public void ConfigureServices(IServiceCollection services)
 		{
-            // Add CORS exception to enable authentication in Teams Client
-            //services.AddCors(options =>
-            //{
-            //    options.AddPolicy("AllowSpecificOrigins",
-            //    builder =>
-            //    {
-            //        builder.WithOrigins("https://webreact20180403042343.azurewebsites.net", "https://login.microsoftonline.com");
-            //    });
-
-            //    options.AddPolicy("AllowAllMethods",
-            //        builder =>
-            //        {
-            //            builder.WithOrigins("https://webreact20180403042343.azurewebsites.net")
-            //                   .AllowAnyMethod();
-            //        });
-
-            //    options.AddPolicy("ExposeResponseHeaders",
-            //        builder =>
-            //        {
-            //            builder.WithOrigins("https://webreact20180403042343.azurewebsites.net")
-            //                   .WithExposedHeaders("X-Frame-Options");
-            //        });
-            //});
-
             // Add in-mem cache service
             services.AddMemoryCache();
 
@@ -99,7 +62,7 @@ namespace WebReact
             services.AddSingleton(typeof(ICredentialProvider), credentialProvider);
 
             // Add Authorization services
-            services.AddScoped<Infrastructure.Authorization.IAuthorizationService, AuthorizationService>();
+            services.AddScoped<IAuthorizationService, AuthorizationService>();
 
             // Add MVC services
             services.AddMvc(options =>
@@ -116,44 +79,43 @@ namespace WebReact
 
 			// Register configuration options
 			services.Configure<AppOptions>(Configuration.GetSection("ProposalManagement"));
+            services.Configure<AzureAdOptions>(Configuration.GetSection("AzureAd"));
 
-			// Add application infrastructure services.
-			services.AddSingleton<IGraphAuthProvider, GraphAuthProvider>(); // Auth provider for Graph client, must be singleton
+            // Add application infrastructure services.
+            services.AddSingleton<IGraphAuthProvider, GraphAuthProvider>(); // Auth provider for Graph client, must be singleton
             services.AddSingleton<IWebApiAuthProvider, WebApiAuthProvider>(); // Auth provider for WebApi calls, must be singleton
             services.AddScoped<IGraphClientAppContext, GraphClientAppContext>();
 			services.AddScoped<IGraphClientUserContext, GraphClientUserContext>();
-			services.AddTransient<IUserContext, UserIdentityContext>();
+            services.AddScoped<IGraphClientOnBehalfContext, GraphClientOnBehalfContext>();
+            services.AddTransient<IUserContext, UserIdentityContext>();
             services.AddScoped<IWordParser, WordParser>();
+            services.AddScoped<IPowerPointParser, PowerPointParser>();
 
             // Add core services
             services.AddScoped<IOpportunityFactory, OpportunityFactory>();
 			services.AddScoped<IOpportunityRepository, OpportunityRepository>();
             services.AddScoped<IUserProfileRepository, UserProfileRepository>();
 			services.AddScoped<IDocumentRepository, DocumentRepository>();
-			services.AddScoped<IRegionRepository, RegionRepository>();
-			services.AddScoped<IIndustryRepository, IndustryRepository>();
-			services.AddScoped<ICategoryRepository, CategoryRepository>();
-			services.AddScoped<IRoleMappingRepository,RoleMappingRepository>();
+			services.AddScoped<IMetaDataRepository, MetaDataRepository>();
             services.AddScoped<ITemplateRepository, TemplateRepository>();
             services.AddScoped<IProcessRepository, ProcessRepository>();
-            services.AddScoped<GraphSharePointAppService>();
             services.AddScoped<SharePointListsSchemaHelper>();
 			services.AddScoped<GraphSharePointUserService>();
-			services.AddScoped<GraphTeamUserService>();
-			services.AddScoped<GraphUserAppService>();
+            services.AddScoped<GraphSharePointAppService>();
+            services.AddScoped<GraphUserAppService>();
+            services.AddScoped<GraphTeamsUserService>();
             services.AddScoped<GraphTeamsAppService>();
+            services.AddScoped<GraphTeamsOnBehalfService>();
             services.AddScoped<IAddInHelper, AddInHelper>();
+            services.AddSingleton<IAzureKeyVaultService, AzureKeyVaultService>();
 
             // FrontEnd services
             services.AddScoped<IOpportunityService, OpportunityService>();
 			services.AddScoped<IDocumentService, DocumentService>();
 			services.AddScoped<IUserProfileService, UserProfileService>();
-			services.AddScoped<IRegionService, RegionService>();
-			services.AddScoped<IIndustryService, IndustryService>();
-			services.AddScoped<IRoleMappingService, RoleMappingService>();
             services.AddScoped<IContextService, ContextService>();
-            services.AddScoped<ICategoryService, CategoryService>();
-			services.AddScoped<ISetupService, SetupService>();
+            services.AddScoped<IMetaDataService, MetaDataService>();
+            services.AddScoped<ISetupService, SetupService>();
             services.AddScoped<UserProfileHelpers>();
             services.AddScoped<TemplateHelpers>();
             services.AddScoped<OpportunityHelpers>();
@@ -165,14 +127,19 @@ namespace WebReact
             services.AddScoped<IPowerBIService, PowerBIService>();
             services.AddScoped<IPermissionRepository, PermissionRepository>();
             services.AddScoped<IPermissionService, PermissionService>();
-
+            services.AddScoped<IGroupsRepository, GroupsRepository>();
+            services.AddScoped<IGroupsService, GroupsService>();
+            
             // DealType Services
-            services.AddScoped<CheckListProcessService>();
-            services.AddScoped<CustomerFeedbackProcessService>();
-            services.AddScoped<CustomerDecisionProcessService>();
-            services.AddScoped<ProposalStatusProcessService>();
-            services.AddScoped<NewOpportunityProcessService>();
-            services.AddScoped<StartProcessService>();
+            services.AddScoped<ICheckListProcessService, CheckListProcessService>();
+            services.AddScoped<ICustomerFeedbackProcessService, CustomerFeedbackProcessService>();
+            services.AddScoped<ICustomerDecisionProcessService, CustomerDecisionProcessService>();
+            services.AddScoped<IProposalDocumentProcessService, ProposalDocumentProcessService>();
+            services.AddScoped<INewOpportunityProcessService, NewOpportunityProcessService>();
+            services.AddScoped<IStartProcessService, StartProcessService>();
+            services.AddScoped<ITeamChannelService, TeamChannelService>();
+            services.AddScoped<IMemberService, MemberService>();
+            services.AddScoped<INotesService, NotesService>();
 
             // SmartLink
             services.AddScoped<IDocumentIdService, DocumentIdService>();
@@ -205,37 +172,6 @@ namespace WebReact
             //Configure writing to appsettings
             services.ConfigureWritable<AppOptions>(Configuration.GetSection("ProposalManagement"));
             services.ConfigureWritable<DocumentIdActivatorConfiguration>(Configuration.GetSection("DocumentIdActivator"));
-
-            // Register the Swagger generator, defining 1 or more Swagger documents
-            //services.AddSwaggerGen(c =>
-            //{
-            //    c.SwaggerDoc("v1", new Info
-            //    {
-            //        Version = "v1",
-            //        Title = "Proposal Manager API",
-            //        Description = "APIs to do CURD operations in Sharepoint schema using Microsoft Graph APIS for Proposal Management App"
-            //    });
-
-            //    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-            //    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-            //    c.IncludeXmlComments(xmlPath);
-
-            //    c.OperationFilter<AddFileParamTypesOperationFilter>();
-            //    c.OperationFilter<AddResponseHeadersFilter>(); // [SwaggerResponseHeader]
-            //    c.OperationFilter<AppendAuthorizeToSummaryOperationFilter>();
-
-            //    c.AddSecurityDefinition("Bearer", new ApiKeyScheme { In = "header", Description = "Please enter JWT with Bearer into field", Name = "Authorization", Type = "apiKey" });
-            //    c.AddSecurityRequirement(new Dictionary<string, IEnumerable<string>>
-            //        {
-            //            { "Bearer", Enumerable.Empty<string>() },
-            //        }
-            //    );
-
-            //});
-
-            //services.AddSwaggerExamplesFromAssemblyOf<RoleMappingModelExample>();
-            // Register the Swagger generator, defining 1 or more Swagger documents
-
         }
 
         /// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -244,6 +180,7 @@ namespace WebReact
 			// Add the console logger.
 			loggerFactory.AddConsole(Configuration.GetSection("Logging"));
 			loggerFactory.AddDebug();
+            loggerFactory.AddAzureWebAppDiagnostics();
 
 			// Configure error handling middleware.
             if (env.IsDevelopment())

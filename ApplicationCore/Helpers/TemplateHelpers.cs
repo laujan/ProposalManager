@@ -56,6 +56,9 @@ namespace ApplicationCore.Helpers
             entity.Id = viewModel.Id ?? String.Empty;
             entity.TemplateName = viewModel.TemplateName ?? String.Empty;
             entity.Description = viewModel.Description ?? String.Empty;
+            entity.DefaultTemplate = viewModel.DefaultTemplate;
+            entity.Initilaltemplate = viewModel.Initilaltemplate;
+            entity.SelectProcessFlag = viewModel.SelectProcessFlag;
 
             //get userprofile entity
             if (viewModel.CreatedBy.Id == "")
@@ -83,6 +86,10 @@ namespace ApplicationCore.Helpers
             model.CreatedBy = await MapToUserProfileViewModel(entity.CreatedBy, requestId);
             model.LastUsed = entity.LastUsed;
             model.ProcessList = await MapToProcessViewModel(entity.ProcessList, requestId);
+
+            model.DefaultTemplate = entity.DefaultTemplate;
+            model.Initilaltemplate = entity.Initilaltemplate;
+            model.SelectProcessFlag = entity.SelectProcessFlag;
 
             return model;
         }
@@ -178,6 +185,9 @@ namespace ApplicationCore.Helpers
                     temp.DaysEstimate = process.DaysEstimate ?? string.Empty;
                     temp.Channel = process.Channel ?? string.Empty;
                     temp.Status = process.Status ?? ActionStatus.NotStarted;
+                    temp.RoleId = process.RoleId ?? String.Empty;
+                    temp.RoleName = process.RoleName ?? String.Empty;
+
                     model.Add(temp);
                 }
 
@@ -204,6 +214,10 @@ namespace ApplicationCore.Helpers
                     temp.DaysEstimate = process.DaysEstimate ?? string.Empty;
                     temp.Channel = process.Channel ?? string.Empty;
                     temp.Status = process.Status ?? ActionStatus.NotStarted;
+
+                    temp.RoleId = process.RoleId ?? String.Empty;
+                    temp.RoleName = process.RoleName ?? String.Empty;
+
                     entity.Add(temp);
                 }
 

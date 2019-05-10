@@ -31,16 +31,12 @@ export class TeamMembers extends Component {
         };
 	}
 
-	componentWillMount() {
-
-	}
-
 
     render() {
 	
 		let enableEditTeam;
         console.log("TeamMembers_render props :", this.props);
-        if (this.props.opportunityState !== 1 && this.props.haveAccessToEditTeam ) {
+        if (this.props.haveAccessToEditTeam ) {
 			enableEditTeam = true;
 		}
 		else {
@@ -58,7 +54,7 @@ export class TeamMembers extends Component {
                                         {...{ imageUrl: member.UserPicture, imageInitials: member.displayName ? member.displayName.match(/\b(\w)/g) ? member.displayName.match(/\b(\w)/g).join('') : "" : "" }}
                                         size={PersonaSize.size40}
                                         text={member.displayName}
-                                        secondaryText={member.assignedRole.adGroupName}
+                                        secondaryText={member.adGroupName}
                                     />
                                     <span>
                                         <p className="pull-right">

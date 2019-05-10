@@ -5,84 +5,78 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
-using System.Net;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using ApplicationCore.Artifacts;
 using ApplicationCore.Interfaces;
 using ApplicationCore.Entities;
 using ApplicationCore.Services;
-using ApplicationCore.Authorization;
 using ApplicationCore;
 using ApplicationCore.Helpers;
-using ApplicationCore.Entities.GraphServices;
 using Newtonsoft.Json.Linq;
-using Newtonsoft.Json;
-using Infrastructure.GraphApi;
 using ApplicationCore.Helpers.Exceptions;
-using Microsoft.Graph;
 using System.Linq;
 using System.Text.RegularExpressions;
-using Infrastructure.DealTypeServices;
-using ApplicationCore.Models;
-using Infrastructure.Authorization;
 
 namespace Infrastructure.Services
 {
-	public class OpportunityFactory : BaseArtifactFactory<Opportunity>, IOpportunityFactory
+    public class OpportunityFactory : BaseArtifactFactory<Opportunity>, IOpportunityFactory
 	{
 		private readonly GraphSharePointAppService _graphSharePointAppService;
 		private readonly GraphUserAppService _graphUserAppService;
-		private readonly IUserProfileRepository _userProfileRepository;
-        private readonly IRoleMappingRepository _roleMappingRepository;
+
         private readonly CardNotificationService _cardNotificationService;
-        private readonly IUserContext _userContext;
-        private readonly CheckListProcessService _checkListProcessService;
-        private readonly CustomerFeedbackProcessService customerFeedbackProcessService;
-        private readonly CustomerDecisionProcessService _customerDecisionProcessService;
-        private readonly ProposalStatusProcessService _proposalStatusProcessService;
-        private readonly NewOpportunityProcessService _newOpportunityProcessService;
-        private readonly StartProcessService _startProcessService;
+        private readonly ICheckListProcessService _checkListProcessService;
+        private readonly ICustomerDecisionProcessService _customerDecisionProcessService;
+        private readonly ICustomerFeedbackProcessService _customerFeedbackProcessService;
+        private readonly IProposalDocumentProcessService _proposalStatusProcessService;
+        private readonly INewOpportunityProcessService _newOpportunityProcessService;
+        private readonly IStartProcessService _startProcessService;
         private readonly IDashboardService _dashboardService;
         private readonly IAuthorizationService _authorizationService;
         private readonly IPermissionRepository _permissionRepository;
         private readonly IDashboardAnalysis _dashboardAnalysis;
         protected readonly GraphTeamsAppService _graphTeamsAppService;
+        protected readonly GraphTeamsOnBehalfService _graphTeamsOnBehalfService ;
         private readonly IAddInHelper _addInHelper;
+        protected readonly IAzureKeyVaultService _azureKeyVaultService;
 
+        private readonly IMemberService _memberService;
+        private readonly ITeamChannelService _teamChannelService;
+        private readonly INotesService _notesService;
 
         public OpportunityFactory(
             ILogger<OpportunityFactory> logger,
             IOptionsMonitor<AppOptions> appOptions,
             GraphSharePointAppService graphSharePointAppService,
             GraphUserAppService graphUserAppService,
-            IUserProfileRepository userProfileRepository,
-            IRoleMappingRepository roleMappingRepository,
             CardNotificationService cardNotificationService,
-            IUserContext userContext,
-            CheckListProcessService checkListProcessService,
-            CustomerFeedbackProcessService customerFeedbackProcessService,
-            CustomerDecisionProcessService customerDecisionProcessService,
-            ProposalStatusProcessService proposalStatusProcessService,
-            NewOpportunityProcessService newOpportunityProcessService,
+            INotesService notesService,
+            ICheckListProcessService checkListProcessService,
+            ICustomerDecisionProcessService customerDecisionProcessService,
+            ICustomerFeedbackProcessService customerFeedbackProcessService,
+            IProposalDocumentProcessService proposalStatusProcessService,
+            INewOpportunityProcessService newOpportunityProcessService,
             IDashboardService dashboardService,
             IAuthorizationService authorizationService,
             IPermissionRepository permissionRepository,
-            StartProcessService startProcessService,
+            IStartProcessService startProcessService,
             IDashboardAnalysis dashboardAnalysis,
             GraphTeamsAppService graphTeamsAppService,
-            IAddInHelper addInHelper) : base(logger, appOptions)
+            IAddInHelper addInHelper,
+            GraphTeamsOnBehalfService graphTeamsOnBeahalfService,
+            IMemberService memberService,
+            ITeamChannelService teamChannelService,
+            IAzureKeyVaultService azureKeyVaultService) : base(logger, appOptions)
 		{
 			Guard.Against.Null(graphSharePointAppService, nameof(graphSharePointAppService));
 			Guard.Against.Null(graphUserAppService, nameof(graphUserAppService));
-			Guard.Against.Null(userProfileRepository, nameof(userProfileRepository));
-            Guard.Against.Null(roleMappingRepository, nameof(roleMappingRepository));
             Guard.Against.Null(cardNotificationService, nameof(cardNotificationService));
-            Guard.Against.Null(userContext, nameof(userContext));
+            Guard.Against.Null(notesService, nameof(notesService));
             Guard.Against.Null(checkListProcessService, nameof(checkListProcessService));
             Guard.Against.Null(customerDecisionProcessService, nameof(customerDecisionProcessService));
+            Guard.Against.Null(customerFeedbackProcessService, nameof(customerFeedbackProcessService));
             Guard.Against.Null(proposalStatusProcessService, nameof(proposalStatusProcessService));
             Guard.Against.Null(newOpportunityProcessService, nameof(newOpportunityProcessService));
             Guard.Against.Null(startProcessService, nameof(startProcessService));
@@ -95,13 +89,11 @@ namespace Infrastructure.Services
 
             _graphSharePointAppService = graphSharePointAppService;
 			_graphUserAppService = graphUserAppService;
-            _userProfileRepository = userProfileRepository;
-            _roleMappingRepository = roleMappingRepository;
+
             _cardNotificationService = cardNotificationService;
-            _userContext = userContext;
             _checkListProcessService = checkListProcessService;
-            this.customerFeedbackProcessService = customerFeedbackProcessService;
             _customerDecisionProcessService = customerDecisionProcessService;
+            _customerFeedbackProcessService = customerFeedbackProcessService;
             _proposalStatusProcessService = proposalStatusProcessService;
             _newOpportunityProcessService = newOpportunityProcessService;
             _startProcessService = startProcessService;
@@ -111,59 +103,54 @@ namespace Infrastructure.Services
             _graphTeamsAppService = graphTeamsAppService;
             _dashboardAnalysis = dashboardAnalysis;
             _addInHelper = addInHelper;
+            _graphTeamsOnBehalfService = graphTeamsOnBeahalfService;
+            _azureKeyVaultService = azureKeyVaultService;
+
+            _memberService = memberService;
+            _teamChannelService = teamChannelService;
+            _notesService = notesService;
         }
 
         public async Task<Opportunity> CreateWorkflowAsync(Opportunity opportunity, string requestId = "")
 		{
 			try
 			{
-				// Set initial opportunity state
-				opportunity.Metadata.OpportunityState = OpportunityState.Creating;
+                _logger.LogError($"RequestId: {requestId} - Opportunityfactory_CreateWorkflowAsync CheckAccess CreateItemAsync");
 
-				// Remove empty sections from proposal document
-				var porposalSectionList = new List<DocumentSection>();
-				foreach (var item in opportunity.Content.ProposalDocument.Content.ProposalSectionList)
-				{
-					if (!String.IsNullOrEmpty(item.DisplayName))
-					{
-						porposalSectionList.Add(item);
-					}
-				}
-				opportunity.Content.ProposalDocument.Content.ProposalSectionList = porposalSectionList;
+                // Set initial opportunity state
+                opportunity.Metadata.OpportunityState = OpportunityState.Creating;
 
-
-                // Delete empty ChecklistItems
-                opportunity.Content.Checklists = await RemoveEmptyFromChecklistAsync(opportunity.Content.Checklists, requestId);
-
-                //Granular Access : Start
-                _logger.LogError($"RequestId: {requestId} - Opportunityfactory_UpdateItemAsync CheckAccess CreateItemAsync");
-                if (opportunity.Content.DealType.ProcessList != null)
+                if (opportunity.Content.Template != null)
                 {
-                    //create team and channels
-                    if (await GroupIdCheckAsync(opportunity.DisplayName, requestId))
-                        await CreateTeamAndChannelsAsync(opportunity, requestId);
-
-                    if (StatusCodes.Status200OK == await _authorizationService.CheckAccessFactoryAsync(PermissionNeededTo.DealTypeWrite, requestId) ||
-                        await _authorizationService.CheckAccessInOpportunityAsync(opportunity, PermissionNeededTo.Write, requestId))
+                    if (opportunity.Content.Template.ProcessList != null)
                     {
+
+                        if (opportunity.Content.Template.ProcessList.Count() > 1)
+                        {
+                            if (!opportunity.TemplateLoaded)
+                            {
+                                opportunity = await _teamChannelService.CreateWorkflowAsync(opportunity, requestId);
+ 
+                                opportunity.Metadata.OpportunityState = OpportunityState.InProgress;
+                            }
+                            opportunity = await _memberService.CreateWorkflowAsync(opportunity, requestId);
+                        }
+
                         bool checklistPass = false;
-                        foreach (var item in opportunity.Content.DealType.ProcessList)
+                        foreach (var item in opportunity.Content.Template.ProcessList)
                         {
                             if (item.ProcessType.ToLower() == "checklisttab" && checklistPass == false)
                             {
-                                //DashBoard Create call Start.
-                                await UpdateDashBoardEntryAsync(opportunity, requestId);
-                                //DashBoard Create call End.
                                 opportunity = await _checkListProcessService.CreateWorkflowAsync(opportunity, requestId);
                                 checklistPass = true;
-                            }
-                            else if (item.ProcessType.ToLower() == "feedbacktab")
-                            {
-                                opportunity = await customerFeedbackProcessService.CreateWorkflowAsync(opportunity, requestId);
                             }
                             else if (item.ProcessType.ToLower() == "customerdecisiontab")
                             {
                                 opportunity = await _customerDecisionProcessService.CreateWorkflowAsync(opportunity, requestId);
+                            }
+                            else if (item.ProcessType.ToLower() == "customerfeedbacktab")
+                            {
+                                opportunity = await _customerFeedbackProcessService.CreateWorkflowAsync(opportunity, requestId);
                             }
                             else if (item.ProcessType.ToLower() == "proposalstatustab")
                             {
@@ -173,102 +160,25 @@ namespace Infrastructure.Services
                             {
                                 opportunity = await _startProcessService.CreateWorkflowAsync(opportunity, requestId);
                             }
-                            else if (item.ProcessStep.ToLower() == "new opportunity")
-                            {
-                                opportunity = await _newOpportunityProcessService.CreateWorkflowAsync(opportunity, requestId);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        if (opportunity.Content.DealType != null)
-                        {
-                            _logger.LogError($"RequestId: {requestId} - CreateWorkflowAsync Service Exception");
-                            throw new AccessDeniedException($"RequestId: {requestId} - CreateWorkflowAsync Service Exception");
                         }
                     }
                 }
-
-
-                // Update note created by (if one) and set it to relationship manager
-                if (opportunity.Content.Notes != null)
-				{
-					if (opportunity.Content.Notes?.Count > 0)
-					{
-						var currentUser = (_userContext.User.Claims).ToList().Find(x => x.Type == "preferred_username")?.Value;
-						var callerUser = await _userProfileRepository.GetItemByUpnAsync(currentUser, requestId);
-
-						if (callerUser != null)
-						{
-							opportunity.Content.Notes[0].CreatedBy = callerUser;
-							opportunity.Content.Notes[0].CreatedDateTime = DateTimeOffset.Now;
-
-						}
-						else
-						{
-							_logger.LogWarning($"RequestId: {requestId} - CreateWorkflowAsync can't find {currentUser} to set note created by");
-						}
-					}
-				}
-
-                // Send notification
-                // Define Sent To user profile
-                var loanOfficer = opportunity.Content.TeamMembers.ToList().Find(x => x.AssignedRole.DisplayName == "LoanOfficer");             
-
-                if (loanOfficer != null)
+                else
                 {
-                    try
-                    {
-                        _logger.LogInformation($"RequestId: {requestId} - CreateWorkflowAsync sendNotificationCardAsync new opportunity notification.");
-                        var sendAccount = UserProfile.Empty;
-                        sendAccount.Id = loanOfficer.Id;
-                        sendAccount.DisplayName = loanOfficer.DisplayName;
-                        sendAccount.Fields.UserPrincipalName = loanOfficer.Fields.UserPrincipalName;
-                        var sendNotificationCard = await _cardNotificationService.sendNotificationCardAsync(opportunity, sendAccount, $"New opportunity {opportunity.DisplayName} has been assigned to ", requestId);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError($"RequestId: {requestId} - CreateWorkflowAsync sendNotificationCardAsync Action error: {ex}");
-                    }
+                    _logger.LogError($"RequestId: {requestId} - CreateWorkflowAsync Service Exception");
+                    throw new AccessDeniedException($"RequestId: {requestId} - CreateWorkflowAsync Service Exception");
                 }
 
-                //Adding RelationShipManager and LoanOfficer into ProposalManager Team
-                foreach (var item in opportunity.Content.TeamMembers)
+                try
                 {
-                    try
-                    {
-                        if (item.AssignedRole.DisplayName == "LoanOfficer" || item.AssignedRole.DisplayName == "RelationshipManager")
-                        {
-                            dynamic jsonDyn = null;
-                            var options = new List<QueryParam>();
-                            options.Add(new QueryParam("filter", $"startswith(displayName,'"+_appOptions.GeneralProposalManagementTeam+"')"));
-                            var groupIdJson = await _graphUserAppService.GetGroupAsync(options, "", requestId);
-                            jsonDyn = groupIdJson;
-                            if (!String.IsNullOrEmpty(jsonDyn.value[0].id.ToString()))
-                            {
-                                var groupID = jsonDyn.value[0].id.ToString();
-                                if (!String.IsNullOrEmpty(item.Fields.UserPrincipalName))
-                                {
-                                    try
-                                    {
-                                        Guard.Against.NullOrEmpty(item.Id, $"OpportunityFactorty_{item.AssignedRole.DisplayName} Id NullOrEmpty", requestId);
-                                        var responseJson = await _graphUserAppService.AddGroupMemberAsync(item.Id, groupID, requestId);
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        _logger.LogError($"RequestId: {requestId} - userId: {item.Id} - OpportunityFactorty_AddGroupMemberAsync_{item.AssignedRole.DisplayName} error in CreateWorkflowAsync: {ex}");
-                                    }
-                                }
-
-                            }
-                        }
-                    }
-                    catch(Exception ex)
-                    {
-                        _logger.LogError($"RequestId: {requestId} - userId: {item.Id} - OpportunityFactorty_AddGroupMemberAsync_{item.AssignedRole.DisplayName} error in CreateWorkflowAsync: {ex}");
-                    }
+                    opportunity = await _notesService.CreateWorkflowAsync(opportunity, requestId);
+                    opportunity = await _dashboardService.CreateWorkflowAsync(opportunity, requestId);
                 }
-                //Adding RelationShipManager and LoanOfficer into ProposalManager Team
+                catch
+                {
+                    _logger.LogError($"RequestId: {requestId} - CreateWorkflowAsync Service Exception");
+                }
+
                 return opportunity;
 			}
 			catch (Exception ex)
@@ -283,52 +193,38 @@ namespace Infrastructure.Services
 
             try
 			{
-                //create team and channels
-                if (opportunity.Content.DealType.ProcessList != null && opportunity.Metadata.OpportunityState == OpportunityState.Creating)
+
+
+                if (opportunity.Content.Template != null)
                 {
-                    if (await GroupIdCheckAsync(opportunity.DisplayName, requestId))
+                    if (opportunity.Content.Template.ProcessList != null)
                     {
-                        await CreateTeamAndChannelsAsync(opportunity, requestId);
-                        //Temperary change, will revert to back after implementing "add app"
-                        opportunity.Metadata.OpportunityState = OpportunityState.InProgress;
-                    }
-                }
+                        if (opportunity.Content.Template.ProcessList.Count() > 1)
+                        {
 
-                var initialState = opportunity.Metadata.OpportunityState;
-                bool checklistPass = false;
+                            if (!opportunity.TemplateLoaded)
+                            {
+                                opportunity = await _teamChannelService.CreateWorkflowAsync(opportunity, requestId);
+                                opportunity.Metadata.OpportunityState = OpportunityState.InProgress;
+                            }
+                            opportunity = await _memberService.CreateWorkflowAsync(opportunity, requestId);
+                        }
 
-                if (opportunity.Metadata.OpportunityState != OpportunityState.Creating)
-                {
-
-                    try
-                    {
-                        opportunity = await MoveTempFileToTeamAsync(opportunity, requestId);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError($"RequestId: {requestId} - UpdateWorkflowAsync_MoveTempFileToTeam Service Exception: {ex}");
-                    }
-
-                    if (opportunity.Content.DealType.ProcessList != null)
-                    {
-
-                        foreach (var item in opportunity.Content.DealType.ProcessList)
+                        bool checklistPass = false;
+                        foreach (var item in opportunity.Content.Template.ProcessList)
                         {
                             if (item.ProcessType.ToLower() == "checklisttab" && checklistPass == false)
                             {
-                                //DashBoard Create call Start.
-                                await UpdateDashBoardEntryAsync(opportunity, requestId);
-                                //DashBoard Create call End.
                                 opportunity = await _checkListProcessService.UpdateWorkflowAsync(opportunity, requestId);
                                 checklistPass = true;
-                            }
-                            else if (item.ProcessType.ToLower() == "feedbacktab")
-                            {
-                                opportunity = await customerFeedbackProcessService.UpdateWorkflowAsync(opportunity, requestId);
                             }
                             else if (item.ProcessType.ToLower() == "customerdecisiontab")
                             {
                                 opportunity = await _customerDecisionProcessService.UpdateWorkflowAsync(opportunity, requestId);
+                            }
+                            else if (item.ProcessType.ToLower() == "customerfeedbacktab")
+                            {
+                                opportunity = await _customerFeedbackProcessService.UpdateWorkflowAsync(opportunity, requestId);
                             }
                             else if (item.ProcessType.ToLower() == "proposalstatustab")
                             {
@@ -338,19 +234,38 @@ namespace Infrastructure.Services
                             {
                                 opportunity = await _startProcessService.UpdateWorkflowAsync(opportunity, requestId);
                             }
-                            else if (item.ProcessStep.ToLower() == "new opportunity")
-                            {
-                                opportunity = await _newOpportunityProcessService.UpdateWorkflowAsync(opportunity, requestId);
-                            }
                         }
+
+
                     }
-
-
-                    var roleMappings = (await _roleMappingRepository.GetAllAsync(requestId)).ToList();
-
+                }
+                else
+                {
+                    _logger.LogError($"RequestId: {requestId} - CreateWorkflowAsync Service Exception");
+                    throw new AccessDeniedException($"RequestId: {requestId} - CreateWorkflowAsync Service Exception");
                 }
 
-                // Send notification
+
+                try
+                {
+                    opportunity = await MoveTempFileToTeamAsync(opportunity, requestId);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError($"RequestId: {requestId} - UpdateWorkflowAsync_MoveTempFileToTeam Service Exception: {ex}");
+                }
+
+                try
+                {
+                    opportunity = await _dashboardService.UpdateWorkflowAsync(opportunity, requestId);
+                }
+                catch(Exception ex)
+                {
+                    _logger.LogError($"RequestId: {requestId} - UpdateWorkflowAsync_dashboardservice Service Exception: {ex}");
+
+                }
+    
+                var initialState = opportunity.Metadata.OpportunityState;
                 _logger.LogInformation($"RequestId: {requestId} - UpdateWorkflowAsync initialState: {initialState.Name} - {opportunity.Metadata.OpportunityState.Name}");
                 if (initialState.Value != opportunity.Metadata.OpportunityState.Value)
                 {
@@ -365,44 +280,6 @@ namespace Infrastructure.Services
                         _logger.LogError($"RequestId: {requestId} - CreateWorkflowAsync sendNotificationCardAsync OpportunityState error: {ex}");
                     }
                 }
-
-                //Adding RelationShipManager and LoanOfficer into ProposalManager Team
-                foreach (var item in opportunity.Content.TeamMembers)
-                {
-                    try
-                    {
-                        if (item.AssignedRole.DisplayName == "LoanOfficer" || item.AssignedRole.DisplayName == "RelationshipManager")
-                        {
-                            dynamic jsonDyn = null;
-                            var options = new List<QueryParam>();
-                            options.Add(new QueryParam("filter", $"startswith(displayName,'Proposal Manager Team')"));
-                            var groupIdJson = await _graphUserAppService.GetGroupAsync(options, "", requestId);
-                            jsonDyn = groupIdJson;
-                            if (!String.IsNullOrEmpty(jsonDyn.value[0].id.ToString()))
-                            {
-                                var groupID = jsonDyn.value[0].id.ToString();
-                                if (!String.IsNullOrEmpty(item.Fields.UserPrincipalName))
-                                {
-                                    try
-                                    {
-                                        Guard.Against.NullOrEmpty(item.Id, $"OpportunityFactorty_{item.AssignedRole.DisplayName} Id NullOrEmpty", requestId);
-                                        var responseJson = await _graphUserAppService.AddGroupMemberAsync(item.Id, groupID, requestId);
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        _logger.LogError($"RequestId: {requestId} - userId: {item.Id} - OpportunityFactorty_AddGroupMemberAsync_{item.AssignedRole.DisplayName} error in CreateWorkflowAsync: {ex}");
-                                    }
-                                }
-
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError($"RequestId: {requestId} - userId: {item.Id} - OpportunityFactorty_AddGroupMemberAsync_{item.AssignedRole.DisplayName} error in CreateWorkflowAsync: {ex}");
-                    }
-                }
-                //Adding RelationShipManager and LoanOfficer into ProposalManager Team
 
                 return opportunity;
 			}
@@ -498,225 +375,5 @@ namespace Infrastructure.Services
 				throw new ResponseException($"RequestId: {requestId} - MoveTempFileToTeam Service Exception: {ex}");
 			}
 		}
-
-        public Task<IList<Checklist>> RemoveEmptyFromChecklistAsync(IList<Checklist> checklists, string requestId = "")
-		{
-			try
-			{
-				var newChecklists = new List<Checklist>();
-				foreach (var item in checklists)
-				{
-					var newChecklist = new Checklist();
-					newChecklist.ChecklistTaskList = new List<ChecklistTask>();
-					newChecklist.ChecklistChannel = item.ChecklistChannel;
-					newChecklist.ChecklistStatus = item.ChecklistStatus;
-					newChecklist.Id = item.Id;
-
-					
-					foreach (var sItem in item.ChecklistTaskList)
-					{
-						var newChecklistTask = new ChecklistTask();
-						if (!String.IsNullOrEmpty(sItem.Id) && !String.IsNullOrEmpty(sItem.ChecklistItem))
-						{
-							newChecklistTask.Id = sItem.Id;
-							newChecklistTask.ChecklistItem = sItem.ChecklistItem;
-							newChecklistTask.Completed = sItem.Completed;
-							newChecklistTask.FileUri = sItem.FileUri;
-
-							newChecklist.ChecklistTaskList.Add(newChecklistTask);
-						}
-					}
-
-					newChecklists.Add(newChecklist);
-				}
-
-				return Task.FromResult<IList<Checklist>>(newChecklists);
-			}
-			catch (Exception ex)
-			{
-				_logger.LogError($"RequestId: {requestId} - RemoveEmptyFromChecklist Service Exception: {ex}");
-				throw new ResponseException($"RequestId: {requestId} - RemoveEmptyFromChecklist Service Exception: {ex}");
-			}
-		}
-
-        private async Task UpdateDashBoardEntryAsync(Opportunity opportunity, string requestId)
-        {
-            _logger.LogInformation($"RequestId: {requestId} - UpdateDashBoardEntryAsync called.");
-            try
-            {
-                var dashboardmodel = await _dashboardService.GetAsync(opportunity.Id, requestId);
-                if (dashboardmodel != null)
-                {
-                    var date = DateTimeOffset.Now.Date;
-
-                    dashboardmodel.LoanOfficer = opportunity.Content.TeamMembers.ToList().Find(x => x.AssignedRole.DisplayName == "LoanOfficer").DisplayName ?? "";
-                    dashboardmodel.RelationshipManager = opportunity.Content.TeamMembers.ToList().Find(x => x.AssignedRole.DisplayName == "RelationshipManager").DisplayName ?? "";
-
-                    if (dashboardmodel.Status.ToLower() != opportunity.Metadata.OpportunityState.Name.ToLower())
-                    {
-                        dashboardmodel.Status = opportunity.Metadata.OpportunityState.Name.ToString();
-                        dashboardmodel.StatusChangedDate = date;
-                        if (dashboardmodel.Status.ToLower().ToString() == "accepted" ||
-                            dashboardmodel.Status.ToLower().ToString() == "archived")
-                        {
-                            dashboardmodel.OpportunityEndDate = date;
-                            //first logic change from sharepoint
-                            dashboardmodel.TotalNoOfDays = _dashboardAnalysis.GetDateDifference(dashboardmodel.StartDate, date, dashboardmodel.StartDate);
-                        }
-
-                    }
-
-                    var oppCheckLists = opportunity.Content.Checklists.ToList();
-                    var updatedDealTypeList = new List<Process>();
-
-                    foreach (var process in opportunity.Content.DealType.ProcessList)
-                    {
-                        if (process.ProcessType.ToLower() == "checklisttab")
-                        {
-                            var checklistItm = oppCheckLists.Find(x => x.ChecklistChannel.ToLower() == process.Channel.ToLower());
-                            //TODO: CHeck checklist is not null
-                            if (checklistItm != null)
-                            {
-                                if (process.Status != checklistItm.ChecklistStatus)
-                                {
-                                    switch (checklistItm.ChecklistChannel.ToLower())
-                                    {
-                                        case "risk assessment":
-                                            if (checklistItm.ChecklistStatus == ActionStatus.Completed)
-                                            {
-                                                dashboardmodel.RiskAssesmentCompletionDate = date;
-                                                dashboardmodel.RiskAssessmentNoOfDays = _dashboardAnalysis.GetDateDifference(
-                                                    dashboardmodel.RiskAssesmentStartDate, date, dashboardmodel.StartDate);
-                                            }
-                                            else if (checklistItm.ChecklistStatus == ActionStatus.InProgress)
-                                                dashboardmodel.RiskAssesmentStartDate = date;
-                                            break;
-                                        case "credit check":
-                                            if (checklistItm.ChecklistStatus == ActionStatus.Completed)
-                                            {
-                                                dashboardmodel.CreditCheckCompletionDate = date;
-                                                dashboardmodel.CreditCheckNoOfDays = _dashboardAnalysis.GetDateDifference(
-                                                    dashboardmodel.CreditCheckStartDate, date, dashboardmodel.StartDate);
-                                            }
-                                            else if (checklistItm.ChecklistStatus == ActionStatus.InProgress)
-                                                dashboardmodel.CreditCheckStartDate = date;
-                                            break;
-                                        case "compliance":
-                                            if (checklistItm.ChecklistStatus == ActionStatus.Completed)
-                                            {
-                                                dashboardmodel.ComplianceReviewComplteionDate = date;
-                                                dashboardmodel.ComplianceReviewNoOfDays = _dashboardAnalysis.GetDateDifference(
-                                                    dashboardmodel.ComplianceReviewStartDate, date, dashboardmodel.StartDate);
-                                            }
-                                            else if (checklistItm.ChecklistStatus == ActionStatus.InProgress)
-                                                dashboardmodel.ComplianceReviewStartDate = date;
-                                            break;
-                                        case "formal proposal":
-                                            if (checklistItm.ChecklistStatus == ActionStatus.Completed)
-                                            {
-                                                dashboardmodel.FormalProposalCompletionDate = date;
-                                                dashboardmodel.FormalProposalNoOfDays = _dashboardAnalysis.GetDateDifference(
-                                                    dashboardmodel.FormalProposalStartDate, date, dashboardmodel.StartDate);
-                                            }
-                                            else if (checklistItm.ChecklistStatus == ActionStatus.InProgress)
-                                                dashboardmodel.FormalProposalStartDate = date;
-                                            break;
-                                    }
-                                }
-                            }
-
-                        }
-                    }
-
-                    var result = await _dashboardService.UpdateOpportunityAsync(dashboardmodel, requestId);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"RequestId: {requestId} - UpdateDashBoardEntryAsync Service Exception: {ex}");
-            }
-        }
-
-        private async Task CreateTeamAndChannelsAsync(Opportunity opportunity, string requestId = "")
-        {
-            _logger.LogError($"RequestId: {requestId} - createTeamAndChannels Started");
-
-            try
-            {
-                //create team
-               await _graphTeamsAppService.CreateTeamAsync(opportunity.DisplayName, requestId);
-
-                //get Group ID
-                bool check = true;
-                dynamic jsonDyn = null;
-                var opportunityName = WebUtility.UrlEncode(opportunity.DisplayName);
-                var options = new List<QueryParam>();
-                options.Add(new QueryParam("filter", $"startswith(displayName,'{opportunityName}')"));
-                while (check)
-                {
-                    var groupIdJson = await _graphUserAppService.GetGroupAsync(options, "", requestId);
-                    jsonDyn = groupIdJson;
-                    JArray jsonArray = JArray.Parse(jsonDyn["value"].ToString());
-                    if (jsonArray.Count() > 0)
-                    {
-                        if (!String.IsNullOrEmpty(jsonDyn.value[0].id.ToString()))
-                            check = false;
-                    }
-
-                }
-                var groupID = String.Empty;
-                groupID = jsonDyn.value[0].id.ToString();
-
-                foreach (var process in opportunity.Content.DealType.ProcessList)
-                {
-                    if (process.Channel.ToLower() != "none")
-                       await _graphTeamsAppService.CreateChannelAsync(groupID, process.Channel, process.Channel + " Channel");
-                }
-
-                //adding app is currently not supported this code is there so that we can add the app to the team once
-                //graph api supports usercontext for this functionality
-                try
-                {
-                    await _graphTeamsAppService.AddAppToTeamAsync(groupID);
-                }
-                catch(Exception ex)
-                {
-                    _logger.LogError($"RequestId: {requestId} - CreateTeamAndChannels_AddAppToTeamAsync Service Exception: {ex}");
-                }
-                
-                try
-                {
-                    // Call to AddIn helper once team has been created
-                    var resCallAddIn = await _addInHelper.CallAddInWebhookAsync(opportunity, requestId);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError($"RequestId: {requestId} -_addInHelper.CallAddInWebhookAsync(opportunity, requestId): {ex}");
-                }
-            }
-            catch(Exception ex)
-            {
-                _logger.LogError($"RequestId: {requestId} - CreateTeamAndChannels Service Exception: {ex}");
-                throw new ResponseException($"RequestId: {requestId} - CreateTeamAndChannels Service Exception: {ex}");
-            }
-        }
-
-        private async Task<bool> GroupIdCheckAsync(string displayName, string requestId = "")
-        {
-            bool check = true;
-            dynamic jsonDyn = null;
-            var opportunityName = WebUtility.UrlEncode(displayName);
-            var options = new List<QueryParam>();
-            options.Add(new QueryParam("filter", $"startswith(displayName,'{opportunityName}')"));
-            var groupIdJson = await _graphUserAppService.GetGroupAsync(options, "", requestId);
-            jsonDyn = groupIdJson;
-            JArray jsonArray = JArray.Parse(jsonDyn["value"].ToString());
-            if (jsonArray.Count() > 0)
-            {
-                if (!String.IsNullOrEmpty(jsonDyn.value[0].id.ToString()))
-                    check = false;
-            }
-            return check;
-        } 
 	}
 }

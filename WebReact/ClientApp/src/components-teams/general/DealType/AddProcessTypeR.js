@@ -9,9 +9,6 @@ import { Trans } from "react-i18next";
 export class AddProcessTypeR extends Component {
     displayName = AddProcessTypeR.name
 
-    constructor(props) {
-        super(props);
-    }
     render() {
         let process = this.props.displayProcess;
         return (

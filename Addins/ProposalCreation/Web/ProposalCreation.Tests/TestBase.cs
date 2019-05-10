@@ -28,7 +28,7 @@ namespace ProposalCreation.Tests
 			ConfigurationProvider = ConfigHelper.GetRootConfigurationProvider(System.IO.Directory.GetCurrentDirectory());
 		}
 
-		protected Mock<IGraphSdkHelper> GetGraphSdkHelper(HttpResponseMessage expectedResponse)
+		protected static Mock<IGraphSdkHelper> GetGraphSdkHelper(HttpResponseMessage expectedResponse)
 		{
 			var mockHttpProvider = new Mock<IHttpProvider>();
 			mockHttpProvider.Setup(x => x.SendAsync(It.IsAny<HttpRequestMessage>())).Returns(Task.FromResult(expectedResponse));
@@ -55,7 +55,7 @@ namespace ProposalCreation.Tests
 			return mockGraphHelper;
 		}
 
-		protected Mock<IDaemonHelper> GetDaemonHelper(HttpResponseMessage expectedResponse)
+		protected static Mock<IDaemonHelper> GetDaemonHelper(HttpResponseMessage expectedResponse)
 		{
 			var mockHttpProvider = new Mock<IHttpProvider>();
 			mockHttpProvider.Setup(x => x.SendAsync(It.IsAny<HttpRequestMessage>())).Returns(Task.FromResult(expectedResponse));
@@ -74,7 +74,7 @@ namespace ProposalCreation.Tests
 			return mockDaemonHelper;
 		}
 
-		protected string ReadContentFromFile(string fileName)
+		protected static string ReadContentFromFile(string fileName)
 		{
 			return System.IO.File.ReadAllText(Path.Combine(System.IO.Directory.GetCurrentDirectory(), "JsonSample", fileName));
 		}

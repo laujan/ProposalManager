@@ -10,12 +10,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using ApplicationCore.ViewModels;
-using ApplicationCore.Interfaces;
-using ApplicationCore;
-using ApplicationCore.Artifacts;
 using ApplicationCore.Entities;
-using ApplicationCore.Services;
-using ApplicationCore.Helpers;
 using ApplicationCore.Helpers.Exceptions;
 using ApplicationCore.Models;
 
@@ -84,8 +79,9 @@ namespace ApplicationCore.Helpers
                 var roleEntity = Role.Empty;
                 roleEntity.Id = role.Id;
                 roleEntity.DisplayName = role.DisplayName;
-                //Granular Permission Change :  Start
+                roleEntity.TeamsMembership = role.TeamsMembership;
                 roleEntity.AdGroupName = role.AdGroupName;
+                roleEntity.Permissions = role.UserPermissions.Select(permission => new Permission() { Name = permission.Name, Id = permission.Id }).ToList();
 
                 return Task.FromResult(roleEntity);
             }
@@ -116,12 +112,10 @@ namespace ApplicationCore.Helpers
                     {
                         var userRole = new RoleModel();
                         userRole.Id = role.Id;
-                        //TODO:Need to change here
                         userRole.DisplayName = role.DisplayName;
-                        //userRole.DisplayName = "LoanOfficer";//role.AdGroupName;
-                        //Granular Permission Change :  Start
                         userRole.AdGroupName = role.AdGroupName;
-
+                        userRole.TeamsMembership = role.TeamsMembership;
+                        userRole.UserPermissions = role.Permissions.Select(permission => new PermissionModel() { Name = permission.Name, Id = permission.Id }).ToList();
                         userProfileViewModel.UserRoles.Add(userRole);
                     }
                 }
@@ -164,9 +158,9 @@ namespace ApplicationCore.Helpers
                 var roleModel = new RoleModel();
                 roleModel.Id = role.Id;
                 roleModel.DisplayName = role.DisplayName;
-                //Granular Permission Change :  Start
                 roleModel.AdGroupName = role.AdGroupName;
-
+                roleModel.TeamsMembership = role.TeamsMembership;
+                roleModel.UserPermissions = role.Permissions.Select(permission => new PermissionModel() { Name = permission.Name, Id = permission.Id }).ToList();
                 return Task.FromResult(roleModel);
             }
             catch (Exception ex)

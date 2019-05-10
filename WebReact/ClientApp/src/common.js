@@ -85,37 +85,37 @@ exports.getQueryVariable = (variable) => {
 
 // Permissions Object
 exports.getAllPemissionTypes = () => {
-	let requestUrl = 'api/Permissions';
-	try {
-		fetch(requestUrl, {
-			method: "GET",
-			headers: { 'authorization': 'Bearer ' + window.authHelper.getWebApiToken() }
-		})
-			.then(response => response.json())
-			.then(data => {
-				try {
-					let allPermissions = data;
-					let permissionsList = [];
-					for (let i = 0; i < allPermissions.length; i++) {
-						let item = {};
-						//item.id = allPermissions[i].id;
-						item.name = allPermissions[i].name;
-						permissionsList.push(item);
-					}
-					console.log("Config load permissions");
-					console.log(permissionsList);
-					//this.setState({ permissionTypes: permissionsList });
+    let requestUrl = 'api/Permissions';
+    try {
+        fetch(requestUrl, {
+            method: "GET",
+            headers: { 'authorization': 'Bearer ' + window.authHelper.getWebApiToken() }
+        })
+            .then(response => response.json())
+            .then(data => {
+                try {
+                    let allPermissions = data;
+                    let permissionsList = [];
+                    for (let i = 0; i < allPermissions.length; i++) {
+                        let item = {};
+                        //item.id = allPermissions[i].id;
+                        item.name = allPermissions[i].name;
+                        permissionsList.push(item);
+                    }
+                    console.log("Config load permissions");
+                    console.log(permissionsList);
+                    //this.setState({ permissionTypes: permissionsList });
 
-				}
-				catch (err) {
-					console.log(err);
-				}
+                }
+                catch (err) {
+                    console.log(err);
+                }
 
-			});
-	} catch (err) {
-		console.log(err);
-	}
-}
+            });
+    } catch (err) {
+        console.log(err);
+    }
+};
 
 exports.permissions = [
 	{
@@ -239,7 +239,65 @@ exports.userPermissionsAll = (permissionArray) => {
 exports.checkAccess = (userPermissions, checkRole) => {
     //return false;
     //if ((userPermissions.filter(x => x.name.toLowerCase() === checkRole.toLowerCase())).length > 0) {
-    if ((userPermissions.filter(x => x.toLowerCase() === checkRole.toLowerCase())).length > 0) {
+    if (userPermissions.filter(x => x.toLowerCase() === checkRole.toLowerCase()).length > 0) {
         return true;
     } else return false;
+};
+
+exports.DayPickerStrings = {
+    months: [
+        'January',
+        'February',
+        'March',
+        'April',
+        'May',
+        'June',
+        'July',
+        'August',
+        'September',
+        'October',
+        'November',
+        'December'
+    ],
+
+    shortMonths: [
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec'
+    ],
+
+    days: [
+        'Sunday',
+        'Monday',
+        'Tuesday',
+        'Wednesday',
+        'Thursday',
+        'Friday',
+        'Saturday'
+    ],
+
+    shortDays: [
+        'S',
+        'M',
+        'T',
+        'W',
+        'T',
+        'F',
+        'S'
+    ],
+
+    goToToday: 'Go to today',
+    prevMonthAriaLabel: 'Go to previous month',
+    nextMonthAriaLabel: 'Go to next month',
+    prevYearAriaLabel: 'Go to previous year',
+    nextYearAriaLabel: 'Go to next year'
 };

@@ -24,10 +24,10 @@ namespace ProjectSmartLink.Entity
 
         public bool IsDeleted { get; set; }
 
-        public DocumentTypes DocumentType { get; set; }
+        public DocumentType DocumentType { get; set; }
     }
 
-    public enum DocumentTypes
+    public enum DocumentType
     {
         SourcePoint = 1,
         DestinationPoint = 2

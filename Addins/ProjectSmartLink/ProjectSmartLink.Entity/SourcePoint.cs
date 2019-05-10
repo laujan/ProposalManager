@@ -3,15 +3,11 @@
 //
 // Licensed under the MIT license. See LICENSE file in the solution root folder for full license information.
 
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Newtonsoft.Json;
 
 namespace ProjectSmartLink.Entity
 {
@@ -21,7 +17,7 @@ namespace ProjectSmartLink.Entity
         Deleted = 1
     }
 
-    public enum SourceTypes
+    public enum SourceType
     {
         Point = 1,
         Table = 2,
@@ -43,7 +39,7 @@ namespace ProjectSmartLink.Entity
         public DateTime Created { get; set; }
         public SourcePointStatus Status { get; set; }
         
-        public SourceTypes SourceType { get; set; }
+        public SourceType SourceType { get; set; }
 
         public string NamePosition { get; set; }
         [StringLength(255)]

@@ -12,6 +12,6 @@ namespace ApplicationCore.Interfaces
         Task<TemplateViewModel> GetItemByIdAsync(string id, string requestId = "");
         Task<StatusCodes> DeleteItemAsync(string id, string requestId = "");
         Task<TemplateListViewModel> GetAllAsync(string requestId = "");
-        Task<bool> ProcessCheckAsync(IList<ProcessViewModel> processList, string requestId = "");
+        bool ProcessCheckAsync(IList<ProcessViewModel> processList, string requestId = "");
     }
 }

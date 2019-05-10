@@ -24,7 +24,7 @@ export class OpportunityList extends Component {
         super(props);
         this.sdkHelper = window.sdkHelper;
         this.authHelper = window.authHelper;
-
+        console.log("OpportunityList : ");
         const dashboardList = this.props.dashboardList;
 
         let columns = [
@@ -74,7 +74,7 @@ export class OpportunityList extends Component {
                 className: 'docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg3 clientcolum',
                 fieldName: 'client',
                 minWidth: 100,
-                maxWidth: 250,
+                maxWidth: 150,
                 isRowHeader: true,
                 isResizable: true,
                 onColumnClick: this.onColumnClick,
@@ -92,7 +92,7 @@ export class OpportunityList extends Component {
                 className: 'docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg3',
                 fieldName: 'openedDate',
                 minWidth: 150,
-                maxWidth: 350,
+                maxWidth: 150,
                 isRowHeader: true,
                 isResizable: true,
                 onColumnClick: this.onColumnClick,
@@ -107,10 +107,10 @@ export class OpportunityList extends Component {
                 key: 'column5',
                 name: <Trans>status</Trans>,
                 headerClassName: 'ms-List-th',
-                className: 'docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg2',
+                className: 'docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg3',
                 fieldName: 'staus',
                 minWidth: 150,
-                maxWidth: 350,
+                maxWidth: 150,
                 isRowHeader: true,
                 isResizable: true,
                 onColumnClick: this.onColumnClick,
@@ -123,13 +123,13 @@ export class OpportunityList extends Component {
             }
         ];
 
-        const actionColumn = {
+        const actionColumn = [{
             key: 'column6',
             name: <Trans>action</Trans>,
             headerClassName: 'ms-List-th delectBTNwidth',
             className: 'DetailsListExample-cell--FileIcon actioniconAlign ',
-            minWidth: 30,
-            maxWidth: 30,
+            minWidth: 50,
+            maxWidth: 50,
             onColumnClick: this.onColumnClick,
             onRender: (item) => {
                 return (
@@ -140,8 +140,23 @@ export class OpportunityList extends Component {
                     </div>
                 );
             }
-        };
+        },
+        {
+            key: 'column7',
+            name: "",
+            headerClassName: 'ms-List-th',
+            className: 'docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg3',
+            minWidth: 30,
+            maxWidth: 30,
+            onRender: (item) => {
+                return (
+                    <div />
+                );
+            }
+        }
+        ];
         this.checkReadWrite = ["Opportunities_ReadWrite_All", "Opportunity_ReadWrite_All", "Opportunity_ReadWrite_Partial"];
+        this.checkCreate = ["Opportunity_Create"];
         this.actionColumn = actionColumn;
 
         this.state = {
@@ -180,19 +195,24 @@ export class OpportunityList extends Component {
 
     //Granular Access start:
     //Oppportunity create access
-    componentWillMount() {
-        this.authHelper.callCheckAccess(["Opportunity_Create"]).then((data) => {
+    componentDidMount() {
+        console.log("OpportunityList componentDidMount: enter");
+        this.authHelper.callCheckAccess(this.checkCreate).then((data) => {
             console.log("Granular Dashboard: ", data);
-            let haveGranularAccess = data;
-            this.setState({ haveGranularAccess });
+            if (data) {
+                let haveGranularAccess = data;
+                this.setState({ haveGranularAccess });
+            }
+            
         });
 
         this.authHelper.callCheckAccess(this.checkReadWrite).then((data) => {
             console.log("Granular Dashboard: ", data);
             if (data) {
-                let columns = this.state.columns;
-                columns.push(this.actionColumn);
-                this.setState({ columns });
+                //let columns = this.state.columns;
+                //columns.push(this.actionColumn);
+                this.setState({ columns: this.state.columns.concat(this.actionColumn) });
+                console.log(this.state.columns);
             }
 
         });
@@ -209,19 +229,6 @@ export class OpportunityList extends Component {
         console.log("Dashboard Ref: " + referenceCall + " error: " + JSON.stringify(err));
     }
 
-
-
-    opportunitiesListHeading() {
-        return (
-            <div className='ms-List-th'>
-                <div className='ms-List-th-itemName'>Opportunity</div>
-                <div className='ms-List-th-itemClient'>Client</div>
-                <div className='ms-List-th-itemDealsize'>Deal Size</div>
-                <div className='ms-List-th-itemDate'>Opened Date</div>
-                <div className='ms-List-th-itemState'>Status</div>
-            </div>
-        );
-    }
 
     delay(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
@@ -282,12 +289,13 @@ export class OpportunityList extends Component {
         this.setState({
             filterDeal: value,
             items: value ?
-                items.filter(item => item.dealsize >= value) :
-                items
+                items.filter(item => parseInt(item.dealsize) >= parseInt(value))
+                : items
         });
     }
 
     _onRenderCell(item, index) {
+        console.log("General_getOpportunityIndex item : ", item);
         return (
             <div className='ms-List-itemCell' data-is-focusable='true'>
                 <div className='ms-List-itemContent'>
@@ -322,7 +330,8 @@ export class OpportunityList extends Component {
     }
 
     render() {
-        const { columns, isCompactMode, items } = this.state;
+        console.log("OpportunityList render: enter" + this.state.haveGranularAccess);
+        const { columns, isCompactMode, items, haveGranularAccess } = this.state;
 
         return (
             <div className='ms-Grid pr18'>
@@ -339,8 +348,8 @@ export class OpportunityList extends Component {
                     <div className='ms-Grid-col ms-sm6 ms-md6 ms-lg6 pageheading'>
                         &nbsp;&nbsp;
                     </div>
-                    {	
-                        this.state.haveGranularAccess
+                    {
+                        haveGranularAccess
                             ? <div className='ms-Grid-col ms-sm6 ms-md6 ms-lg6 createButton pt15 '>
                                 {
                                     <PrimaryButton className='pull-right' onClick={this.props.onClickCreateOpp}> <i className="ms-Icon ms-Icon--Add pr10" aria-hidden="true" /><Trans>createNew</Trans></PrimaryButton>

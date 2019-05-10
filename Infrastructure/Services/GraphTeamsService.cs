@@ -3,15 +3,13 @@
 //
 // Licensed under the MIT license. See LICENSE file in the solution root folder for full license information.
 
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using ApplicationCore;
 using ApplicationCore.Interfaces;
 using Infrastructure.GraphApi;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace Infrastructure.Services
 {
@@ -22,7 +20,8 @@ namespace Infrastructure.Services
             IOptionsMonitor<AppOptions> appOptions,
             IGraphClientAppContext graphClientContext,
             IUserContext userContext,
-            IAzureKeyVaultService azureKeyVaultService) : base(logger, appOptions, graphClientContext, userContext, azureKeyVaultService)
+            IAzureKeyVaultService azureKeyVaultService,
+            IMemoryCache memoryCache) : base(logger, appOptions, graphClientContext, userContext, azureKeyVaultService, memoryCache)
         {
         }
     }
@@ -34,7 +33,8 @@ namespace Infrastructure.Services
             IOptionsMonitor<AppOptions> appOptions,
             IGraphClientUserContext graphClientContext,
             IUserContext userContext,
-            IAzureKeyVaultService azureKeyVaultService) : base(logger, appOptions, graphClientContext, userContext, azureKeyVaultService)
+            IAzureKeyVaultService azureKeyVaultService,
+            IMemoryCache memoryCache) : base(logger, appOptions, graphClientContext, userContext, azureKeyVaultService, memoryCache)
         {
         }
     }
@@ -45,7 +45,8 @@ namespace Infrastructure.Services
             IOptionsMonitor<AppOptions> appOptions,
             IGraphClientOnBehalfContext graphClientContext,
             IUserContext userContext,
-            IAzureKeyVaultService azureKeyVaultService) : base(logger, appOptions, graphClientContext, userContext, azureKeyVaultService)
+            IAzureKeyVaultService azureKeyVaultService,
+            IMemoryCache memoryCache) : base(logger, appOptions, graphClientContext, userContext, azureKeyVaultService, memoryCache)
         {
         }
     }

@@ -371,7 +371,7 @@ a:hover, a:focus {
 }
 
 .newOpBg {
-    background: url(../src/components/Images/defaultArrows.png);
+    background: url(../src/Images/defaultArrows.png);
     height: 114px;
     background-repeat: no-repeat;
     background-position: center right;
@@ -379,7 +379,7 @@ a:hover, a:focus {
 }
 
 .divUserRolegroup-arrow {
-    background:url(../src/components/Images/defaultArrows.png)#fff;
+    background:url(../src/Images/defaultArrows.png)#fff;
     background-repeat: no-repeat;
     background-position: right 45px;
     padding: 0px 20px 0px 5px;
@@ -588,7 +588,7 @@ a:hover, a:focus {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    width: 15%;
+    width: 55%;
     float: left;
 }
 
@@ -945,13 +945,13 @@ a:hover, a:focus {
 }
 
 .groupLeft {
-    background: url(../src/components/Images/ArrowLeft.png);
+    background: url(../src/Images/ArrowLeft.png);
     width: 40px;
     background-repeat: no-repeat;
 }
 
 .groupRight {
-    background: url(../src/components/Images/ArrowRight.png);
+    background: url(../src/Images/ArrowRight.png);
     width: 40px;
     background-repeat: no-repeat;
 }
@@ -1188,12 +1188,12 @@ a:hover, a:focus {
     }
 
     .groupLeft {
-        background: url(../src/components/Images/ArrowUp.png);
+        background: url(../src/Images/ArrowUp.png);
         width: 30px;
         background-repeat: no-repeat;
     }
     .groupRight {
-        background: url(../src/components/Images/ArrowDown.png);
+        background: url(../src/Images/ArrowDown.png);
         width: 30px;
         background-repeat: no-repeat;
     }
@@ -1417,4 +1417,52 @@ a:hover, a:focus {
     display: block;
     height: 4px;
     border: 0;
+}
+
+/* Landing page CSS */
+.wrapper {
+    column-count: 1;
+    /* column-gap: 50px; */
+    padding: 5px;
+}
+
+.wrapper p {
+    line-height: 1.6;
+    font-family: Helvetica;
+    text-align: justify;
+    margin: 0;
+    font-size: 14px;
+}
+
+.teamsLogo {
+    float: right;
+    width: 350px;
+    height: auto;
+    shape-margin: 20px;
+    margin-right: 20px;
+    margin-bottom: 20px;
+    padding-left:10px;
+}
+
+/* Help Page */
+table.helpTable td {
+    border: 1px solid;
+    padding:5px;
+}
+.helpPageheading {
+    padding-top: 0px;
+    margin-top: 10px;
+    color: #0e8dbb;
+}
+h4.helpPageheading {
+    padding-top:15px;
+    padding-bottom:0px;
+    margin-bottom:0px;
+}
+
+.helpHeading5 {
+    padding-top: 15px;
+    padding-bottom: 5px;
+    margin-bottom: 0px;
+    font-weight: bold;
 }

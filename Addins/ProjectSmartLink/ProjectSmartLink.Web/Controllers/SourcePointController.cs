@@ -21,8 +21,8 @@ namespace ProjectSmartLink.Web.Controllers
 	[Authorize]
     public class SourcePointController : BaseController
     {
-        protected readonly ISourceService _sourceService;
-        protected readonly IMapper _mapper;
+        private readonly ISourceService _sourceService;
+        private readonly IMapper _mapper;
         public SourcePointController(IConfiguration config, ISourceService sourceService, IMapper mapper) :
 			base(config)
         {
@@ -32,7 +32,7 @@ namespace ProjectSmartLink.Web.Controllers
 
         [HttpPost]
         [Route("api/SourcePoint")]
-        public async Task<IActionResult> Post([FromForm]SourcePointForm sourcePointAdded)
+        public async Task<IActionResult> PostAsync([FromForm]SourcePointForm sourcePointAdded)
         {
             if (!ModelState.IsValid)
             {
@@ -54,7 +54,7 @@ namespace ProjectSmartLink.Web.Controllers
 
         [HttpGet]
         [Route("api/SourcePointCatalog")]
-        public async Task<IActionResult> GetSourcePointCatalog(string fileName, string documentId)
+        public async Task<IActionResult> GetSourcePointCatalogAsync(string fileName, string documentId)
         {
 			if(string.IsNullOrWhiteSpace(fileName))
 			{
@@ -67,7 +67,7 @@ namespace ProjectSmartLink.Web.Controllers
 
         [HttpGet]
         [Route("api/SourcePointCatalogs")]
-        public async Task<IActionResult> GetSourcePointCatalogs(bool external = false)
+        public async Task<IActionResult> GetSourcePointCatalogsAsync(bool external = false)
         {
             var retValue = await _sourceService.GetSourceCatalogs(external);
             return Ok(retValue);
@@ -75,7 +75,7 @@ namespace ProjectSmartLink.Web.Controllers
 
         [HttpPost]
         [Route("api/PublishSourcePoints")]
-        public async Task<IActionResult> PublishSourcePoints([FromForm]IEnumerable<PublishSourcePointForm> sourcePointPublishForm)
+        public async Task<IActionResult> PublishSourcePointsAsync([FromForm]IEnumerable<PublishSourcePointForm> sourcePointPublishForm)
         {
             if (!ModelState.IsValid || sourcePointPublishForm.Count() == 0)
             {
@@ -89,7 +89,7 @@ namespace ProjectSmartLink.Web.Controllers
 
         [HttpPut]
         [Route("api/SourcePoint")]
-        public async Task<IActionResult> EditSourcePoint([FromForm]SourcePointForm sourcePointAdded)
+        public async Task<IActionResult> EditSourcePointAsync([FromForm]SourcePointForm sourcePointAdded)
         {
             if (!ModelState.IsValid)
             {
@@ -110,7 +110,7 @@ namespace ProjectSmartLink.Web.Controllers
 
         [HttpDelete]
         [Route("api/SourcePoint")]
-        public async Task<IActionResult> DeleteSourcePoint(string id)
+        public async Task<IActionResult> DeleteSourcePointAsync(string id)
         {
             var retValue = await _sourceService.DeleteSourcePoint(new Guid(id));
             return Ok();
@@ -118,53 +118,10 @@ namespace ProjectSmartLink.Web.Controllers
 
         [HttpPost]
         [Route("api/DeleteSelectedSourcePoint")]
-        public async Task<IActionResult> DeleteSelectedSourcePoint([FromForm]IEnumerable<Guid> seletedIds)
+        public async Task<IActionResult> DeleteSelectedSourcePointAsync([FromForm]IEnumerable<Guid> seletedIds)
         {
             await _sourceService.DeleteSelectedSourcePoint(seletedIds);
             return Ok();
-        }
-
-        [HttpPost]
-        [Route("api/CloneCheckFile")]
-        public async Task<IActionResult> CloneCheckFile([FromForm]IEnumerable<CloneForm> files)
-        {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest("Invalid posted data.");
-            }
-
-            try
-            {
-                return Ok(await _sourceService.CheckCloneFileStatus(files));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.ToString());
-            }
-        }
-
-        [HttpPost]
-        [Route("api/CloneFiles")]
-        public async Task<IActionResult> CloneFiles([FromForm]IEnumerable<CloneForm> files)
-        {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest("Invalid posted data.");
-            }
-
-            try
-            {
-                foreach (var item in files)
-                {
-                    item.DestinationFileUrl = HttpUtility.UrlDecode(item.DestinationFileUrl);
-                }
-                await _sourceService.CloneFiles(files);
-                return Ok();
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.ToString());
-            }
         }
     }
 }

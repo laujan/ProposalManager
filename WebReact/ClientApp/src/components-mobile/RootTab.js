@@ -13,9 +13,8 @@ import {
 } from 'office-ui-fabric-react/lib/Pivot';
 import { Workflow } from '../components-teams/Proposal/Workflow';
 import { TeamUpdate } from '../components-teams/Proposal/TeamUpdate';
-import { TeamsComponentContext } from 'msteams-ui-components-react';
 import { getQueryVariable } from '../common';
-import { GroupEmployeeStatusCard } from '../components/Opportunity/GroupEmployeeStatusCard';
+import { GroupEmployeeStatusCard } from '../components-teams/general/Opportunity/GroupEmployeeStatusCard';
 import { Trans } from "react-i18next";
 import {
     Spinner,
@@ -25,12 +24,10 @@ import { OpportunitySummary } from '../components-teams/general/Opportunity/Oppo
 import { OpportunityNotes } from '../components-teams/general/Opportunity/OpportunityNotes';
 import Accessdenied from '../helpers/AccessDenied';
 
-
-let teamMembers = [];
-let OtherRoleTeamMembers = [];
-
 export class RootTab extends Component {
-    displayName = RootTab.name
+    displayName = RootTab.name;
+    teamMembers = [];
+    otherRoleTeamMembers = [];
 
     constructor(props) {
         super(props);
@@ -54,17 +51,13 @@ export class RootTab extends Component {
                 OppName: "",
                 oppDetails: "",
                 UserRoleList: [],
-                OtherRoleTeamMembers: [],
+                otherRoleTeamMembers: [],
                 loading: true,
                 haveGranularAccess: false
             };
         }
 
         this.fnGetOpportunityData = this.fnGetOpportunityData.bind(this);
-    }
-
-    componentWillMount() {
-        console.log("Dashboard_componentWillMount isauth: " + this.authHelper.isAuthenticated());
     }
 
     componentDidMount() {
@@ -111,11 +104,10 @@ export class RootTab extends Component {
                         resolve(true);
                     } else {
                         let loanOfficer = {};
-                        teamMembers = data.teamMembers;
+                        this.teamMembers = data.teamMembers;
                         // Getting processtypes from opportunity dealtype object
-                        let processList = data.dealType.processes;
-                        //let oppChannels = new Array();
-                        //oppChannels = processList.filter(x => x.channel.toLowerCase() !== "none");
+                        let processList = data.template.processes;
+                      
                         // Get Other role officers list
                         let otherRolesMapping = processList.filter(function (k) {
                             return k.processType.toLowerCase() !== "new opportunity" && k.processType.toLowerCase() !== "start process" && k.processType.toLowerCase() !== "customerdecisiontab" && k.processType.toLowerCase() !== "proposalstatustab";
@@ -125,7 +117,7 @@ export class RootTab extends Component {
                         for (let j = 0; j < otherRolesMapping.length; j++) {
 
                             let processTeamMember = new Array();
-                            //processTeamMember = data.teamMembers.filter(t => t.processStep.toLowerCase() === otherRolesMapping[j].processStep.toLowerCase());
+                            
                             processTeamMember = data.teamMembers.filter(function (k) {
                                 if (k.processStep.toLowerCase() === otherRolesMapping[j].processStep.toLowerCase()) {
                                     //ProcessStep
@@ -150,7 +142,6 @@ export class RootTab extends Component {
                             }
 
                             otherRolesArr1 = otherRolesArr1.concat(processTeamMember);
-                            //otherRolesArr1 = otherRolesArr1.concat(teamMember);
                         }
 
                         let otherRolesArr = otherRolesArr1.reduce(function (res, currentValue) {
@@ -171,16 +162,16 @@ export class RootTab extends Component {
                             for (let r = 0; r < otherRolesArr.length; r++) {
                                 otherRolesObj.push(otherRolesArr[r].users);
                             }
-                            OtherRoleTeamMembers = otherRolesObj;
+                            this.otherRoleTeamMembers = otherRolesObj;
                         }
                         this.setState({
                             loading: false,
-                            teamMembers: teamMembers,
+                            teamMembers: this.teamMembers,
                             LoanOfficer: loanOfficer,
                             oppDetails: data,
                             oppStatus: data.opportunityState,
                             OppName: data.displayName,
-                            OtherRoleTeamMembers: otherRolesObj,
+                            otherRoleTeamMembers: otherRolesObj,
                             haveGranularAccess: true
                         });
                         resolve(true);
@@ -244,13 +235,13 @@ export class RootTab extends Component {
                                             </PivotItem>
                                             <PivotItem linkText={<Trans>workflow</Trans>} width='100%' >
                                                 <div className='ms-Grid-row mt20 pl15 bg-white'>
-                                                    <Workflow memberslist={teamMembers} oppStaus={this.state.oppStatus} oppDetails={this.state.oppDetails} OtherRoleTeamMembers={this.state.OtherRoleTeamMembers} />
+                                                    <Workflow memberslist={this.teamMembers} oppStaus={this.state.oppStatus} oppDetails={this.state.oppDetails}/>
                                                 </div>
                                             </PivotItem>
                                             <PivotItem linkText={<Trans>teamUpdate</Trans>}>
                                                 <div className='ms-Grid-row bg-white'>
                                                     {
-                                                        this.state.OtherRoleTeamMembers.map((obj, ind) =>
+                                                        this.state.otherRoleTeamMembers.map((obj, ind) =>
                                                             obj.length > 1
                                                                 ?
                                                                 <div className=' ms-Grid-col ms-sm12 ms-md8 ms-lg4 p-5' key={ind}>

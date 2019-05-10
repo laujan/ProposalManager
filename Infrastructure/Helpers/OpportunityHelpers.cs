@@ -21,15 +21,17 @@ using ApplicationCore.Models;
 using Infrastructure.DealTypeServices;
 using Infrastructure.Authorization;
 using ApplicationCore.Authorization;
+using Infrastructure.Services;
 
 namespace Infrastructure.Helpers
 {
     public class OpportunityHelpers
     {
+        private readonly GraphUserAppService _graphUserAppService;
         protected readonly ILogger _logger;
         protected readonly AppOptions _appOptions;
         private readonly UserProfileHelpers _userProfileHelpers;
-        private readonly IRoleMappingRepository _roleMappingRepository;
+        private readonly IRoleRepository _roleRepository;
         private readonly CardNotificationService _cardNotificationService;
         private readonly TemplateHelpers _templateHelpers;
         private readonly ICheckListProcessService _checkListProcessService;
@@ -46,20 +48,22 @@ namespace Infrastructure.Helpers
             ILogger<OpportunityHelpers> logger,
             IOptions<AppOptions> appOptions,
             UserProfileHelpers userProfileHelpers,
-            IRoleMappingRepository roleMappingRepository,
+            IRoleRepository roleRepository,
             CardNotificationService cardNotificationService,
             TemplateHelpers templateHelpers,
             ICheckListProcessService checkListProcessService,
             ICustomerDecisionProcessService customerDecisionProcessService,
             IAuthorizationService authorizationService,
             IPermissionRepository permissionRepository,
+            GraphUserAppService graphUserAppService,
             IUserContext userContext,
             IProposalDocumentProcessService proposalStatusProcessService)
         {
             Guard.Against.Null(logger, nameof(logger));
             Guard.Against.Null(appOptions, nameof(appOptions));
             Guard.Against.Null(userProfileHelpers, nameof(userProfileHelpers));
-            Guard.Against.Null(roleMappingRepository, nameof(roleMappingRepository));
+            Guard.Against.Null(roleRepository, nameof(roleRepository));
+            Guard.Against.Null(graphUserAppService, nameof(graphUserAppService));
             Guard.Against.Null(cardNotificationService, nameof(cardNotificationService));
             Guard.Against.Null(templateHelpers, nameof(templateHelpers));
             Guard.Against.Null(checkListProcessService, nameof(checkListProcessService));
@@ -68,10 +72,11 @@ namespace Infrastructure.Helpers
             Guard.Against.Null(authorizationService, nameof(authorizationService));
             Guard.Against.Null(permissionRepository, nameof(permissionRepository));
 
+            _graphUserAppService = graphUserAppService;
             _logger = logger;
             _appOptions = appOptions.Value;
             _userProfileHelpers = userProfileHelpers;
-            _roleMappingRepository = roleMappingRepository;
+            _roleRepository = roleRepository;
             _cardNotificationService = cardNotificationService;
             _templateHelpers = templateHelpers;
             _checkListProcessService = checkListProcessService;
@@ -100,30 +105,21 @@ namespace Infrastructure.Helpers
                     Reference = entity.Reference,
                     Version = entity.Version,
                     OpportunityState = OpportunityStateModel.FromValue(entity.Metadata.OpportunityState.Value),
-                    DealSize = entity.Metadata.DealSize,
-                    AnnualRevenue = entity.Metadata.AnnualRevenue,
-                    OpenedDate = entity.Metadata.OpenedDate,
-                    //For DashBoard
-                    TargetDate = entity.Metadata.TargetDate,
-                    Industry = new IndustryModel
-                    {
-                        Name = entity.Metadata.Industry.Name,
-                        Id = entity.Metadata.Industry.Id
-                    },
-                    Region = new RegionModel
-                    {
-                        Name = entity.Metadata.Region.Name,
-                        Id = entity.Metadata.Region.Id
-                    },
-                    Margin = entity.Metadata.Margin,
-                    Rate = entity.Metadata.Rate,
-                    DebtRatio = entity.Metadata.DebtRatio,
-                    Purpose = entity.Metadata.Purpose,
-                    DisbursementSchedule = entity.Metadata.DisbursementSchedule,
-                    CollateralAmount = entity.Metadata.CollateralAmount,
-                    Guarantees = entity.Metadata.Guarantees,
-                    RiskRating = entity.Metadata.RiskRating,
-                    OpportunityChannelId = entity.Metadata.OpportunityChannelId,
+                    OpportunityChannelId = entity.Metadata.OpportunityChannelId ,
+                    //TODO
+                    TemplateLoaded = entity.TemplateLoaded,
+
+                   //TODO : WAVE-4 GENERIC ACCELERATOR Change : start
+                    MetaDataFields = entity.Metadata.Fields.Select(
+                            field => new OpportunityMetaDataFields()
+                            {
+                                DisplayName = field.DisplayName,  
+                                FieldType= field.FieldType,
+                                Screen = field.Screen,
+                                Values = field.Values
+                            }
+                        ).ToList(),
+                    //TODO : WAVE-4 GENERIC ACCELERATOR Change : end
                     Customer = new CustomerModel
                     {
                         DisplayName = entity.Metadata.Customer.DisplayName,
@@ -137,14 +133,14 @@ namespace Infrastructure.Helpers
 
                 //DealType
                 var dealTypeFlag = false;
-                dealTypeFlag = entity.Content.DealType is null || entity.Content.DealType.Id is null;
+                dealTypeFlag = entity.Content.Template is null || entity.Content.Template.Id is null;
                 if (!dealTypeFlag)
                 {
-                    viewModel.DealType = await _templateHelpers.MapToViewModel(entity.Content.DealType);
+                    viewModel.Template = await _templateHelpers.MapToViewModel(entity.Content.Template);
 
                     //DealType Processes
                     var checklistPass = false;
-                    foreach (var item in entity.Content.DealType.ProcessList)
+                    foreach (var item in entity.Content.Template.ProcessList)
                     {
 
                         if (item.ProcessType.ToLower() == "checklisttab" && checklistPass == false)
@@ -163,20 +159,30 @@ namespace Infrastructure.Helpers
                     }
                 }
 
-                
 
                 // TeamMembers
                 foreach (var item in entity.Content.TeamMembers.ToList())
                 {
                     var memberModel = new TeamMemberModel();
-                    memberModel.AssignedRole = await _userProfileHelpers.RoleToViewModelAsync(item.AssignedRole, requestId);
+                    memberModel.RoleId = item.RoleId; //await _userProfileHelpers.RoleToViewModelAsync(item.AssignedRole, requestId);
                     memberModel.Id = item.Id;
                     memberModel.DisplayName = item.DisplayName;
                     memberModel.Mail = item.Fields.Mail;
                     memberModel.UserPrincipalName = item.Fields.UserPrincipalName;
                     memberModel.Title = item.Fields.Title ?? String.Empty;
                     memberModel.ProcessStep = item.ProcessStep;
-
+                    memberModel.Permissions = new List<PermissionModel>();
+                    memberModel.AdGroupName = await _graphUserAppService.GetAdGroupName(item.RoleId, requestId);
+                    memberModel.RoleName = item.RoleName;
+                    foreach (var permission in item.Fields.Permissions)
+                    {
+                        memberModel.Permissions.Add(new PermissionModel { Id = permission.Id, Name = permission.Name });
+                    }
+                    memberModel.TeamsMembership = new TeamsMembershipModel()
+                    {
+                        Value = item.TeamsMembership.Value,
+                        Name = item.TeamsMembership.Name.ToString()
+                    };
                     viewModel.TeamMembers.Add(memberModel);
                 }
 
@@ -246,9 +252,12 @@ namespace Infrastructure.Helpers
                 entity.Id = viewModel.Id ?? String.Empty;
                 entity.DisplayName = viewModel.DisplayName ?? String.Empty;
                 entity.Reference = viewModel.Reference ?? String.Empty;
-                entity.Version = viewModel.Version ?? String.Empty;
+                entity.Version = viewModel.Version ?? _appOptions.Version;
 
-                // DocumentAttachments
+                //TODO
+                entity.TemplateLoaded = viewModel.TemplateLoaded;
+
+                // DocumentAttachments//TODO
                 if (entity.DocumentAttachments == null) entity.DocumentAttachments = new List<DocumentAttachment>();
                 if (viewModel.DocumentAttachments != null)
                 {
@@ -287,12 +296,12 @@ namespace Infrastructure.Helpers
                 }
 
                 //DealType
-                if (viewModel.DealType != null)
+                if (viewModel.Template != null)
                 {
-                    entity.Content.DealType = await _templateHelpers.MapToEntity(viewModel.DealType);
+                    entity.Content.Template = await _templateHelpers.MapToEntity(viewModel.Template);
                     //DealType Processes
                     var checklistPass = false;
-                    foreach (var item in viewModel.DealType.ProcessList)
+                    foreach (var item in viewModel.Template.ProcessList)
                     {
 
                         if (item.ProcessType.ToLower() == "checklisttab" && checklistPass == false)
@@ -368,53 +377,46 @@ namespace Infrastructure.Helpers
                         // Update team members
                         foreach (var item in viewModel.TeamMembers)
                         {
-                            updatedTeamMembers.Add(await TeamMemberToEntityAsync(item));
+                            updatedTeamMembers.Add( TeamMemberToEntityAsync(item));
                         }
                         entity.Content.TeamMembers = updatedTeamMembers;
                     }
                 }
                 //Granular Access end
 
+                //TODO : WAVE-4 GENERIC ACCELERATOR Change : start
                 // Metadata
                 if (entity.Metadata == null) entity.Metadata = OpportunityMetadata.Empty;
-                entity.Metadata.AnnualRevenue = viewModel.AnnualRevenue;
-                entity.Metadata.CollateralAmount = viewModel.CollateralAmount;
 
                 if (entity.Metadata.Customer == null) entity.Metadata.Customer = Customer.Empty;
                 entity.Metadata.Customer.DisplayName = viewModel.Customer.DisplayName ?? String.Empty;
                 entity.Metadata.Customer.Id = viewModel.Customer.Id ?? String.Empty;
                 entity.Metadata.Customer.ReferenceId = viewModel.Customer.ReferenceId ?? String.Empty;
-
-                entity.Metadata.DealSize = viewModel.DealSize;
-                entity.Metadata.DebtRatio = viewModel.DebtRatio;
-                entity.Metadata.DisbursementSchedule = viewModel.DisbursementSchedule ?? String.Empty;
-                entity.Metadata.Guarantees = viewModel.Guarantees ?? String.Empty;
-
-                if (entity.Metadata.Industry == null) entity.Metadata.Industry = new Industry();
-                if (viewModel.Industry != null) entity.Metadata.Industry = await IndustryToEntityAsync(viewModel.Industry);
-
-                entity.Metadata.Margin = viewModel.Margin;
-
-                if (entity.Metadata.OpenedDate == null) entity.Metadata.OpenedDate = DateTimeOffset.MinValue;
-                if (viewModel.OpenedDate != null) entity.Metadata.OpenedDate = viewModel.OpenedDate;
-
-                //For Dashboard --TargetDate
-                if (entity.Metadata.TargetDate == null) entity.Metadata.TargetDate = DateTimeOffset.MinValue;
-                if (viewModel.TargetDate != null) entity.Metadata.TargetDate = viewModel.TargetDate;
+                entity.Metadata.OpportunityChannelId = viewModel.OpportunityChannelId;
 
                 if (entity.Metadata.OpportunityState == null) entity.Metadata.OpportunityState = OpportunityState.Creating;
                 if (viewModel.OpportunityState != null) entity.Metadata.OpportunityState = OpportunityState.FromValue(viewModel.OpportunityState.Value);
 
-                entity.Metadata.Purpose = viewModel.Purpose ?? String.Empty;
-                entity.Metadata.Rate = viewModel.Rate;
+                if (entity.Metadata.Fields == null) entity.Metadata.Fields = new List<OpportunityMetaDataFields>();
+                foreach(var field in viewModel.MetaDataFields.ToList())
+                {
 
-                if (entity.Metadata.Region == null) entity.Metadata.Region = Region.Empty;
-                if (viewModel.Region != null) entity.Metadata.Region = await RegionToEntityAsync(viewModel.Region);
-
-                entity.Metadata.RiskRating = viewModel.RiskRating;
-
-                // if to avoid deleting channelId if vieModel passes empty and a value was already in opportunity
-                if (!String.IsNullOrEmpty(viewModel.OpportunityChannelId)) entity.Metadata.OpportunityChannelId = viewModel.OpportunityChannelId;
+                        var obj = entity.Metadata.Fields.ToList().FirstOrDefault(x => x.DisplayName == field.DisplayName);
+                        if (obj != null) obj.Values = field.Values;
+                        else
+                        {
+                            entity.Metadata.Fields.Add(new OpportunityMetaDataFields()
+                            {
+                                DisplayName = field.DisplayName ?? String.Empty,
+                                FieldType = field.FieldType ?? FieldType.None,
+                                Screen = field.Screen ?? String.Empty,
+                                Values = field.Values ?? String.Empty
+                            });
+                        }
+                    
+                }
+  
+                //TODO : WAVE-4 GENERIC ACCELERATOR Change : end
 
                 return entity;
             }
@@ -423,15 +425,6 @@ namespace Infrastructure.Helpers
                 //_logger.LogError("MapFromViewModelAsync error: " + ex);
                 throw new ResponseException($"RequestId: {requestId} - OpportunityToEntityAsync oppId: {oppId} - failed to map opportunity: {ex}");
             }
-        }
-
-        private Task<Industry> IndustryToEntityAsync(IndustryModel model)
-        {
-            return Task.FromResult(new Industry
-            {
-                Name = model.Name,
-                Id = model.Id
-            });
         }
 
         private async Task<Note> NoteToEntityAsync(NoteModel model, string requestId = "")
@@ -454,30 +447,25 @@ namespace Infrastructure.Helpers
             return note;
         }
 
-        private async Task<TeamMember> TeamMemberToEntityAsync(TeamMemberModel model, string requestId = "")
+        private TeamMember TeamMemberToEntityAsync(TeamMemberModel model, string requestId = "")
         {
             var teamMember = TeamMember.Empty;
             teamMember.Id = model.Id;
             teamMember.DisplayName = model.DisplayName;
-            teamMember.AssignedRole = await _userProfileHelpers.RoleModelToEntityAsync(model.AssignedRole, requestId);
+            teamMember.RoleId = model.RoleId; 
             teamMember.Fields = TeamMemberFields.Empty;
             teamMember.Fields.Mail = model.Mail;
             teamMember.Fields.Title = model.Title;
             teamMember.Fields.UserPrincipalName = model.UserPrincipalName;
-            if (teamMember.AssignedRole.DisplayName.ToLower() == "relationshipmanager")
-                teamMember.ProcessStep = "New Opportunity";
-            else
-                teamMember.ProcessStep = model.ProcessStep;
-            return teamMember;
-        }
-
-        private Task<Region> RegionToEntityAsync(RegionModel model)
-        {
-            return Task.FromResult(new Region
+            teamMember.ProcessStep = model.ProcessStep;
+            teamMember.Fields.Permissions = new List<Permission>();
+            foreach(var permission in model.Permissions)
             {
-                Name = model.Name,
-                Id = model.Id
-            });
+                teamMember.Fields.Permissions.Add(new Permission { Id=permission.Id,Name=permission.Name});
+            }
+            teamMember.TeamsMembership = TeamsMembership.FromName(string.IsNullOrEmpty(model.TeamsMembership.Name) ? TeamsMembership.None.Name : model.TeamsMembership.Name);
+            teamMember.RoleName = model.RoleName;
+            return teamMember;
         }
         #endregion
     }

@@ -33,18 +33,20 @@
     Specify only if you explicitly intend to overwrite an existing installation of Proposal Manager.
 .PARAMETER MFA
     Specify only if your tenant's security configuration requires you to use Multi-Factor Authentication.
+.PARAMETER TeamName
+    TeamName| The name of the Microsoft Team that will be created. If it's not provided then "Proposal Manager Team" will be used.
 #>
 [CmdletBinding()]
 param(
-    [Parameter(Mandatory = $false)]
+    [Parameter(Mandatory = $true)]
     [string]$PMAdminUpn,
     [Parameter(Mandatory = $false)]
     [string]$PMSiteAlias,
-    [Parameter(Mandatory = $false)]
+    [Parameter(Mandatory = $true)]
     [string]$OfficeTenantName,
-    [Parameter(Mandatory = $false)]
+    [Parameter(Mandatory = $true)]
     [string]$AzureResourceLocation,
-    [Parameter(Mandatory = $false)]
+    [Parameter(Mandatory = $true)]
     [string]$AzureSubscription,
     [Parameter(Mandatory = $false)]
     [string]$ResourceGroupName,
@@ -68,11 +70,21 @@ param(
     [Parameter(Mandatory = $false)]
     [switch]$Force,
     [Parameter(Mandatory = $false)]
-    [switch]$MFA
+    [switch]$MFA,
+    [Parameter(Mandatory = $false)]
+    [string]$TeamName
 )
 
 $ErrorActionPreference = 'Stop'
 $InformationPreference = 'Continue'
+
+# Create Proposal Manager Team
+if(!$TeamName)
+{
+    $TeamName = "Proposal Manager Team"
+}
+
+Write-Information "MS Teams Name: $TeamName"
 
 if($Mode -in 'Full', 'NoDeploy', 'RegisterDeploy')
 {
@@ -133,7 +145,7 @@ if($builds)
     }
     catch
     {
-        Write-Error "You need to install the dotnet core sdk 2.1. Please do so by navigating to https://dotnet.microsoft.com/download/thank-you/dotnet-sdk-2.1.500-windows-x64-installer"
+			
     }
     
     # Verify .NET Framework is installed
@@ -163,6 +175,11 @@ Verify-RequiredModules
 if(!$ApplicationName)
 {
     $ApplicationName = "propmgr-$OfficeTenantName"
+}
+
+if(!$PMSiteAlias)
+{
+    $PMSiteAlias = "propmgrsp-$OfficeTenantName"
 }
 
 # Must be lower case
@@ -213,8 +230,6 @@ if($registers)
     # Create SharePoint Site
     $pmSiteUrl = New-PMSharePointSite -AdminSiteUrl $AdminSharePointSiteUrl -Credential $credential -PMAdminUpn $PMAdminUpn -PMSiteAlias $PMSiteAlias -OfficeTenantName $OfficeTenantName -Force:$Force
 
-    New-PMGroupStructure -Credential $Credential -Force:$Force
-
     $preAuthorizedAppIds = @()
 
     if($IncludeAddins)
@@ -223,7 +238,7 @@ if($registers)
         $replyUrls = @([string]::Empty, 'auth', 'auth/end')
         [array]$delegatedPermissions = @(,'e1fe6dd8-ba31-4d61-89e7-88639da4683d')
         $applicationPermissions = @()
-        $proposalCreationRegistration = RegisterApp -ApplicationName "$ApplicationName-propcreation" -RelativeReplyUrls $replyUrls -DelegatedPermissions $delegatedPermissions -Credential $credential
+        $proposalCreationRegistration = RegisterApp -ApplicationName "$ApplicationName-propcreation" -RelativeReplyUrls $replyUrls -DelegatedPermissions $delegatedPermissions -Credential $credential -Force:$Force
         $preAuthorizedAppIds += $proposalCreationRegistration.AppId
         Write-Information "Proposal Creation add-in successfully registered."
 
@@ -236,63 +251,65 @@ if($registers)
             '89fe6a52-be36-487e-b7d8-d061c450a026',
             'e1fe6dd8-ba31-4d61-89e7-88639da4683d'
         $applicationPermissions = @()
-        $projectSmartLinkRegistration = RegisterApp -ApplicationName "$ApplicationName-projectsmartlink" -RelativeReplyUrls $replyUrls -DelegatedPermissions $delegatedPermissions -Credential $credential
+        $projectSmartLinkRegistration = RegisterApp -ApplicationName "$ApplicationName-projectsmartlink" -RelativeReplyUrls $replyUrls -DelegatedPermissions $delegatedPermissions -Credential $credential -Force:$Force
         
         Write-Information "Project Smart Link add-in successfully registered."
     }
 
     # Register Azure AD application (Endpoint v2)
-    $appRegistration = RegisterApp -ApplicationName $ApplicationName -AdditionalPreAuthorizedAppIds $preAuthorizedAppIds -Credential $credential
+    $appRegistration = RegisterApp -ApplicationName $ApplicationName -AdditionalPreAuthorizedAppIds $preAuthorizedAppIds -Credential $credential -Force:$Force
 
-    # Create Service Principal
-    Write-Information "Creating Service Principal"
-
-    if($MFA)
+    if (!$appRegistration.Reused)
     {
-        Write-Information "Please enter your Office 365 credentials in the dialog."
+        # Create Service Principal
+        Write-Information "Creating Service Principal"
 
-        # Unlike the others cmdlets, this one fails when passing a null Credential parameter
-        Connect-AzureRmAccount
-    }
-    else 
-    {        
-        Connect-AzureRmAccount -Credential $credential
-    }
-    
-    [int]$retriesLeft = 3
-    [bool]$success = $false
-    while(!$success)
-    {
-        try
+        if($MFA)
         {
-            New-AzureRmADServicePrincipal -ApplicationId $appRegistration.AppId
-            $success = $true
+            Write-Information "Please enter your Office 365 credentials in the dialog."
+
+            # Unlike the others cmdlets, this one fails when passing a null Credential parameter
+            Connect-AzureRmAccount
         }
-        catch
+        else 
+        {        
+            Connect-AzureRmAccount -Credential $credential
+        }
+        
+        [int]$retriesLeft = 3
+        [bool]$success = $false
+        while(!$success)
         {
-            if($retriesLeft)
+            try
             {
-                $retriesLeft -= 1
-                Write-Warning "Service Principal creation failed. Retrying..."
-                Start-Sleep -Seconds 10
+                New-AzureRmADServicePrincipal -ApplicationId $appRegistration.AppId
+                $success = $true
             }
-            else
+            catch
             {
-                Write-Error "Service Principal creation failed after 3 retries."
+                if($retriesLeft)
+                {
+                    $retriesLeft -= 1
+                    Write-Warning "Service Principal creation failed. Retrying..."
+                    Start-Sleep -Seconds 10
+                }
+                else
+                {
+                    Write-Error "Service Principal creation failed after 3 retries."
+                }
             }
         }
+        Disconnect-AzureRmAccount
     }
-    Disconnect-AzureRmAccount
 
     if($IncludeBot)
     {
         Write-Information "Registering bot app..."
-        $botRegistration = RegisterApp -ApplicationName "$ApplicationName-bot" -Credential $credential
+        $botRegistration = RegisterApp -ApplicationName "$ApplicationName-bot" -Credential $credential -Force:$Force
         Write-Information "Bot app registered. Creating bot..."
         if($BotAzureSubscription)
         {
-            $bot = New-PMBot -Subscription $BotAzureSubscription -ResourceGroupName $ResourceGroupName -ApplicationName $ApplicationName ´
-                             -Credential $credential -AppId $botRegistration.AppId -AppSecret $botRegistration.AppSecret
+            $bot = New-PMBot -Subscription $BotAzureSubscription -ResourceGroupName $ResourceGroupName -ApplicationName $ApplicationName -Credential $credential -AppId $botRegistration.AppId -AppSecret $botRegistration.AppSecret
             Write-Information "Bot created successfully."
             $botRegistration += @{ AppName = $bot.name }
         
@@ -316,7 +333,6 @@ if($registers)
         BotName = $botRegistration.AppName;
     } `
     | ConvertTo-Json | Set-Content registrations.json -Force
-
 }
 
 if($deploys)
@@ -342,6 +358,7 @@ if($deploys)
         MicrosoftAppId = $botRegistration.AppId;
         MicrosoftAppPassword = $botRegistration.AppSecret;
         AllowedTenants = $tenantId;
+        GeneralProposalManagementTeam = $TeamName;
     }
 
     $proposalCreationSettings = @{
@@ -424,7 +441,7 @@ if($IncludeAddins)
         cd "..\Addins\ProposalCreation\Web\ProposalCreation.Core"
         dotnet msbuild "ProposalCreation.Core.csproj" "/p:SolutionDir=`"$($solutionDir)\\`";Configuration=Release;DebugSymbols=false;DebugType=None"
         cd ..\..\..\..\Setup
-        rd ..\Addins\ProposalCreation\Web\ProposalCreationWeb\bin\Release\netcoreapp2.1\publish -Recurse -ErrorAction Ignore
+        rd ..\Addins\ProposalCreation\Web\ProposalCreationWeb\bin\Release\netcoreapp2.2\publish -Recurse -ErrorAction Ignore
         dotnet publish ..\Addins\ProposalCreation\Web\ProposalCreationWeb -c Release
 
     }
@@ -432,9 +449,9 @@ if($IncludeAddins)
     if($deploys)
     {
 
-        UpdateAppSettings -pathToJson ..\Addins\ProposalCreation\Web\ProposalCreationWeb\bin\Release\netcoreapp2.1\publish\appsettings.json -inputParams $proposalCreationSettings -ProposalCreation
+        UpdateAppSettings -pathToJson ..\Addins\ProposalCreation\Web\ProposalCreationWeb\bin\Release\netcoreapp2.2\publish\appsettings.json -inputParams $proposalCreationSettings -ProposalCreation
 
-        .\ZipDeploy.ps1 -sourcePath ..\Addins\ProposalCreation\Web\ProposalCreationWeb\bin\Release\netcoreapp2.1\publish\* -username $deploymentCredentials.PCUsername -password $deploymentCredentials.PCPassword -appName "$ApplicationName-propcreation"
+        .\ZipDeploy.ps1 -sourcePath ..\Addins\ProposalCreation\Web\ProposalCreationWeb\bin\Release\netcoreapp2.2\publish\* -username $deploymentCredentials.PCUsername -password $deploymentCredentials.PCPassword -appName "$ApplicationName-propcreation"
 
         Write-Information "Proposal Creation: Web app deployment has completed!"
 
@@ -485,7 +502,7 @@ if($IncludeAddins)
         cd "..\ProjectSmartLink.Service"
         dotnet msbuild "ProjectSmartLink.Service.csproj" "/p:SolutionDir=`"$($solutionDir)\\`";Configuration=Release;DebugSymbols=false;DebugType=None"
         cd ..\..\..\Setup
-        rd ..\Addins\ProjectSmartLink\ProjectSmartLink.Web\bin\Release\netcoreapp2.1\publish -Recurse -ErrorAction Ignore
+        rd ..\Addins\ProjectSmartLink\ProjectSmartLink.Web\bin\Release\netcoreapp2.2\publish -Recurse -ErrorAction Ignore
         dotnet publish ..\Addins\ProjectSmartLink\ProjectSmartLink.Web -c Release
 
     }
@@ -493,9 +510,9 @@ if($IncludeAddins)
     if($deploys)
     {
 
-        UpdateAppSettings -pathToJson ..\Addins\ProjectSmartLink\ProjectSmartLink.Web\bin\Release\netcoreapp2.1\publish\appsettings.json -inputParams $projectSmartLinkSettings -ProjectSmartLink
+        UpdateAppSettings -pathToJson ..\Addins\ProjectSmartLink\ProjectSmartLink.Web\bin\Release\netcoreapp2.2\publish\appsettings.json -inputParams $projectSmartLinkSettings -ProjectSmartLink
 
-        .\ZipDeploy.ps1 -sourcePath ..\Addins\ProjectSmartLink\ProjectSmartLink.Web\bin\Release\netcoreapp2.1\publish\* -username $deploymentCredentials.PSLUsername -password $deploymentCredentials.PSLPassword -appName "$ApplicationName-projectsmartlink"
+        .\ZipDeploy.ps1 -sourcePath ..\Addins\ProjectSmartLink\ProjectSmartLink.Web\bin\Release\netcoreapp2.2\publish\* -username $deploymentCredentials.PSLUsername -password $deploymentCredentials.PSLPassword -appName "$ApplicationName-projectsmartlink"
 
         Write-Information "Project Smart Link: Web app deployment has completed!"
 
@@ -531,28 +548,30 @@ if($builds)
     cd "..\Utilities\OpportunitySiteProvisioner"
     dotnet msbuild "OpportunitySiteProvisioner.csproj" "/p:SolutionDir=`"$($solutionDir)\\`";Configuration=Release;DebugSymbols=false;DebugType=None"
     cd ..\..\Setup
-    rd ..\WebReact\bin\Release\netcoreapp2.1\publish -Recurse -ErrorAction Ignore
+    rd ..\WebReact\bin\Release\netcoreapp2.2\publish -Recurse -ErrorAction Ignore
     dotnet publish ..\WebReact -c Release
-
 }
 
 if($deploys)
 {
+    UpdateAppSettings -pathToJson ..\WebReact\bin\Release\netcoreapp2.2\publish\appsettings.json -inputParams $appSettings
 
-    UpdateAppSettings -pathToJson ..\WebReact\bin\Release\netcoreapp2.1\publish\appsettings.json -inputParams $appSettings
-
-    $compiledJsPath = (Get-Item ..\WebReact\bin\Release\netcoreapp2.1\publish\ClientApp\build\static\js\* -Filter *.js).FullName
+    $compiledJsPath = (Get-Item ..\WebReact\bin\Release\netcoreapp2.2\publish\ClientApp\build\static\js\* -Filter *.js).FullName
     UpdateAppSettingsClient $compiledJsPath -appId $appRegistration.AppId -appUri "https://$ApplicationName.azurewebsites.net" -tenantId $tenantId
     Write-Information "AppSettings.js has been updated"
 
-    .\ZipDeploy.ps1 -sourcePath ..\WebReact\bin\Release\netcoreapp2.1\publish\* -username $deploymentCredentials.Username -password $deploymentCredentials.Password -appName $ApplicationName
+    .\ZipDeploy.ps1 -sourcePath ..\WebReact\bin\Release\netcoreapp2.2\publish\* -username $deploymentCredentials.Username -password $deploymentCredentials.Password -appName $ApplicationName
 
     Write-Information "Web app deployment has completed!"
+
+    # Include MS Teams helper
+    . .\CreateMSTeam.ps1
+
+    Create-NewTeam -TeamName $TeamName
     
     $adminConsentUrl = "https://login.microsoftonline.com/common/adminconsent?client_id=$($appRegistration.AppId)&state=12345&redirect_uri=$applicationUrl"
 
     Start-Process $adminConsentUrl
-
 }
 
 if($registers)

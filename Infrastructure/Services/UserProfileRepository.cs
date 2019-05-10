@@ -5,54 +5,49 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using ApplicationCore.Artifacts;
 using ApplicationCore.Interfaces;
 using ApplicationCore.Entities;
 using ApplicationCore.Services;
 using ApplicationCore;
 using ApplicationCore.Helpers;
-using ApplicationCore.Entities.GraphServices;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using ApplicationCore.Helpers.Exceptions;
 using Microsoft.Extensions.Caching.Memory;
+using System.Linq;
 
 namespace Infrastructure.Services
 {
-	public class UserProfileRepository : BaseRepository<UserProfile>, IUserProfileRepository
+    public class UserProfileRepository : BaseRepository<UserProfile>, IUserProfileRepository
 	{
 		private IMemoryCache _cache;
 		private readonly GraphSharePointAppService _graphSharePointAppService;
 		private readonly GraphUserAppService _graphUserAppService;
-        private readonly IRoleMappingRepository _roleMappingRepository;
+        private readonly IRoleRepository _roleRepository;
         private readonly IUserContext _userContext;
-        private JArray _roleMappingList;
 		private List<UserProfile> _usersList;
 
 		public UserProfileRepository(ILogger<UserProfileRepository> logger,
 			 GraphSharePointAppService graphSharePointAppService,
 			 GraphUserAppService graphUserAppService,
-             IRoleMappingRepository roleMappingRepository,
+             IRoleRepository roleRepository,
              IUserContext userContext,
              IOptionsMonitor<AppOptions> appOptions,
 			 IMemoryCache memoryCache) : base(logger, appOptions)
 		{
 			Guard.Against.Null(graphSharePointAppService, nameof(graphSharePointAppService));
             Guard.Against.Null(graphUserAppService, nameof(graphUserAppService));
-            Guard.Against.Null(roleMappingRepository, nameof(roleMappingRepository));
+            Guard.Against.Null(roleRepository, nameof(roleRepository));
             Guard.Against.Null(userContext, nameof(userContext));
 
             _graphSharePointAppService = graphSharePointAppService;
 			_graphUserAppService = graphUserAppService;
-            _roleMappingRepository = roleMappingRepository;
+            _roleRepository = roleRepository;
             _userContext = userContext;
             _cache = memoryCache;
 
-			_roleMappingList = null;
 			_usersList = new List<UserProfile>();
 		}
 
@@ -125,33 +120,6 @@ namespace Infrastructure.Services
 		}
 
 
-		// Private methods
-		private async Task<JArray> GetRoleMappingListAsync(string requestId = "")
-		{
-			try
-			{
-				if (_roleMappingList == null)
-				{
-					var siteList = new SiteList
-					{
-						SiteId = _appOptions.ProposalManagementRootSiteId,
-						ListId = _appOptions.RoleMappingsListId
-					};
-
-					var json = await _graphSharePointAppService.GetListItemsAsync(siteList, "all", requestId);
-					JArray jArrayResult = JArray.Parse(json["value"].ToString());
-
-					_roleMappingList = jArrayResult;
-				}
-
-				return _roleMappingList;
-			}
-			catch (Exception ex)
-			{
-				_logger.LogError($"RequestId: {requestId} - GetRoleMappingList Service Exception: {ex}");
-				throw new ResponseException($"RequestId: {requestId} - GetRoleMappingList Service Exception: {ex}");
-			}
-		}
 
 		private async Task<List<UserProfile>> GetUsersListAsync(string requestId = "")
 		{
@@ -159,28 +127,32 @@ namespace Infrastructure.Services
 			{
 				if (_usersList?.Count == 0)
 				{
-					var roleMappings = await _roleMappingRepository.GetAllAsync(requestId);
-					foreach(var role in roleMappings)
-					{
-						var userRole = Role.Empty;
-                        //TODO : Change needed here
-                        userRole.DisplayName = role.Role.DisplayName;
-                        //Granular Permission Change :  Start
+					var roles = await _roleRepository.GetAllAsync(requestId);
+                    foreach (var role in roles)
+                    {
+                        var userRole = Role.Empty;
+                        userRole.Id = role.Id;
+                        userRole.DisplayName = role.DisplayName;
                         userRole.AdGroupName = role.AdGroupName;
+                        userRole.TeamsMembership = role.TeamsMembership;
+                        userRole.Permissions = (
+                                                from permission in role.Permissions
+                                                select new Permission { Name = permission.Name, Id = permission.Id }
+                                               ).ToList();
 
-                        var options = new List<QueryParam>();
-                        //Granular Permission Change :  Start
-                        options.Add(new QueryParam("filter", $"startswith(displayName,'{role.AdGroupName}')"));
-                        var groupIdJson = await _graphUserAppService.GetGroupAsync(options, "", requestId);
-						dynamic jsonDyn = groupIdJson;
+                        var options = new List<QueryParam>
+                                                {
+                                                    new QueryParam("filter", $"startswith(displayName,'{role.AdGroupName}')"),
+                                                    new QueryParam("$expand", "members")
+                                                };
+                    
+                        dynamic jsonDyn = await _graphUserAppService.GetGroupAsync(options, "", requestId);
+
 						if (jsonDyn.value.HasValues)
 						{
 							userRole.Id = jsonDyn.value[0].id.ToString();
 
-							var groupMembersJson = await _graphUserAppService.GetGroupMembersAsync(userRole.Id, requestId);
-							JArray membersJsonArray = JArray.Parse(groupMembersJson["value"].ToString());
-
-							foreach (var member in membersJsonArray)
+							foreach (var member in jsonDyn.value[0]["members"])
 							{
 								var user = UserProfile.Empty;
 								user = _usersList.Find(x => x.Id == member["id"].ToString());

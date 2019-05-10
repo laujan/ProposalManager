@@ -4,17 +4,13 @@
 // Licensed under the MIT license. See LICENSE file in the solution root folder for full license information
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using ApplicationCore;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using ApplicationCore.Interfaces;
 using ApplicationCore.Helpers;
-using ApplicationCore.Artifacts;
 using Newtonsoft.Json.Linq;
 using ApplicationCore.ViewModels;
 using Microsoft.AspNetCore.Authorization;
@@ -199,9 +195,7 @@ namespace WebReact.Api
                     return await GetByReference(reference);
                 }
 
-                var itemsPage = 10;
-
-                var modelList = await _opportunityService.GetAllAsync(page ?? 1, itemsPage, requestId);
+                var modelList = await _opportunityService.GetAllAsync(page ?? 1, 10, requestId);
                 Guard.Against.Null(modelList, nameof(modelList), requestId);
 
                 if (modelList.ItemsList.Count == 0)
@@ -210,9 +204,7 @@ namespace WebReact.Api
                     return NotFound($"RequestID:{requestId} - GetAll no user profiles found");
                 }
 
-                var responseJson = JObject.FromObject(modelList);
-
-                return Ok(responseJson);
+                return Ok(JObject.FromObject(modelList));
             }
             catch (Exception ex)
             {
@@ -244,9 +236,7 @@ namespace WebReact.Api
                     return NotFound($"RequestID:{requestId} - GetOpportunityById no opportunities found");
                 }
 
-                var responseJObject = JObject.FromObject(thisOpportunity);
-
-                return Ok(responseJObject);
+                return Ok(JObject.FromObject(thisOpportunity));
             }
             catch (Exception ex)
             {
@@ -278,9 +268,7 @@ namespace WebReact.Api
                     return NotFound($"RequestID:{requestId} - GetOpportunityByName no opportunities found");
                 }
 
-                var responseJObject = JObject.FromObject(thisOpportunity);
-
-                return Ok(responseJObject);
+                return Ok(JObject.FromObject(thisOpportunity));
             }
             catch (Exception ex)
             {
@@ -312,9 +300,7 @@ namespace WebReact.Api
                     return NotFound($"RequestID:{requestId} - GeOpportunitytByReference no opportunities found");
                 }
 
-                var responseJObject = JObject.FromObject(thisOpportunity);
-
-                return Ok(responseJObject);
+                return Ok(JObject.FromObject(thisOpportunity));
             }
             catch (Exception ex)
             {

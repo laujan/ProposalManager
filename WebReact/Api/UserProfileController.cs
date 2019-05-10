@@ -4,17 +4,14 @@
 // Licensed under the MIT license. See LICENSE file in the solution root folder for full license information
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ApplicationCore;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using ApplicationCore.Interfaces;
 using ApplicationCore.Helpers;
-using ApplicationCore.Artifacts;
 using Newtonsoft.Json.Linq;
 using Microsoft.AspNetCore.Authorization;
 
@@ -63,9 +60,7 @@ namespace WebReact.Api
                     return NotFound($"UPN:{requestId} - UserProfileController_GetById no user found");
                 }
 
-                var responseJObject = JObject.FromObject(userProfile);
-
-                return Ok(responseJObject);
+                return Ok(JObject.FromObject(userProfile));
             }
             catch (Exception ex)
             {
@@ -91,8 +86,7 @@ namespace WebReact.Api
 					
 				}
 
-                var itemsPage = 10;
-                var modelList = await _userProfileService.GetAllAsync(page ?? 1, itemsPage, requestId);
+                var modelList = await _userProfileService.GetAllAsync(page ?? 1, 10, requestId);
                 Guard.Against.Null(modelList, nameof(modelList), requestId);
 
                 if (modelList.ItemsList.Count == 0)
@@ -101,9 +95,7 @@ namespace WebReact.Api
                     return NotFound($"RequestID:{requestId} - UserProfileController_GetAll no items found");
                 }
 
-                var responseJson = JObject.FromObject(modelList);
-
-                return Ok(responseJson);
+                return Ok(JObject.FromObject(modelList));
             }
             catch (Exception ex)
             {
@@ -135,9 +127,7 @@ namespace WebReact.Api
                     return NotFound($"UPN:{requestId} - UserProfileController_GetByUPN no user found");
                 }
 
-                var responseJObject = JObject.FromObject(userProfile);
-
-                return Ok(responseJObject);
+                return Ok(JObject.FromObject(userProfile));
             }
             catch (Exception ex)
             {

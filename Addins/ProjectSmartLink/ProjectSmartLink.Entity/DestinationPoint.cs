@@ -8,13 +8,10 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ProjectSmartLink.Entity
 {
-    public enum DestinationTypes
+    public enum DestinationType
     {
         None = 0,
         Point = 1,
@@ -49,7 +46,7 @@ namespace ProjectSmartLink.Entity
 
         public int? DecimalPlace { get; set; } = null;
 
-        public DestinationTypes DestinationType { get; set; }
+        public DestinationType DestinationType { get; set; }
 
         public DestinationPoint()
         {

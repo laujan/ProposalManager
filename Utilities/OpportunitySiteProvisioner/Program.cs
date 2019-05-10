@@ -58,8 +58,7 @@ namespace OpportunitySiteProvisioner
                 }
                 catch (Exception ex)
                 {
-                    var errorMessage = $"Provisioning failed: {ex.Message}. Retry #{retries}.";
-                    Console.WriteLine(errorMessage);
+                    Console.WriteLine($"Provisioning failed: {ex.Message}. Retry #{retries}.");
                     retries++;
                     Thread.Sleep(5000);
                 }

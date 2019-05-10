@@ -15,6 +15,8 @@ namespace ApplicationCore.ViewModels
             ProcessStep = string.Empty;
             ProcessType = string.Empty;
             Channel = string.Empty;
+            RoleName = string.Empty;
+            RoleId = string.Empty;
         }
 
         [JsonProperty("id")]
@@ -25,5 +27,10 @@ namespace ApplicationCore.ViewModels
         public string Channel { get; set; }
         [JsonProperty("processType", Order = 4)]
         public string ProcessType { get; set; }
+
+        [JsonProperty("roleName", Order = 5)]
+        public string RoleName { get; set; }
+        [JsonProperty("roleId", Order = 6)]
+        public string RoleId { get; set; }
     }
 }

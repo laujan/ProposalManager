@@ -3,24 +3,22 @@
 //
 // Licensed under the MIT license. See LICENSE file in the solution root folder for full license information.
 
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.IO;
-using System.Linq;
-using System.Net.Http;
-using System.Threading.Tasks;
+using ApplicationCore;
+using ApplicationCore.Helpers;
+using ApplicationCore.Helpers.Exceptions;
+using ApplicationCore.Interfaces;
+using Infrastructure.Services;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Graph;
 using Newtonsoft.Json.Linq;
-using Infrastructure.Services;
-using ApplicationCore;
-using ApplicationCore.Interfaces;
-using ApplicationCore.Entities.GraphServices;
-using ApplicationCore.Helpers;
-using ApplicationCore.Helpers.Exceptions;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Net.Http;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace Infrastructure.GraphApi
 {
@@ -80,8 +78,7 @@ namespace Infrastructure.GraphApi
                 // Get the status response and throw if is not 200.
                 Guard.Against.NotStatus200OK(response.StatusCode, nameof(this.GetUserAsync), requestId);
 
-                var content = await response.Content.ReadAsStringAsync();
-                JObject responseJObject = JObject.Parse(await response.Content.ReadAsStringAsync());
+                JObject responseJObject = await response.Content.ReadAsAsync<JObject>();
 
                 _logger.LogInformation($"RequestId: {requestId} - GetUserAsync end.");
                 return responseJObject;
@@ -90,6 +87,56 @@ namespace Infrastructure.GraphApi
             {
                 _logger.LogError($"RequestId: {requestId} - GetUserAsync Service Exception: {ex}");
                 throw new ResponseException($"RequestId: {requestId} - GetUserAsync Service Exception: {ex}");
+            }
+        }
+
+
+        public async Task<string> GetAdGroupName(string id, string requestId = "")
+        {
+            // GET:https://graph.microsoft.com/v1.0/groups/5410fdb0-da68-420d-8aac-22f175bc8f6a
+            // EXAMPLE: https://graph.microsoft.com/v1.0/groups/5410fdb0-da68-420d-8aac-22f175bc8f6a
+
+            _logger.LogInformation($"RequestId: {requestId} - GetUserAsync called.");
+            try
+            {
+                Guard.Against.NullOrEmpty(id, nameof(id), requestId);
+
+                var requestUrl = $"{_appOptions.GraphRequestUrl}groups/{id}";
+
+                // Create the request message and add the content.
+                HttpRequestMessage hrm = new HttpRequestMessage(HttpMethod.Get, requestUrl);
+
+                var response = new HttpResponseMessage();
+
+                // Authenticate (add access token) our HttpRequestMessage
+                await GraphClient.AuthenticationProvider.AuthenticateRequestAsync(hrm);
+
+                _logger.LogInformation($"RequestId: {requestId} - GetUserAsync call to graph: " + requestUrl);
+
+                // Send the request and get the response.
+                response = await GraphClient.HttpProvider.SendAsync(hrm);
+
+                // Get the status response and throw if is not 200.
+                Guard.Against.NotStatus200OK(response.StatusCode, nameof(this.GetUserAsync), requestId);
+
+                JObject responseJObject = await response.Content.ReadAsAsync<JObject>();
+
+                _logger.LogInformation($"RequestId: {requestId} - GetUserAsync end.");
+                var adgroupname = string.Empty;
+                try
+                {
+                    adgroupname = responseJObject["displayName"].ToString();
+                }
+                catch(Exception ex)
+                {
+                    _logger.LogError($"RequestId: {requestId} - GetUserAsync Service Exception: {ex}");
+                }
+                return adgroupname;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"RequestId: {requestId} - GetUserAsync Service Exception: {ex}");
+                return String.Empty;
             }
         }
 
@@ -138,8 +185,7 @@ namespace Infrastructure.GraphApi
                 // Get the status response and throw if is not 200.
                 Guard.Against.NotStatus200OK(response.StatusCode, nameof(this.GetGroupAsync), requestId);
 
-                var content = await response.Content.ReadAsStringAsync();
-                JObject responseJObject = JObject.Parse(await response.Content.ReadAsStringAsync());
+                JObject responseJObject = await response.Content.ReadAsAsync<JObject>();
 
                 _logger.LogInformation($"RequestId: {requestId} - GetGroupAsync end.");
                 return responseJObject;
@@ -179,8 +225,7 @@ namespace Infrastructure.GraphApi
                 // Get the status response and throw if is not 200.
                 Guard.Against.NotStatus200OK(response.StatusCode, $"GetGroupMembersAsync_response: {requestUrl}", requestId);
 
-                var content = await response.Content.ReadAsStringAsync();
-                JObject responseJObject = JObject.Parse(await response.Content.ReadAsStringAsync());
+                JObject responseJObject = await response.Content.ReadAsAsync<JObject>();
 
                 _logger.LogInformation($"RequestId: {requestId} - GetGroupMembersAsync end.");
                 return responseJObject;
@@ -253,7 +298,6 @@ namespace Infrastructure.GraphApi
                 var requestBody = "{'@odata.id': 'https://graph.microsoft.com/v1.0/users/" + userId + "'}";
 
                 var requestUrl = $"{_appOptions.GraphRequestUrl}groups/{groupId}/owners/$ref";
-
 
                 // Create the request message and add the content.
                 HttpRequestMessage hrm = new HttpRequestMessage(HttpMethod.Post, requestUrl) { Content = new StringContent(requestBody, Encoding.UTF8, "application/json") };

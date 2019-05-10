@@ -23,9 +23,9 @@ namespace ApplicationCore.Models
             DisplayName = String.Empty;
             OpportunityState = OpportunityStateModel.NoneEmpty;
             Customer = new CustomerModel();
-            DealSize = 0.0;
-            OpenedDate = DateTimeOffset.MinValue;
-            DealType = new TemplateViewModel();
+            Template = new TemplateViewModel();
+            Dealsize = String.Empty;
+            OpenedDate = String.Empty;
         }
 
         /// <summary>
@@ -48,15 +48,13 @@ namespace ApplicationCore.Models
 
         [JsonProperty("customer")]
         public CustomerModel Customer { get; set; }
+        [JsonProperty("template")]
+        public TemplateViewModel Template { get; set; }
 
-        [JsonProperty("dealSize")]
-        public double DealSize { get; set; }
+        [JsonProperty("dealsize")]
+        public string Dealsize { get; set; }
 
         [JsonProperty("openedDate")]
-        public DateTimeOffset OpenedDate { get; set; }
-
-        // DealType
-        [JsonProperty("dealType")]
-        public TemplateViewModel DealType { get; set; }
+        public string OpenedDate { get; set; }
     }
 }

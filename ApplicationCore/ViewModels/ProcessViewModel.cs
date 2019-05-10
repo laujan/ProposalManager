@@ -18,6 +18,10 @@ namespace ApplicationCore.ViewModels
         [JsonConverter(typeof(StatusConverter))]
         [JsonProperty("status", Order = 7)]
         public ActionStatus Status { get; set; }
+        [JsonProperty("processnumber", Order = 8)]
+        public int ProcesNumber { get; set; }
+        [JsonProperty("groupnumber", Order = 9)]
+        public int GroupNumber { get; set; }
         /// <summary>
         /// Represents the empty user profile. This field is read-only.
         /// </summary>
@@ -27,7 +31,9 @@ namespace ApplicationCore.ViewModels
             {
                Order = string.Empty,
                DaysEstimate = string.Empty,
-               Status = ActionStatus.NotStarted
+               Status = ActionStatus.NotStarted,
+               ProcesNumber=0,
+               GroupNumber=0,
             };
         }
     }

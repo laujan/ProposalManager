@@ -5,11 +5,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using ApplicationCore.Artifacts;
 using ApplicationCore.Interfaces;
 using ApplicationCore.Entities;
 using ApplicationCore.Services;
@@ -28,16 +26,25 @@ namespace Infrastructure.Services
     {
         private readonly GraphSharePointAppService _graphSharePointAppService;
         private IMemoryCache _cache;
+        private readonly GraphUserAppService _graphUserAppService;
+        private readonly GraphTeamsAppService _graphTeamsAppService;
 
         public RoleRepository(
-            ILogger<CategoryRepository> logger,
+            ILogger<RoleRepository> logger,
             IOptionsMonitor<AppOptions> appOptions,
             GraphSharePointAppService graphSharePointAppService,
+            GraphUserAppService graphUserAppService,
+            GraphTeamsAppService graphTeamsAppService,
             IMemoryCache memoryCache) : base(logger, appOptions)
         {
             Guard.Against.Null(graphSharePointAppService, nameof(graphSharePointAppService));
+            Guard.Against.Null(graphUserAppService, nameof(graphUserAppService));
+            Guard.Against.Null(graphTeamsAppService, nameof(graphTeamsAppService));
+
             _graphSharePointAppService = graphSharePointAppService;
             _cache = memoryCache;
+            _graphUserAppService = graphUserAppService;
+            _graphTeamsAppService = graphTeamsAppService;
         }
 
         public async Task<StatusCodes> CreateItemAsync(Role entity, string requestId = "")
@@ -46,6 +53,18 @@ namespace Infrastructure.Services
 
             try
             {
+                if (!(await CheckRoleAdGroupNameExist(entity.AdGroupName.Trim(), requestId)))
+                {
+                    try
+                    {
+                        await _graphTeamsAppService.CreateGroupAsync(entity.AdGroupName.Trim(), entity.AdGroupName.Trim() + " Group");
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError($"RequestId: {requestId} - SetupService_CreateAdminGroupAsync error: {ex}");
+                    }
+                }
+
                 var siteList = new SiteList
                 {
                     SiteId = _appOptions.ProposalManagementRootSiteId,
@@ -54,13 +73,14 @@ namespace Infrastructure.Services
 
                 // Create Json object for SharePoint create list item
                 dynamic itemFieldsJson = new JObject();
-                itemFieldsJson.Name = entity.DisplayName;
-                itemFieldsJson.Title = entity.Id;
-
                 dynamic itemJson = new JObject();
+                itemFieldsJson.AdGroupName = entity.AdGroupName.Trim();
+                itemFieldsJson.Role = entity.DisplayName.Trim();
+                itemFieldsJson.TeamsMembership = entity.TeamsMembership.Name.ToString();
+                itemFieldsJson.Permissions = JsonConvert.SerializeObject(entity.Permissions, Formatting.Indented);
                 itemJson.fields = itemFieldsJson;
 
-                var result = await _graphSharePointAppService.CreateListItemAsync(siteList, itemJson.ToString(), requestId);
+                await _graphSharePointAppService.CreateListItemAsync(siteList, itemJson.ToString(), requestId);
 
                 _logger.LogInformation($"RequestId: {requestId} - RolesRepo_CreateItemAsync finished creating SharePoint list item.");
 
@@ -74,6 +94,38 @@ namespace Infrastructure.Services
                 _logger.LogError($"RequestId: {requestId} - RolesRepo_CreateItemAsync error: {ex}");
                 throw;
             }
+        }
+
+        private async Task<bool> CheckRoleAdGroupNameExist(string adGroupName, string requestId)
+        {
+            bool flag = false;
+            try
+            {
+                //bug fix
+                if ("aud" == adGroupName.Substring(0, 3).ToLower())
+                    flag = true;
+                else
+                {
+                    var options = new List<QueryParam>();
+                    //Granular Permission Change :  Start
+                    options.Add(new QueryParam("filter", $"startswith(displayName,'{adGroupName}')"));
+                    dynamic jsonDyn = await _graphUserAppService.GetGroupAsync(options, "", requestId);
+                    if (jsonDyn.value.HasValues)
+                    {
+                        var id = "";
+                        id = jsonDyn.value[0].id.ToString();
+                        if (!string.IsNullOrEmpty(id))
+                            flag = true;
+
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"RequestId: {requestId} - RoleMappingRepo_CreateItemAsync error: {ex}");
+            }
+
+            return flag;
         }
 
         public async Task<StatusCodes> DeleteItemAsync(string id, string requestId = "")
@@ -90,7 +142,7 @@ namespace Infrastructure.Services
                     ListId = _appOptions.RoleListId
                 };
 
-                var result = await _graphSharePointAppService.DeleteListItemAsync(siteList, id, requestId);
+                await _graphSharePointAppService.DeleteListItemAsync(siteList, id, requestId);
 
                 _logger.LogInformation($"RequestId: {requestId} - RolesRepo_DeleteItemAsync finished creating SharePoint list item.");
 
@@ -134,11 +186,14 @@ namespace Infrastructure.Services
                 };
 
                 // Create Json object for SharePoint create list item
-                dynamic itemJson = new JObject();
-                itemJson.Title = entity.Id;
-                itemJson.Name = entity.DisplayName;
+                dynamic itemFieldsJson = new JObject();
+                itemFieldsJson.AdGroupName = entity.AdGroupName.Trim();
+                itemFieldsJson.Role = entity.DisplayName.Trim();
+                itemFieldsJson.TeamsMembership = entity.TeamsMembership.Name.ToString();
+                itemFieldsJson.Permissions = JsonConvert.SerializeObject(entity.Permissions, Formatting.Indented);
 
-                var result = await _graphSharePointAppService.UpdateListItemAsync(siteList, entity.Id, itemJson.ToString(), requestId);
+
+                await _graphSharePointAppService.UpdateListItemAsync(siteList, entity.Id, itemFieldsJson.ToString(), requestId);
 
                 _logger.LogInformation($"RequestId: {requestId} - RolesRepo_UpdateItemAsync finished creating SharePoint list item.");
 
@@ -200,18 +255,29 @@ namespace Infrastructure.Services
                     ListId = _appOptions.RoleListId
                 };
 
-                var json = await _graphSharePointAppService.GetListItemsAsync(siteList, "all", requestId);
-                JArray jsonArray = JArray.Parse(json["value"].ToString());
-
+                dynamic json = await _graphSharePointAppService.GetListItemsAsync(siteList, "all", requestId);
                 var itemsList = new List<Role>();
-                foreach (var item in jsonArray)
+                if (json.value.HasValues)
                 {
-                    var role = Role.Empty;
-                    role.Id = item["fields"]["id"].ToString() ?? String.Empty;
-                    role.DisplayName = item["fields"]["Name"].ToString() ?? String.Empty;
-
-                    itemsList.Add(role);
+                    foreach (var item in json.value)
+                    {
+                        var obj = JObject.Parse(item.ToString()).SelectToken("fields");
+                        itemsList.Add(new Role
+                        {                           
+                            Id = obj.SelectToken("id")?.ToString(),
+                            AdGroupName = obj.SelectToken("AdGroupName")?.ToString(),
+                            DisplayName = obj.SelectToken("Role")?.ToString(),
+                            TeamsMembership = obj.SelectToken("TeamsMembership") !=null? TeamsMembership.FromName(obj.SelectToken("TeamsMembership").ToString()): TeamsMembership.None,
+                            Permissions = obj.SelectToken("Permissions") != null ? JsonConvert.DeserializeObject<IList<Permission>>(obj.SelectToken("Permissions").ToString(), new JsonSerializerSettings
+                            {
+                                MissingMemberHandling = MissingMemberHandling.Ignore,
+                                NullValueHandling = NullValueHandling.Ignore
+                            }) : new List<Permission>()                         
+ 
+                        });
+                    }
                 }
+
 
                 return itemsList;
             }
@@ -226,8 +292,7 @@ namespace Infrastructure.Services
         {
             try
             {
-                var roleList = new List<Role>();
-                roleList = (await GetRoleListAsync(requestId)).ToList();
+                var roleList = (await GetRoleListAsync(requestId)).ToList();
 
                 var cacheEntryOptions = new MemoryCacheEntryOptions()
                     .SetAbsoluteExpiration(TimeSpan.FromMinutes(_appOptions.UserProfileCacheExpiration));

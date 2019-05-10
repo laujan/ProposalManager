@@ -3,20 +3,20 @@
 //
 // Licensed under the MIT license. See LICENSE file in the solution root folder for full license information
 
-using ApplicationCore;
-using ApplicationCore.Entities;
-using ApplicationCore.Entities.GraphServices;
-using ApplicationCore.Helpers;
-using ApplicationCore.Interfaces;
-using Infrastructure.Helpers;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using ApplicationCore.Interfaces;
+using ApplicationCore;
+using ApplicationCore.Helpers;
+using ApplicationCore.Entities;
+using Newtonsoft.Json.Linq;
+using Infrastructure.Helpers;
+using ApplicationCore.Entities.GraphServices;
+using System.Net;
 using System.Xml;
 
 namespace Infrastructure.Services
@@ -26,6 +26,7 @@ namespace Infrastructure.Services
         private readonly GraphSharePointAppService _graphSharePointAppService;
         private readonly IWritableOptions<AppOptions> _writableOptions;
         private readonly IWritableOptions<DocumentIdActivatorConfiguration> documentIdActivatorConfigurationWritableOptions;
+        //protected readonly SharePointListsSchemaHelper _sharePointListsSchemaHelper;
         private readonly GraphTeamsAppService _graphTeamsAppService;
         private readonly GraphUserAppService _graphUserAppService;
         private readonly IUserContext _userContext;
@@ -52,28 +53,30 @@ namespace Infrastructure.Services
             _graphSharePointAppService = graphSharePointAppService;
             _writableOptions = writableOptions;
             this.documentIdActivatorConfigurationWritableOptions = documentIdActivatorConfigurationWritableOptions;
+            //_sharePointListsSchemaHelper = sharePointListsSchemaHelper;
             _graphTeamsAppService = graphTeamsAppService;
             _graphUserAppService = graphUserAppService;
             _userContext = userContext;
             _azureKeyVaultService = azureKeyVaultService;
+
         }
 
         public async Task<StatusCodes> UpdateAppOpptionsAsync(string key, string value, string requestId = "")
         {
             _logger.LogInformation($"RequestId: {requestId} - SetupService_UpdateAppOpptionsAsync called.");
 
-            //Save powerbi username and password to to Key Vault.
-            if (key == "PBIUserName" || key == "PBIUserPassword")
-            {
-                await _azureKeyVaultService.SetValueInVaultAsync(key, value, requestId);
+            ////Save powerbi username and password to to Key Vault.
+            //if (key == "PBIUserName" || key == "PBIUserPassword")
+            //{
+            //    await _azureKeyVaultService.SetValueInVaultAsync(key, value, requestId);
+            //    return StatusCodes.Status200OK;
+            //}
+            ////save values to appsettings.
+            //else
+            //{
+                _writableOptions.UpdateAsync(key, value, requestId);
                 return StatusCodes.Status200OK;
-            }
-            //save values to appsettings.
-            else
-            {
-                await _writableOptions.UpdateAsync(key, value, requestId);
-                return StatusCodes.Status200OK;
-            }
+             //}
         }
 
         public Task<StatusCodes> UpdateDocumentIdActivatorOptionsAsync(string key, string value, string requestId = "")
@@ -119,7 +122,8 @@ namespace Infrastructure.Services
                         itemFieldsJson.ProcessType = process.ProcessType;
                         itemFieldsJson.Channel = process.Channel;
                         itemFieldsJson.ProcessStep = process.ProcessStep;
-
+                        itemFieldsJson.RoleName = process.RoleName;
+                        itemFieldsJson.RoleId = process.RoleId;
                         dynamic itemJson = new JObject();
                         itemJson.fields = itemFieldsJson;
 
@@ -168,13 +172,14 @@ namespace Infrastructure.Services
                         dynamic itemJson = new JObject();
                         itemJson.fields = itemFieldsJson;
 
-                        await _graphSharePointAppService.CreateListItemAsync(siteList, itemJson.ToString());
+                        var result = await _graphSharePointAppService.CreateListItemAsync(siteList, itemJson.ToString());
                     }
                     catch (Exception ex)
                     {
                         _logger.LogWarning($"RequestId: {requestId} - SetupService_CreateSitePermissionsAsync warning: {ex}");
                     }
                 }
+
             }
             catch (Exception ex)
             {
@@ -183,87 +188,7 @@ namespace Infrastructure.Services
             }
         }
 
-        public async Task CreateSiteRolesAsync(string requestId = "")
-        {
-            _logger.LogInformation($"RequestId: {requestId} - SetupService_CreateSiteRolesAsync called.");
-
-            try
-            {
-                var siteList = new SiteList
-                {
-                    SiteId = _appOptions.ProposalManagementRootSiteId,
-                    ListId = _appOptions.RoleListId
-                };
-                var roles = getRoles();
-
-                foreach (string role in roles)
-                {
-                    try
-                    {
-                        // Create Json object for SharePoint create list item
-                        dynamic itemFieldsJson = new JObject();
-                        itemFieldsJson.Name = role;
-
-                        dynamic itemJson = new JObject();
-                        itemJson.fields = itemFieldsJson;
-
-                        await _graphSharePointAppService.CreateListItemAsync(siteList, itemJson.ToString());
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogWarning($"RequestId: {requestId} - SetupService_CreateSiteRolesAsync warning: {ex}");
-                    }
-                }
-
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"RequestId: {requestId} - SetupService_CreateSiteRolesAsync Service Exception: {ex}");
-                throw;
-            }
-        }
-
-        public async Task CreateSiteTasksAsync(string requestId = "")
-        {
-            _logger.LogInformation($"RequestId: {requestId} - SetupService_CreateSiteTasksAsync called.");
-
-            try
-            {
-                var siteList = new SiteList
-                {
-                    SiteId = _appOptions.ProposalManagementRootSiteId,
-                    ListId = _appOptions.TasksListId
-                };
-                var tasks = getTasks();
-
-                foreach (string task in tasks)
-                {
-                    try
-                    {
-                        // Create Json object for SharePoint create list item
-                        dynamic itemFieldsJson = new JObject();
-                        itemFieldsJson.Name = task;
-
-                        dynamic itemJson = new JObject();
-                        itemJson.fields = itemFieldsJson;
-
-                        await _graphSharePointAppService.CreateListItemAsync(siteList, itemJson.ToString());
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogWarning($"RequestId: {requestId} - SetupService_CreateSiteTasksAsync warning: {ex}");
-                    }
-                }
-
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"RequestId: {requestId} - SetupService_CreateSiteTasksAsync Service Exception: {ex}");
-                throw;
-            }
-        }
-
-        public async Task CreateSiteAdminPermissionsAsync(string adGroupName, string requestId = "")
+        public async Task CreateSiteAdminPermissionsAsync(string adGroupName,string requestId = "")
         {
             _logger.LogInformation($"RequestId: {requestId} - SetupService_CreateSiteAdminPermissionsAsync called.");
             try
@@ -271,11 +196,11 @@ namespace Infrastructure.Services
                 var siteList = new SiteList
                 {
                     SiteId = _appOptions.ProposalManagementRootSiteId,
-                    ListId = _appOptions.RoleMappingsListId
+                    ListId = _appOptions.RoleListId
                 };
                 // Create Json object for SharePoint create list item
                 dynamic itemFieldsJson = new JObject();
-                itemFieldsJson.ADGroupName = adGroupName;
+                itemFieldsJson.AdGroupName = adGroupName;
                 itemFieldsJson.Role = "Administrator";
                 itemFieldsJson.Permissions = @"[
                       {
@@ -284,11 +209,11 @@ namespace Infrastructure.Services
                         'name': 'Administrator'
                       }
                     ]";
-
+                itemFieldsJson.TeamsMembership = "Owner";
                 dynamic itemJson = new JObject();
                 itemJson.fields = itemFieldsJson;
 
-                await _graphSharePointAppService.CreateListItemAsync(siteList, itemJson.ToString());
+                var result = await _graphSharePointAppService.CreateListItemAsync(siteList, itemJson.ToString());
             }
             catch (Exception ex)
             {
@@ -304,9 +229,8 @@ namespace Infrastructure.Services
             var sharepointLists = GetSharePointLists();
             var siteList = new SiteList();
 
-            siteList.SiteId = _appOptions.ProposalManagementRootSiteId;
-            if (string.IsNullOrEmpty(siteList.SiteId))
-                siteList.SiteId = siteRootId;
+            siteList.SiteId = siteRootId;
+
             foreach (var list in sharepointLists)
             {
                 try
@@ -314,51 +238,35 @@ namespace Infrastructure.Services
                     string htmlBody = string.Empty;
                     switch (list)
                     {
-                        case ListSchema.CategoriesListId:
-                            htmlBody = SharePointListsSchemaHelper.CategoriesJsonSchema(_appOptions.CategoriesListId);
-                            await _graphSharePointAppService.CreateSiteListAsync(htmlBody);
-                            break;
-                        case ListSchema.IndustryListId:
-                            htmlBody = SharePointListsSchemaHelper.IndustryJsonSchema(_appOptions.IndustryListId);
-                            await _graphSharePointAppService.CreateSiteListAsync(htmlBody);
-                            break;
                         case ListSchema.OpportunitiesListId:
                             htmlBody = SharePointListsSchemaHelper.OpportunitiesJsonSchema(_appOptions.OpportunitiesListId);
-                            await _graphSharePointAppService.CreateSiteListAsync(htmlBody);
                             break;
                         case ListSchema.Permissions:
                             htmlBody = SharePointListsSchemaHelper.PermissionJsonSchema(_appOptions.Permissions);
-                            await _graphSharePointAppService.CreateSiteListAsync(htmlBody);
                             break;
                         case ListSchema.ProcessListId:
                             htmlBody = SharePointListsSchemaHelper.WorkFlowItemsJsonSchema(_appOptions.ProcessListId);
-                            await _graphSharePointAppService.CreateSiteListAsync(htmlBody);
                             break;
-                        case ListSchema.RegionsListId:
-                            htmlBody = SharePointListsSchemaHelper.RegionsJsonSchema(_appOptions.RegionsListId);
-                            await _graphSharePointAppService.CreateSiteListAsync(htmlBody);
+                        case ListSchema.OpportunityMetaDataId:
+                            htmlBody = SharePointListsSchemaHelper.OpportunityMetaDataJsonSchema(_appOptions.OpportunityMetaDataId);
                             break;
                         case ListSchema.RoleListId:
                             htmlBody = SharePointListsSchemaHelper.RoleJsonSchema(_appOptions.RoleListId);
-                            await _graphSharePointAppService.CreateSiteListAsync(htmlBody);
                             break;
-                        case ListSchema.RoleMappingsListId:
-                            htmlBody = SharePointListsSchemaHelper.RoleMappingsJsonSchema(_appOptions.RoleMappingsListId);
-                            await _graphSharePointAppService.CreateSiteListAsync(htmlBody);
+                        case ListSchema.GroupsListId:
+                            htmlBody = SharePointListsSchemaHelper.GroupJsonSchema(_appOptions.GroupsListId);
                             break;
                         case ListSchema.TemplateListId:
                             htmlBody = SharePointListsSchemaHelper.TemplatesJsonSchema(_appOptions.TemplateListId);
-                            await _graphSharePointAppService.CreateSiteListAsync(htmlBody);
                             break;
                         case ListSchema.DashboardListId:
                             htmlBody = SharePointListsSchemaHelper.DashboardJsonSchema(_appOptions.DashboardListId);
-                            await _graphSharePointAppService.CreateSiteListAsync(htmlBody);
                             break;
                         case ListSchema.TasksListId:
                             htmlBody = SharePointListsSchemaHelper.TasksJsonSchema(_appOptions.TasksListId);
-                            await _graphSharePointAppService.CreateSiteListAsync(htmlBody);
                             break;
                     }
+                    await _graphSharePointAppService.CreateSiteListAsync(htmlBody,siteRootId);
                 }
                 catch (Exception ex)
                 {
@@ -373,12 +281,24 @@ namespace Infrastructure.Services
 
             try
             {
-                var response = await _graphTeamsAppService.CreateTeamAsync(name, name + "team");
-                var groupID = response["id"].ToString();
+                _logger.LogInformation($"RequestId: {requestId} - SetupService_CreateProposalManagerTeamAsync called.");
 
-                //Create channels
-                await _graphTeamsAppService.CreateChannelAsync(groupID, "Configuration", "Configuration Channel");
-                await _graphTeamsAppService.CreateChannelAsync(groupID, "Administration", "Administration Channel");
+                try
+                {
+                    var response = await _graphTeamsAppService.GetGroupsIdAsync($"startswith(displayName,'{_appOptions.GeneralProposalManagementTeam.ToString()}')");
+                    var groupID = JObject.Parse(response.ToString()).SelectToken("value")[0].SelectToken("id").ToString();
+
+                    //Create channels
+                    await _graphTeamsAppService.CreateChannelAsync(groupID, "Configuration", "Configuration Channel");
+                    await _graphTeamsAppService.CreateChannelAsync(groupID, "Administration", "Administration Channel");
+                    await _graphTeamsAppService.CreateChannelAsync(groupID, "Help", "Help Channel");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError($"RequestId: {requestId} - SetupService_CreateProposalManagerTeamAsync error: {ex}");
+                    throw;
+                }
+
             }
             catch (Exception ex)
             {
@@ -389,6 +309,7 @@ namespace Infrastructure.Services
 
         public async Task CreateAdminGroupAsync(string name, string requestId = "")
         {
+
             _logger.LogInformation($"RequestId: {requestId} - SetupService_CreateAdminGroupAsync called.");
 
             try
@@ -434,17 +355,18 @@ namespace Infrastructure.Services
             _logger.LogInformation($"RequestId: {requestId} - SetupService_GetSharePointLists called.");
 
             List<ListSchema> sharepointLists = new List<ListSchema>();
-            sharepointLists.Add(ListSchema.CategoriesListId);
-            sharepointLists.Add(ListSchema.IndustryListId);
+            sharepointLists.Add(ListSchema.OpportunityMetaDataId);
+            sharepointLists.Add(ListSchema.GroupsListId);
             sharepointLists.Add(ListSchema.OpportunitiesListId);
             sharepointLists.Add(ListSchema.ProcessListId);
-            sharepointLists.Add(ListSchema.RegionsListId);
+            
             sharepointLists.Add(ListSchema.RoleListId);
-            sharepointLists.Add(ListSchema.RoleMappingsListId);
+          
             sharepointLists.Add(ListSchema.TemplateListId);
             sharepointLists.Add(ListSchema.Permissions);
             sharepointLists.Add(ListSchema.DashboardListId);
             sharepointLists.Add(ListSchema.TasksListId);
+
             return sharepointLists;
         }
 
@@ -465,44 +387,9 @@ namespace Infrastructure.Services
             permissions.Add("Administrator");
             permissions.Add("CustomerDecision_Read");
             permissions.Add("CustomerDecision_ReadWrite");
-            permissions.Add("CreditCheck_Read");
-            permissions.Add("CreditCheck_ReadWrite");
-            permissions.Add("Compliance_Read");
-            permissions.Add("Compliance_ReadWrite");
             permissions.Add("ProposalDocument_Read");
             permissions.Add("ProposalDocument_ReadWrite");
-            permissions.Add("RiskAssessment_Read");
-            permissions.Add("RiskAssessment_ReadWrite");
-            permissions.Add("Underwriting_Read");
-            permissions.Add("Underwriting_ReadWrite");
             return permissions;
-        }
-
-        private List<string> getRoles(string requestId = "")
-        {
-            _logger.LogInformation($"RequestId: {requestId} - SetupService_getRoles called.");
-
-            List<string> roles = new List<string>();
-            roles.Add("LoanOfficer");
-            roles.Add("RelationshipManager");
-            roles.Add("Administrator");
-            roles.Add("CreditCheck");
-            roles.Add("LegalCounsel");
-            roles.Add("RiskAssessment");
-            roles.Add("HumanResources");
-            roles.Add("Compliance");
-            roles.Add("Underwriting");
-            return roles;
-        }
-        private List<string> getTasks(string requestId = "")
-        {
-            _logger.LogInformation($"RequestId: {requestId} - SetupService_getTasks called.");
-
-            List<string> tasks = new List<string>();
-            tasks.Add("Approval");
-            tasks.Add("Content");
-            tasks.Add("Unassigned");
-            return tasks;
         }
 
         private List<ProcessesType> getProcesses(string requestId = "")
@@ -515,51 +402,307 @@ namespace Infrastructure.Services
             startProcess.ProcessType = "Base";
             startProcess.Channel = "None";
             startProcess.ProcessStep = "Start Process";
+            startProcess.RoleId = "";
+            startProcess.RoleName = "";
             processesTypes.Add(startProcess);
-            //New Opportunity 
-            ProcessesType newOpportunity = new ProcessesType();
-            newOpportunity.ProcessType = "Base";
-            newOpportunity.Channel = "None";
-            newOpportunity.ProcessStep = "New Opportunity";
-            processesTypes.Add(newOpportunity);
+
             //Customer Descision
             ProcessesType customerDecision = new ProcessesType();
-            customerDecision.Channel = "CustomerDecision";
+            customerDecision.Channel = "Customer Decision";
             customerDecision.ProcessType = "customerDecisionTab";
-            customerDecision.ProcessStep = "Draft Proposal";
+            customerDecision.ProcessStep = "Customer Decision";
+            customerDecision.RoleId = "";
+            customerDecision.RoleName = "";
             processesTypes.Add(customerDecision);
+
             //Formal Proposal
             ProcessesType formalProposal = new ProcessesType();
             formalProposal.Channel = "Formal Proposal";
-            formalProposal.ProcessType = "ProposalStatusTab";
-            formalProposal.ProcessStep = "None";
+            formalProposal.ProcessType = "proposalStatusTab";
+            formalProposal.ProcessStep = "Formal Proposal";
+            formalProposal.RoleId = "";
+            formalProposal.RoleName = "";
             processesTypes.Add(formalProposal);
-            //Credit Check
-            ProcessesType creditCheck = new ProcessesType();
-            creditCheck.Channel = "Credit Check";
-            creditCheck.ProcessType = "CheckListTab";
-            creditCheck.ProcessStep = "CreditCheck";
-            processesTypes.Add(creditCheck);
-            //Compliance
-            ProcessesType compliance = new ProcessesType();
-            compliance.Channel = "Compliance";
-            compliance.ProcessType = "CheckListTab";
-            compliance.ProcessStep = "Compliance";
-            processesTypes.Add(compliance);
-            //UnderWriting
-            ProcessesType underWriting = new ProcessesType();
-            underWriting.Channel = "Underwriting";
-            underWriting.ProcessType = "CheckListTab";
-            underWriting.ProcessStep = "Underwriting";
-            processesTypes.Add(underWriting);
-            //Risk Assessment
-            ProcessesType riskAssessment = new ProcessesType();
-            riskAssessment.Channel = "Risk Assessment";
-            riskAssessment.ProcessType = "CheckListTab";
-            riskAssessment.ProcessStep = "RiskAssessment";
-            processesTypes.Add(riskAssessment);
 
             return processesTypes;
+        }
+
+        public async Task CreateMetaDataList(string requestId = "")
+        {
+            _logger.LogInformation($"RequestId: {requestId} - SetupService_CreateMetaDataList called.");
+            try
+            {
+                var siteList = new SiteList
+                {
+                    SiteId = _appOptions.ProposalManagementRootSiteId,
+                    ListId = _appOptions.OpportunityMetaDataId
+                };
+                var metaDataList = getMetaData();
+                foreach (var entity in metaDataList)
+                {
+                    try
+                    {
+                        // Create Json object for SharePoint create list item
+                        dynamic itemFieldsJson = new JObject();
+                        itemFieldsJson.FieldName = entity.DisplayName;
+                        itemFieldsJson.FieldType = entity.FieldType.Name.ToString();
+                        itemFieldsJson.FieldValue = entity.Values;
+                        itemFieldsJson.FieldScreen = entity.Screen;
+
+                        dynamic itemJson = new JObject();
+                        itemJson.fields = itemFieldsJson;
+
+
+                        _logger.LogDebug($"RequestId: {requestId} - SetupService_CreateSiteProcessesAsync debug result: {itemJson}");
+
+                        var result = await _graphSharePointAppService.CreateListItemAsync(siteList, itemJson.ToString());
+
+                        _logger.LogDebug($"RequestId: {requestId} - SetupService_CreateSiteProcessesAsync debug result: {result}");
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning($"RequestId: {requestId} - SetupService_CreateSiteProcessesAsync warning: {ex}");
+                    }
+
+                }
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"RequestId: {requestId} - SetupService_CreateSiteProcessesAsync Service Exception: {ex}");
+                throw;
+            }
+        }
+
+        private List<MetaData> getMetaData(string requestId = "")
+        {
+            _logger.LogInformation($"RequestId: {requestId} - SetupService_getProcesses called.");
+
+            List<MetaData> metaDataList = new List<MetaData>();
+            metaDataList.Add(new MetaData
+            {
+                DisplayName = "Customer",
+                FieldType = FieldType.String,
+                Values = "",
+                Screen = "Screen1"
+            });
+
+            metaDataList.Add(new MetaData
+            {
+                DisplayName = "Opportunity",
+                FieldType = FieldType.String,
+                Values = "",
+                Screen = "Screen1"
+            });
+
+            metaDataList.Add(new MetaData
+            {
+                DisplayName = "Opened Date",
+                FieldType = FieldType.Date,
+                Values = "",
+                Screen = "Screen1"
+            });
+
+            metaDataList.Add(new MetaData
+            {
+                DisplayName = "Target Date",
+                FieldType = FieldType.Date,
+                Values = "",
+                Screen = "Screen1"
+            });
+
+            metaDataList.Add(new MetaData
+            {
+                DisplayName = "Deal Size",
+                FieldType = FieldType.Double,
+                Values = "0",
+                Screen = "Screen1"
+            });
+
+            metaDataList.Add(new MetaData
+            {
+                DisplayName = "Annual Revenue",
+                FieldType = FieldType.Double,
+                Values = "0",
+                Screen = "Screen1"
+            });
+
+            metaDataList.Add(new MetaData
+            {
+                DisplayName = "Industry",
+                FieldType = FieldType.DropDown,
+                Values = @"[
+                            {
+                            'typeName': 'DropDownMetaDataValue',
+                            'id': '1',
+                            'name': 'Industry 1'
+                            },{
+                            'typeName': 'DropDownMetaDataValue',
+                            'id': '2',
+                            'name': 'Industry 2'
+                            }]",
+                Screen = "Screen1"
+            });
+
+            metaDataList.Add(new MetaData
+            {
+                DisplayName = "Region",
+                FieldType = FieldType.DropDown,
+                Values = @"[
+                            {
+                            'typeName': 'DropDownMetaDataValue',
+                            'id': '1',
+                            'name': 'Region 1'
+                            },{
+                            'typeName': 'DropDownMetaDataValue',
+                            'id': '2',
+                            'name': 'Region 2'
+                            }]",
+                Screen = "Screen1"
+            });
+
+            metaDataList.Add(new MetaData
+            {
+                DisplayName = "Notes",
+                FieldType = FieldType.String,
+                Values = "",
+                Screen = "Screen1"
+            });
+
+            metaDataList.Add(new MetaData
+            {
+                DisplayName = "Category",
+                FieldType = FieldType.DropDown,
+                Values = @"[
+                            {
+                            'typeName': 'DropDownMetaDataValue',
+                            'id': '1',
+                            'name': 'Category 1'
+                            },{
+                            'typeName': 'DropDownMetaDataValue',
+                            'id': '2',
+                            'name': 'Category 2'
+                            }]",
+                Screen = "Screen2"
+            });
+
+            //Screen3
+
+            metaDataList.Add(new MetaData
+            {
+                DisplayName = "Margin",
+                FieldType = FieldType.Double,
+                Values = "0",
+                Screen = "Screen3"
+            });
+
+            metaDataList.Add(new MetaData
+            {
+                DisplayName = "Debt Ratio",
+                FieldType = FieldType.Double,
+                Values = "0",
+                Screen = "Screen3"
+            });
+
+            metaDataList.Add(new MetaData
+            {
+                DisplayName = "Rate",
+                FieldType = FieldType.Double,
+                Values = "0",
+                Screen = "Screen3"
+            });
+
+            metaDataList.Add(new MetaData
+            {
+                DisplayName = "Purpose",
+                FieldType = FieldType.String,
+                Values = "",
+                Screen = "Screen3"
+            });
+
+            metaDataList.Add(new MetaData
+            {
+                DisplayName = "Disbursement Schedule",
+                FieldType = FieldType.String,
+                Values = "",
+                Screen = "Screen3"
+            });
+
+            metaDataList.Add(new MetaData
+            {
+                DisplayName = "Collateral Amount",
+                FieldType = FieldType.Double,
+                Values = "0",
+                Screen = "Screen3"
+            });
+
+            metaDataList.Add(new MetaData
+            {
+                DisplayName = "Guarantees",
+                FieldType = FieldType.Double,
+                Values = "0",
+                Screen = "Screen3"
+            });
+
+            return metaDataList;
+        }
+
+        public async Task CreateDefaultBusinessProcess(string requestId)
+        {
+
+            _logger.LogInformation($"RequestId: {requestId} - SetupService_CreateDefaultBusinessProcess called.");
+            try
+            {
+                var siteList = new SiteList
+                {
+                    SiteId = _appOptions.ProposalManagementRootSiteId,
+                    ListId = _appOptions.TemplateListId
+                };
+
+                try
+                {
+                    // Create Json object for SharePoint create list item
+                    dynamic templateFieldsJson = new JObject();
+                    templateFieldsJson.TemplateName = "Default Business Process";
+                    templateFieldsJson.Description = "Default Business Process";
+                    templateFieldsJson.LastUsed = DateTimeOffset.Now.Date;
+                    templateFieldsJson.CreatedBy = "";
+                    templateFieldsJson.ProcessList = @"[{
+                                                        'typeName': 'ProcessesType',
+                                                        'id': '',
+                                                        'processStep': 'Start Process',
+                                                        'channel': 'None',
+                                                        'processType': 'Base',
+                                                        'order': '1.1',
+                                                        'roleName': '',
+                                                        'daysEstimate': '0',
+                                                        'roleId': '',
+                                                        'status': 0,
+                                                        'processnumber': 0,
+                                                        'groupnumber': 0
+                                                      }]";
+                    templateFieldsJson.DefaultTemplate = "True";
+
+                    dynamic templateJson = new JObject();
+                    templateJson.fields = templateFieldsJson;
+
+                    _logger.LogDebug($"RequestId: {requestId} - SetupService_CreateSiteProcessesAsync debug result: {templateJson}");
+
+                    var result = await _graphSharePointAppService.CreateListItemAsync(siteList, templateJson.ToString(), requestId);
+
+                    _logger.LogDebug($"RequestId: {requestId} - SetupService_CreateSiteProcessesAsync debug result: {result}");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning($"RequestId: {requestId} - SetupService_CreateSiteProcessesAsync warning: {ex}");
+                }
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"RequestId: {requestId} - SetupService_CreateSiteProcessesAsync Service Exception: {ex}");
+                throw;
+            }
         }
     }
 }

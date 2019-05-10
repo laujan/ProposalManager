@@ -12,10 +12,7 @@ using Microsoft.Extensions.Options;
 using ApplicationCore.ViewModels;
 using ApplicationCore.Interfaces;
 using ApplicationCore;
-using ApplicationCore.Artifacts;
-using Infrastructure.Services;
 using ApplicationCore.Helpers;
-using ApplicationCore.Entities;
 using ApplicationCore.Helpers.Exceptions;
 
 namespace Infrastructure.Services
@@ -35,7 +32,7 @@ namespace Infrastructure.Services
             _templateRepository = templateRepository;
             _templateHelpers = templateHelpers;
         }
-        public async Task<bool> ProcessCheckAsync(IList<ProcessViewModel> processList, string requestId = "")
+        public bool ProcessCheckAsync(IList<ProcessViewModel> processList, string requestId = "")
         {
             _logger.LogInformation($"RequestId: {requestId} - Template_ProcessCheck called.");
 
@@ -100,11 +97,10 @@ namespace Infrastructure.Services
                 var listItems = (await _templateRepository.GetAllAsync(requestId)).ToList();
                 Guard.Against.Null(listItems, nameof(listItems), requestId);
 
-                var templateistViewModel = new TemplateListViewModel();
-                foreach (var item in listItems)
+                var templateistViewModel = new TemplateListViewModel
                 {
-                    templateistViewModel.ItemsList.Add(await _templateHelpers.MapToViewModel(item));
-                }
+                    ItemsList = await Task.WhenAll(listItems.Select(item => _templateHelpers.MapToViewModel(item)).ToList())
+                };
 
                 if (templateistViewModel.ItemsList.Count == 0)
                 {

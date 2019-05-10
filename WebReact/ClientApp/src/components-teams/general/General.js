@@ -23,6 +23,7 @@ import { MessageBar, MessageBarType } from 'office-ui-fabric-react/lib/MessageBa
 import '../../Style.css';
 import AccessDenied from '../../helpers/AccessDenied';
 
+
 export class General extends Component {
     displayName = General.name
 
@@ -33,298 +34,209 @@ export class General extends Component {
         this.sdkHelper = window.sdkHelper;
         this.utils = new Utils();
         this.accessGranted = false;
-        //const userProfile = this.props.userProfile;
-
         try {
-            //microsoftTeams.initialize();
+            console.log("General_Constructor  ");
         }
         catch (err) {
-            console.log(err);
+            console.log("General_Constructor : error => ", err.message);
         }
         finally {
-            const userProfile = { id: "", displayName: "", mail: "", phone: "", picture: "", userPrincipalName: "", roles: [] };
+            // Wave4 - adding permission key for userprofiles
+            const userProfile = { id: "", displayName: "", mail: "", phone: "", picture: "", userPrincipalName: "", roles: [], permissions: "" };
             let isMobile = false;
-            // check is Mobile url
             if (window.location.pathname.indexOf("/tabMob/") === 0) {
                 isMobile = true;
             }
 
             this.state = {
                 userProfile: userProfile,
-                teamName: "",
-                groupId: "",
                 haveGranularAccess: false,
                 dashboardList: [],
                 loading: true,
                 viewState: "dashboard",
-                industryList: [],
-                regionList: [],
                 categoryList: [],
                 teamMembers: [],
                 messageBarEnabled: false,
-                isMobile: isMobile
+                isMobile: isMobile,
+                templateItems: [],
+                templateList: [],
+                templateLoading: true,
+                metaDataList:[]
             };
         }
         this.onClickCreateOpp = this.onClickCreateOpp.bind(this);
         this.onClickOppCancel = this.onClickOppCancel.bind(this);
         this.onClickOppBack = this.onClickOppBack.bind(this);
     }
-
-    componentDidMount() {
+    async componentDidMount() {
         console.log("Dashboard_componentDidMount isauth: " + this.authHelper.isAuthenticated());
-        if (this.authHelper.isAuthenticated() && !this.accessGranted) {
-            this.accessGranted = true;
-            this.authHelper.callGetUserProfile()
-                .then(userProfile => {
-                    this.setState({
-                        userProfile: userProfile,
-                        loading: true
-                    });
-                });
-            if (this.state.regionList.length === 0) {
-                this.getRegions();
-            }
-            if (this.state.industryList.length === 0) {
-                this.getIndustries();
-            }
-            if (this.state.categoryList.length === 0) {
-                this.getCategories();
-            }
-            if (this.state.teamMembers.length === 0) {
-                this.getUserProfiles();
-            }
-            if (this.state.dashboardList.length === 0) {
-                this.getOpportunityIndex();
-            }
-        }
+        await this.getAllData();
     }
-    
-    componentDidUpdate() {
-        console.log("Dashboard_componentDidUpdate isauth: " + this.authHelper.isAuthenticated());
+    async componentDidUpdate() {
+        console.log("Dashboard_componentDidMount isauth: " + this.authHelper.isAuthenticated());
+        await this.getAllData();
+    }
+
+    async getAllData() {
         if (this.authHelper.isAuthenticated() && !this.accessGranted) {
             this.accessGranted = true;
-            this.authHelper.callGetUserProfile()
-                .then(userProfile => {
-                    this.setState({
-                        userProfile: userProfile,
-                        loading: true
-                    });
-                });
-            if (this.state.regionList.length === 0) {
-                this.getRegions();
-            }
-            if (this.state.industryList.length === 0) {
-                this.getIndustries();
-            }
-            if (this.state.categoryList.length === 0) {
-                this.getCategories();
+            let userProfile = await this.authHelper.callGetUserProfile();
+
+            this.setState({
+                userProfile: userProfile,
+                loading: true
+            });
+
+            if (this.state.metaDataList.length === 0) {
+                await this.getMetaData();
             }
             if (this.state.teamMembers.length === 0) {
-                this.getUserProfiles();
+                await this.getUserProfiles();
             }
             if (this.state.dashboardList.length === 0) {
-                this.getOpportunityIndex();
+                await this.getOpportunityIndex();
+            }
+            if (this.state.templateList.length === 0) {
+                await this.getTemplatesLists();
             }
         }
     }
 
-    getOpportunityIndex() {
-        return new Promise((resolve, reject) => {
-            // To get the List of Opportunities to Display on Dashboard page
-            let requestUrl = 'api/Opportunity?page=1';
-
-            fetch(requestUrl, {
-                method: "GET",
-                headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() }
-            })
-                .then(response => {
-                    if (response.ok) {
-                        return response.json();
-                    } else {
-                        this.fetchResponseHandler(response, "getOpportunityIndex");
-                        reject(response);
-                    }
-                })
-                .then(data => {
-                    let itemslist = [];
-                    if (data.ItemsList.length > 0) {
-                        for (let i = 0; i < data.ItemsList.length; i++) {
-
-                            let item = data.ItemsList[i];
-
-                            let newItem = {};
-
-                            newItem.id = item.id;
-                            newItem.opportunity = item.displayName;
-                            newItem.client = item.customer.displayName;
-                            newItem.dealsize = item.dealSize;
-                            newItem.openedDate = new Date(item.openedDate).toLocaleDateString();
-                            newItem.stausValue = item.opportunityState;
-                            newItem.status = oppStatusClassName[item.opportunityState];
-                            itemslist.push(newItem);
-                        }
-                    }
-                    if (itemslist.length > 0) {
-                        this.setState({ reverseList: true });
-                    }
-
-                    let sortedList = this.state.reverseList ? itemslist.reverse() : itemslist;
-                    this.setState({
-                        loading: false,
-                        dashboardList: sortedList,
-                        haveGranularAccess: true
-                    });
-
-                    resolve(true);
-                })
-                .catch(err => {
-                    this.errorHandler(err, "getOpportunityIndex");
-                    this.setState({
-                        loading: false,
-                        dashboardList: [],
-                        haveGranularAccess: true
-                    });
-                    reject(err);
-                });
-        });
-    }
-
-    getRegions() {
-        // call to API fetch Regions
-        let requestUrl = 'api/Region';
-        fetch(requestUrl, {
+    async getOpportunityIndex() {
+        // To get the List of Opportunities to Display on Dashboard page
+        let requestUrl = 'api/Opportunity?page=1';
+        let options = {
             method: "GET",
             headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() }
-        })
-            .then(response => response.json())
-            .then(data => {
-                try {
-                    let regionList = [];
-                    for (let i = 0; i < data.length; i++) {
-                        let region = {};
-                        region.key = data[i].id;
-                        region.text = data[i].name;
-                        regionList.push(region);
-                    }
-                    this.setState({ regionList: regionList });
-                }
-                catch (err) {
-                    return false;
-                }
-
-            })
-            .catch(err => {
-                console.log("Opportunities_getRegions error: ");
-                console.log(err);
-                return false;
-            });
-    }
-
-    getIndustries() {
-        // call to API fetch Industry
-        let requestUrl = 'api/Industry';
-        fetch(requestUrl, {
-            method: "GET",
-            headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() }
-        })
-            .then(response => response.json())
-            .then(data => {
-                try {
-                    let industryList = [];
-                    for (let i = 0; i < data.length; i++) {
-                        let industry = {};
-                        industry.key = data[i].id;
-                        industry.text = data[i].name;
-                        industryList.push(industry);
-                    }
-                    this.setState({ industryList: industryList });
-                }
-                catch (err) {
-                    return false;
-                }
-
-            })
-            .catch(err => {
-                console.log("Opportunities_getIndustries error: ");
-                console.log(err);
-                return false;
-            });
-    }
-
-    getCategories() {
-        // call to API fetch Categories
-        let requestUrl = 'api/Category';
-        fetch(requestUrl, {
-            method: "GET",
-            headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() }
-        })
-            .then(response => response.json())
-            .then(data => {
-                try {
-                    let categoryList = [];
-                    for (let i = 0; i < data.length; i++) {
-                        let category = {};
-                        category.key = data[i].id;
-                        category.text = data[i].name;
-                        categoryList.push(category);
-                    }
-                    this.setState({ categoryList: categoryList });
-                }
-                catch (err) {
-                    return false;
-                }
-
-            })
-            .catch(err => {
-                console.log("Opportunities_getCategories error: ");
-                console.log(err);
-                return false;
-            });
-    }
-
-    getUserProfiles() {
-        let requestUrl = 'api/UserProfile/';
-        fetch(requestUrl, {
-            method: "GET",
-            headers: {
-                'authorization': 'Bearer ' + this.authHelper.getWebApiToken()
-            }
-        })
-            .then(response => {
-                if (response.ok) {
-                    return response.json();
-                } else {
-                    this.fetchResponseHandler(response, "getUserProfiles");
-                    return [];
-                }
-            })
-            .then(data => {
-                let itemslist = [];
+        };
+        let itemslist = [];
+        try {
+            let response = await fetch(requestUrl, options);
+            if (response.ok) {
+                let data = await response.json();
 
                 if (data.ItemsList.length > 0) {
                     for (let i = 0; i < data.ItemsList.length; i++) {
-
+                        
                         let item = data.ItemsList[i];
-
+                        console.log("General_getOpportunityIndex item : ", item);
                         let newItem = {};
 
                         newItem.id = item.id;
-                        newItem.displayName = item.displayName;
-                        newItem.mail = item.mail;
-                        newItem.userPrincipalName = item.userPrincipalName;
-                        newItem.userRoles = item.userRoles;
-
+                        newItem.opportunity = item.displayName;
+                        newItem.client = item.customer.displayName;
+                        newItem.dealsize = item.dealsize;
+                        newItem.openedDate = new Date(item.openedDate).toLocaleDateString();
+                        newItem.stausValue = item.opportunityState;
+                        newItem.status = oppStatusClassName[item.opportunityState];
                         itemslist.push(newItem);
                     }
                 }
+                if (itemslist.length > 0) {
+                    this.setState({ reverseList: true });
+                }
 
+                let sortedList = this.state.reverseList ? itemslist.reverse() : itemslist;
                 this.setState({
-                    teamMembers: itemslist
+                    loading: false,
+                    dashboardList: sortedList,
+                    haveGranularAccess: true
                 });
-            })
-            .catch(err => {
-                console.log("Opportunities_getUserProfiles error: " + JSON.stringify(err));
+            }
+
+        } catch (err) {
+            this.errorHandler(err, "Opportunities_getOpportunityIndex");
+        } finally {
+            this.setState({
+                loading: false,
+                dashboardList: itemslist,
+                haveGranularAccess: true
             });
+        }
+
+    }
+
+    async getMetaData() {
+        let categoryList=[];
+        let requestUrl = 'api/MetaData';
+        let options = {
+            method: "GET",
+            headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() }
+        };
+        let metaDataList = [];
+        try {
+            let response = await fetch(requestUrl, options);
+            if (response.ok) {
+                let data = await response.json();
+
+                for (let i = 0; i < data.length; i++) {
+                    metaDataList.push(data[i]);
+                }
+                let temp = metaDataList.find(x => x.displayName === "Category" && x.fieldType.name === "DropDown").values;
+                categoryList = temp.map(x => { return { 'key': x.id, 'text': x.name }; });
+                this.setState({ metaDataList,categoryList});
+            }
+
+        } catch (err) {
+            this.errorHandler(err, "Opportunities_CreateNew_getCategories");
+        } 
+    }
+
+    async getUserProfiles() {
+        let requestUrl = 'api/UserProfile/';
+        let options = {
+            method: "GET",
+            headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() }
+        };
+        let teamMembers = [];
+        try {
+            let response = await fetch(requestUrl, options);
+            if (response.ok) {
+                let data = await response.json();
+                if (data.ItemsList.length > 0) {
+                    teamMembers = data.ItemsList;
+                }
+                console.log("General_getUserProfiles : ", teamMembers);
+                this.setState({teamMembers });
+            }
+
+        } catch (err) {
+            this.setState({
+                teamMembers
+            });
+            this.errorHandler(err, "Opportunities_CreateNew_getUserProfiles");
+        } 
+    }
+
+    // Wave4 - Get all templates
+    async getTemplatesLists() {
+        let requestUrl = "api/template/";
+        try {
+            let response = await fetch(requestUrl, {
+                method: "GET",
+                headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() }
+            });
+            let data = await response.json();
+            let templateItemsList = [];
+            let templateList = [];
+            for (let i = 0; i < data.itemsList.length; i++) {
+                templateItemsList.push(data.itemsList[i]);
+                let template = {};
+                template.key = data.itemsList[i].id;
+                template.text = data.itemsList[i].templateName;
+                template.defaultTemplate = data.itemsList[i].defaultTemplate;
+                templateList.push(template);
+            }
+            this.setState({
+                templateItems: templateItemsList,
+                templateList: templateList,
+                templateLoading: false
+            });
+            return true;
+        } catch (error) {
+            console.log("OpportunitySummary_getDealTypeLists error ", error);
+            return false;
+        }
     }
 
     fetchResponseHandler(response, referenceCall) {
@@ -338,52 +250,65 @@ export class General extends Component {
         console.log("Opportunities Ref: " + referenceCall + " error: " + JSON.stringify(err));
     }
 
-    onClickCreateOpp() {
-        this.newOpportunity = {
-            id: "",
-            displayName: "",
-            customer: {
-                id: "",
-                displayName: "",
-                referenceId: ""
-            },
-            dealSize: 0,
-            annualRevenue: 0,
-            openedDate: new Date(),
-            industry: {
-                id: "",
-                name: ""
-            },
-            region: {
-                id: "",
-                name: ""
-            },
-            margin: 0,
-            rate: 0,
-            debtRatio: 0,
-            purpose: "",
-            disbursementSchedule: "",
-            collateralAmount: 0,
-            guarantees: "",
-            riskRating: 0,
-            teamMembers: [
-                {
-                    status: 0,
-                    id: this.state.userProfile.id,
-                    displayName: this.state.userProfile.displayName,
-                    mail: this.state.userProfile.mail,
-                    userPrincipalName: this.state.userProfile.userPrincipalName,
-                    userRoles: this.state.userProfile.roles,
-                    assignedRole: this.state.userProfile.roles.filter(x => x.displayName === "RelationshipManager")[0]
+    async onClickCreateOpp() {
+        try {
+            let res = await this.authHelper.callCheckAccess(["Opportunity_Create"]);
+
+            let role = this.state.userProfile.roles.find(role=>{
+                if (role.permissions.find(permission => permission.name === "Opportunity_Create"))
+                    return role.id;
+            });
+
+            let metaData = [];
+            this.state.metaDataList.forEach((metaobj)=>{
+                if (metaobj.screen === "Screen1" || metaobj.screen === "Screen2" || metaobj.screen ==="Screen3"){
+                    metaData.push( {
+                        id:metaobj.displayName.toLowerCase().replace(/\s/g, ''),
+                        displayName:metaobj.displayName,
+                        values:"",
+                        screen:metaobj.screen,
+                        fieldType :metaobj.fieldType
+                    });
                 }
-            ],
-            notes: [],
-            documentAttachments: [],
-            targetDate: ""
-        };
-        this.setState({
-            viewState: "createStep1"
-        });
+            });
+
+            if (res) {
+                this.newOpportunity = {
+                    id: "",
+                    displayName: "",
+                    customer: {
+                        id: "",
+                        displayName: "",
+                        referenceId: ""
+                    },
+                    metaDataFields:metaData,
+                    teamMembers: [{
+                        status: 0,
+                        id: this.state.userProfile.id,
+                        displayName: this.state.userProfile.displayName,
+                        mail: this.state.userProfile.mail,
+                        userPrincipalName: this.state.userProfile.mail,
+                        roleId: role ? role.id : "",
+                        permissions: role ? role.permissions:[],
+                        teamsMembership: role ? role.teamsMembership:[],
+						roleName : role? role.displayName:""
+                    }],
+                    notes: [],
+                    documentAttachments: [],
+                    template: {
+                        id: "",
+                        templateName: ""
+                    }
+                };
+                console.log("General_onClickCreateOpp : ", this.newOpportunity);
+                this.setState({
+                    viewState: "createStep1"
+                });
+            }
+
+        } catch (err) {
+            console.log(err);
+        }
     }
 
     onClickOppCancel() {
@@ -416,6 +341,8 @@ export class General extends Component {
     }
 
     onClickCreateOppNext() {
+
+        console.log("General_onClickCreateOppNext : ", this.newOpportunity);
 
         if (this.state.viewState === "createStep1") {
             this.setState({
@@ -509,6 +436,15 @@ export class General extends Component {
             }
             this.newOpportunity.documentAttachments = cleanAttachments;
 
+            console.log("General_createopportunity metadata : ", this.newOpportunity.metaDataFields);
+            //adding default bussinees process
+            if(this.newOpportunity.template.id.length===0){
+                let defaultTemplateAvailable = this.state.templateList.some(name=>name.defaultTemplate);
+                if(defaultTemplateAvailable){
+                    this.newOpportunity.template = this.state.templateItems.filter(name => name.defaultTemplate)[0];
+                }
+            }
+            
             let requestUrl = 'api/opportunity/';
 
             let options = {
@@ -519,7 +455,6 @@ export class General extends Component {
                     'authorization': 'Bearer    ' + this.authHelper.getWebApiToken()
                 },
                 body: JSON.stringify(this.newOpportunity)
-                //body: this.newOpportunity
             };
 
             fetch(requestUrl, options)
@@ -611,8 +546,9 @@ export class General extends Component {
                                                             userProfile={this.state.userProfile}
                                                             dashboardList={this.state.dashboardList}
                                                             onClickCreateOpp={this.onClickCreateOpp}
-                                                        />
-                                                    }
+                                                            metaDataList={this.state.metaDataList}
+                                                />
+                                            }
                                                 </PivotItem>
                                                 {
                                                     this.state.isMobile
@@ -622,7 +558,7 @@ export class General extends Component {
                                                             <DashboardView />
                                                         </PivotItem>
                                                 }
-                                                
+
 
                                             </Pivot>
                                         }
@@ -631,11 +567,10 @@ export class General extends Component {
                                             <NewOpportunity
                                                 userProfile={this.state.userProfile}
                                                 opportunity={this.newOpportunity}
-                                                regions={this.state.regionList}
-                                                industries={this.state.industryList}
                                                 dashboardList={this.state.dashboardList}
                                                 onClickCancel={this.onClickOppCancel}
                                                 onClickNext={this.onClickCreateOppNext.bind(this, this.newOpportunity)}
+                                                metaDataList = {this.state.metaDataList}
                                             />
                                         }
 
@@ -647,6 +582,7 @@ export class General extends Component {
                                                 categories={this.state.categoryList}
                                                 onClickBack={this.onClickOppBack}
                                                 onClickNext={this.onClickCreateOppNext.bind(this, this.newOpportunity)}
+                                                metaDataList = {this.state.metaDataList}
                                             />
                                         }
 
@@ -656,8 +592,11 @@ export class General extends Component {
                                                 userProfile={this.state.userProfile}
                                                 opportunity={this.newOpportunity}
                                                 teamMembers={this.state.teamMembers}
+                                                templateItems={this.state.templateItems}
+                                                templateList={this.state.templateList}
                                                 onClickBack={this.onClickOppBack}
                                                 onClickNext={this.onClickCreateOppNext.bind(this, this.newOpportunity)}
+                                                metaDataList = {this.state.metaDataList}
                                             />
                                         }
                                     </div>

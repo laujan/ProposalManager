@@ -77,7 +77,7 @@ namespace Infrastructure.Identity
                     vaultBaseUrl = "https://" + vaultBaseUrl;
                 var sec = await keyVaultClient.SetSecretAsync(vaultBaseUrl, key, value);
                 //update appsetings with the new secret identifier.
-                await _writableOptions.UpdateAsync(key, sec.SecretIdentifier.ToString());
+                _writableOptions.UpdateAsync(key, sec.SecretIdentifier.ToString());
             }
             catch (Exception ex)
             {

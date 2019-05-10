@@ -13,7 +13,8 @@ namespace ApplicationCore.Interfaces
 	{
 		string GetConnectionRoleName(string id);
 		string GetAccountName(string id);
-		UserData GetUserData(string id);
+        string GetContactName(string id);
+        UserData GetUserData(string id);
 		Task CreateTemporaryLocationForOpportunityAsync(string opportunityId, string opportunityName);
 		Task CreateLocationsForOpportunityAsync(string opportunityId, string opportunityName, IEnumerable<string> locations);
 	}

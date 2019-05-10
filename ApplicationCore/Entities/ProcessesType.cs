@@ -14,6 +14,11 @@ namespace ApplicationCore.Entities
         [JsonProperty("processType", Order = 4)]
         public string ProcessType { get; set; }
 
+        [JsonProperty("roleName", Order = 5)]
+        public string RoleName { get; set; }
+        [JsonProperty("roleId", Order = 6)]
+        public string RoleId { get; set; }
+
         public static ProcessesType Empty
         {
             get => new ProcessesType
@@ -21,7 +26,9 @@ namespace ApplicationCore.Entities
                 Id = string.Empty,
                 ProcessStep = string.Empty,
                 Channel = string.Empty,
-                ProcessType = string.Empty
+                ProcessType = string.Empty,
+                RoleName = string.Empty,
+                RoleId = string.Empty,
             };
         }
     }

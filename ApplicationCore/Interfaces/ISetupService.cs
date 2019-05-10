@@ -15,13 +15,14 @@ namespace ApplicationCore.Interfaces
         Task<StatusCodes> UpdateDocumentIdActivatorOptionsAsync(string key, string value, string requestId = "");
         Task CreateSitePermissionsAsync(string requestId = "");
         Task CreateAllListsAsync(string siteRootId,string requestId = "");
-        Task CreateSiteRolesAsync(string requestId = "");
         Task CreateSiteProcessesAsync(string requestId = "");
         Task CreateProposalManagerTeamAsync(string name, string requestId = "");
         Task CreateAdminGroupAsync(string name, string requestId = "");
         Task<string> GetAppId(string name, string requestId = "");
         Task CreateSiteAdminPermissionsAsync(string adGroupName, string requestId = "");
-        Task CreateSiteTasksAsync(string requestId = "");
+
+        Task CreateMetaDataList(string requestId);
+        Task CreateDefaultBusinessProcess(string requestId);
     }
 
 }

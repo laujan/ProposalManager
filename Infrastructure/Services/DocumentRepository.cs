@@ -26,7 +26,6 @@ namespace Infrastructure.Services
     {
         private readonly GraphSharePointAppService _graphSharePointAppService;
         private readonly IOpportunityRepository _opportunityRepository;
-        private readonly IRoleMappingRepository _roleMappingRepository;
         private readonly IWordParser _wordParser;
         private readonly IPowerPointParser _powerPointParser;
 
@@ -35,19 +34,16 @@ namespace Infrastructure.Services
             IOptionsMonitor<AppOptions> appOptions,
             GraphSharePointAppService graphSharePointAppService,
             IOpportunityRepository opportunityRepository,
-            IRoleMappingRepository roleMappingRepository,
             IWordParser wordParser,
             IPowerPointParser powerPointParser) : base(logger, appOptions)
         {
             Guard.Against.Null(graphSharePointAppService, nameof(graphSharePointAppService));
             Guard.Against.Null(opportunityRepository, nameof(opportunityRepository));
-            Guard.Against.Null(roleMappingRepository, nameof(roleMappingRepository));
             Guard.Against.Null(wordParser, nameof(wordParser));
             Guard.Against.Null(powerPointParser, nameof(powerPointParser));
 
             _graphSharePointAppService = graphSharePointAppService;
             _opportunityRepository = opportunityRepository;
-            _roleMappingRepository = roleMappingRepository;
             _wordParser = wordParser;
             _powerPointParser = powerPointParser;
         }
@@ -62,9 +58,8 @@ namespace Infrastructure.Services
                 Guard.Against.NullOrEmpty(folder, nameof(folder), requestId);
                 Guard.Against.Null(file, nameof(file), requestId);
 
-                var response = await _graphSharePointAppService.UploadFileAsync(siteId, folder, file, requestId);
+                return await _graphSharePointAppService.UploadFileAsync(siteId, folder, file, requestId);
 
-                return response;
             }
             catch (Exception ex)
             {
@@ -104,23 +99,6 @@ namespace Infrastructure.Services
                 {
                     folder = docTypeParts[1].Replace(" ", "");
                 }
-                //else if (docType.StartsWith($"{DocumentContext.ChecklistDocument.Name}={OpportunityChannel.CreditCheck.Name}"))
-                //{
-                //    folder = OpportunityChannel.CreditCheck.Name;
-                //}
-                //else if (docType.StartsWith($"{DocumentContext.ChecklistDocument.Name}={OpportunityChannel.RiskAssessment.Name}"))
-                //{
-                //    folder = OpportunityChannel.RiskAssessment.Name;
-                //}
-                //else
-                //{
-                //    //TODO: Doc type not recognized
-                //    _logger.LogError($"RequestID:{requestId} - UploadDocumentTeamAsync upload document: document type not recognized");
-                //    var errorResponse = JsonErrorResponse.BadRequest($"UploadDocumentTeamAsync upload document: document type not recognized", requestId);
-
-                //    return errorResponse;
-                //}
-
 
 
                 // Get opportunity to update the associated docUri
@@ -322,9 +300,7 @@ namespace Infrastructure.Services
                 Guard.Against.NullOrEmpty(folderName, nameof(folderName), requestId);
                 Guard.Against.Null(path, nameof(path), requestId);
 
-                var response = await _graphSharePointAppService.CreateFolderAsync(siteId, folderName, path, requestId);
-
-                return response;
+                return await _graphSharePointAppService.CreateFolderAsync(siteId, folderName, path, requestId);
             }
             catch (Exception ex)
             {
@@ -342,9 +318,8 @@ namespace Infrastructure.Services
                 Guard.Against.NullOrEmpty(siteId, nameof(siteId), requestId);
                 Guard.Against.NullOrEmpty(itemPath, nameof(itemPath), requestId);
 
-                var response = await _graphSharePointAppService.DeleteFileOrFolderAsync(siteId, itemPath, requestId);
+                return await _graphSharePointAppService.DeleteFileOrFolderAsync(siteId, itemPath, requestId);
 
-                return response;
             }
             catch (Exception ex)
             {
@@ -364,9 +339,8 @@ namespace Infrastructure.Services
                 Guard.Against.NullOrEmpty(toSiteId, nameof(toSiteId), requestId);
                 Guard.Against.NullOrEmpty(toItemPath, nameof(toItemPath), requestId);
 
-                var response = await _graphSharePointAppService.MoveFileAsync(fromSiteId, fromItemPath, toSiteId, toItemPath, requestId);
+                return await _graphSharePointAppService.MoveFileAsync(fromSiteId, fromItemPath, toSiteId, toItemPath, requestId);
 
-                return response;
             }
             catch (Exception ex)
             {

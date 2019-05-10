@@ -46,7 +46,6 @@ export class ChooseTeam extends Component {
             peopleList: [],
             OppDetails: {},
             mostRecentlyUsed: [],
-            allOfficersList: [],
             oppName: "",
             MessagebarText: "",
             MessagebarTextFinalizeTeam: "",
@@ -65,10 +64,6 @@ export class ChooseTeam extends Component {
         this.handleFileUpload = this.handleFileUpload.bind(this);
         this.saveFile = this.saveFile.bind(this);
         this.selectedTeamMemberFromDropDown = this.selectedTeamMemberFromDropDown.bind(this);
-    }
-
-    async componentWillMount() {
-        console.log("Dashboard_componentWillMount isauth: " + this.authHelper.isAuthenticated());
     }
 
     async componentDidMount() {
@@ -93,11 +88,7 @@ export class ChooseTeam extends Component {
             await this.getOpportunity();
         }
     }
-    /*async componentWillMount() {
-        await this.getUserRoles()
-        await this.getOpportunity();
-	}
-    */
+
     async getOpportunity() {
         let requestUrl = 'api/Opportunity/?id=' + this.state.oppID;
         try {
@@ -108,28 +99,27 @@ export class ChooseTeam extends Component {
 
             let data = await response.json();
             let TeamsObject = await this.getUserProfiles();
-
+            console.log("ChooseTeams_log getOpportunity : ", data);
             let oppSelTeam = [];
             if (data.teamMembers.length > 0) {
                 for (let m = 0; m < data.teamMembers.length; m++) {
                     let item = data.teamMembers[m];
                     if (item.displayName.length > 0) {
-                        let newItem = {};
-
-                        newItem.id = item.id;
-                        newItem.displayName = item.displayName;
-                        newItem.mail = item.mail;
-                        newItem.userPrincipalName = item.userPrincipalName;
-                        newItem.assignedRole = item.assignedRole;
-                        newItem.processStep = item.processStep;
-                        oppSelTeam.push(newItem);
+                        oppSelTeam.push(item);
                     }
                 }
             }
+            console.log("ChooseTeams_Log getOpportunity : ", TeamsObject);
+            console.log("ChooseTeams_Log getOpportunity : ", oppSelTeam);
+            //TODO
             TeamsObject.forEach(team => {
                 oppSelTeam.forEach(selectedTeam => {
-                    if (selectedTeam.assignedRole.displayName.toLowerCase() === team.role.toLowerCase())
-                        team.selectedMemberList.push(selectedTeam);
+                    if (selectedTeam.roleName && team.role) {
+                        if (selectedTeam.roleName.toLowerCase() === team.role.toLowerCase()) {
+                            selectedTeam.text = selectedTeam.displayName;
+                            team.selectedMemberList.push(selectedTeam);
+                        }                          
+                    }
                 });
             });
 
@@ -146,25 +136,30 @@ export class ChooseTeam extends Component {
             });
 
         } catch (error) {
-            console.log("Choose Team Error : ", JSON.stringify(error));
+            console.log("Choose Team Error : ", error.message);
         }
 
     }
 
     async getUserRoles() {
-        let requestUrl = 'api/RoleMapping';
+        //WAVE-4 : Changing RoleMappong to Roles:
+        let requestUrl = 'api/Roles';
         try {
             let response = await fetch(requestUrl, { method: "GET", headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() } });
             let data = await response.json();
+            console.log("ChooseTeams_Log getUserRoles : ", data);
             try {
                 let userRoleList = [];
                 for (let i = 0; i < data.length; i++) {
                     let userRole = {};
                     userRole.id = data[i].id;
-                    userRole.roleName = data[i].role.displayName;
+                    userRole.roleName = data[i].displayName;
                     userRole.adGroupName = data[i].adGroupName;
+                    userRole.permissions = data[i].permissions;
+                    userRole.teamsMembership = data[i].teamsMembership;
                     userRoleList.push(userRole);
                 }
+                console.log("ChooseTeams_Log getUserRoles userRoleList: ", userRoleList);
                 this.setState({ UserRoleMapList: userRoleList });
             }
             catch (err) {
@@ -195,14 +190,13 @@ export class ChooseTeam extends Component {
                 }
             });
             let data = await response.json();
+            console.log("ChooseTeams_Log getUserProfiles : ", data);
 
             let itemslist = [];
             let TeamsObject = [];
 
             this.state.UserRoleMapList.forEach(role => {
-                if (role.roleName.toLowerCase() !== "administrator"
-                    && role.roleName.toLowerCase() !== "relationshipmanager"
-                    && role.roleName.toLowerCase() !== "loanofficer") {
+                if (role.roleName.toLowerCase() !== "administrator") {
                     TeamsObject.push({ "role": role.roleName.toLowerCase(), "memberList": [], "selectedMemberList": [] });
                 }
             });
@@ -210,24 +204,19 @@ export class ChooseTeam extends Component {
             if (data.ItemsList.length > 0) {
                 for (let i = 0; i < data.ItemsList.length; i++) {
                     let item = data.ItemsList[i];
-                    let newItem = {};
-
-                    newItem.id = item.id;
-                    newItem.displayName = item.displayName;
-                    newItem.mail = item.mail;
-                    newItem.userPrincipalName = item.userPrincipalName;
-                    newItem.userRoles = item.userRoles;
-                    newItem.status = 0;
 
                     TeamsObject.forEach(team => {
-                        newItem.userRoles.forEach(role => {
+                        item.userRoles.forEach(role => {
                             if (role.displayName.toLowerCase() === team.role.toLowerCase())
-                                team.memberList.push(newItem);
+                                team.memberList.push(item);
                         });
                     });
-                    itemslist.push(newItem);
+
+                    itemslist.push(item);
                 }
             }
+
+            console.log("ChooseTeams_Log getUserProfiles TeamsObject: ", TeamsObject);
 
             this.setState({
                 allOfficersList: itemslist,
@@ -296,10 +285,8 @@ export class ChooseTeam extends Component {
     }
 
     onFinalizeTeam() {
-        let oppID = this.state.oppID;
         let teamsSelected = this.state.currentSelectedItems;
-        let oppDetails = {};
-
+        console.log("ChooseTeam_onFinalizeTeam teamsSelected : ", teamsSelected);
         this.setState({
             isFinalizeTeam: true
         });
@@ -328,13 +315,17 @@ export class ChooseTeam extends Component {
             });
     }
 
-    selectedTeamMemberFromDropDown(item, processStep) {
+    selectedTeamMemberFromDropDown(item, roleName, processStep) {
+        console.log("ChooseTeams_Log selectedTeamMemberFromDropDown item : ", item);
+        console.log("ChooseTeams_Log selectedTeamMemberFromDropDown processStep : ", roleName);
+
+
         let tempSelectedTeamMembers = this.state.currentSelectedItems;
         let finalTeam = [];
 
         for (let i = 0; i < tempSelectedTeamMembers.length; i++) {
 
-            if (tempSelectedTeamMembers[i].assignedRole.displayName !== processStep) {
+            if (tempSelectedTeamMembers[i].processStep !== roleName) {
 
                 finalTeam.push(tempSelectedTeamMembers[i]);
             }
@@ -346,16 +337,22 @@ export class ChooseTeam extends Component {
             return;
         }
         else {
-
+            let role = item[0].userRoles.find(role => {
+                if (role.displayName.toLowerCase() === roleName.toLowerCase()) return role.id;
+            });
+            console.log("ChooseTeams_Log selectedTeamMemberFromDropDown role : ", role);
             let newMember = {};
+            newMember.status = 0;
             newMember.id = item[0].id;
             newMember.displayName = item[0].text;
             newMember.mail = item[0].mail;
             newMember.userPrincipalName = item[0].userPrincipalName;
-            newMember.userRoles = item[0].userRoles;
-            newMember.status = 0;
-            newMember.assignedRole = item[0].userRoles.filter(x => x.displayName === processStep)[0];
-            newMember.processStep = newMember.assignedRole.displayName;
+            newMember.roleId = role ? role.id : "";
+            newMember.permissions = role ? role.permissions : [];
+            newMember.teamsMembership = role ? role.teamsMembership : [];
+            newMember.processStep = processStep;
+            newMember.adGroupName = role.adGroupName;
+            newMember.roleName = roleName;
 
             finalTeam.push(newMember);
 
@@ -366,41 +363,71 @@ export class ChooseTeam extends Component {
     }
 
     getPeoplePickerTeamMembers() {
-        let processes = this.state.oppData.dealType.processes;
-        let teamMembersObject = this.state.TeamsObject;
+        let processes = JSON.parse(JSON.stringify(this.state.oppData.template.processes));
+        let teamMembersObject = JSON.parse(JSON.stringify(this.state.TeamsObject));
 
-        let teammembertemplate = processes.map(process => {
-            if (process.processStep.toLowerCase() !== "new opportunity"
-                && process.processStep.toLowerCase() !== "start process"
-                && process.processStep.toLowerCase() !== "test1") {
+        let teammembertemplate = processes.map((process, index) => {
+            if (process.processStep.toLowerCase() !== "start process" &&
+                process.processType.toLowerCase() !== "none") {
                 let members = teamMembersObject.find(team => {
-                    if (process.processStep.toLowerCase() === team.role.toLowerCase()) {
+                    if (process.roleName.toLowerCase() === team.role.toLowerCase()) {
                         return team;
                     }
                 });
+                console.log("getPeoplePickerTeamMembers : ", members);
+
                 if (typeof members !== 'undefined') {
+                    // get unique values from selectedMemberList
+                    const selUsers = [];
+                    const map = new Map();
+                    for (const item of members.selectedMemberList) {
+                        if (!map.has(item.id)) {
+                            map.set(item.id, true);
+                            selUsers.push(item);
+                        }
+                    }
+
                     return (
-                        <div className='ms-Grid-col ms-sm11 ms-md11 ms-lg11 light-grey '>
+                        <div className='ms-Grid-col ms-sm11 ms-md11 ms-lg11 light-grey' key={index}>
                             <h5>{process.processStep}</h5>
                             <span className="p-b-10" />
                             <PeoplePickerTeamMembers
                                 teamMembers={members.memberList}
-                                defaultSelectedUsers={members.selectedMemberList}
-                                onChange={(e) => this.selectedTeamMemberFromDropDown(e, process.processStep)}
+                                defaultSelectedUsers={selUsers}
+                                onChange={(e) => this.selectedTeamMemberFromDropDown(e, process.roleName, process.processStep)}
+                                itemLimit={1}
                             />
                         </div>
                     );
                 }
             }
         });
+        teammembertemplate = teammembertemplate.filter(obj => typeof obj !== 'undefined');
+        console.log("ChooseTeams_Log getPeoplePickerTeamMembers : ", teammembertemplate);
         return <div className='ms-Grid-row bg-white'>{teammembertemplate}</div>;
     }
 
     render() {
-
-        let oppID = this.state.oppID;
         let uploadedFile = { name: this.state.proposalDocumentFileName };
+        let disableBrowseButton = false;
 
+        if (!this.state.loading) {
+            disableBrowseButton = this.state.oppData.proposalDocument === null ?
+                true : this.state.oppData.proposalDocument.documentUri ? false : true;
+            console.log("somevalue : ", this.state.oppData.proposalDocument === null);
+        }
+
+        let filteredTeammembers = JSON.parse(JSON.stringify(this.state.currentSelectedItems));
+        let tempArray = [];
+        filteredTeammembers = filteredTeammembers.filter(obj => {
+            let key = obj.displayName.toLowerCase() + obj.adGroupName.toLowerCase();
+            if (!tempArray.includes(key)) {
+                tempArray.push(key);
+                return obj;
+            }
+        });
+
+        console.log("ChooseTeams_Log_render currentselected : ", this.state.currentSelectedItems);
         if (this.state.loading) {
             return (
                 <div className='ms-BasicSpinnersExample ibox-content pt15 '>
@@ -482,14 +509,14 @@ export class ChooseTeam extends Component {
                                 <div className='ms-Grid-col ms-sm12 ms-md12 ms-lg12 pl0'>
                                     <h4 className='p15'> <Trans>selectedTeam</Trans></h4>
                                     {
-                                        this.state.currentSelectedItems.map((member, index) =>
+                                        filteredTeammembers.map((member, index) =>
                                             member.displayName !== "" ?
                                                 <div className='ms-Grid-col ms-sm6 ms-md4 ms-lg12 p15' key={index}>
                                                     <Persona
                                                         {...{ imageUrl: member.UserPicture, imageInitials: '' }}
                                                         size={PersonaSize.size40}
                                                         primaryText={member.displayName}
-                                                        secondaryText={member.assignedRole.adGroupName}
+                                                        secondaryText={member.adGroupName}
                                                     />
 
                                                 </div>
@@ -508,7 +535,7 @@ export class ChooseTeam extends Component {
                                 <div className='ms-Grid-col ms-sm12 ms-md12 ms-lg12 pageheading bg-white pb20'>
                                     <h4 className=" mb0 pt15"><Trans>updateTemplate</Trans></h4>
                                     <div className='docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg12 pt10 '>
-                                        <div className='ms-Grid-col ms-sm12 ms-md6 ms-lg9 pl0 pull-left' >
+                                        <div className='ms-Grid-col ms-sm12 ms-md6 ms-lg7 pl0 pull-left' >
                                             <FilePicker
                                                 id='filePicker'
                                                 //Bug Fix, proposaldocument coming as null start
@@ -517,19 +544,17 @@ export class ChooseTeam extends Component {
                                                 file={uploadedFile}
                                                 //Bug Fix, proposaldocument coming as null start
                                                 showBrowse={
-                                                    this.state.oppData.proposalDocument !== null ?
-                                                        this.state.oppData.proposalDocument.documentUri ? false : true : false
+                                                    disableBrowseButton
                                                 }
                                                 //Bug Fix, proposaldocument coming as null end
                                                 showLabel='true'
                                                 onChange={(e) => this.handleFileUpload(e)}
                                                 //Bug Fix, proposaldocument coming as null start
-                                                btnCaption={this.state.oppData.proposalDocument !== null ?
-                                                    this.state.oppData.proposalDocument.documentUri ? "Change File" : "" : ""}
+                                                btnCaption={!disableBrowseButton ? "Change File" : ""}
                                             //Bug Fix, proposaldocument coming as null end
                                             />
                                         </div>
-                                        <div className='ms-Grid-col ms-sm12 ms-md6 ms-lg3 '>
+                                        <div className='ms-Grid-col ms-sm12 ms-md6 ms-lg5 '>
                                             {
                                                 this.state.IsfileUpload ?
                                                     <Spinner size={SpinnerSize.small} ariaLive='assertive' className="pull-right p-5" />

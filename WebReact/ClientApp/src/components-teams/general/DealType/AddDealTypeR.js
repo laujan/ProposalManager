@@ -22,8 +22,8 @@ export class AddDealTypeR extends Component {
         this.authHelper = window.authHelper;
         //hardcoded group numbers for "START PROCESS and NEW OPPORTUNITY".
         //To make it even more dynamic, we need to remove the use of this two arrays
-        this.processTypesNotToDisplay = ["Base", "customerDecisionTab", "ProposalStatusTab"];
-        this.hardcodedGroupNos = [1,2];
+        this.processTypesNotToDisplay = [];
+        this.hardcodedGroupNos = [];
         this.state = {
             isUpdate: false, isUpdateMsg: false, MessageBarType: null, MessagebarText: "",
             pageLoading: true,
@@ -45,7 +45,9 @@ export class AddDealTypeR extends Component {
                 "id": "",
                 "templateName": "",
                 "description": "test desc",
-                "processes": []
+                "processes": [],
+                "defaultTemplate":false,
+                "initilaltemplate":false
             },
             dealTypeObj: {}
         };
@@ -53,14 +55,13 @@ export class AddDealTypeR extends Component {
     }
 
     async componentDidMount() {
-        let process = await this.getAllProcessFrmSharepoint();
+        await this.getAllProcessFrmSharepoint();
         let dealTypeId = getQueryVariable('dealTypeId');
         console.log("componentDidMount><===", dealTypeId);
         if (dealTypeId !== null) {
             console.log("componentDidMount><===", dealTypeId);
             await this.getSelectedDealTypeById(dealTypeId);
         }
-
     }
 
     _findProcessInArray(tempList, process) {
@@ -376,6 +377,15 @@ export class AddDealTypeR extends Component {
         this.setState({ isUpdate: true });
         try {
             let dealTypeObject = this.state.dealTypeObj;
+            let defaultTemplate = false;
+			if(dealTypeObject.processes.length===1){
+				defaultTemplate = dealTypeObject.processes[0].processStep.toLowerCase() === "start process" ? true:false;
+			}
+            dealTypeObject.defaultTemplate = defaultTemplate;
+            dealTypeObject.initilaltemplate = false;
+
+            console.log("AddDealType_log : dealTypeObject ",dealTypeObject);
+
             let requestUpdUrl = 'api/template/';
             let options = {
                 method: dealTypeObject.id ? "PATCH" : "POST",
@@ -386,9 +396,8 @@ export class AddDealTypeR extends Component {
                 },
                 body: JSON.stringify(dealTypeObject)
             };
-            let response = await fetch(requestUpdUrl, options);
+            await fetch(requestUpdUrl, options);
             this.setState({ MessagebarText: <Trans>dealTypeAddSuccess</Trans>, isUpdate: false, isUpdateMsg: true });
-
         } catch (error) {
             this.setState({
                 MessagebarText: `${<Trans>errorOoccuredPleaseTryAgain</Trans>} : ${error.message}`,
@@ -482,7 +491,7 @@ export class AddDealTypeR extends Component {
         if (!ok) {
             let status = response.status;
             let statusText = response.statusText;
-            let type = response.type;
+            response.type;
             if (status >= 500) {
                 throw new Error(`ServerError: ErrorMsg ${statusText} & status code ${status}`);
             }
@@ -569,7 +578,7 @@ export class AddDealTypeR extends Component {
                 <div className='ms-Grid-col ms-sm12 ms-md12 ms-lg4 pl10'>
                     <TextField
                         id='dealTypeName'
-                        label={<Trans>dealTypeName</Trans>}
+                        label={<Trans>Business Process Name</Trans>}
                         value={this.state.template.templateName}
                         onBlur={this.onBlurDealTypeName.bind(this)}
                     />
@@ -702,7 +711,9 @@ export class AddDealTypeR extends Component {
             <div className='ms-Grid bg-white ibox-content border-none p-10'>
                 <div className='ms-Grid-row'>
                     <div className='ms-Grid-col ms-sm6 ms-md6 ms-lg6 adddealtypeheading'>
-                        <h3><span className="dealtype" ><Trans>dealTypes</Trans><i className="ms-Icon ms-Icon--ChevronRightMed font-20" aria-hidden="true" /> </span><Trans>addDealType</Trans></h3>
+                        <h3><span className="dealtype" >
+                            <Trans>Business Process</Trans><i className="ms-Icon ms-Icon--ChevronRightMed font-20" aria-hidden="true" /> </span>
+                            <Trans>Add Business Process</Trans></h3>
                     </div>
                     <div className='ms-Grid-col ms-sm6 ms-md6 ms-lg6'>
                         <LinkRoute to={'/tab/generalConfigurationTab#dealType'} className='pull-right'><Trans>backToList</Trans> </LinkRoute>
