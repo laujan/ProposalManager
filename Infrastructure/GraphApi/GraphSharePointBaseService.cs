@@ -677,6 +677,38 @@ namespace Infrastructure.GraphApi
             }
         }
 
+        public async Task<JObject> CreateTempFolderAsync(string siteId, string folderName, string requestId = "")
+        {
+           _logger.LogInformation($"RequestId: {requestId} - CreateTempFolderAsync called.");
+            try
+            {
+                Guard.Against.NullOrEmpty(siteId, nameof(siteId), requestId);
+                Guard.Against.NullOrEmpty(folderName, nameof(folderName), requestId);
+
+                // Add the folder.
+                DriveItem folder = await GraphClient.Sites[siteId].Drive.Root.Children.Request().AddAsync(new DriveItem
+                {
+                    Name = folderName,
+                    Folder = new Folder()
+                });
+
+                if (folder != null)
+                {
+                    _logger.LogInformation($"RequestId: {requestId} - CreateFolderAsync end.");
+                    return JObject.FromObject(folder); ;
+                }
+
+                _logger.LogError($"RequestId: {requestId} - CreateTempFolderAsync error: response foler null for folder: {folder}");
+                var errorResponse = JsonErrorResponse.BadRequest($"CreateTempFolderAsync error: response foler null for folder: {folder}", requestId);
+                return errorResponse;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"RequestId: {requestId} - CreateTempFolderAsync Service Exception: {ex}");
+                throw new ResponseException($"RequestId: {requestId} - CreateTempFolderAsync Service Exception: {ex}");
+            }
+        }
+
         public async Task<JObject> DeleteFileOrFolderAsync(string siteId, string itemPath, string requestId = "")
         {
             // DELETE https://graph.microsoft.com/v1.0/sites/{siteId}/drive/items/{itemId}

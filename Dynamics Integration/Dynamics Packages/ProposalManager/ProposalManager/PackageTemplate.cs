@@ -69,6 +69,10 @@ namespace ProposalManager
             { "prvDeleteSharePointDocumentLocation", PrivilegeDepth.Global },
             { "prvCreateSharePointSite", PrivilegeDepth.Global },
             { "prvReadSharePointSite", PrivilegeDepth.Global },
+            { "prvAppendSharePointSite", PrivilegeDepth.Global },
+            { "prvAppendToSharePointSite", PrivilegeDepth.Global },
+            { "prvWriteSharePointSite", PrivilegeDepth.Global },
+            { "prvDeleteSharePointSite", PrivilegeDepth.Global },
             { "prvReadUser", PrivilegeDepth.Global }
         };
 

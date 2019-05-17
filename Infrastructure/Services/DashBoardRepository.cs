@@ -196,8 +196,7 @@ namespace Infrastructure.Services
 
 
                 dashboardJson.Status = dashboard.Status;
-                dashboardJson.StartDate = dashboard.StartDate;
-                dashboardJson.OpportunityName = dashboard.OpportunityName;
+
                 dashboardJson.TargetCompletionDate = dashboard.TargetCompletionDate??String.Empty;
                 dashboardJson.OpportunityID = dashboard.OpportunityId;
                 dashboardJson.TotalNoOfDays = dashboard.TotalNoOfDays;

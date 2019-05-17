@@ -309,6 +309,24 @@ namespace Infrastructure.Services
             }
         }
 
+        public async Task<JObject> CreateTempFolderAsync(string siteId, string folderName, string requestId = "")
+        {
+            _logger.LogInformation($"RequestId: {requestId} - CreateFolderAsync called.");
+
+            try
+            {
+                Guard.Against.NullOrEmpty(siteId, nameof(siteId), requestId);
+                Guard.Against.NullOrEmpty(folderName, nameof(folderName), requestId);
+
+                return await _graphSharePointAppService.CreateTempFolderAsync(siteId, folderName, requestId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"RequestId: {requestId} - CreateFolderAsync Service Exception: {ex}");
+                throw new ResponseException($"RequestId: {requestId} - CreateFolderAsync Service Exception: {ex}");
+            }
+        }
+
         private async Task<JObject> DeleteFileOrFolderAsync(string siteId, string itemPath, string requestId = "")
         {
             _logger.LogInformation($"RequestId: {requestId} - DeleteFileOrFolderAsync called.");

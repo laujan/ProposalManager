@@ -48,6 +48,24 @@ namespace Infrastructure.Services
             }
         }
 
+        public async Task<JObject> CreateTempFolderAsync(string siteId, string folderName, string requestId = "")
+        {
+            _logger.LogInformation($"RequestId: {requestId} - DocumentService_CreateFolderAsync called.");
+
+            try
+            {
+                Guard.Against.NullOrEmpty(siteId, nameof(siteId), requestId);
+                Guard.Against.NullOrEmpty(folderName, nameof(folderName), requestId);
+
+                return await _documentRepository.CreateTempFolderAsync(siteId, folderName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"RequestId: {requestId} - DocumentService_CreateFolderAsync Service Exception: {ex}");
+                throw new ResponseException($"RequestId: {requestId} - DocumentService_CreateFolderAsync Service Exception: {ex}");
+            }
+        }
+
         public async Task<JObject> UploadDocumentTeamAsync(string opportunityName, string docType, IFormFile file, string requestId = "")
         {
             _logger.LogInformation($"RequestId: {requestId} - DocumentService_UploadDocumentTeamAsync called.");

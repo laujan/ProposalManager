@@ -57,7 +57,8 @@ export class AppTeams extends Component {
             teamsAppInstanceId: appSettingsObject.teamsAppInstanceId,
             teamsAppName: appSettingsObject.teamsAppName,
             reportId: appSettingsObject.reportId,
-            workspaceId: appSettingsObject.workspaceId
+            workspaceId: appSettingsObject.workspaceId,
+            sharePointSiteRelativeName: ""
         };
 
         this.localStorePrefix = appSettingsObject.localStorePrefix;
@@ -146,7 +147,8 @@ export class AppTeams extends Component {
                             teamsAppInstanceId: res.TeamsAppInstanceId,
                             teamsAppName: res.ProposalManagerAddInName,
                             reportId: res.PBIReportId,
-                            workspaceId: res.PBIWorkSpaceId
+                            workspaceId: res.PBIWorkSpaceId,
+                            sharePointSiteRelativeName: res.SharePointSiteRelativeName
                         };
                         console.log("AppTeams_componentDidMount_getClientSettings  ==>", res);
                     })
@@ -174,7 +176,8 @@ export class AppTeams extends Component {
                             teamsAppInstanceId: res.TeamsAppInstanceId,
                             teamsAppName: res.ProposalManagerAddInName,
                             reportId: res.PBIReportId,
-                            workspaceId: res.PBIWorkSpaceId
+                            workspaceId: res.PBIWorkSpaceId,
+                            sharePointSiteRelativeName: res.SharePointSiteRelativeName
                         };
                         console.log("AppTeams_componentDidUpdate_getClientSettings  ==>", res);
                     })
@@ -541,7 +544,7 @@ export class AppTeams extends Component {
         };
 
         const SetupView = ({ match }) => {
-            return <Setup teamsContext={teamsContext} />;
+            return <Setup teamsContext={teamsContext} appSettings={appSettings}/>;
         };
 
         const HelpView = ({ match }) => {

@@ -10,7 +10,9 @@ The Procedure section of this guide will guide you in performing all the steps i
 
 ## Prerequisites
 
-You need Document Management to be enabled for your Dynamics 365 organization. If it's not (or if you don't know), follow these [steps](https://docs.microsoft.com/en-us/dynamics365/customer-engagement/admin/set-up-dynamics-365-online-to-use-sharepoint-online#configure-a-new-organization).
+You need Document Management to be enabled for your Dynamics 365 organization. If it's not, follow these [steps](https://docs.microsoft.com/en-us/dynamics365/customer-engagement/admin/set-up-dynamics-365-online-to-use-sharepoint-online#configure-a-new-organization).
+
+You can check if you have Document Management enabled in your Dynamics instance by going to Settings > Document Management. If you see an option called "Enable Server-Based SharePoint Integration", then the Dynamics instance does not have Document Management enabled. Click on that option, and follow the steps.
 
 ## Parameters
 

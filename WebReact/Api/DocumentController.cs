@@ -31,6 +31,27 @@ namespace WebReact.Api
             _documentService = documentService;
         }
 
+        [Authorize]
+        [HttpPost("CreateTempFolder/{siteId}/{folder}")]
+        public async Task<IActionResult> CreateTempFolderAsync(string siteId, string folder)
+        {
+            var requestId = Guid.NewGuid().ToString();
+            _logger.LogInformation($"RequestID:{requestId} - Document_UploadFile called.");
+
+            try
+            {
+                Guard.Against.NullOrUndefined(siteId, "Document_UploadFile_siteId", requestId);
+                Guard.Against.NullOrUndefined(folder, "Document_UploadFile_folder", requestId);
+
+                return Ok(await _documentService.CreateTempFolderAsync(siteId, folder, requestId));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"RequestID:{requestId} - Document_UploadFile error: {ex.Message}");
+                return BadRequest(JsonErrorResponse.BadRequest($"Document_UploadFile error: {ex.Message} ", requestId));
+            }
+        }
+
         // Put: /Document/UploadFile
         [Authorize]
         [HttpPut("UploadFile/{opportunityName}/{docType}")]

@@ -144,3 +144,12 @@ updateSetting("https://<YOUR_TENANT_NAME_HERE>.crm.dynamics.com", true);
 6. If everything went well, you should see both a *"Recieved organization id"* message, followed by a *"Succesfully updated setting message"*. If not, check that your user has permissions to update settings in your organization, and that the URL in the last line of the code points to your organization's Dynamics 365 instance.
 7. Refresh the application pressing F5; you should see now the legacy interface. You can perform now Step 4 of this guide. 
 8. When finished, you can go back to the new Interface perfoming these same steps but replacing the "true" of the last line of the code to a "false". The result should be something similar to `updateSetting("https://<YOUR_TENANT_NAME_HERE>.crm.dynamics.com",  false);`
+
+### Not able to share files from Dynamics to the Proposal Manager Opportunity
+
+This can happen if the Temporary Folder is not created during the initial Proposal Management configuration. You can check its existance and create it manually by following the next steps:
+
+1. Go to the Proposal Manager SharePoint site.
+2. On the left, click on "Site contents".
+3. Open up the Documents folder.
+4. If the folder is empty, then the Temporary Folder failed to create. Create it manually by clicking the "New" dropdown button, and selecting "Folder". For the name, type in "TempFolder", without the quotes.

@@ -18,5 +18,6 @@ namespace ApplicationCore.Interfaces
         Task<JObject> UploadDocumentAsync(string siteId, string folder, IFormFile file, string requestId = "");
 
         Task<JObject> UploadDocumentTeamAsync(string opportunityName, string docType, IFormFile file, string requestId = "");
+        Task<JObject> CreateTempFolderAsync(string siteId, string folder, string requestId = "");
     }
 }

@@ -428,6 +428,28 @@ export class Setup extends Component {
         this.spinnerOff(group, false);
     }
 
+    async createTempFolder(siteId, token) {
+        try {
+            const { appSettings } = this.props;
+            const siteName = appSettings.sharePointSiteRelativeName;
+            console.log("Setup_createTempFolder", siteName);
+            let requestUrl = `api/Document/CreateTempFolder/${siteId}/tempFolder`;
+            let options = {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'authorization': `Bearer ${token}`
+                }
+            };
+            let data = await fetch(requestUrl, options);
+            console.log("Setup_createTempFolder response: ", data);
+            return true;
+        } catch (error) {
+            console.log("Setup_createTempFolder error: ", error.message);
+            return false;
+        }
+    }
+
     async CreateAllLists(rootID, token) {
         try {
             console.log("Setup_createAllLists");
@@ -485,6 +507,7 @@ export class Setup extends Component {
             await this.UpdateAppSettings("SharePointListsPrefix", "e3_", token);
 
             await this.CreateAllLists(rootID, token);
+            await this.createTempFolder(rootID, token);
             await this.CreateProposalManagerAdminGroup(AdGroupName);
 
             await this.loadDataForPermision_Process_Roles();
