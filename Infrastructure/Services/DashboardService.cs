@@ -44,6 +44,7 @@ namespace Infrastructure.Services
                     entity.Status = opportunity.Metadata.OpportunityState.Name.ToString();
                     entity.StartDate = openedDate ?? String.Empty;
                     entity.OpportunityName = opportunity.DisplayName.ToString();
+                    entity.OpportunityId = opportunity.Id;
                     entity.Id = String.Empty;
                     entity.TotalNoOfDays = 0;
                     entity.ProcessList = new List<DashboardProcessList>();

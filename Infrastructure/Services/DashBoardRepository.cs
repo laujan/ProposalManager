@@ -53,6 +53,7 @@ namespace Infrastructure.Services
                 itemFieldsJson.Status = entity.Status;
                 itemFieldsJson.StartDate = entity.StartDate;
                 itemFieldsJson.OpportunityName = entity.OpportunityName;
+                itemFieldsJson.OpportunityID = entity.OpportunityId;
 
                 itemFieldsJson.TotalNoOfDays = entity.TotalNoOfDays;
 
@@ -194,10 +195,10 @@ namespace Infrastructure.Services
 
                 dynamic dashboardJson = new JObject();
 
-
+                
                 dashboardJson.Status = dashboard.Status;
 
-                dashboardJson.TargetCompletionDate = dashboard.TargetCompletionDate??String.Empty;
+                // dashboardJson.TargetCompletionDate = dashboard.TargetCompletionDate??String.Empty;
                 dashboardJson.OpportunityID = dashboard.OpportunityId;
                 dashboardJson.TotalNoOfDays = dashboard.TotalNoOfDays;
 
