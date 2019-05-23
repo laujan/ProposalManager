@@ -491,7 +491,6 @@ export class AddDealTypeR extends Component {
         if (!ok) {
             let status = response.status;
             let statusText = response.statusText;
-            response.type;
             if (status >= 500) {
                 throw new Error(`ServerError: ErrorMsg ${statusText} & status code ${status}`);
             }

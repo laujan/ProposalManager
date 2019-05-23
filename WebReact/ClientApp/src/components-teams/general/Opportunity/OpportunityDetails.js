@@ -69,7 +69,9 @@ export class OpportunityDetails extends Component {
             }
         } catch (error) {
             this.accessGranted = false;
-            this.state.loading === true ? this.setState({loading:false}): "";
+            if (this.state.loading === true) {
+                this.setState({ loading: false });
+            }
             console.log("OpportunityDetails_componentDidUpdate error :", error);
         }
     }

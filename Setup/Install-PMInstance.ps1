@@ -556,7 +556,7 @@ if($deploys)
 {
     UpdateAppSettings -pathToJson ..\WebReact\bin\Release\netcoreapp2.2\publish\appsettings.json -inputParams $appSettings
 
-    $compiledJsPath = (Get-Item ..\WebReact\bin\Release\netcoreapp2.2\publish\ClientApp\build\static\js\* -Filter *.js).FullName
+    $compiledJsPath = (Get-Item ..\WebReact\bin\Release\netcoreapp2.2\publish\ClientApp\build\static\js\main.* -Filter *.js).FullName
     UpdateAppSettingsClient $compiledJsPath -appId $appRegistration.AppId -appUri "https://$ApplicationName.azurewebsites.net" -tenantId $tenantId
     Write-Information "AppSettings.js has been updated"
 

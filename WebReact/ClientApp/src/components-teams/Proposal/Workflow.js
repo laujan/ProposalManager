@@ -86,8 +86,12 @@ export class Workflow extends Component {
         } else {
             userRole = p.processStep;
         }
-        if (p.processStep.toLowerCase() === "draft proposal") {
-            userRoleArry = this.utils.getLoanOficers(this.props.memberslist)
+        
+        if (p.processStep.toLowerCase() === "start process") {
+            userRoleArry = this.utils.getRelationShipManagers(this.props.memberslist);
+            processStatus = p.status;
+        }else if (p.processStep.toLowerCase() === "draft proposal") {
+            userRoleArry = this.utils.getLoanOficers(this.props.memberslist);
             processStatus = this.props.oppStaus;
             isDispOppStatus = true;
         } else {

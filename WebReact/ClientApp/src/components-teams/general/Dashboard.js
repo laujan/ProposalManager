@@ -30,7 +30,7 @@ export class Dashboard extends Component {
 			workspaceId:workspaceId,
 			embedConfig: {
                 embedUrl: `https://app.powerbi.com/reportEmbed?reportId=${reportId}&groupId=${workspaceId}`,
-                accessToken: "" //this.authHelper.getWebApiToken(),
+                accessToken: ""
             },
             isAuthenticated: false
 		};
@@ -56,10 +56,10 @@ export class Dashboard extends Component {
 			if(reportId && workspaceId){
 				let embedConfig =  {
 					embedUrl: `https://app.powerbi.com/reportEmbed?reportId=${reportId}&groupId=${workspaceId}`,
-					accessToken: "" //this.authHelper.getWebApiToken(),
+					accessToken: ""
 				};
 
-				this.setState({embedConfig,workspaceId,reportId})
+                this.setState({ embedConfig, workspaceId, reportId });
 			}
 			
 		}
@@ -154,11 +154,9 @@ export class Dashboard extends Component {
 							width: 1000,
 							height: 1200
 						}
-						//displayOption: pbi.models.DisplayOption.ActualSize,
 					}
 				}
 			};
-			//pbi.Embed(/* Service */, /*Html Element */ , config);
 
 			let powerbi = new pbi.service.Service(pbi.factories.hpmFactory, pbi.factories.wpmpFactory, pbi.factories.routerFactory);
 

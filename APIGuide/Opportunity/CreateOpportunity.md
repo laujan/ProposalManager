@@ -1,6 +1,4 @@
 
-
-#
 # Create Opportunity
 
 Create an opportunity

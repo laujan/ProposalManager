@@ -61,7 +61,7 @@ export class General extends Component {
                 templateItems: [],
                 templateList: [],
                 templateLoading: true,
-                metaDataList:[]
+                metaDataList: []
             };
         }
         this.onClickCreateOpp = this.onClickCreateOpp.bind(this);
@@ -117,7 +117,7 @@ export class General extends Component {
 
                 if (data.ItemsList.length > 0) {
                     for (let i = 0; i < data.ItemsList.length; i++) {
-                        
+
                         let item = data.ItemsList[i];
                         console.log("General_getOpportunityIndex item : ", item);
                         let newItem = {};
@@ -157,7 +157,7 @@ export class General extends Component {
     }
 
     async getMetaData() {
-        let categoryList=[];
+        let categoryList = [];
         let requestUrl = 'api/MetaData';
         let options = {
             method: "GET",
@@ -174,12 +174,12 @@ export class General extends Component {
                 }
                 let temp = metaDataList.find(x => x.displayName === "Category" && x.fieldType.name === "DropDown").values;
                 categoryList = temp.map(x => { return { 'key': x.id, 'text': x.name }; });
-                this.setState({ metaDataList,categoryList});
+                this.setState({ metaDataList, categoryList });
             }
 
         } catch (err) {
             this.errorHandler(err, "Opportunities_CreateNew_getCategories");
-        } 
+        }
     }
 
     async getUserProfiles() {
@@ -197,7 +197,7 @@ export class General extends Component {
                     teamMembers = data.ItemsList;
                 }
                 console.log("General_getUserProfiles : ", teamMembers);
-                this.setState({teamMembers });
+                this.setState({ teamMembers });
             }
 
         } catch (err) {
@@ -205,7 +205,7 @@ export class General extends Component {
                 teamMembers
             });
             this.errorHandler(err, "Opportunities_CreateNew_getUserProfiles");
-        } 
+        }
     }
 
     // Wave4 - Get all templates
@@ -254,20 +254,20 @@ export class General extends Component {
         try {
             let res = await this.authHelper.callCheckAccess(["Opportunity_Create"]);
 
-            let role = this.state.userProfile.roles.find(role=>{
+            let role = this.state.userProfile.roles.find(role => {
                 if (role.permissions.find(permission => permission.name === "Opportunity_Create"))
                     return role.id;
             });
 
             let metaData = [];
-            this.state.metaDataList.forEach((metaobj)=>{
-                if (metaobj.screen === "Screen1" || metaobj.screen === "Screen2" || metaobj.screen ==="Screen3"){
-                    metaData.push( {
-                        id:metaobj.displayName.toLowerCase().replace(/\s/g, ''),
-                        displayName:metaobj.displayName,
-                        values:"",
-                        screen:metaobj.screen,
-                        fieldType :metaobj.fieldType
+            this.state.metaDataList.forEach((metaobj) => {
+                if (metaobj.screen === "Screen1" || metaobj.screen === "Screen2" || metaobj.screen === "Screen3") {
+                    metaData.push({
+                        id: metaobj.displayName.toLowerCase().replace(/\s/g, ''),
+                        displayName: metaobj.displayName,
+                        values: "",
+                        screen: metaobj.screen,
+                        fieldType: metaobj.fieldType
                     });
                 }
             });
@@ -281,7 +281,7 @@ export class General extends Component {
                         displayName: "",
                         referenceId: ""
                     },
-                    metaDataFields:metaData,
+                    metaDataFields: metaData,
                     teamMembers: [{
                         status: 0,
                         id: this.state.userProfile.id,
@@ -289,9 +289,9 @@ export class General extends Component {
                         mail: this.state.userProfile.mail,
                         userPrincipalName: this.state.userProfile.mail,
                         roleId: role ? role.id : "",
-                        permissions: role ? role.permissions:[],
-                        teamsMembership: role ? role.teamsMembership:[],
-						roleName : role? role.displayName:""
+                        permissions: role ? role.permissions : [],
+                        teamsMembership: role ? role.teamsMembership : [],
+                        roleName: role ? role.displayName : ""
                     }],
                     notes: [],
                     documentAttachments: [],
@@ -438,13 +438,13 @@ export class General extends Component {
 
             console.log("General_createopportunity metadata : ", this.newOpportunity.metaDataFields);
             //adding default bussinees process
-            if(this.newOpportunity.template.id.length===0){
-                let defaultTemplateAvailable = this.state.templateList.some(name=>name.defaultTemplate);
-                if(defaultTemplateAvailable){
+            if (this.newOpportunity.template.id.length === 0) {
+                let defaultTemplateAvailable = this.state.templateList.some(name => name.defaultTemplate);
+                if (defaultTemplateAvailable) {
                     this.newOpportunity.template = this.state.templateItems.filter(name => name.defaultTemplate)[0];
                 }
             }
-            
+
             let requestUrl = 'api/opportunity/';
 
             let options = {
@@ -547,8 +547,8 @@ export class General extends Component {
                                                             dashboardList={this.state.dashboardList}
                                                             onClickCreateOpp={this.onClickCreateOpp}
                                                             metaDataList={this.state.metaDataList}
-                                                />
-                                            }
+                                                        />
+                                                    }
                                                 </PivotItem>
                                                 {
                                                     this.state.isMobile
@@ -570,7 +570,7 @@ export class General extends Component {
                                                 dashboardList={this.state.dashboardList}
                                                 onClickCancel={this.onClickOppCancel}
                                                 onClickNext={this.onClickCreateOppNext.bind(this, this.newOpportunity)}
-                                                metaDataList = {this.state.metaDataList}
+                                                metaDataList={this.state.metaDataList}
                                             />
                                         }
 
@@ -582,7 +582,7 @@ export class General extends Component {
                                                 categories={this.state.categoryList}
                                                 onClickBack={this.onClickOppBack}
                                                 onClickNext={this.onClickCreateOppNext.bind(this, this.newOpportunity)}
-                                                metaDataList = {this.state.metaDataList}
+                                                metaDataList={this.state.metaDataList}
                                             />
                                         }
 
@@ -596,7 +596,7 @@ export class General extends Component {
                                                 templateList={this.state.templateList}
                                                 onClickBack={this.onClickOppBack}
                                                 onClickNext={this.onClickCreateOppNext.bind(this, this.newOpportunity)}
-                                                metaDataList = {this.state.metaDataList}
+                                                metaDataList={this.state.metaDataList}
                                             />
                                         }
                                     </div>
