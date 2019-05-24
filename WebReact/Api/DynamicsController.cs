@@ -147,12 +147,20 @@ namespace WebReact.Api
             var opportunityMapping = dynamicsConfiguration.OpportunityMapping;
             try
             {
-                var jopp = data["InputParameters"].First()["value"]["Attributes"];
+                var jopp = data["InputParameters"].First()["value"];
 
+                if (!jopp["LogicalName"].ToString().Equals(opportunityMapping.EntityName, StringComparison.OrdinalIgnoreCase))
+                {
+                    _logger.LogError($"DYNAMICS INTEGRATION ENGINE: Incorrect entity type recieved from opportunity creation. Expected ${opportunityMapping.EntityName}, got {jopp["LogicalName"].ToString()}.");
+                    return BadRequest();
+                }
+
+                var opportunityId = jopp["Id"].ToString();
+
+                jopp = jopp["Attributes"];
                 var attributes = jopp.ToDictionary(p => p["key"], v => v["value"]);
 
-                var opportunityName = GetAttribute(attributes, "name")?.ToString();
-                var opportunityId = GetAttribute(attributes, "opportunityid").ToString();
+                var opportunityName = GetAttribute(attributes, opportunityMapping.NameProperty)?.ToString();
                 var creator = dynamicsLinkService.GetUserData(data["InitiatingUserId"].ToString());
                 var creatorRole = proposalManagerConfiguration.CreatorRole;
 
@@ -199,7 +207,7 @@ namespace WebReact.Api
                             }
                         }
                     },
-                    Checklists = new ChecklistModel[] { }
+                    Checklists = Array.Empty<ChecklistModel>()
                 };
 
                 var proposalManagerClient = await proposalManagerClientFactory.GetProposalManagerClientAsync();
@@ -215,7 +223,7 @@ namespace WebReact.Api
 
                 foreach (var metadata in metadataList)
                 {
-                    var mappingName = dynamicsConfiguration.OpportunityMapping.MetadataFields.FirstOrDefault(x => x.To == metadata.DisplayName);
+                    var mappingName = opportunityMapping.MetadataFields.FirstOrDefault(x => x.To == metadata.DisplayName);
 
                     if (mappingName != null)
                     {
@@ -318,7 +326,7 @@ namespace WebReact.Api
                 var record1id = GetAttribute(attributes, "record1id");
                 var record2id = GetAttribute(attributes, "record2id");
 
-                if (!record1id["LogicalName"].ToString().Equals("opportunity", StringComparison.OrdinalIgnoreCase) ||
+                if (!record1id["LogicalName"].ToString().Equals(dynamicsConfiguration.OpportunityMapping.EntityName, StringComparison.OrdinalIgnoreCase) ||
                     !record2id["LogicalName"].ToString().Equals("systemuser", StringComparison.OrdinalIgnoreCase))
                 {
                     return new EmptyResult();

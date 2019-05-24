@@ -14,12 +14,15 @@ namespace ApplicationCore
 		public string OrganizationUri { get; set; }
 		public int ProposalManagerCategoryId { get; set; }
 		public string RootDrive { get; set; }
-		public OpportunityMappingConfiguration OpportunityMapping { get; set; }
+        public OpportunityMappingConfiguration OpportunityMapping { get; set; }
 	}
 
 	public class OpportunityMappingConfiguration
 	{
-        public ICollection<OpportunityMapping> MetadataFields { get; set; }
+        public string EntityName { get; set; }
+        public string OpportunityLinkPropertyName { get; set; }
+        public string NameProperty { get; set; }
+        public ICollection<OpportunityMapping> MetadataFields { get; set;  }
         public ICollection<OpportunityStatusMapping> Status { get; set; }
 		public int MapStatusCode(int statusCode) => Status?.FirstOrDefault(s => s.From == statusCode)?.To ?? statusCode;
 	}

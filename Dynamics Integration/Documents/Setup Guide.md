@@ -59,8 +59,8 @@ The professional performing the setup needs to have appropriate administrative p
       ---|-----
       `opportunity`|An arbitrary security string. You need to come up with some secret and you write it here.
       `connection`|An arbitrary security string. You need to come up with some secret and you write it here.
-6. Register the webhooks using the dynamics plugin registration tool. For information on how to install the tool, check [this link](https://docs.microsoft.com/en-us/dynamics365/customer-engagement/developer/download-tools-nuget). To do this:
-   1. Run the plugin registration tool.
+6. Register the webhooks using the Dynamics *Plugin Registration Tool*. For information on how to install the tool, check [this link](https://docs.microsoft.com/en-us/dynamics365/customer-engagement/developer/download-tools-nuget). To do this:
+   1. Run the Plugin Registration Tool.
    2. Click "CREATE NEW CONNECTION" and log in to Dynamics 365 with your administrator credentials.
    3. Click "Register" > "Register new Web Hook".
    4. Fill the form as follows:
