@@ -5,14 +5,10 @@
 
 import React, { Component } from 'react';
 import { Label } from 'office-ui-fabric-react/lib/Label';
-import {
-    Persona,
-    PersonaSize
-} from 'office-ui-fabric-react/lib/Persona';
+import { Persona, PersonaSize } from 'office-ui-fabric-react/lib/Persona';
 import '../../../Style.css';
 import { oppStatus, oppStatusText } from '../../../common';
 import { TooltipHost } from 'office-ui-fabric-react/lib/Tooltip';
-
 
 export class GroupEmployeeStatusCard extends Component {
     displayName = GroupEmployeeStatusCard.name
@@ -43,25 +39,23 @@ export class GroupEmployeeStatusCard extends Component {
             )
         );
     }
-    render() {
 
-        let role = this.props.role;
-
-        let members = this.props.members;
-
+    render()
+    {
+        const { role, members, status, isDispOppStatus, isTeam } = this.props;
         let userContent = this.getUsersDetails(members, role);
-
-        let status = "";
+        let statusDisplay = "";
         let statusClassName = "";
-        if (this.props.isDispOppStatus) {
-            status = oppStatusText[this.props.status];
-            statusClassName = this.props.status === 0 ? "status" + this.props.status : "status" + (this.props.status - 1);
+
+        if (isDispOppStatus) {
+            statusDisplay = oppStatusText[status];
+            statusClassName = status === 0 ? "status" + status : "status" + (status - 1);
         } else {
-            status = oppStatus[this.props.status];
-            statusClassName = "status" + this.props.status;
+            statusDisplay = oppStatus[status];
+            statusClassName = "status" + status;
         }
         // Team view not display the status
-        let isDispStatusClass = this.props.isTeam === true ? "hide" : "";
+        let isDispStatusClass = isTeam === true ? "hide" : "";
 
         return (
             <div className='ms-Grid'>
@@ -72,7 +66,6 @@ export class GroupEmployeeStatusCard extends Component {
                                 onRenderContent: () => {
                                     return (
                                         userContent
-                                        //content={userContent}
                                     );
                                 }
                             }}
@@ -85,7 +78,7 @@ export class GroupEmployeeStatusCard extends Component {
 
                                     </div>
                                     <div className=' ms-Grid-col ms-sm6 ms-md8 ms-lg8'>
-                                        <Label><span className={statusClassName}> {status} </span></Label>
+                                        <Label><span className={statusClassName}> {statusDisplay} </span></Label>
                                     </div>
                                 </div>
                                 <div className='ms-PersonaExample'>
@@ -106,8 +99,6 @@ export class GroupEmployeeStatusCard extends Component {
                             </div>
                         </TooltipHost>
                 </div>
-
-                
             </div>
             </div>
             );

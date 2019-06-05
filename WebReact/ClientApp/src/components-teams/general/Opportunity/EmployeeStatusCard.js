@@ -5,10 +5,7 @@
 
 import React, { Component } from 'react';
 import { Label } from 'office-ui-fabric-react/lib/Label';
-import {
-    Persona,
-    PersonaSize
-} from 'office-ui-fabric-react/lib/Persona';
+import { Persona, PersonaSize } from 'office-ui-fabric-react/lib/Persona';
 import '../../../Style.css';
 import { oppStatus, oppStatusText } from '../../../common';
 import { Trans } from "react-i18next";
@@ -18,27 +15,25 @@ export class EmployeeStatusCard extends Component {
 
     constructor(props) {
         super(props);
-        this.state = {
-            renderPersonaDetails: true
-        };
-        
     }
+
     render() {
-        let status = "";
+        const { status, image, name, role, isDispOppStatus } = this.props;
+        let statusDisplay = "";
         let statusClassName = "";
-        if (this.props.isDispOppStatus) {
-            status = oppStatusText[this.props.status];
-            statusClassName = this.props.status === 0 ? "status" + this.props.status : "status" + (this.props.status - 1);
+
+        if (isDispOppStatus) {
+            statusDisplay = oppStatusText[status];
+            statusClassName = status === 0 ? "status" + status : "status" + (status - 1);
         } else {
-            status = oppStatus[this.props.status];
-            statusClassName = "status" + this.props.status;
-        }
-        
+            statusDisplay = oppStatus[status];
+            statusClassName = "status" + status;
+        }        
         
         return (
             <div className=' ms-Grid-col ms-sm6 ms-md8 ms-lg12 bg-grey p-5'>
                 <div className='ms-PersonaExample'>
-                    {this.props.name ?
+                    {name ?
                         <div>
                         <div className='ms-Grid-row'>
                             <div className='ms-Grid-col ms-sm6 ms-md8 ms-lg4'>
@@ -46,17 +41,17 @@ export class EmployeeStatusCard extends Component {
 
                             </div>
                             <div className=' ms-Grid-col ms-sm6 ms-md8 ms-lg8'>
-                                    <Label><span className={statusClassName}> <Trans>{status}</Trans> </span></Label>
+                                    <Label><span className={statusClassName}> <Trans>{statusDisplay}</Trans> </span></Label>
 
                             </div>
                         </div>
                         <div className='ms-Grid-row'>
                             <div className=' ms-Grid-col ms-sm12 ms-md8 ms-lg12'>
                                 <Persona
-                                    { ...{ imageUrl: this.props.image, imageInitials: "" } }
+                                    { ...{ imageUrl: image, imageInitials: "" } }
                                     size={PersonaSize.size40}
-                                    primaryText={this.props.name}
-                                    secondaryText={this.props.role}
+                                    primaryText={name}
+                                    secondaryText={role}
                                 />
 
                             </div>
@@ -83,7 +78,7 @@ export class EmployeeStatusCard extends Component {
                                         } }
                                         size={PersonaSize.size40}
                                         primaryText={<Trans>userNotSelected</Trans>}
-                                        secondaryText={this.props.role}
+                                        secondaryText={role}
                                     />
                                     
                                 </div>
@@ -93,9 +88,7 @@ export class EmployeeStatusCard extends Component {
                     }
                 </div>
             </div>
-
         );
-
     }
 }
 export default EmployeeStatusCard;

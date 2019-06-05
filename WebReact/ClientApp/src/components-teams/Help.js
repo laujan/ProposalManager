@@ -12,7 +12,6 @@ export class Help extends Component {
         super(props);
 
         this.authHelper = window.authHelper;
-        this.sdkHelper = window.sdkHelper;
     }
     render() {
         const bold = { 'fontWeight': 'bold' };

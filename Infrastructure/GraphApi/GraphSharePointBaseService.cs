@@ -10,6 +10,7 @@ using ApplicationCore.Helpers.Exceptions;
 using ApplicationCore.Interfaces;
 using Infrastructure.Services;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Graph;
@@ -26,14 +27,18 @@ namespace Infrastructure.GraphApi
     public abstract class GraphSharePointBaseService : BaseService<GraphSharePointBaseService>
     {
         protected readonly IGraphClientContext _graphClientContext;
+        private readonly IMemoryCache memoryCache;
+        private const string SharePointRootSiteIdKey = "rootId";
 
         public GraphSharePointBaseService(
             ILogger<GraphSharePointBaseService> logger,
             IOptionsMonitor<AppOptions> appOptions,
-            IGraphClientContext graphClientContext) : base(logger, appOptions)
+            IGraphClientContext graphClientContext,
+            IMemoryCache memoryCache) : base(logger, appOptions)
         {
             Guard.Against.Null(graphClientContext, nameof(graphClientContext));
             _graphClientContext = graphClientContext;
+            this.memoryCache = memoryCache;
         }
 
         /// <summary>
@@ -118,7 +123,7 @@ namespace Infrastructure.GraphApi
 
 
         // List Management
-        public async Task<JObject> CreateSiteListAsync(string htmlBody, string rootId ,string requestId = "")
+        public async Task<JObject> CreateSiteListAsync(string htmlBody, string rootId, string requestId = "")
         {
             // POST: https://graph.microsoft.com/beta/sites/{site-id}/lists
             // EXAMPLE: https://graph.microsoft.com/v1.0/sites/onterawe.sharepoint.com,988079b1-450c-44ae-bad2-41aeffe2fadb,7028bf8f-4174-4578-96cc-e5a9f52e542c/lists
@@ -208,7 +213,7 @@ namespace Infrastructure.GraphApi
 
             return await GetSiteListAsync(siteList.SiteId, siteList.ListId, requestId);
         }
-     
+
         // List Item Management
         public async Task<JObject> CreateListItemAsync(SiteList siteList, string siteListItemJson, string requestId = "")
         {
@@ -823,6 +828,50 @@ namespace Infrastructure.GraphApi
             {
                 _logger.LogError($"RequestId: {requestId} - MoveFileAsync Service Exception: {ex}");
                 throw new ResponseException($"RequestId: {requestId} - MoveFileAsync Service Exception: {ex}");
+            }
+        }
+
+        public async Task<string> GetSharePointRootId()
+        {
+            try
+            {
+                return await memoryCache.GetOrCreateAsync(SharePointRootSiteIdKey,
+                    async x =>
+                    {
+                        var requestUrl = _appOptions.GraphRequestUrl + $"sites/{_appOptions.SharePointHostName}:/sites/{_appOptions.SharePointSiteRelativeName}?$select=id";
+
+                        // Create the request message and add the content.
+                        var hrm = new HttpRequestMessage(HttpMethod.Get, requestUrl);
+
+                        // Authenticate (add access token) our HttpRequestMessage
+                        await GraphClient.AuthenticationProvider.AuthenticateRequestAsync(hrm);
+
+                        // Send the request and get the response.
+                        var response = await GraphClient.HttpProvider.SendAsync(hrm);
+
+                        if (response.IsSuccessStatusCode)
+                        {
+                            JObject result = await response.Content.ReadAsAsync<JObject>();
+                            var token = result.SelectToken("id")?.ToObject<string>();
+                            if (!string.IsNullOrWhiteSpace(token))
+                            {
+                                return token;
+                            }
+                            else
+                            {
+                                throw new Exception($"The SharePoint root site Id has not been found for '{_appOptions.SharePointSiteRelativeName}'");
+                            }
+                        }
+                        else
+                        {
+                            throw new Exception($"Error retrieving SharePoint root id for '{_appOptions.SharePointSiteRelativeName}': {response.ReasonPhrase}");
+                        }
+                    });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Error retrieving SharePoint root id for '{_appOptions.SharePointSiteRelativeName}': " + ex.Message);
+                throw ex;
             }
         }
 

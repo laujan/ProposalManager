@@ -22,12 +22,8 @@ export class AdminAllOpportunities extends Component {
     constructor(props) {
         super(props);
 
-        this.authHelper = window.authHelper;
-        this.sdkHelper = window.sdkHelper;
+        this.apiService = this.props.apiService;
         this.utils = new Utils();
-
-        const userProfile = { id: "", displayName: "", mail: "", phone: "", picture: "", userPrincipalName: "", roles: [] };
-        const userRoleList = this.props.userRoleList;
 
         const columns = [
             {
@@ -104,12 +100,11 @@ export class AdminAllOpportunities extends Component {
         ];
 
         this.state = {
-            userProfile: userProfile,
             loading: true,
             refreshing: false,
             items: [],
             itemsOriginal: [],
-            userRoleList: userRoleList,
+            userRoleList: [],
             channelCounter: 0,
             isCompactMode: false,
             columns: columns,
@@ -119,29 +114,11 @@ export class AdminAllOpportunities extends Component {
 
         this.archiveOpportunity = this.archiveOpportunity.bind(this);
         this._onFilterByOpportunityName = this._onFilterByOpportunityName.bind(this);
-
     }
 
-    async componentDidMount() {
-        this.acquireGraphAdminTokenSilent(); // Call acquire token so it is ready when calling graph using admin token
-
-        if (this.authHelper.isAuthenticated()) {
-            if (!this.state.isAuthenticated) {
-                this.authHelper.callGetUserProfile()
-                    .then(userProfile => {
-                        this.setState({
-                            userProfile: userProfile
-
-                        });
-                    });
-            }
-        }
-        if (this.state.itemsOriginal.length === 0) {
-            await this.getOpportunityIndex();
-            await this.getUserRoles();
-        }
-
-
+    componentDidMount() {
+        console.log("AdminAllOpportunites_componentDidMount");
+        this.getData();
     }
 
     fetchResponseHandler(response, referenceCall) {
@@ -154,185 +131,61 @@ export class AdminAllOpportunities extends Component {
         console.log("Administration Ref: " + referenceCall + " error: " + JSON.stringify(err));
     }
 
-    acquireGraphAdminTokenSilent() {
-        if (this.utils.getQueryVariable("admin_consent")) {
-            let isAdmin = this.state.userProfile.roles.filter(x => x.displayName === "Administrator");
-            if (isAdmin) {
-                this.authHelper.loginPopupGraphAdmin()
-                    .then(access_token => {
-                        // TODO: For future expansion sice the toke has been handled by authHelper
-                    })
-                    .catch(err => {
-                        console.log(err);
-                        this.errorHandler(err, "Administration_acquireGraphAdminTokenSilent");
-                    });
-            }
-        } else {
-            let isAdmin = this.state.userProfile.roles.filter(x => x.displayName === "Administrator");
-            if (isAdmin) {
-                this.authHelper.acquireGraphAdminTokenSilent()
-                    .then(access_token => {
-                        // TODO: For future expansion sice the toke has been handled by authHelper
-                    })
-                    .catch(err => {
-                        console.log(err);
-                        this.errorHandler(err, "Administration_acquireGraphAdminTokenSilent");
-                        //this.showMessageBar("Error while requesting an admin token for Graph API, please try refreshing your browser and sign-in again.", MessageBarType.error);
-                    });
-            }
-        }
-    }
-
-    async getOpportunityIndex() {
+    getData() {
         // To get the List of Opportunities to Display on Dashboard page
-        let requestUrl = 'api/Opportunity?page=1';
-        let options = {
-            method: "GET",
-            headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() }
-        };
-        let itemslist = [], filteredItems = [];
-        try {
-            let response = await fetch(requestUrl, options);
-            if (response.ok) {
-                let data = await response.json();
+        let itemslist = this.props.items;
+        let filteredItems = itemslist.filter(item => item.status.toLowerCase() !== "archived");
 
-                if (data.ItemsList.length > 0) {
-                    for (let i = 0; i < data.ItemsList.length; i++) {
-
-                        let item = data.ItemsList[i];
-                        console.log("General_getOpportunityIndex item : ", item);
-                        let newItem = {};
-
-                        newItem.id = item.id;
-                        newItem.opportunity = item.displayName;
-                        newItem.client = item.customer.displayName;
-                        newItem.dealsize = item.dealsize;
-                        newItem.openedDate = new Date(item.openedDate).toLocaleDateString();
-                        newItem.stausValue = item.opportunityState;
-                        newItem.status = oppStatusClassName[item.opportunityState];
-                        itemslist.push(newItem);
-                    }
-                }
-                if (itemslist.length > 0) {
-                    this.setState({ reverseList: true });
-                }
-
-               // let sortedList = this.state.reverseList ? itemslist.reverse() : itemslist;
-                filteredItems = itemslist.filter(item => item.status.toLowerCase() !== "archived");
-                
-            }
-
-        } catch (err) {
-            this.errorHandler(err, "Opportunities_getOpportunityIndex");
-        } finally {
-            this.setState({
-                items: filteredItems,
-                itemsOriginal: itemslist,
-                loading: false,
-                haveGranularAccess: true
-
-                
-            });
-        }
-
+        this.setState({
+            items: filteredItems,
+            itemsOriginal: itemslist,
+            loading: false,
+            haveGranularAccess: true,
+            userRoleList: this.props.userRoleList
+        });
     }
-
-    async getUserRoles() {
-        let requestUrl = 'api/Roles';
-        let options = {
-            method: "GET",
-            headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() }
-        };
-        let userRoleList = [];
+    
+    async getOppDetails(id) {
         try {
-            let response = await fetch(requestUrl, options);
+            let response = await this.apiService.callApi('Opportunity', 'GET', { query: `id=${id}` });
+            let data = await response.json();
             if (response.ok) {
-                let data = await response.json();
-                for (let i = 0; i < data.length; i++) {
-                    let userRole = {};
-                    userRole.id = data[i].id;
-                    userRole.adGroupName = data[i].adGroupName;
-                    userRole.displayName = data[i].displayName;
-                    userRole.permissions = data[i].permissions;
-                    userRole.teamsMembership = data[i].teamsMembership;
-                    userRoleList.push(userRole);
-                }
-                this.setState({ userRoleList: userRoleList });
-                console.log("Administration_getUserRoles userRoleList lenght: " + userRoleList.length);
+                return data;
             }
-        } catch (err) {
-            this.errorHandler(err, "Opportunities_getOpportunityIndex");
-        } finally {
-            this.setState({
-                userRoleList: userRoleList,
-                loading: false
-            });
+            else {
+                throw new Error(data.error.message);
+            }
+        }
+        catch (e) {
+            throw new Error(`Error retrieving oppDetails: ${e.message}`);
         }
     }
 
-    
+    async updateOpportunity(opportunity)
+    {
+        try
+        {
+            this.setState({ refreshing: true });
 
-    
+            let response = await this.apiService.callApi('Opportunity', 'PATCH', { body: JSON.stringify(opportunity) });
 
-
-    getOppDetails(id) {
-        return new Promise((resolve, reject) => {
-            let requestUrl = 'api/Opportunity/?id=' + id;
-            fetch(requestUrl, {
-                method: "GET",
-                headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() }
-            })
-                .then(response => response.json())
-                .then(data => {
-                    try {
-                        resolve(data);
-                    }
-                    catch (err) {
-                        console.log(err);
-                    }
-                });
-        });
+            if (response.ok)
+            {
+                let items = this.state.items;
+                let updatedItems = items.filter(item => item.opportunity.opportunityState !== 11);
+                this.setState({ refreshing: false, items: updatedItems });
+            }
+            else
+            {
+                this.fetchResponseHandler(response, "Administration_updateOpportunity_fetch");
+            }
+        }
+        catch (err)
+        {
+            this.errorHandler(err, "Administration_updateOpportunity");
+            this.setState({ refreshing: false });
+        }
     }
-
-
-    updateOpportunity(opportunity) {
-        return new Promise((resolve, reject) => {
-            let requestUrl = 'api/opportunity';
-
-            var options = {
-                method: "PATCH",
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    'authorization': 'Bearer    ' + this.authHelper.getWebApiToken()
-                },
-                body: JSON.stringify(opportunity)
-            };
-
-            this.setState({
-                refreshing: true
-            });
-
-            fetch(requestUrl, options)
-                .then(response => this.fetchResponseHandler(response, "Administration_updateOpportunity_fetch"))
-                .then(data => {
-                    this.setState({
-                        refreshing: false
-                    });
-                    this.getOpportunityIndex();
-                    resolve(true);
-                })
-                .catch(err => {
-                    this.errorHandler(err, "Administration_updateOpportunity");
-                    this.setState({
-                        refreshing: false
-                    });
-                    reject(false);
-                });
-        });
-
-    }
-
 
     showMessageBar(text, messageBarType) {
         this.setState({
@@ -341,19 +194,13 @@ export class AdminAllOpportunities extends Component {
                 text: text
             }
         });
-
     }
 
     hideMessageBar() {
-        this.setState({
-            result: null
-        });
+        this.setState({ result: null });
     }
 
-
     //Event handlers
-
-
     // Filter by Templatename
     _onFilterByOpportunityName(text) {
         const items = this.state.itemsOriginal;
@@ -404,7 +251,6 @@ export class AdminAllOpportunities extends Component {
                 .then(oppData => {
                     this.setState({ items: allItems });
                     oppData.opportunityState = 11; //set the State to archived
-                    //this.setState({ items: items });
                     this.updateOpportunity(oppData);
                 })
                 .then(result => {
@@ -413,20 +259,20 @@ export class AdminAllOpportunities extends Component {
                         allItems[j].statusValue = 11;
                         allItems[j].status = 'archived';
                         this.setState({ items: allItems });
-                        this.setState({ items: selectedItems });
                     }
+                })
+                .catch(err => {
+                    console.log("AdminAllOpportunities_archiveOpportunity error: ", err);
+                    this.setState({ refreshing: false });
                 });
 
         } // end of outside for loop
-
     }
 
     render() {
         //const items = this.state.items;
         let showArchiveButton = this._selection.getSelection().length > 0 ? true : false;
-
         const { columns, isCompactMode, items } = this.state;
-
 
         return (
             <div className='ms-Grid'>
@@ -466,16 +312,12 @@ export class AdminAllOpportunities extends Component {
                     <div className='ms-Grid-col ms-sm12 ms-md12 ms-lg12'>
                         {
                             this.state.result &&
-                            <MessageBar
-                                messageBarType={this.state.result.type}
+                            <MessageBar messageBarType={this.state.result.type}
                                 onDismiss={this.hideMessageBar.bind(this)}
-                                isMultiline={false}
-                                dismissButtonAriaLabel='Close'
-                            >
+                                isMultiline={false} dismissButtonAriaLabel='Close'>
                                 {this.state.result.text}
                             </MessageBar>
                         }
-
                         {
                             this.state.loading ?
                                 <div>
@@ -505,14 +347,10 @@ export class AdminAllOpportunities extends Component {
                                     </div>
                                     :
                                     <div><Trans>noOpportunities</Trans></div>
-
                         }
                     </div>
-
                 </div>
-
             </div>
         );
     }
-
 }

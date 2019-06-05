@@ -129,21 +129,22 @@
         if(!$DelegatedPermissions)
         {
             $DelegatedPermissions =
-                '64a6cdd6-aab1-4aaf-94b8-3cc8405e90d0',
-                '7427e0e9-2fba-42fe-b0c0-848c9e6a8182',
-                '37f7f235-527c-4136-accd-4a02d197296e',
-                '14dad69e-099b-42c9-810b-d002981feec1',
-                'e1fe6dd8-ba31-4d61-89e7-88639da4683d',
-                '1ca167d5-1655-44a1-8adf-1414072e1ef9' # AppCatalog.ReadWrite.All
+                '64a6cdd6-aab1-4aaf-94b8-3cc8405e90d0', # email
+                '7427e0e9-2fba-42fe-b0c0-848c9e6a8182', # offline_access
+                '37f7f235-527c-4136-accd-4a02d197296e', # openid
+                '14dad69e-099b-42c9-810b-d002981feec1', # profile
+                'e1fe6dd8-ba31-4d61-89e7-88639da4683d', # User.Read
+                '4e46008b-f24c-477d-8fff-7bb4ec7aafe0', # Group.ReadWrite.All
+                '1ca167d5-1655-44a1-8adf-1414072e1ef9'  # AppCatalog.ReadWrite.All
         }
 
         if(!$ApplicationPermissions)
         {
             $ApplicationPermissions =
-                '75359482-378d-4052-8f01-80520e7db3cd',
-                '62a82d76-70ea-41e2-9197-370581804d09',
-                '0c0bf378-bf22-4481-8f81-9e89a9b4960a',
-                '741f803b-c850-494e-b5df-cde7c675a1ca'
+                '75359482-378d-4052-8f01-80520e7db3cd', # Files.ReadWrite.All
+                '62a82d76-70ea-41e2-9197-370581804d09', # Group.ReadWrite.All
+                '0c0bf378-bf22-4481-8f81-9e89a9b4960a', # Sites.Manage.All
+                '741f803b-c850-494e-b5df-cde7c675a1ca'  # User.ReadWrite.All
         }
 
         $ofType = [System.Linq.Enumerable].GetMethod("OfType").MakeGenericMethod([System.Object]);

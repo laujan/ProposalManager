@@ -3,6 +3,8 @@
 *  See LICENSE in the source repository root for complete license information. 
 */
 
+/* eslint-disable radix */
+
 import React, { Component } from 'react';
 import { Label } from 'office-ui-fabric-react/lib/Label';
 import { EmployeeStatusCard } from '../../components-teams/general/Opportunity/EmployeeStatusCard';
@@ -24,7 +26,6 @@ export class Workflow extends Component {
     constructor(props) {
         super(props);
         this.authHelper = window.authHelper;
-        this.sdkHelper = window.sdkHelper;
         this.utils = window.utils;
 
         this.state = {

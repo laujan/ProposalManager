@@ -16,17 +16,12 @@ export class NewOpportunityOthers extends Component {
     constructor(props) {
         super(props);
 
-        this.sdkHelper = window.sdkHelper;
-        this.authHelper = window.authHelper;
-        this.utils = window.utils;
-
         let teamlist = [];
         this.props.teamMembers.forEach(element => {
             element.userRoles.forEach((userrole) => {
                 userrole.permissions.forEach((per) => {
-                    if (per.name.toLowerCase() === "Opportunity_ReadWrite_Dealtype".toLocaleLowerCase()) {
-                        console.log("NewOpportunityOther_filterUserProfiles_element : ", element);
-                        if (!teamlist.includes(element)) teamlist.push(element);
+                    if (per.name.toLowerCase() === "Opportunity_ReadWrite_Dealtype".toLocaleLowerCase() && !teamlist.includes(element)) {
+                        teamlist.push(element);
                     }
                 });
             });
@@ -38,7 +33,6 @@ export class NewOpportunityOthers extends Component {
             showModal: false,
             currentPicker: 1,
             delayResults: false,
-
             adGroupUsers: [],
             templateList: this.props.templateList,
             templateItems: this.props.templateItems ,// will have all template list with all process
@@ -50,20 +44,17 @@ export class NewOpportunityOthers extends Component {
     
     getSelectedUsers() {
         // Wave4 changes - who has "opportunity_edit_team_member" permission dispaly those user as selected in dropdown 
-        console.log(this.opportunity.teamMembers);
         let selectedLO = [];
         this.opportunity.teamMembers.forEach(element => {
             element.permissions.forEach((userrole) => {
-                if (userrole.name.toLowerCase() === "Opportunity_ReadWrite_Dealtype".toLocaleLowerCase()) {
-                        console.log("NewOpportunityOther_filterUserProfiles_element : ", element);
-                    if (!selectedLO.includes(element)) selectedLO.push(element);
+                if (userrole.name.toLowerCase() === "Opportunity_ReadWrite_Dealtype".toLocaleLowerCase() && !selectedLO.includes(element)) {
+                        selectedLO.push(element);
                     }
             });
         });
         let tempArray = [];
         let filteredLoUser = JSON.parse(JSON.stringify(selectedLO));
         filteredLoUser = filteredLoUser.filter(obj => {
-            console.log(obj);
             let key = obj.displayName.toLowerCase() + obj.adGroupName.toLowerCase();
             if (!tempArray.includes(key)) {
                 obj.text = obj.displayName;
@@ -71,13 +62,11 @@ export class NewOpportunityOthers extends Component {
                 return obj;
             }
         });
-        console.log(filteredLoUser);
-        return filteredLoUser; // this.opportunity.teamMembers.filter(x => x.permissions.includes("Opportunity_ReadWrite_Dealtype"));
+        
+        return filteredLoUser; 
     }
 
     onChangeLoanOfficer(value) {
-        console.log("NewOpportunityOther_filterUserProfiles : ", value);
-
         let updatedTeamMembers = JSON.parse(JSON.stringify(this.opportunity.teamMembers));
 
         updatedTeamMembers = this.opportunity.teamMembers.filter(x => {
@@ -85,9 +74,7 @@ export class NewOpportunityOthers extends Component {
                 return x;
         });
 
-        console.log("NewOpportunityOther_filterUserProfiles : ", updatedTeamMembers);
         if (value.length > 0) {
-            
            let role = value[0].userRoles.find(role => {
                 if (role.permissions.find(permission => permission.name === "Opportunity_ReadWrite_Dealtype"))
                     return role.id;
@@ -101,8 +88,6 @@ export class NewOpportunityOthers extends Component {
             updatedTeamMembers.splice(-2,2);
         }
         this.opportunity.teamMembers = updatedTeamMembers;
-        console.log(this.opportunity.teamMembers);
-        // let disableSubmit = this.utils.getLoanOficers(this.opportunity.teamMembers).length>0?false:true;
         let selLO = [];
         this.opportunity.teamMembers.forEach(element => {
             element.permissions.forEach((userrole) => {
@@ -112,9 +97,7 @@ export class NewOpportunityOthers extends Component {
             });
         });
         let disableSubmit = selLO.length > 0 ? false : true;
-        console.log("NewOpportunityOther_filterUserProfiles : ", disableSubmit);
         this.setState({ disableSubmit });
-        
     }
 
     addBaseProcessPersonal(value,role,processstep){
@@ -141,16 +124,13 @@ export class NewOpportunityOthers extends Component {
         let selTemplate = this.state.templateItems.filter(function (d) {
             return d.id === e.key;
         });
-        console.log(selTemplate);
         this.opportunity.template = selTemplate[0];
-        console.log(this.opportunity);
     }
 
     onBlurProperty(e,key) {
         if (e.target.value.length !== 0) {
             this.opportunity.metaDataFields.forEach(obj=>{
                 if(obj.id===key){
-                    console.log("NewOpportunityOthers_onBlurProperty : ", obj.id);
                     obj.values=e.target.value;
                 }
             });
@@ -179,12 +159,10 @@ export class NewOpportunityOthers extends Component {
         return metaDataComponents;
     }
 
-
     render() {
 
         let selectedUsers = this.getSelectedUsers();
         let disableSubmit = selectedUsers.length > 0 ? false : true;
-        console.log("NewOpportunityOther_getSelectedUser : ", disableSubmit);
         disableSubmit = this.setState.disableSubmit ? this.setState.disableSubmit : disableSubmit;
 
         let loanOfficerADName =  <Trans>loanOfficer</Trans>; //TODO from appsettings
@@ -226,25 +204,18 @@ export class NewOpportunityOthers extends Component {
                             </div>
                         </div>
                 }
-
-
                 <div className='ms-Grid'>
                     <div className='ms-grid-row'>
                         <h3 className="pageheading">{loanOfficerADName}</h3>
                         <div className='ms-lg12 ibox-content pb20'>
                             <div className='docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg6'>
-                                <PeoplePickerTeamMembers teamMembers={this.state.teamMembers} defaultSelectedUsers={selectedUsers} onChange={(e) => this.onChangeLoanOfficer(e)} />
+                                <PeoplePickerTeamMembers teamMembers={this.state.teamMembers} defaultSelectedUsers={selectedUsers} onChange={(e) => this.onChangeLoanOfficer(e)} apiService={this.props.apiService}/>
                             </div>
                         </div>
-
                     </div>
-
-
                 </div>
 
                 <div className='ms-Grid'>
-
-
                     <div className='ms-grid-row '>
                         <div className='ms-Grid-col ms-sm6 ms-md6 ms-lg6 pb20'><br />
                             <PrimaryButton className='backbutton pull-left' onClick={this.props.onClickBack}><Trans>back</Trans></PrimaryButton>
@@ -254,7 +225,6 @@ export class NewOpportunityOthers extends Component {
                         </div>
                     </div><br /><br />
                 </div>
-
             </div>
         );
     }

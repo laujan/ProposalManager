@@ -9,7 +9,7 @@ import { Trans } from "react-i18next";
 import { Modal } from 'office-ui-fabric-react/lib/Modal';
 import { Spinner, SpinnerSize } from 'office-ui-fabric-react/lib/Spinner';
 import { MessageBar } from 'office-ui-fabric-react/lib/MessageBar';
-import { PreviewTemplate } from './PreviewTemplate'; 
+import { PreviewTemplate } from './PreviewTemplate';
 
 export default function ShowPreviewTemplateModel() {
     console.log("ShowPreviewTemplateModel==>,", this.state);
@@ -36,15 +36,12 @@ export default function ShowPreviewTemplateModel() {
                 </div>
             </div>
             <div className="ms-modalExample-body">
-
                 <div className="ms-Grid-row">
                     <div className='ms-Grid-col ms-sm6 ms-md6 ms-lg12 ibox-content'>
                         <div className="ms-Grid-row bg-white">
                             <PreviewTemplate templateObject={this.state.templateObj} />
-
                         </div>
                     </div>
-
                 </div>
                 <div className="ms-Grid-row">
                     <div className='ms-Grid-col ms-sm6 ms-md6 ms-lg9'>
@@ -71,6 +68,5 @@ export default function ShowPreviewTemplateModel() {
                     </div>
                 </div>
             </div>
-
         </Modal>);
 }

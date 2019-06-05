@@ -14,12 +14,14 @@ import { MessageBar, MessageBarType } from 'office-ui-fabric-react/lib/MessageBa
 import { Trans } from "react-i18next";
 
 export class Tasks extends Component {
-    displayName = Tasks.name
+    displayName = Tasks.name;
 
     constructor(props) {
         super(props);
         this.utils = new Utils();
         this.authHelper = window.authHelper;
+        this.apiService = this.props.apiService;
+
         const columns = [
             {
                 key: 'column1',
@@ -83,16 +85,9 @@ export class Tasks extends Component {
         let items = this.state.items.slice(0);
         let index = items.findIndex(tasks => tasks.name.toLowerCase() === value.toLowerCase());
         if (index !== -1) {
-            this.setState({
-                isUpdate: false,
-                isUpdateMsg: true,
-                MessagebarText: <Trans>tasksExist</Trans>,
-                MessageBarType: MessageBarType.error
-            });
-            setTimeout(function () {
-                this.setMessage(false, false, "", "");
-                this.setState({ items });
-            }.bind(this), 2000);
+            this.setMessage(false, true, MessageBarType.error, <Trans>tasksExist</Trans>);
+            this.setState({ items });
+
             flag = true;
         }
         return flag;
@@ -116,87 +111,80 @@ export class Tasks extends Component {
     }
 
     setMessage(isUpdate, isUpdateMsg, MessageBarType, MessagebarText) {
+        //Show message
         this.setState({ isUpdate, isUpdateMsg, MessageBarType, MessagebarText });
+
+        //Schedule message hide
+        setTimeout(function () {
+            this.setState({ isUpdate: false, isUpdateMsg: false, MessageBarType: "", MessagebarText: "" });
+        }.bind(this), 2000);
     }
 
     async getTasks() {
-        let items = [], loading = false;
-        try {
-            let requestUrl = 'api/Tasks';
-            let response = await fetch(requestUrl, {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-                method: "GET",
-                headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() }
+        this.apiService.callApi('Tasks', 'GET')
+            .then(async (response) => {
+                let data = await this.utils.handleErrors(response).json();
+                let items = [];
+
+                if (typeof data === "string") {
+                    this.setMessage(false, true, MessageBarType.info, <Trans>itemsNotFound</Trans>);
+                }
+                else {
+                    items = data.map(tasks => { return { "id": tasks.id, "name": tasks.name }; });
+                    this.setState({ items });
+                }
+            })
+            .catch(error => {
+                this.setMessage(false, true, MessageBarType.error, error.message);
+            })
+            .finally(() => {
+                this.setState({ loading: false });
             });
-            let data = await this.utils.handleErrors(response).json();
-            if (typeof data === "string") {
-                this.setMessage(false, true, MessageBarType.info, <Trans>itemsNotFound</Trans>);
-                return true;
-            }
-            items = data.map(tasks => { return { "id": tasks.id, "name": tasks.name }; });
-        } catch (error) {
-            this.setMessage(false, true, MessageBarType.error, error.message);
-        } finally {
-            this.setState({ items, loading });
-            setTimeout(function () { this.setMessage(false, false, "", ""); }.bind(this), 2000);
-        }
     }
 
     async onBlurTasksName(e, item) {
         this.setState({ isUpdate: true });
+
         let id = item.id;
         let value = e.target.value;
-        let requestUpdUrl = 'api/Tasks';
         let method = item.name.length === 0 ? "POST" : "PATCH";
 
-        try {
-            // Checking item value is null
-            if (parseInt(value.length) === 0) {
-                this.setMessage(false, true, MessageBarType.error, <Trans>tasksCannotbeEmpty</Trans>);
-                return;
-            }
-            //Checking item is already present
-            if (this.checkTasksIsAlreadyPresent(value)) return;
-
-            let response = await fetch(requestUpdUrl, {
-                method: method,
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    'authorization': 'Bearer    ' + window.authHelper.getWebApiToken()
-                },
-                body: JSON.stringify({ "id": id, "name": value })
-            });
-            response = this.utils.handleErrors(response);
-            this.setMessage(false, true, MessageBarType.success, method === "PATCH" ? <Trans>tasksUpdatedSuccess</Trans> : <Trans>tasksAddedSuccess</Trans>);
-        } catch (error) {
-            this.setMessage(false, true, MessageBarType.error, <Trans>errorOoccuredPleaseTryAgain</Trans> + " " + error.message);
-        } finally {
-            setTimeout(function () { this.setMessage(false, false, "", ""); }.bind(this), 2000);
-            await this.getTasks();
+        // Checking item value is null
+        if (parseInt(value.length) === 0) {
+            this.setMessage(false, true, MessageBarType.error, <Trans>tasksCannotbeEmpty</Trans>);
+            return;
         }
+
+        //Checking item is already present
+        if (this.checkTasksIsAlreadyPresent(value)) return;
+
+        this.apiService.callApi('Tasks', method, { body: JSON.stringify({ "id": id, "name": value }) })
+            .then(async (response) => {
+                response = this.utils.handleErrors(response);
+                this.setMessage(false, true, MessageBarType.success, method === "PATCH" ? <Trans>tasksUpdatedSuccess</Trans> : <Trans>tasksAddedSuccess</Trans>);
+            })
+            .catch(error => {
+                this.setMessage(false, true, MessageBarType.error, <Trans>errorOoccuredPleaseTryAgain</Trans> + " " + error.message);
+            })
+            .finally(async () => {
+                await this.getTasks();
+            });
     }
 
     async deleteRow(tasksItem) {
         this.setState({ isUpdate: true });
-        let requestUpdUrl = 'api/Tasks/' + tasksItem.id;
-        try {
-            let response = await fetch(requestUpdUrl, {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-                method: "DELETE",
-                headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() }
+
+        this.apiService.callApi('Tasks', "DELETE", { id: tasksItem.id })
+            .then(async (response) => {
+                response = this.utils.handleErrors(response);
+                this.setMessage(false, true, MessageBarType.success, <Trans>tasksDeletedSuccess</Trans>);
+            })
+            .catch(error => {
+                this.setMessage(false, true, MessageBarType.error, <Trans>errorOoccuredPleaseTryAgain</Trans> + " " + error.message);
+            })
+            .finally(async () => {
+                await this.getTasks();
             });
-            response = this.utils.handleErrors(response);
-            this.setMessage(false, true, MessageBarType.success, <Trans>tasksDeletedSuccess</Trans>);
-        } catch (error) {
-            this.setMessage(false, true, MessageBarType.error, <Trans>errorOoccuredPleaseTryAgain</Trans> + " " + error.message);
-        } finally {
-            setTimeout(function () { this.setMessage(false, false, "", ""); }.bind(this), 2000);
-            await this.getTasks();
-        }
-        return;
     }
 
     render() {

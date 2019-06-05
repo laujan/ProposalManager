@@ -9,6 +9,7 @@ using ApplicationCore;
 using ApplicationCore.Interfaces;
 using Infrastructure.GraphApi;
 using Infrastructure.Helpers;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace Infrastructure.Services
 {
@@ -18,7 +19,8 @@ namespace Infrastructure.Services
             ILogger<GraphSharePointBaseService> logger,
             IOptionsMonitor<AppOptions> appOptions,
             IGraphClientAppContext graphClientContext,
-            SharePointListsSchemaHelper sharePointListsSchemaHelper) : base(logger, appOptions, graphClientContext)
+            SharePointListsSchemaHelper sharePointListsSchemaHelper,
+            IMemoryCache memoryCache) : base(logger, appOptions, graphClientContext, memoryCache)
         {
         }
 
@@ -30,7 +32,8 @@ namespace Infrastructure.Services
         public GraphSharePointUserService(
             ILogger<GraphSharePointBaseService> logger,
             IOptionsMonitor<AppOptions> appOptions,
-            IGraphClientUserContext graphClientContext) : base(logger, appOptions, graphClientContext)
+            IGraphClientUserContext graphClientContext,
+            IMemoryCache memoryCache) : base(logger, appOptions, graphClientContext, memoryCache)
         {
         }
     }

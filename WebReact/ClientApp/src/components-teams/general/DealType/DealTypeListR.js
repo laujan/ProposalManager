@@ -30,8 +30,8 @@ export class DealTypeListR extends Component {
     constructor(props) {
         super(props);
 
-        this.sdkHelper = window.sdkHelper;
         this.authHelper = window.authHelper;
+        this.apiService = this.props.apiService;
         this.accessGranted = false;
         const columns = [
             {
@@ -97,16 +97,12 @@ export class DealTypeListR extends Component {
 
         this.state = {
             loading: true,
-            channelName: "",
             columns: columns,
-            //selectionDetails: this._getSelectionDetails(),
-            selectedTemplateCount: 0,
             filterTemplateName: '',
             items: [],
             itemsOriginal: [],
             isUpdateMsg: false,
-            MessageBarType: MessageBarType.success,
-            haveGranularAccess: false
+            MessageBarType: MessageBarType.success
         };
 
         this._onFilterByTemplateNameChanged = this._onFilterByTemplateNameChanged.bind(this);
@@ -130,52 +126,46 @@ export class DealTypeListR extends Component {
     }
 
     async getDealTypeLists() {
-        let requestUrl = "api/template/";
-        let loading = false;
         let dealTypeItemList = [];
-        let options = {
-            method: "GET",
-            headers: { 'authorization': 'Bearer    ' + window.authHelper.getWebApiToken() }
-        };
 
-        try {
-            let response = await fetch(requestUrl, options);
-            if (response.ok) {
-                let data = await response.json();
-                for (let i = 0; i < data.itemsList.length; i++) {
-                    if (data.itemsList[i].defaultTemplate !== true) {
-                        data.itemsList[i].createdDisplayName = data.itemsList[i].createdBy.displayName;
-                        data.itemsList[i].defaultTemplate = data.itemsList[i].defaultTemplate.toString();
-                        dealTypeItemList.push(data.itemsList[i]);
+        this.apiService.callApi('Template', 'GET')
+            .then(async (response) => {
+                if (response.ok) {
+                    let data = await response.json();
+                    for (let i = 0; i < data.itemsList.length; i++) {
+                        if (data.itemsList[i].defaultTemplate !== true) {
+                            data.itemsList[i].createdDisplayName = data.itemsList[i].createdBy.displayName;
+                            data.itemsList[i].defaultTemplate = data.itemsList[i].defaultTemplate.toString();
+                            dealTypeItemList.push(data.itemsList[i]);
+                        }
                     }
-                    
                 }
-            }
-            console.log("DealTypeList getDealTypeLists: " , dealTypeItemList);
-        } catch (err) {
-            console.log("DealTypeList getDealTypeLists: " + err);
-        } finally {
-            this.setState({
-                loading: loading,
-                items: dealTypeItemList,
-                itemsOriginal: dealTypeItemList
+            })
+            .catch(error => {
+                console.log("getDealTypeLists: " + error);
+            })
+            .finally(() => {
+                this.setState({
+                    loading: false,
+                    items: dealTypeItemList,
+                    itemsOriginal: dealTypeItemList
+                });
             });
-        }
     }
 
-    errorHandler(err, referenceCall) {
-        console.log("Get DealTypeList Ref: " + referenceCall + " error: " + JSON.stringify(err));
+    setMessage(isUpdate, isUpdateMsg, MessageBarType, MessagebarText) {
+        //Show message
+        this.setState({ isUpdate, isUpdateMsg, MessageBarType, MessagebarText });
+
+        //Schedule message hide
+        setTimeout(function () {
+            this.setState({ isUpdate: false, isUpdateMsg: false, MessageBarType: "", MessagebarText: "" });
+        }.bind(this), 2000);
     }
 
     _selection = new Selection({
-        onSelectionChanged: () => this.setState({ selectionDetails: this._getSelectionDetails() })
+        onSelectionChanged: () => this.setState({ selectionDetails: this._selection.getSelectedCount() })
     });
-
-    _getSelectionDetails() {
-        const selectionCount = this._selection.getSelectedCount();
-        return selectionCount;
-
-    }
 
     // Filter by Templatename
     _onFilterByTemplateNameChanged(text) {
@@ -191,38 +181,22 @@ export class DealTypeListR extends Component {
 
     deleteTemplate(items) {
         this.setState({ isUpdate: true });
-        // API Delete call        
-        this.requestUrl = 'api/Template/' + items[0].id;
 
-        fetch(this.requestUrl, {
-            method: "DELETE",
-            headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() }
-        })
-            .catch(error => console.error('Error:', error))
-            .then(response => {
+        this.apiService.callApi('Template', 'DELETE', { id: items[0].id })
+            .then(async (response) => {
                 if (response.ok) {
                     let currentItems = this.state.items.filter(x => x.id !== items[0].id);
+                    this.setState({ items: currentItems, itemsOriginal: currentItems });
 
-                    this.setState({
-                        items: currentItems,
-                        itemsOriginal: currentItems,
-                        MessagebarText: <Trans>dealTypeDeletedSuccess</Trans>,
-                        isUpdate: false,
-                        isUpdateMsg: true
-                    });
-
-                    setTimeout(function () { this.setState({ isUpdateMsg: false, MessageBarType: MessageBarType.success, MessagebarText: "" }); }.bind(this), 3000);
-                    return response.json;
+                    this.setMessage(false, true, MessageBarType.success, <Trans>dealTypeDeletedSuccess</Trans>);
                 } else {
-                    this.setState({
-                        MessagebarText: <Trans>errorOoccuredPleaseTryAgain</Trans>,
-                        isUpdate: false,
-                        isUpdateMsg: true
-                    });
-                    setTimeout(function () { this.setState({ isUpdateMsg: false, MessageBarType: MessageBarType.error, MessagebarText: "" }); }.bind(this), 3000);
+                    this.setMessage(false, true, MessageBarType.error, <Trans>errorOoccuredPleaseTryAgain</Trans>);
                 }
-            }).then(json => {
-                //console.log(json);
+            })
+            .catch(error => {
+                console.error('deleteTemplate: ', error);
+            })
+            .finally(() => {
                 this.setState({ isUpdate: false });
             });
     }
@@ -233,7 +207,7 @@ export class DealTypeListR extends Component {
 
     render() {
         const { columns } = this.state;
-        let showDeleteButton = this._selection.getSelection().length > 0 ? true : false;
+        let showDeleteButton = this._selection.getSelection().length > 0;
         if (this.state.loading) {
             return (
                 <div className='ms-BasicSpinnersExample ibox-content pt15 '>
@@ -307,7 +281,7 @@ export class DealTypeListR extends Component {
                                                 setKey="set"
                                                 layoutMode={DetailsListLayoutMode.fixedColumns}
                                                 selection={this._selection}
-                                                selectionPreservedOnEmptyClick={true}
+                                                selectionPreservedOnEmptyClick
                                                 ariaLabelForSelectionColumn="Toggle selection"
                                                 ariaLabelForSelectAllCheckbox="Toggle selection for all items"
                                                 onItemInvoked={this._onItemInvoked}
@@ -319,8 +293,6 @@ export class DealTypeListR extends Component {
                                 }
                             </div>
                         </div>
-
-
                     </div>
                     :
                     <Accessdenied />

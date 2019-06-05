@@ -7,17 +7,15 @@ import { PrimaryButton } from 'office-ui-fabric-react/lib/Button';
 import { TextField } from 'office-ui-fabric-react/lib/TextField';
 import { Spinner, SpinnerSize } from 'office-ui-fabric-react/lib/Spinner';
 import { I18n, Trans } from "react-i18next";
-import { Label } from 'office-ui-fabric-react/lib/Label';
 import { MessageBar, MessageBarType } from 'office-ui-fabric-react/lib/MessageBar';
-//import  appSettingsObject  from './helpers/AppSettings';
 
 export class Setup extends Component {
     displayName = Setup.name
 
     constructor(props) {
         super(props);
-        this.sdkHelper = window.sdkHelper;
-        this.authHelper = window.authHelper;
+        this.apiService = this.props.apiService;
+        
         console.log("Setup : Constructor");
         this.state = {
             loading: true,
@@ -99,20 +97,11 @@ export class Setup extends Component {
         this.onBlurOnBISettings = this.onBlurOnBISettings.bind(this);
         this.onBlurOnDocumentIdActivatorSettings = this.onBlurOnDocumentIdActivatorSettings.bind(this);
         this.loadDataForPermision_Process_Roles = this.loadDataForPermision_Process_Roles.bind(this);
-
-        this.setClientSettings().then();
     }
 
-
     async componentDidMount() {
-        this.authHelper.isAuthenticated();
-        this.authHelper.acquireGraphAdminTokenSilent()
-            .then(token => {
-                console.log(`Setup_componentDidMount acquireGraphAdminTokenSilent succeded: ${token}`);
-                })
-            .catch(err => { 
-                console.log(`Setup_componentDidMount acquireGraphAdminTokenSilent failed: ${err}`);
-            });
+        console.log("SetUp_componentDidMount");
+        await this.setClientSettings();
     }
 
     async setClientSettings() {
@@ -145,12 +134,18 @@ export class Setup extends Component {
                 ProposalManagement_Team[key] = value;
             }
         }
-        console.log("SetUp_componentDidMount : ",
-            ProposalManagement_Misc, ProposalManagement_Sharepoint, ProposalManagement_bot, ProposalManagement_BI, ProposalManagement_Team, DocumentIdActivator);
-        this.setState({
-            ProposalManagement_Misc, ProposalManagement_Sharepoint, ProposalManagement_bot, ProposalManagement_BI, ProposalManagement_Team, DocumentIdActivator
-            , loading: false
-        });
+
+        console.log("SetUp_setClientSettings: ", ProposalManagement_Misc, ProposalManagement_Sharepoint, ProposalManagement_bot, ProposalManagement_BI, ProposalManagement_Team, DocumentIdActivator);
+        this.setState(
+            {
+                ProposalManagement_Misc,
+                ProposalManagement_Sharepoint,
+                ProposalManagement_bot,
+                ProposalManagement_BI,
+                ProposalManagement_Team,
+                DocumentIdActivator,
+                loading: false
+            });
     }
 
     delay(ms) {
@@ -158,21 +153,13 @@ export class Setup extends Component {
     }
 
     async getClientSettings() {
-        let clientSettings = { "setupPage": "" };
         try {
             console.log("Setup_getClientSettings");
-            let requestUrl = 'api/Context/GetClientSettings';
-            let token = this.authHelper.getWebApiToken();
-            console.log("Setup_getClientSettings token==> ", token.length);
-            let data = await fetch(requestUrl, {
-                method: "GET",
-                headers: { 'authorization': 'Bearer ' + token }
-            });
-            let response = await data.json();
-            return response;
+            let data = await this.apiService.callApi('Context', 'GET', { id: 'GetClientSettings'});
+            return await data.json();
         } catch (error) {
             console.log("Setup_getClientSettings error: ", error.message);
-            return clientSettings;
+            return { "setupPage": "" };
         }
     }
 
@@ -297,20 +284,13 @@ export class Setup extends Component {
         this.setState({ finish: false });
     }
 
-    async UpdateAppSettings(key, value, token) {
+    async UpdateAppSettings(key, value) {
         try {
             console.log("SetUp_updateAppSettings");
             // check vaultbaseurl contains http(s) - remove it
             value = key === "VaultBaseUrl" ? value.replace(/https?:\/\//, "") : value;
-            let requestUrl = `api/Setup/${key}/${value}`;
-            let options = {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'authorization': `Bearer ${token}`
-                }
-            };
-            let data = await fetch(requestUrl, options);
+            
+            let data = await this.apiService.callApi('Setup', 'POST', { id: `${key}/${value}`});
             console.log("SetUp_updateAppSettings response: ", data);
             return true;
         } catch (error) {
@@ -319,24 +299,15 @@ export class Setup extends Component {
         }
     }
 
-    async UpdateDocumentIdActivatorSettings(key, value, token) {
+    async UpdateDocumentIdActivatorSettings(key, value) {
         try {
             console.log("SetUp_updateDocumentIdActivatorSettings");
-            let requestUrl = "api/Setup/documentid";
             let postData = {
                 key: key,
                 value: value
             };
 
-            let options = {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify(postData)
-            };
-            let data = await fetch(requestUrl, options);
+            let data = await this.apiService.callApi('Setup', 'POST', { id: 'documentId', body: JSON.stringify(postData) });
             console.log("SetUp_updateDocumentIdActivatorSettings response: ", data);
             return true;
         } catch (error) {
@@ -347,43 +318,20 @@ export class Setup extends Component {
 
     //Setp 3 & //Setp 4
     async SetAppSetting_JsonKeys(ProposalManagement, group, key = false) {
-        console.log("SetAppSetting_JsonKeys   : ", ProposalManagement);
+        console.log("SetAppSetting_JsonKeys: ", ProposalManagement);
         this.spinnerOff(group, true);
-        let token = this.authHelper.getWebApiToken();
         this.setSpinnerAndMsg(true, false, "");
 
-        let SharePointHostName = ProposalManagement.SharePointHostName;
-        let ProposalManagementRootSiteId = ProposalManagement.ProposalManagementRootSiteId;
-        let SharePointSiteRelativeName = ProposalManagement.SharePointSiteRelativeName;
-
         try {
-
             for (const Objkey of Object.keys(ProposalManagement)) {
                 try {
                     if (Objkey !== "ProposalManagementRootSiteId") {
-                        const contents = await this.UpdateAppSettings(Objkey, ProposalManagement[Objkey], token);
+                        const contents = await this.UpdateAppSettings(Objkey, ProposalManagement[Objkey]);
                         console.log(`SetAppSetting_JsonKeys_${Objkey} : `, contents);
                     }
                 } catch (error) {
                     console.log(`SetAppSetting_JsonKeys_${Objkey}_err : `, error.message);
                 }
-            }
-
-            let rootID = "";
-            if (SharePointHostName !== "" && SharePointSiteRelativeName !== "" && key) {
-                console.log("SetAppSetting_JsonKeys ProposalManagementRootSiteId ", SharePointHostName, SharePointSiteRelativeName, ProposalManagementRootSiteId);
-                let ProposalManagement_Sharepoint = { ...this.state.ProposalManagement_Sharepoint };
-                let rootIdObj = await this.sdkHelper.getSharepointRootId(SharePointHostName, SharePointSiteRelativeName);
-                console.log("ProposalManagementRootSiteId 1: ", rootIdObj);
-                if (rootIdObj) {
-                    rootID = rootIdObj.id;
-                    ProposalManagement_Sharepoint["ProposalManagementRootSiteId"] = rootID;
-                    this.setState({ ProposalManagement_Sharepoint });
-                    console.log("ProposalManagementRootSiteId 2: ", rootID);
-                    const contents = await this.UpdateAppSettings("ProposalManagementRootSiteId", rootID, token);
-                }
-            } else if (ProposalManagementRootSiteId) {
-                rootID = ProposalManagementRootSiteId;
             }
 
             this.setSpinnerAndMsg(false, true, "Updated", MessageBarType.success);
@@ -400,7 +348,7 @@ export class Setup extends Component {
         console.log("SetDocumentIdActivatorSetting_JsonKeys   : ", DocumentIdActivator);
         console.log("SetDocumentIdActivatorSetting_JsonKeys   : ", DocumentIdActivator.constructor.name);
         this.spinnerOff(group, true);
-        let token = this.authHelper.getWebApiToken();
+
         if (!DocumentIdActivator.SharePointAppId || !DocumentIdActivator.SharePointAppSecret) {
             alert("All fields are mandatory");
         }
@@ -410,7 +358,7 @@ export class Setup extends Component {
 
                 for (const Objkey of Object.keys(DocumentIdActivator)) {
                     try {
-                        const contents = await this.UpdateDocumentIdActivatorSettings(Objkey, DocumentIdActivator[Objkey], token);
+                        const contents = await this.UpdateDocumentIdActivatorSettings(Objkey, DocumentIdActivator[Objkey]);
                         console.log(`SetDocumentIdActivatorSetting_JsonKeys_${Objkey} : `, contents);
                     } catch (error) {
                         console.log(`SetDocumentIdActivatorSetting_JsonKeys_${Objkey}_err : `, error.message);
@@ -428,40 +376,10 @@ export class Setup extends Component {
         this.spinnerOff(group, false);
     }
 
-    async createTempFolder(siteId, token) {
-        try {
-            const { appSettings } = this.props;
-            const siteName = appSettings.sharePointSiteRelativeName;
-            console.log("Setup_createTempFolder", siteName);
-            let requestUrl = `api/Document/CreateTempFolder/${siteId}/tempFolder`;
-            let options = {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'authorization': `Bearer ${token}`
-                }
-            };
-            let data = await fetch(requestUrl, options);
-            console.log("Setup_createTempFolder response: ", data);
-            return true;
-        } catch (error) {
-            console.log("Setup_createTempFolder error: ", error.message);
-            return false;
-        }
-    }
-
-    async CreateAllLists(rootID, token) {
+    async CreateAllLists() {
         try {
             console.log("Setup_createAllLists");
-            let requestUrl = `api/Setup/CreateAllLists/${rootID}`;
-            let options = {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'authorization': `Bearer ${token}`
-                }
-            };
-            let data = await fetch(requestUrl, options);
+            let data = await this.apiService.callApi('Setup', 'POST', { id: 'CreateAllLists' });
             console.log("Setup_createAllLists response: ", data);
             return true;
         } catch (error) {
@@ -474,40 +392,14 @@ export class Setup extends Component {
     async CreateAdminPermissions() {
         this.setState({ renderStep_5: true });
         let AdGroupName = this.state.ADGroupName || "Proposal Manager Administrators";
-        let token = this.authHelper.getWebApiToken();
         this.setState({ renderStep_3: true });
         this.setSpinnerAndMsg(true, false, "");
 
         try {
-            // Set rootID
-            let ProposalManagement_Sharepoint = { ...this.state.ProposalManagement_Sharepoint };
-            let rootID = ProposalManagement_Sharepoint.ProposalManagementRootSiteId;
-            console.log("rootID:", rootID);
-            
-            if (rootID.length === 0) {
-                //let grapAdminToken = await this.authHelper.acquireGraphAdminTokenSilent();
-                let SharePointHostName = ProposalManagement_Sharepoint.SharePointHostName;
-                let SharePointSiteRelativeName = ProposalManagement_Sharepoint.SharePointSiteRelativeName;
-                let rootIdObj = await this.sdkHelper.getSharepointRootId(SharePointHostName, SharePointSiteRelativeName);
-                console.log("ProposalManagementRootSiteId 1: ", rootIdObj);
-                if (rootIdObj) {
-                    rootID = rootIdObj.id;
-                    ProposalManagement_Sharepoint["ProposalManagementRootSiteId"] = rootID;
-                    this.setState({ ProposalManagement_Sharepoint });
-                    console.log("ProposalManagementRootSiteId 2: ", rootID);
-                }
-            }
+            await this.UpdateAppSettings("UserProfileCacheExpiration", 30);
+            await this.UpdateAppSettings("SharePointListsPrefix", "e3_");
 
-            if (rootID.length === 0) {
-                throw new Error ("Sharepoint root site id cannot be empty");
-            }
-
-            await this.UpdateAppSettings("ProposalManagementRootSiteId", rootID, token);
-            await this.UpdateAppSettings("UserProfileCacheExpiration", 30, token);
-            await this.UpdateAppSettings("SharePointListsPrefix", "e3_", token);
-
-            await this.CreateAllLists(rootID, token);
-            await this.createTempFolder(rootID, token);
+            await this.CreateAllLists();
             await this.CreateProposalManagerAdminGroup(AdGroupName);
 
             await this.loadDataForPermision_Process_Roles();
@@ -516,7 +408,7 @@ export class Setup extends Component {
             if(!await this.CheckEverythingCreated()){
                 throw new Error ("Lists are not created");
             }
-            await this.UpdateAppSettings("SetupPage", "disabled", token);
+            await this.UpdateAppSettings("SetupPage", "disabled");
             
             let  ProposalManagement_Misc = JSON.parse(JSON.stringify(this.state.ProposalManagement_Misc));
             ProposalManagement_Misc.SetupPage = "disabled";
@@ -537,27 +429,21 @@ export class Setup extends Component {
 
     async CheckEverythingCreated(){
         try {
-            let items = [];
-            let requestUrl = 'api/MetaData';
-            let options = {
-                method: "GET",
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-                headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() }
-            };
-
-            let response = await fetch(requestUrl, options);
+           
+            let response = await this.apiService.callApi('MetaData', 'GET');
+            let data = await response.json();
             if (response.ok) {
-                let data = await response.json();
-                items = JSON.parse(JSON.stringify(data));
-            }else{
-                throw new Error("Meta data get api error");
-            }
-            if(items.length>10)
-                return true;
-            else{
-                throw new Error("Meta data is empty");
+                if (data.length > 10) {
+                    return true;
                 }
+                else {
+                    throw new Error("Meta data is empty");
+                }
+            }
+            else
+            {
+                throw new Error(`Meta data get api error: ${data.error.message}`);
+            }
         } catch (error) {
             console.log("everything creeted : ", error.message);
             return false;
@@ -565,47 +451,25 @@ export class Setup extends Component {
     }
        //Setp 1
     async CreateProposalManagerTeam(PMTeamName) {
-
-        let token = this.authHelper.getWebApiToken();
         try {
             console.log("Setup_CreateProposalManagerTeam", PMTeamName);
             if (PMTeamName) {
-                let requestUrl = `api/Setup/CreateProposalManagerTeam/${PMTeamName}`;
-                let options = {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'authorization': `Bearer ${token}`
-                    }
-                };
-                let data = await fetch(requestUrl, options);
-                
-
+                await this.apiService.callApi('Setup', 'POST', {id: `CreateProposalManagerTeam/${PMTeamName}` });
             } 
         } catch (error) {
             this.setSpinnerAndMsg(false, true, error.message, MessageBarType.error);
             console.log("Setup_CreateProposalManagerTeam error : ", error.message);
         }
-
     }
 
     //step 5
     async loadDataForPermision_Process_Roles() {
-        let token = this.authHelper.getWebApiToken();
         let requestUriArray = ["CreateSitePermissions","CreateSiteProcesses","CreateMetaDataList","CreateDefaultBusinessProcess"];
         try {
             console.log("Setup_loadDataForPermision_Process_Roles");
             for (const uri of requestUriArray) {
                 try {
-                    let requestUrl = `api/Setup/${uri}`;
-                    let options = {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'authorization': `Bearer ${token}`
-                        }
-                    };
-                    let data = await fetch(requestUrl, options);
+                    let data = await this.apiService.callApi('Setup', 'POST', { id: uri });
                     console.log("Setup_loadDataForPermision_Process_Roles response: ", data);
                 } catch (error) {
                     console.log(error.message);
@@ -620,20 +484,10 @@ export class Setup extends Component {
 
     //step 1
     async CreateProposalManagerAdminGroup(AdGroupName) {
-
-        let token = this.authHelper.getWebApiToken();
         try {
             console.log("Setup_CreateProposalManagerAdminGroup", AdGroupName);
             if (AdGroupName) {
-                let requestUrl = `api/Setup/CreateProposalManagerAdminGroup/${AdGroupName}`;
-                let options = {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'authorization': `Bearer ${token}`
-                    }
-                };
-                let data = await fetch(requestUrl, options);
+                let data = await this.apiService.callApi('Setup', 'POST', { id: `CreateProposalManagerAdminGroup/${AdGroupName}` });
                 console.log("Setup_CreateProposalManagerAdminGroup response: ", data);
                 return true;
             } else
@@ -846,7 +700,6 @@ export class Setup extends Component {
     renderStep_6() {
         let margin = { margin: '10px' };
         let bold = { 'fontWeight': 'bold' };
-        let disabled = Object.keys(this.state.ProposalManagement_bot).every(key => this.state.ProposalManagement_bot[key]);
         let placeholders = this.placeholderForProposalManager();
         let TextBoxViewList = Object.keys(this.state.ProposalManagement_bot).map(key => {
             if (key !== "BotServiceUrl")

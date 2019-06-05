@@ -3,6 +3,8 @@
 *  See LICENSE in the source repository root for complete license information. 
 */
 
+/* eslint-disable radix */
+
 import React, { Component } from 'react';
 import { Trans } from "react-i18next";
 import { Persona, PersonaSize } from 'office-ui-fabric-react/lib/Persona';
@@ -12,7 +14,7 @@ export class PreviewDealTypeR extends Component {
 
     constructor(props) {
         super(props);
-        console.log("constructor==>< PROPS ", this.props.dealTypeObject);
+        console.log("constructor PROPS: ", this.props.dealTypeObject);
     }
 
     dealTypeGroupList() {
@@ -25,7 +27,7 @@ export class PreviewDealTypeR extends Component {
             }
             tempObj[key].push(template.processes[index]);
         }
-        console.log("_processGrpObjtBasedOrderNo==>", tempObj);
+        console.log("_processGrpObjtBasedOrderNo: ", tempObj);
         return tempObj;
     }
 

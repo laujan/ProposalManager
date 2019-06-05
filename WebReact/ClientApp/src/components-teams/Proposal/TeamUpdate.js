@@ -21,8 +21,7 @@ export class TeamUpdate extends Component {
 	constructor(props) {
 		super(props);
 
-		this.sdkHelper = window.sdkHelper;
-		let teamName = this.props.OppName;
+		let teamName = this.props.oppName;
         let channelId = this.props.channelId;
         try {
 			/* Initialize the Teams library before any other SDK calls.

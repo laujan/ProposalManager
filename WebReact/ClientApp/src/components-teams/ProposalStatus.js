@@ -1,21 +1,16 @@
 import React, { Component } from 'react';
 import { TeamsComponentContext, Panel, PanelBody, PanelFooter, PanelHeader, ThemeStyle } from 'msteams-ui-components-react';
-import {
-    Spinner,
-    SpinnerSize
-} from 'office-ui-fabric-react/lib/Spinner';
+import { Spinner, SpinnerSize } from 'office-ui-fabric-react/lib/Spinner';
 import { DatePicker } from 'office-ui-fabric-react/lib/DatePicker';
 import { Dropdown } from 'office-ui-fabric-react/lib/Dropdown';
 import { getQueryVariable } from '../common';
 import { MessageBar, MessageBarType } from 'office-ui-fabric-react/lib/MessageBar';
-
 import { FocusZone, FocusZoneDirection } from 'office-ui-fabric-react/lib/FocusZone';
 import { List } from 'office-ui-fabric-react/lib/List';
-import { PeoplePickerTeamMembers } from '../components-teams/general/PeoplePickerTeamMembers';
+import { PeoplePickerTeamMembers } from '../components-teams/general/Opportunity/PeoplePickerTeamMembers';
 import './teams.css';
 import { Trans } from "react-i18next";
 import Accessdenied from '../helpers/AccessDenied';
-
 
 const DayPickerStrings = {
     months: [
@@ -75,22 +70,18 @@ const DayPickerStrings = {
     nextYearAriaLabel: 'Go to next year'
 };
 
-
 const oppStatusOptions = [{ "text": 'Not Started', "key": 0 },
 { "text": 'In Progress', "key": 1 },
 { "text": 'Blocked', "key": 2 },
 { "text": 'Completed', "key": 3 }];
 
-let teamContext = {};
-
 export class ProposalStatus extends Component {
     displayName = ProposalStatus.name
-    constructor() {
-        super();
+    constructor(props) {
+        super(props);
 
+        this.apiService = this.props.apiService;
         this.authHelper = window.authHelper;
-        this.sdkHelper = window.sdkHelper;
-        this.accessGranted = false;
         this.state = {
             fontSize: 16,
             theme: ThemeStyle.Light,
@@ -112,165 +103,107 @@ export class ProposalStatus extends Component {
         this._onRenderCell = this._onRenderCell.bind(this);
     }
 
-    componentDidMount() {
-        console.log("FormalProposal_componentDidMount isauth: " + this.authHelper.isAuthenticated());
-        if (!this.state.isAuthenticated) {
-            this.authHelper.callGetUserProfile()
-                .then(userProfile => {
-                    this.setState({
-                        userProfile: userProfile,
-                        loading: true
-                    });
-                });
-        }
-    }
-
-
-    componentDidUpdate() {
-        if (this.authHelper.isAuthenticated() && !this.accessGranted) {
-            console.log("FormalProposal_componentDidUpdate callCheckAccess");
-            this.accessGranted = true;
-            let teamName = getQueryVariable('teamName');
-            this.fnGetOpportunityData(teamName);
-        }
-    }
-
-    initialize({ groupId, channelName, teamName }) {
-        let tc = {
-            group: groupId,
-            channel: channelName,
-            team: teamName
-        };
-        teamContext = tc;
-
+    async componentDidMount() {
+        console.log("FormalProposal_componentDidMount");
+        let teamName = getQueryVariable('teamName');
         this.fnGetOpportunityData(teamName);
     }
 
-
     fnGetOpportunityData(teamName) {
-        return new Promise((resolve, reject) => {
-            // API - Fetch call
-            this.requestUrl = `api/Opportunity?name=${teamName}`;
-            fetch(this.requestUrl, {
-                method: "GET",
-                headers: { 'authorization': 'Bearer ' + window.authHelper.getWebApiToken() }
-            })
-                .then(response => response.json())
-                .then(data => {
-                    // If badrequest - user Access Denied 
-                    if (data.error && data.error.code.toLowerCase() === "badrequest") {
-                        this.setState({
-                            loading: false,
-                            haveGranularAccess: false
-                        });
-                        resolve(true);
-                    } else {
-                        // Start Check Access
-                        let permissionRequired = ["Opportunity_ReadWrite_All", "Opportunities_ReadWrite_All", "Administrator"];
-                        this.authHelper.callCheckAccess(permissionRequired).then(checkAccess => {
-                            if (checkAccess) {
-                                let peopleListAll = [];
-                                if (data.teamMembers.length > 0) {
-                                    for (let i = 0; i < data.teamMembers.length; i++) {
-                                        let people = {};
-                                        let item = data.teamMembers[i];
-                                        if (item.displayName !== "") {
-                                            people.key = item.id;
-                                            people.imageUrl = "";
-                                            people.text = item.displayName;
-                                            people.displayName = item.displayName;
-                                            people.primaryText = item.displayName;
-                                            people.userPrincipalName = item.userPrincipalName;
-                                            people.secondaryText = item.adGroupName;
-                                            people.userRole = item.adGroupName;
-                                            people.mail = item.mail;
-                                            people.phoneNumber = "";
-                                            peopleListAll.push(people);
-                                        }
-                                    }
-                                }
-                                let proposalSectionListArr = [];
-                                let proposalSectionList = data.proposalDocument.content.proposalSectionList;
-                                for (let p = 0; p < proposalSectionList.length; p++) {
-                                        proposalSectionList[p].owner.text = proposalSectionList[p].owner.displayName;
-                                        proposalSectionList[p].ddlStatusChange = (event) => this.ddlStatusChange(p);
-                                        proposalSectionListArr.push(proposalSectionList[p]);
-                                }
-
-                                this.setState({
-                                    loading: false,
-                                    proposalDocumentList: proposalSectionListArr,
-                                    teamMembers: data.teamMembers,
-                                    peopleList: peopleListAll, 
-                                    mostRecentlyUsed: peopleListAll.slice(0, 5),
-                                    oppData: data,
-                                    haveGranularAccess: true
-                                });
-                                resolve(true);
-
-                            } else {
-                                this.setState({
-                                    haveGranularAccess: false,
-                                    loading: false
-                                });
-                                resolve(true);
-                            }
-                        })
-                            .catch(err => {
-                                this.setState({
-                                    loading: false,
-                                    isReadOnly: true,
-                                    haveGranularAccess:false
-                                });
-                                reject(err);
-                            });
-
-                        // End Check Access
-                        
-                    }
-                })
-                .catch(function (err) {
-                    console.log("Error: OpportunityGetByName--");
-                    reject(err);
+        // API - Fetch call
+        this.apiService.callApi('Opportunity', 'GET', { query: `name=${teamName}` })
+            .then(response => response.json())
+            .then(data => {
+                // If badrequest - user Access Denied 
+                if (data.error && data.error.code.toLowerCase() === "badrequest") {
                     this.setState({
                         loading: false,
                         haveGranularAccess: false
                     });
+                } else {
+                    // Start Check Access
+                    let permissionRequired = ["Opportunity_ReadWrite_All", "Opportunities_ReadWrite_All", "Administrator"];
+                    this.authHelper.callCheckAccess(permissionRequired).then(checkAccess => {
+                        if (checkAccess) {
+                            let peopleListAll = [];
+                            if (data.teamMembers.length > 0) {
+                                for (let i = 0; i < data.teamMembers.length; i++) {
+                                    let people = {};
+                                    let item = data.teamMembers[i];
+                                    if (item.displayName !== "") {
+                                        people.key = item.id;
+                                        people.imageUrl = "";
+                                        people.text = item.displayName;
+                                        people.displayName = item.displayName;
+                                        people.primaryText = item.displayName;
+                                        people.userPrincipalName = item.userPrincipalName;
+                                        people.secondaryText = item.adGroupName;
+                                        people.userRole = item.adGroupName;
+                                        people.mail = item.mail;
+                                        people.phoneNumber = "";
+                                        peopleListAll.push(people);
+                                    }
+                                }
+                            }
+                            let proposalSectionListArr = [];
+                            let proposalSectionList = data.proposalDocument.content.proposalSectionList;
+                            for (let p = 0; p < proposalSectionList.length; p++) {
+                                proposalSectionList[p].owner.text = proposalSectionList[p].owner.displayName;
+                                proposalSectionList[p].ddlStatusChange = (event) => this.ddlStatusChange(p);
+                                proposalSectionListArr.push(proposalSectionList[p]);
+                            }
+
+                            this.setState({
+                                loading: false,
+                                proposalDocumentList: proposalSectionListArr,
+                                teamMembers: data.teamMembers,
+                                peopleList: peopleListAll,
+                                mostRecentlyUsed: peopleListAll.slice(0, 5),
+                                oppData: data,
+                                haveGranularAccess: true
+                            });
+                        } else {
+                            this.setState({
+                                haveGranularAccess: false,
+                                loading: false
+                            });
+                        }
+                    })
+                        .catch(err => {
+                            this.setState({
+                                loading: false,
+                                isReadOnly: true,
+                                haveGranularAccess: false
+                            });
+                        });
+
+                    // End Check Access
+
+                }
+            })
+            .catch(function (err) {
+                console.log("Error: OpportunityGetByName--");
+                this.setState({
+                    loading: false,
+                    haveGranularAccess: false
                 });
-
-
-        });
+            });
     }
-
 
     fnUpdateFormalProposal(oppViewData) {
         this.setState({ isUpdate: true, MessagebarText: <Trans>updating</Trans> });
-
-
         // API Update call        
-        this.requestUpdUrl = 'api/opportunity?id=' + oppViewData.id;
-        let options = {
-            method: "PATCH",
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-                'authorization': 'Bearer    ' + window.authHelper.getWebApiToken()
-            },
-            body: JSON.stringify(oppViewData),
-            id: oppViewData.id
-        };
-
-        fetch(this.requestUpdUrl, options)
+        this.apiService.callApi('Opportunity', 'PATCH', { query: `id=${oppViewData.id}`, body: JSON.stringify(oppViewData) })
             .catch(error => console.error('Error:', error))
             .then(response => {
                 if (response.ok) {
                     return response.json;
                 } else {
-                    console.log('Error...: ');
+                    console.log('Error...: ', response.statusText);
                 }
             }).then(json => {
-                this.setState({ MessagebarText: <Trans>updatedSuccessfully</Trans> });
                 console.log(json);
+                this.setState({ MessagebarText: <Trans>updatedSuccessfully</Trans> });
                 setTimeout(function () { this.setState({ isUpdate: false, MessagebarText: "" }); }.bind(this), 3000);
             });
     }
@@ -426,7 +359,7 @@ export class ProposalStatus extends Component {
                 <div className='ms-List-itemContent'>
                     <div className='ms-List-itemSections'>{item.displayName}</div>
                     <div className='ms-List-itemOwner'>
-                        <PeoplePickerTeamMembers teamMembers={this.state.peopleList} onChange={(e) => this.fnChangeOwnerNew(e, idx)} itemLimit='1' defaultSelectedUsers={item.owner.displayName.length > 0 ? [item.owner] : []} />
+                        <PeoplePickerTeamMembers teamMembers={this.state.peopleList} onChange={(e) => this.fnChangeOwnerNew(e, idx)} itemLimit='1' defaultSelectedUsers={item.owner.displayName.length > 0 ? [item.owner] : []} apiService={this.apiService}/>
                     </div>
                     <div className='ms-List-itemStatus'>
                         <Dropdown

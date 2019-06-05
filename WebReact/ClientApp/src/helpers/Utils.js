@@ -176,8 +176,8 @@ export default class Utils {
                 }
             });
         });
-        console.log("Utils_getLoanOficers : ",teamlist)
-        return teamlist
+        console.log("Utils_getLoanOficers : ", teamlist);
+        return teamlist;
     }
 
     getRelationShipManagers(teamMembers){
@@ -194,7 +194,7 @@ export default class Utils {
                 }
             });
         });
-        console.log("Utils_getLoanOficers : ",teamlist)
-        return teamlist
+        console.log("Utils_getLoanOficers : ", teamlist);
+        return teamlist;
     }
 }

@@ -32,8 +32,6 @@ export class Checklist extends Component {
     constructor(props) {
         super(props);
 
-        this.authHelper = window.authHelper;
-        this.sdkHelper = window.sdkHelper;
         this.accessGranted = false;
         //Granular Access Start
         if (window.authHelper) {
@@ -189,12 +187,10 @@ export class Checklist extends Component {
                         this.state.opportunity.opportunityState === 8
                             ?
                             <div>
-
                                 <IconButton id={'btnDelete' + item.id} iconProps={{ iconName: 'Delete' }} onClick={e => this.deleteRow(item)} disabled />
                             </div>
                             :
                             <div>
-
                                 <IconButton id={'btnDelete' + item.id} iconProps={{ iconName: 'Delete' }} onClick={e => this.deleteRow(item)} />
                             </div>
                     );
@@ -258,7 +254,6 @@ export class Checklist extends Component {
     componentDidMount() {
         this.getOppDetails();
     }
-
 
     getTeamsContext() {
         microsoftTeams.getContext(context => {

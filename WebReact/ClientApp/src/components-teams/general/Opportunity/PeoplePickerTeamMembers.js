@@ -14,17 +14,13 @@ export class PeoplePickerTeamMembers extends Component {
 
     constructor(props) {
         super(props);
-
+        this.apiService = this.props.apiService;
         // Set the initial state for the picker data source.
         // The people list is populated in the _onFilterChanged function.
         this._peopleList = [];
         this._searchResults = [];
 
-        // Helper that uses the JavaScript SDK to communicate with Microsoft Graph.
-        this.sdkHelper = window.sdkHelper;
-
-        this.authHelper = window.authHelper;
-
+        this.apiService = this.props.apiService;
         this._showError = this._showError.bind(this);
 
         let filteredList = this.props.teamMembers;
@@ -40,16 +36,8 @@ export class PeoplePickerTeamMembers extends Component {
     }
 
     componentDidMount() {
-        console.log("code-review-comment implementation");
         if (this.props.defaultSelectedUsers && this.props.defaultSelectedUsers.length > 0 && this.props.defaultSelectedUsers[0].displayName.length > 0) {
             this.mapDefaultSelectedItems();
-        }
-    }
-
-    fetchResponseHandler(response, referenceCall) {
-        // console.log("PeoplePickerLoanOfficer fetchResponseHandler refcall: " + referenceCall + " response: " + response.status + " - " + response.statusText);
-        if (response.status === 401) {
-            // TODO: placeholder for future logic
         }
     }
 
@@ -58,18 +46,12 @@ export class PeoplePickerTeamMembers extends Component {
     }
 
     getUserProfilesSearch(searchText, callback) {
-        let requestUrl = 'api/UserProfile/';
-        fetch(requestUrl, {
-            method: "GET",
-            headers: {
-                'authorization': 'Bearer ' + this.authHelper.getWebApiToken()
-            }
-        })
+        this.apiService.callApi('UserProfile', 'GET')
             .then(response => {
                 if (response.ok) {
                     return response.json();
                 } else {
-                    this.fetchResponseHandler(response, "getUserProfiles");
+                    this.errorHandler(response, "getUserProfilesSearch");
                     let err = "Error in fetch get users";
                     callback(err, []);
                 }
@@ -110,57 +92,6 @@ export class PeoplePickerTeamMembers extends Component {
 
     }
 
-    getUserProfiles() {
-        let requestUrl = 'api/UserProfile/';
-        fetch(requestUrl, {
-            method: "GET",
-            headers: {
-                'authorization': 'Bearer ' + this.authHelper.getWebApiToken()
-            }
-        })
-            .then(response => {
-                if (response.ok) {
-                    return response.json();
-                } else {
-                    this.fetchResponseHandler(response, "getUserProfiles");
-                    return [];
-                }
-            })
-            .then(data => {
-                let itemslist = [];
-
-                if (data.ItemsList.length > 0) {
-                    for (let i = 0; i < data.ItemsList.length; i++) {
-
-                        let item = data.ItemsList[i];
-
-                        let newItem = {};
-
-                        newItem.id = item.id;
-                        newItem.displayName = item.displayName;
-                        newItem.mail = item.mail;
-                        newItem.phoneNumber = item.phoneNumber;
-                        newItem.UserPicture = item.UserPicture;
-                        newItem.userPrincipalName = item.userPrincipalName;
-                        newItem.userRole = item.userRole;
-
-                        itemslist.push(newItem);
-                    }
-                }
-
-                // filter to just loan officers
-                let filteredList = itemslist.filter(itm => itm.userRole === 1);
-                
-                this.setState({
-                    teamMembers: filteredList,
-                    isLoadingPeople: false
-                });
-            })
-            .catch(err => {
-                this._showError(err);
-            });
-    }
-
     // Create the persona for the defaultSelectedItems using user ID
     mapDefaultSelectedItems() {
         this.setState({
@@ -175,7 +106,7 @@ export class PeoplePickerTeamMembers extends Component {
 
             // The email property is returned differently from the /users and /people endpoints.
             let email = p.mail ? p.mail : p.userPrincipalName;
-            console.log("ChooseTeams_Log _mapUsersToPersonas : p",p)
+            console.log("ChooseTeams_Log _mapUsersToPersonas : p", p);
             let persona = {
                 id: p.id,
                 text: p.displayName ? p.displayName : "USER NAME",
@@ -201,13 +132,6 @@ export class PeoplePickerTeamMembers extends Component {
         this.setState({
             isLoadingPics: false
         });
-
-        // TODO: Retrieve pictures
-        //this.sdkHelper.getProfilePics(personas, (err) => {
-        //    this.setState({
-        //        isLoadingPics: false
-        //    });
-        //});
     }
 
     // Remove currently selected people from the suggestions list.
@@ -225,20 +149,6 @@ export class PeoplePickerTeamMembers extends Component {
             return filterText ? this._peopleList.concat(this._searchResults)
                 .filter(item => item.primaryText.toLowerCase().indexOf(filterText.toLowerCase()) === 0)
                 .filter(item => !this._listContainsPersona(item, items)) : [];
-        }
-        else {
-            //TODO: Fetch more people from MT right now MT returns all so no need for this. For future expansion.
-            //return new Promise((resolve, reject) => this.getUserProfiles((err, people) => {
-            //    console.log("ONFILTER: " + JSON.stringify(people));
-            //    if (!err) {
-            //        this._peopleList = this._mapUsersToPersonas(people, false);
-            //        this._getPics(this._peopleList);
-            //        resolve(this._peopleList);
-            //    }
-            //    else { this._showError(err); }
-            //})).then(value => value.concat(this._searchResults)
-            //    .filter(item => item.primaryText.toLowerCase().indexOf(filterText.toLowerCase()) === 0)
-            //    .filter(item => !this._listContainsPersona(item, items)));
         }
     }
 
@@ -299,7 +209,6 @@ export class PeoplePickerTeamMembers extends Component {
 
     // Renders the people picker using the NormalPeoplePicker template.
     render() {
-        //onChange={this._onSelectionChanged.bind(this)}
         return (
             <div>
                 {

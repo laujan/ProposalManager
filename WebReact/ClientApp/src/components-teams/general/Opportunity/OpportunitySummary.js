@@ -9,14 +9,8 @@ import { Label } from 'office-ui-fabric-react/lib/Label';
 import { Link } from 'office-ui-fabric-react/lib/Link';
 import { Link as LinkRoute } from 'react-router-dom';
 import { TeamMembers } from './TeamMembers';
-import {
-    Persona,
-    PersonaSize
-} from 'office-ui-fabric-react/lib/Persona';
-import {
-    Spinner,
-    SpinnerSize
-} from 'office-ui-fabric-react/lib/Spinner';
+import { Persona, PersonaSize } from 'office-ui-fabric-react/lib/Persona';
+import { Spinner, SpinnerSize } from 'office-ui-fabric-react/lib/Spinner';
 import { MessageBar, MessageBarType } from 'office-ui-fabric-react/lib/MessageBar';
 import { userRoles } from '../../../common';
 import { PeoplePickerTeamMembers } from './PeoplePickerTeamMembers';
@@ -29,16 +23,16 @@ export class OpportunitySummary extends Component {
     constructor(props) {
         super(props);
 
-        this.sdkHelper = window.sdkHelper;
+        this.apiService = this.props.apiService;
         this.authHelper = window.authHelper;
         this.utils = window.utils;
         const opportunityData = this.props.opportunityData;
         const teamsContext = this.props.teamsContext;
-        this.isDealTypeAlreadyUpdated = opportunityData ? opportunityData.dealType === null ? false : true : false;
+        
         this.state = {
             teamsContext: teamsContext,
             loading: true,
-            LoanOfficer: [],
+            loanOfficer: [],
             teamMembers: [],
             showPicker: false,
             peopleList: [],
@@ -51,8 +45,6 @@ export class OpportunitySummary extends Component {
             loanOfficerRole: '',
             userAssignedRole: "",
             oppStatusAll: [],
-            OppDetails: [],
-            TeamMembersAll: [],
             isUpdate: false,
             isStatusUpdate: false,
             dealTypeItems: [],
@@ -65,76 +57,46 @@ export class OpportunitySummary extends Component {
             dealTypeSelectMsgShow: false,
             dealTypeUpdated: false,
             userId: "",
-            isAuthenticated: false,
-            isComponentDidUpdate: false,
             haveAccessToChangeLO: false,
             haveAccessToChangeStatus: false,
             haveAccessToEditTeam: false,
             haveAccessToEditDealType: false
         };
 
-
         this.onStatusChange = this.onStatusChange.bind(this);
     }
 
-
     async componentDidMount() {
-        console.log("OpportunityDetails_componentDidMount isauth: " + this.authHelper.isAuthenticated() + " this.accessGranted: " + this.accessGranted);
+        console.log("OpportunityDetails_componentDidMount");
 
-        if (!this.state.isAuthenticated) {
-            this.setState({
-                isAuthenticated: this.authHelper.isAuthenticated()
-            });
-        }
-
-    }
-
-    componentWillReceiveProps(nextProps) {
-        console.log("OpportunitySummary_componentWillReceiveProps : ", nextProps);
-        console.log("Opportunity_summary_constructor : teamsContext : ", nextProps.teamsContext);
-        this.isDealTypeAlreadyUpdated = nextProps.opportunityData ? nextProps.opportunityData.dealType === null ? false : true : false;
-        this.setState({ oppData: nextProps.opportunityData });
-    }
-
-
-    async componentDidUpdate() {
         try {
-            if (this.state.isAuthenticated && !this.state.isComponentDidUpdate && this.state.oppData) {
-                console.log("OpportunitySummary_componentDidUpdate 1", this.state.loading, this.state.isComponentDidUpdate);
-                let userProfile = await this.authHelper.callGetUserProfile();
-                console.log("OpportunitySummary_componentDidUpdate 1.5", userProfile);
+            if (this.state.oppData) {
                 await this.getUserProfiles();
                 await this.getOppStatusAll();
                 await this.getDealTypeLists();
-                await this.getOppDetails(userProfile);
+                await this.getOppDetails();
             } else {
-                if (!this.state.oppData) {
-                    console.log("OpportunitySummary_componentDidUpdate 2", this.state.loading, this.state.isComponentDidUpdate);
-                    if (typeof this.state.teamsContext !== 'undefined' && this.state.loading) {
-                        await this.getOpportunityForTeams(this.state.teamsContext.teamName);
-                    }
+                console.log("OpportunitySummary_componentDidUpdate 2", this.state.loading);
+                if (typeof this.state.teamsContext !== 'undefined' && this.state.loading) {
+                    await this.getOpportunityForTeams(this.state.teamsContext.teamName);
                 }
             }
-
         } catch (error) {
             console.log("OpportunitySummary_componentDidUpdate error : ", error);
         }
-
     }
-
-    async getOpportunityForTeams(teamname) {
+    
+    async getOpportunityForTeams(teamName) {
         let oppData = "";
-        let requestUrl = `api/Opportunity/?name=${teamname}`;
-        console.log("OpportunitySummar_getOppDetails teamname :", requestUrl);
         try {
-            let token = "";
-            token = this.authHelper.getWebApiToken();
-            console.log("OpportunitySummar_getOppDetails  token: ", token.length);
-            let response = await fetch(requestUrl, {
-                method: "GET",
-                headers: { 'authorization': 'Bearer ' + token }
-            });
-            oppData = await response.json();
+            let response = await this.apiService.callApi('Opportunity', 'GET', { query: `name=${teamName}` });
+            if (response.ok) {
+                oppData = await response.json();
+            }
+            else {
+                console.log("getOpportunityForTeams", response.statusText);
+            }
+
             this.setState({ oppData });
             return oppData;
         }
@@ -146,113 +108,119 @@ export class OpportunitySummary extends Component {
 
     async getOppStatusAll() {
         console.log("OpportunitySummary_getOppStatusAll ");
-        let requestUrl = 'api/context/GetOpportunityStatusAll';
 
         try {
-            let response = await fetch(requestUrl, {
-                method: "GET",
-                headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() }
-            });
-            let data = await response.json();
+            let response = await this.apiService.callApi('Context', 'GET', { id: 'GetOpportunityStatusAll' });
+            if (response.ok) {
+                let data = await response.json();
+                let filteredData = [];
+                if (this.state.oppData.opportunityState !== 11) // if the current state is not archived, remove the archive option from the array
+                {
+                    filteredData = data.filter(x => x.Name !== 'Archived');
+                }
 
-            if (this.state.oppData.opportunityState !== 11) // if the current state is not archived, remove the archive option from the array
-            {
-                var filteredData = data.filter(x => x.Name !== 'Archived');
+                let oppStatusAll = [];
+                for (let i = 0; i < filteredData.length; i++) {
+                    let oppStatus = {};
+                    oppStatus.key = data[i].Value;
+                    oppStatus.text = data[i].Name;
+                    oppStatusAll.push(oppStatus);
+                }
+                this.setState({ oppStatusAll });
+                return true;
             }
-
-            let oppStatusAll = [];
-            for (let i = 0; i < filteredData.length; i++) {
-                let oppStatus = {};
-                oppStatus.key = data[i].Value;
-                oppStatus.text = data[i].Name;
-                oppStatusAll.push(oppStatus);
+            else {
+                console.log("OpportunitySummary_getOppStatusAll error: ", response.statusText);
+                return false;
             }
-            this.setState({ oppStatusAll });
-            return true;
         } catch (error) {
             console.log("OpportunitySummary_getOppStatusAll error : ", error);
             return false;
         }
     }
 
-    async getUserProfiles() {
-        let requestUrl = 'api/UserProfile/';
-
-        try {
-            let response = await fetch(requestUrl, {
-                method: "GET",
-                headers: {
-                    'authorization': 'Bearer ' + this.authHelper.getWebApiToken()
-                }
-            });
-
-            let data = await response.json();
+    async getUserProfiles()
+    {
+        try
+        {
             let peopleList = [];
+            let response = await this.apiService.callApi('UserProfile', 'GET');
+            if (response.ok) {
+                let data = await response.json();
 
-            if (data.ItemsList.length > 0) {
-                for (let i = 0; i < data.ItemsList.length; i++) {
-                    let item = data.ItemsList[i];
-                    let newItem = {};
-                    newItem.id = item.id;
-                    newItem.displayName = item.displayName;
-                    newItem.mail = item.mail;
-                    newItem.userPrincipalName = item.userPrincipalName;
-                    newItem.userRoles = item.userRoles;
+                if (data.ItemsList.length > 0) {
+                    for (let i = 0; i < data.ItemsList.length; i++) {
+                        let item = data.ItemsList[i];
+                        let newItem = {};
+                        newItem.id = item.id;
+                        newItem.displayName = item.displayName;
+                        newItem.mail = item.mail;
+                        newItem.userPrincipalName = item.userPrincipalName;
+                        newItem.userRoles = item.userRoles;
 
-                    peopleList.push(newItem);
+                        peopleList.push(newItem);
+                    }
                 }
-            }
-            console.log("OpportunitySummary_getUserProfiles peopleList : ", peopleList);
-            let teamlist = this.utils.getMembersWithTemplateProperties(data.ItemsList);
 
-            console.log("OpportunitySummary_getUserProfiles peopleList : ", teamlist);
-            this.setState({ peopleList: teamlist, usersPickerLoading: peopleList > 0 ? true : false, isComponentDidUpdate: true });
-            return true;
+                console.log("OpportunitySummary_getUserProfiles peopleList : ", peopleList);
+                let teamlist = this.utils.getMembersWithTemplateProperties(data.ItemsList);
+
+                console.log("OpportunitySummary_getUserProfiles peopleList : ", teamlist);
+                this.setState({ peopleList: teamlist, usersPickerLoading: peopleList > 0 ? true : false });
+                return true;
+            }
+            else {
+                console.log("OpportunitySummary_getUserProfiles error : ", response.statusText);
+                return false;
+            }
         } catch (error) {
             console.log("OpportunitySummary_getUserProfiles error : ", error);
             return false;
         }
-
-
     }
 
-    async getDealTypeLists() {
-        let requestUrl = "api/template/";
-        try {
+    async getDealTypeLists()
+    {       
+        try
+        {
             console.log("OpportunitySummary_getDealTypeLists");
-            let response = await fetch(requestUrl, {
-                method: "GET",
-                headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() }
-            });
-            let data = await response.json();
-            let dealTypeItemsList = [];
-            let dealTypeList = [];
-            for (let i = 0; i < data.itemsList.length; i++) {
-                dealTypeItemsList.push(data.itemsList[i]);
-                let dealType = {};
-                dealType.key = data.itemsList[i].id;
-                dealType.text = data.itemsList[i].templateName;
-                dealType.defaultTemplate = data.itemsList[i].defaultTemplate;
-                dealTypeList.push(dealType);
+            let response = await this.apiService.callApi('Template', 'GET');
+            if (response.ok) {
+                let data = await response.json();
+                let dealTypeItemsList = [];
+                let dealTypeList = [];
+                for (let i = 0; i < data.itemsList.length; i++) {
+                    dealTypeItemsList.push(data.itemsList[i]);
+                    let dealType = {};
+                    dealType.key = data.itemsList[i].id;
+                    dealType.text = data.itemsList[i].templateName;
+                    dealType.defaultTemplate = data.itemsList[i].defaultTemplate;
+                    dealTypeList.push(dealType);
+                }
+                this.setState({
+                    dealTypeItems: dealTypeItemsList,
+                    dealTypeList: dealTypeList,
+                    dealTypeLoading: false
+                });
+                return true;
             }
-            this.setState({
-                dealTypeItems: dealTypeItemsList,
-                dealTypeList: dealTypeList,
-                dealTypeLoading: false
-            });
-            return true;
+            else {
+                console.log("OpportunitySummary_getDealTypeLists error: ", response.statusText);
+                return false;
+            }
         } catch (error) {
             console.log("OpportunitySummary_getDealTypeLists error ", error);
             return false;
         }
     }
 
-    async getOppDetails(userDetails) {
+    async getOppDetails() {
 
         try {
             let data = this.state.oppData;
             if (data) {
                 console.log("OpportunitySummary_getOppDetails data: ", data.teamMembers);
+                let userDetails = this.props.userProfile;
                 let teamMembers = [];
                 teamMembers = data.teamMembers;
                 let loanOfficerObj = this.utils.getLoanOficers(data.teamMembers);
@@ -291,7 +259,7 @@ export class OpportunitySummary extends Component {
                 });
                 this.setState({
                     teamMembers: teamMembers,
-                    LoanOfficer: loanOfficerObj.length === 0 ? loanOfficerObj : [],
+                    loanOfficer: loanOfficerObj.length === 0 ? loanOfficerObj : [],
                     showPicker: loanOfficerObj.length === 0 ? true : false,
                     userAssignedRole: userAssignedRole,
                     loading: false
@@ -357,21 +325,8 @@ export class OpportunitySummary extends Component {
 
     async updateOpportunity(opportunity) {
         console.log("OpportubitySummary_updateOpportunity");
-        let requestUrl = 'api/opportunity';
         try {
-            let options = {
-                method: "PATCH",
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    'authorization': 'Bearer ' + this.authHelper.getWebApiToken()
-                },
-                body: JSON.stringify(opportunity)
-            };
-
-            let response = await fetch(requestUrl, options);
-            return response;
-
+            return await this.apiService.callApi('Opportunity', 'PATCH', { body: JSON.stringify(opportunity)});
         } catch (error) {
             console.log("OpportubitySummary_updateOpportunity error: ", error.message);
             throw new Error(error);
@@ -507,7 +462,7 @@ export class OpportunitySummary extends Component {
                                     </div>
                                     :
                                     <div>
-                                        <PeoplePickerTeamMembers teamMembers={this.state.peopleList} onChange={(e) => this.fnChangeLoanOfficer(e)} defaultSelectedUsers={[]} />
+                                        <PeoplePickerTeamMembers teamMembers={this.state.peopleList} onChange={(e) => this.fnChangeLoanOfficer(e)} defaultSelectedUsers={[]} apiService={this.props.apiService}/>
                                         <br />
                                         <PrimaryButton
                                             buttonType={0}
@@ -678,12 +633,12 @@ export class OpportunitySummary extends Component {
     }
 
     async _fnUpdateLoanOfficer() {
-        let oppDetails = this.state.oppData; //oppData;
+        let oppDetails = this.state.oppData;
         let selLoanOfficer = this.state.currentSelectedItems;
 
         this.setState({
             loanOfficerName: selLoanOfficer[0].text,
-            loanOfficerPic: '', //selLoanOfficer[0].imageUrl,
+            loanOfficerPic: '', 
             loanOfficerRole: userRoles[0]
         });
         console.log(selLoanOfficer);
@@ -702,22 +657,18 @@ export class OpportunitySummary extends Component {
         //Process Customer Decision
         updatedTeamMembers.push(this.addBaseProcessPersonal(selLoanOfficer, role, "Customer Decision"));
 
-
         oppDetails.teamMembers = updatedTeamMembers;
         console.log(oppDetails.teamMembers);
 
         await this.fnUpdateOpportunity(oppDetails, "LO");
     }
 
-    onStatusChange = async (event) => {
-
+    onStatusChange = async (event) =>
+    {
         let oppDetails = this.state.oppData;
-
         oppDetails.opportunityState = event.key;
 
-
         await this.fnUpdateOpportunity(oppDetails, "Status");
-
     }
 
     async fnUpdateOpportunity(oppViewData, Updtype) {
@@ -742,8 +693,6 @@ export class OpportunitySummary extends Component {
             }
         }
     }
-
-    
 
     render() {
         let filteredTeammembers =  [];
@@ -792,11 +741,9 @@ export class OpportunitySummary extends Component {
                                     <TeamMembersView />
                                 </div> : null
                         }
-
                     </div>
                 </div>
             );
         }
     }
-
 }

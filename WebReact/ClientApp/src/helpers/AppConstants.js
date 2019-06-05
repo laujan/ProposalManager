@@ -5,7 +5,7 @@
 
 
 const ScreenNames = ["Screen1","Screen2","Screen3"]; //App screens
-const MetaPropertiesToShow = ["Deal Size", "Opened Date"]
+const MetaPropertiesToShow = ["Deal Size", "Opened Date"];
 
 export const appConstants = {
     ScreenNames,

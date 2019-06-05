@@ -25,8 +25,8 @@ export class RootTab extends Component {
     constructor(props) {
         super(props);
 
+        this.apiService = this.props.apiService;
         this.authHelper = window.authHelper;
-        this.sdkHelper = window.sdkHelper;
         this.utils = window.utils;
         this.accessGranted = false;
 
@@ -40,60 +40,33 @@ export class RootTab extends Component {
             this.state = {
                 teamMembers: [],
                 errorLoading: false,
-                OppName: "",
+                oppName: "",
                 oppDetails: "",
-                UserRoleList: [],
-                OtherRoleTeamMembers: [],
+                otherRoleTeamMembers: [],
                 loading: true,
                 haveGranularAccess: false,
                 isAuthenticated: false
             };
         }
-        this.fnGetOpportunityData = this.fnGetOpportunityData.bind(this);
     }
 
     componentDidMount() {
-        console.log("Dashboard_componentDidMount isauth: " + this.authHelper.isAuthenticated());
-        if (!this.state.isAuthenticated) {
-            this.authHelper.callGetUserProfile()
-                .then(userProfile => {
-                    this.setState({
-                        userProfile: userProfile,
-                        loading: true
-                    });
-                });
-        }
-    }
-
-
-    componentDidUpdate() {
-        if (this.authHelper.isAuthenticated() && !this.accessGranted) {
-            console.log("Dashboard_componentDidUpdate callCheckAccess");
-            this.accessGranted = true;
-            this.fnGetOpportunityData();
-        }
+        console.log("Dashboard_componentDidMount");
+        this.fnGetOpportunityData();
     }
 
     fnGetOpportunityData() {
-        return new Promise((resolve, reject) => {
-            // API - Fetch call
-            let teamName = getQueryVariable('teamName');
-            this.requestUrl = `api/Opportunity?name=${teamName}`;
-            fetch(this.requestUrl, {
-                method: "GET",
-                headers: { 'authorization': 'Bearer ' + window.authHelper.getWebApiToken() }
-
-            })
-                .then(response => response.json())
-                .then(data => {
+        const teamName = getQueryVariable('teamName');
+        this.apiService.callApi('Opportunity', 'GET', { query: `name=${teamName}` })
+            .then(async (response) => {
+                if (response.ok) {
+                    let data = await response.json();
                     if (data.error && data.error.code.toLowerCase() === "badrequest") {
                         this.setState({
                             loading: false,
                             haveGranularAccess: false
                         });
-                        resolve(true);
                     } else {
-                        let loanOfficer = {};
                         let teamMembers = data.teamMembers;
                         let processList = data.template.processes;
 
@@ -111,7 +84,6 @@ export class RootTab extends Component {
                         for (let j = 0; j < otherRolesMapping.length; j++) {
 
                             let processTeamMember = [];
-                            //processTeamMember = data.teamMembers.filter(t => t.processStep.toLowerCase() === otherRolesMapping[j].processStep.toLowerCase());
                             processTeamMember = data.teamMembers.filter(function (k) {
                                 if (k.processStep.toLowerCase() === otherRolesMapping[j].processStep.toLowerCase()) {
                                     k.processStep = otherRolesMapping[j].processStep;
@@ -120,12 +92,15 @@ export class RootTab extends Component {
                                     k.status = otherRolesMapping[j].status;
                                     return k.processStep.toLowerCase() === otherRolesMapping[j].processStep.toLowerCase();
                                 }
+                                else {
+                                    return false;
+                                }
                             });
                             if (processTeamMember.length === 0) {
                                 processTeamMember = [{
                                     "displayName": "",
                                     "assignedRole": {
-                                        "displayName": otherRolesMapping[j].roleName ,
+                                        "displayName": otherRolesMapping[j].roleName,
                                         "adGroupName": otherRolesMapping[j].adGroupName
                                     },
                                     "processStep": otherRolesMapping[j].processStep,
@@ -135,7 +110,6 @@ export class RootTab extends Component {
                             }
 
                             otherRolesArr1 = otherRolesArr1.concat(processTeamMember);
-                            //otherRolesArr1 = otherRolesArr1.concat(teamMember);
                         }
 
                         let otherRolesArr = otherRolesArr1.reduce(function (res, currentValue) {
@@ -156,26 +130,22 @@ export class RootTab extends Component {
                             for (let r = 0; r < otherRolesArr.length; r++) {
                                 otherRolesObj.push(otherRolesArr[r].users);
                             }
-                            //let OtherRoleTeamMembers = otherRolesObj;
                         }
                         this.setState({
                             loading: false,
                             teamMembers: teamMembers,
-                            LoanOfficer: loanOfficer,
                             oppDetails: data,
                             oppStatus: data.opportunityState,
-                            OppName: data.displayName,
-                            OtherRoleTeamMembers: otherRolesObj,
+                            oppName: data.displayName,
+                            otherRoleTeamMembers: otherRolesObj,
                             haveGranularAccess: true
                         });
-                        resolve(true);
                     }
-                })
-                .catch(function (err) {
-                    console.log("Error: OpportunityGetByName--");
-                    reject(err);
-                });
-        });
+                }
+            })
+            .catch(function (err) {
+                console.log("Error: OpportunityGetByName", err);
+            });
     }
 
 
@@ -186,18 +156,19 @@ export class RootTab extends Component {
     }
 
     render() {
-
-        const channelId = this.props.teamsContext.channelId;
+        const { teamMembers, otherRoleTeamMembers, oppDetails, groupId, oppStatus, errorLoading, loading, haveGranularAccess, oppName } = this.state;
+        const { teamsContext, userProfile, apiService } = this.props;
+        const channelId = teamsContext.channelId;
         let loanOfficerRealManagerArr = [];
 
-        let loanOfficerRealManagerArr1 = this.utils.getLoanOficers(this.state.teamMembers);
-        let loanOfficerRealManagerArr2 = this.utils.getRelationShipManagers(this.state.teamMembers);
+        let loanOfficerRealManagerArr1 = this.utils.getLoanOficers(teamMembers);
+        let loanOfficerRealManagerArr2 = this.utils.getRelationShipManagers(teamMembers);
 
         loanOfficerRealManagerArr = loanOfficerRealManagerArr1.concat(loanOfficerRealManagerArr2);
         console.log("RootTab_fnGetOpportunityData loanOfficerRealManagerArr : ", loanOfficerRealManagerArr);
-        console.log("RootTab_fnGetOpportunityData OtherRoleTeamMembers : ", this.state.OtherRoleTeamMembers);
-        const OpportunitySummaryView = ({ match }) => {
-            return <OpportunitySummary teamsContext={this.props.teamsContext} opportunityData={this.state.oppDetails} opportunityId={this.state.oppDetails.id} />;
+        console.log("RootTab_fnGetOpportunityData OtherRoleTeamMembers : ", otherRoleTeamMembers);
+        const OpportunitySummaryView = () => {
+            return <OpportunitySummary teamsContext={teamsContext} opportunityData={oppDetails} opportunityId={oppDetails.id} userProfile={userProfile} apiService={apiService} />;
         };
         return (
 
@@ -206,7 +177,7 @@ export class RootTab extends Component {
                     <div className='ms-Grid-row'>
                         <div className='ms-Grid-col ms-sm6 ms-md8 ms-lg12 pL0' >
                             {
-                                this.state.errorLoading ?
+                                errorLoading ?
                                     <div>
                                         <Trans>errorLoadinOpportunityDataPleaseRefresh</Trans>
                                         <br /><br />
@@ -217,7 +188,7 @@ export class RootTab extends Component {
                                     :
                                     <div>
                                         {
-                                            this.state.loading ?
+                                            loading ?
                                                 <div>
                                                     <div className='ms-BasicSpinnersExample pull-center'>
                                                         <br /><br />
@@ -225,7 +196,7 @@ export class RootTab extends Component {
                                                     </div>
                                                 </div>
                                                 :
-                                                this.state.haveGranularAccess
+                                                haveGranularAccess
                                                     ?
                                                     <div>
                                                         <Pivot className='tabcontrols' linkFormat={PivotLinkFormat.tabs} linkSize={PivotLinkSize.large}>
@@ -239,13 +210,13 @@ export class RootTab extends Component {
                                                             </PivotItem>
                                                             <PivotItem linkText={<Trans>workflow</Trans>} width='100%' >
                                                                 <div className='ms-Grid-row mt20 pl15 bg-white'>
-                                                                    <Label><Workflow memberslist={this.state.teamMembers} oppStaus={this.state.oppStatus} oppDetails={this.state.oppDetails} /></Label>
+                                                                    <Label><Workflow memberslist={teamMembers} oppStaus={oppStatus} oppDetails={oppDetails} /></Label>
                                                                 </div>
                                                             </PivotItem>
                                                             <PivotItem linkText={<Trans>teamUpdate</Trans>}>
                                                                 <div className='ms-Grid-row mt20 pl15 bg-white'>
                                                                     {
-                                                                        this.state.OtherRoleTeamMembers.map((obj, ind) =>
+                                                                        otherRoleTeamMembers.map((obj, ind) =>
                                                                             obj.length > 1 ?
                                                                                 <div className=' ms-Grid-col ms-sm12 ms-md8 ms-lg4 p-5' key={ind}>
                                                                                     <GroupEmployeeStatusCard members={obj} status={obj[0].status} isDispOppStatus={false} role={obj[0].adGroupName} isTeam='true' />
@@ -254,15 +225,12 @@ export class RootTab extends Component {
                                                                                 obj.map((member, j) => {
                                                                                     return (
                                                                                         <div className=' ms-Grid-col ms-sm12 ms-md8 ms-lg4 p-5' key={j}>
-                                                                                            <TeamUpdate memberslist={member} channelId={channelId} groupId={this.state.groupId} OppName={this.state.OppName} />
+                                                                                            <TeamUpdate memberslist={member} channelId={channelId} groupId={groupId} oppName={oppName} />
                                                                                         </div>
                                                                                     );
                                                                                 }
-
                                                                                 )
-
                                                                         )
-
                                                                     }
                                                                 </div>
                                                                 <div className='ms-Grid-row'>
@@ -273,7 +241,7 @@ export class RootTab extends Component {
                                                                         loanOfficerRealManagerArr.map((member, ind) => {
                                                                             return (
                                                                                 <div className=' ms-Grid-col ms-sm12 ms-md8 ms-lg4 p-5' key={ind} >
-                                                                                    <TeamUpdate memberslist={member} channelId={channelId} groupId={this.state.groupId} OppName={this.state.OppName} />
+                                                                                    <TeamUpdate memberslist={member} channelId={channelId} groupId={groupId} oppName={oppName} />
                                                                                 </div>
                                                                             );
                                                                         })
@@ -282,7 +250,7 @@ export class RootTab extends Component {
                                                             </PivotItem>
                                                             <PivotItem linkText={<Trans>notes</Trans>} width='100%' itemKey="Notes" >
                                                                 <div className='ms-Grid-col ms-sm12 ms-md8 ms-lg12' >
-                                                                    <OpportunityNotes userProfile={[]} opportunityData={this.state.oppDetails} opportunityId={this.state.oppDetails.id} />
+                                                                    <OpportunityNotes userProfile={userProfile} apiService={apiService} opportunityData={oppDetails} opportunityId={oppDetails.id} />
                                                                 </div>
                                                             </PivotItem>
                                                         </Pivot>
@@ -291,7 +259,6 @@ export class RootTab extends Component {
                                                     <Accessdenied />
                                         }
                                     </div>
-
                             }
                         </div>
                     </div>

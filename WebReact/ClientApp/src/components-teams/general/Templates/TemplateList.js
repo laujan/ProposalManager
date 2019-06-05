@@ -23,7 +23,7 @@ import { MessageBar, MessageBarType } from 'office-ui-fabric-react/lib/MessageBa
 import { LinkContainer } from 'react-router-bootstrap';
 import i18n from '../../../i18n';
 import Accessdenied from '../../../helpers/AccessDenied';
-import { getAllTemplatesList, getAllProcess } from './TemplatesCommon';
+import TemplatesCommon from './TemplatesCommon';
 
 export class TemplateList extends Component {
     displayName = TemplateList.name
@@ -31,8 +31,10 @@ export class TemplateList extends Component {
     constructor(props) {
         super(props);
 
-        this.sdkHelper = window.sdkHelper;
         this.authHelper = window.authHelper;
+        this.apiService = this.props.apiService;
+        this.templatesCommon = new TemplatesCommon(this.apiService);
+
         this.accessGranted = false;
         const columns = [
             {
@@ -117,7 +119,7 @@ export class TemplateList extends Component {
                 this.accessGranted = true;
                 await this.fnGetTemplates();
                 await this.fnGetProcess();
-                
+
             } catch (error) {
                 this.accessGranted = false;
                 console.log("Templatelist_componentDidUpdate error_callCheckAccess:");
@@ -126,32 +128,24 @@ export class TemplateList extends Component {
         }
     }
 
-
     componentDidUpdate() {
         console.log("Templatelist_componentDidUpdate isauth: " + this.authHelper.isAuthenticated() + " this.accessGranted: " + this.accessGranted);
     }
 
     async fnGetTemplates() {
-        let templateObj = [];
-        templateObj = await getAllTemplatesList();
-        if (templateObj.length > 0) {
-            this.setState({
-                loading: false,
-                items: templateObj,
-                itemsOriginal: templateObj
-            });
-        } else {
-            this.setState({
-                loading: false,
-                items: templateObj,
-                itemsOriginal: templateObj
-            });
-        }
+        let templateObj = await this.templatesCommon.getAllTemplatesList();
+        
+        this.setState({
+            loading: false,
+            items: templateObj,
+            itemsOriginal: templateObj
+        });
     }
 
     async fnGetProcess() {
         let processItems, processItemsOriginal = [];
-        processItems = await getAllProcess();
+        processItems = await this.templatesCommon.getAllProcess();
+        console.log(processItems);
         if (processItems.length > 0) {
             this.setState({
                 loading: false,
@@ -176,9 +170,7 @@ export class TemplateList extends Component {
     });
 
     _getSelectionDetails() {
-        const selectionCount = this._selection.getSelectedCount();
-        return selectionCount;
-
+        return this._selection.getSelectedCount();
     }
 
     // Filter by Templatename
@@ -195,40 +187,35 @@ export class TemplateList extends Component {
 
     deleteTemplate(items) {
         this.setState({ isUpdate: true });
-        // API Delete call        
-        this.requestUrl = 'api/Template/' + items[0].id;
 
-        fetch(this.requestUrl, {
-            method: "DELETE",
-            headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() }
-        })
-            .catch(error => console.error('Error:', error))
+        this.apiService.callApi('Template', 'DELETE', { id: items[0].id })
             .then(response => {
                 if (response.ok) {
                     let currentItems = this.state.items.filter(x => x.id !== items[0].id);
 
                     this.setState({
                         items: currentItems,
-                        itemsOriginal: currentItems,
-                        MessagebarText: <Trans>dealTypeDeletedSuccess</Trans>,
-                        isUpdate: false,
-                        isUpdateMsg: true
+                        itemsOriginal: currentItems
                     });
 
-                    setTimeout(function () { this.setState({ isUpdateMsg: false, MessageBarType: MessageBarType.success, MessagebarText: "" }); }.bind(this), 3000);
-                    return response.json;
+                    this.setMessage(false, true, MessageBarType.success, <Trans>dealTypeDeletedSuccess</Trans>);
                 } else {
-                    this.setState({
-                        MessagebarText: <Trans>errorOoccuredPleaseTryAgain</Trans>,
-                        isUpdate: false,
-                        isUpdateMsg: true
-                    });
-                    setTimeout(function () { this.setState({ isUpdateMsg: false, MessageBarType: MessageBarType.error, MessagebarText: "" }); }.bind(this), 3000);
+                    this.setMessage(false, true, MessageBarType.error, <Trans>errorOoccuredPleaseTryAgain</Trans>);
                 }
-            }).then(json => {
-                //console.log(json);
-                this.setState({ isUpdate: false });
+            })
+            .catch(error => {
+                this.setMessage(false, true, MessageBarType.error, `${<Trans>errorOoccuredPleaseTryAgain</Trans>} : ${error.message}`);
             });
+    }
+
+    setMessage(isUpdate, isUpdateMsg, MessageBarType, MessagebarText) {
+        //Show message
+        this.setState({ isUpdate, isUpdateMsg, MessageBarType, MessagebarText });
+
+        //Schedule message hide
+        setTimeout(function () {
+            this.setState({ isUpdate: false, isUpdateMsg: false, MessageBarType: "", MessagebarText: "" });
+        }.bind(this), 3000);
     }
 
     editTemplate(templateItem) {
@@ -311,7 +298,7 @@ export class TemplateList extends Component {
                                                 setKey="set"
                                                 layoutMode={DetailsListLayoutMode.fixedColumns}
                                                 selection={this._selection}
-                                                selectionPreservedOnEmptyClick={true}
+                                                selectionPreservedOnEmptyClick
                                                 ariaLabelForSelectionColumn="Toggle selection"
                                                 ariaLabelForSelectAllCheckbox="Toggle selection for all items"
                                                 onItemInvoked={this._onItemInvoked}

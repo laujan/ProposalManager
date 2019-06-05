@@ -3,6 +3,8 @@
 *  See LICENSE in the source repository root for complete license information. 
 */
 
+/* eslint-disable radix */
+
 import React, { Component } from 'react';
 import { DefaultButton, PrimaryButton, ActionButton } from 'office-ui-fabric-react/lib/Button';
 import { Trans } from "react-i18next";
@@ -14,12 +16,15 @@ import { MessageBar, MessageBarType } from 'office-ui-fabric-react/lib/MessageBa
 import ShowAddProcessModel from './ShowAddProcessModel';
 import ShowPreviewModel from './ShowPreviewModel';
 import { getQueryVariable } from '../../../common';
+
 export class AddDealTypeR extends Component {
     displayName = AddDealTypeR.name
+
     constructor(props) {
         super(props);
-        this.sdkHelper = window.sdkHelper;
         this.authHelper = window.authHelper;
+        this.apiService = this.props.apiService;
+
         //hardcoded group numbers for "START PROCESS and NEW OPPORTUNITY".
         //To make it even more dynamic, we need to remove the use of this two arrays
         this.processTypesNotToDisplay = [];
@@ -46,8 +51,8 @@ export class AddDealTypeR extends Component {
                 "templateName": "",
                 "description": "test desc",
                 "processes": [],
-                "defaultTemplate":false,
-                "initilaltemplate":false
+                "defaultTemplate": false,
+                "initilaltemplate": false
             },
             dealTypeObj: {}
         };
@@ -56,10 +61,11 @@ export class AddDealTypeR extends Component {
 
     async componentDidMount() {
         await this.getAllProcessFrmSharepoint();
+
         let dealTypeId = getQueryVariable('dealTypeId');
-        console.log("componentDidMount><===", dealTypeId);
+        console.log("componentDidMount: ", dealTypeId);
+
         if (dealTypeId !== null) {
-            console.log("componentDidMount><===", dealTypeId);
             await this.getSelectedDealTypeById(dealTypeId);
         }
     }
@@ -81,12 +87,13 @@ export class AddDealTypeR extends Component {
             }
             tempObj[key].push(template.processes[index]);
         }
-        console.log("_processGrpObjtBasedOrderNo==>", tempObj);
+
+        console.log("_processGrpObjtBasedOrderNo: ", tempObj);
         return tempObj;
     }
 
     setProcessGroupNumberNo(e) {
-        console.log("setProcessGroupNumberNo>===", e.key);
+        console.log("setProcessGroupNumberNo: ", e.key);
         let orderNumber = this.state.orderNumber;
         if (orderNumber !== e.key) {
             orderNumber = e.key;
@@ -102,12 +109,14 @@ export class AddDealTypeR extends Component {
     onBlurDealTypeName(e) {
         let template = JSON.parse(JSON.stringify(this.state.template));
         template.templateName = e.target.value;
+
         let showdealTypeError = false;
         let messagebarDealTypeName = "";
         if (template.templateName.length === 0) {
             messagebarDealTypeName = <Trans>dealTypeNameNotEmpty</Trans>;
             showdealTypeError = true;
         }
+
         this.setState({ template, messagebarDealTypeName, showdealTypeError });
     }
 
@@ -116,7 +125,7 @@ export class AddDealTypeR extends Component {
     }
 
     addProcess(process) {
-        console.log("addProcess==>", process);
+        console.log("addProcess: ", process);
         let template = JSON.parse(JSON.stringify(this.state.template));
         let { processNumber, orderNumber } = this.state;
         let selectedProcessGroup = this.state.selectedProcessGroup.slice();
@@ -158,7 +167,7 @@ export class AddDealTypeR extends Component {
         let template = JSON.parse(JSON.stringify(this.state.template));
         let processGroupNumberList = this.state.processGroupNumberList.slice();
 
-        if (this.state.orderNumber === this.state.selectedOrderNumber) {//if(this.state.orderNumber === processGroupNumberList[0]){
+        if (this.state.orderNumber === this.state.selectedOrderNumber) {
             //adding a group
             processGroupNumberList.splice(processGroupNumberList.indexOf(this.state.orderNumber), 1);
             if (selectedProcessGroup.length > 1) {
@@ -186,6 +195,7 @@ export class AddDealTypeR extends Component {
             });
         }
         template.processes.sort((pA, pB) => pA.order - pB.order);
+
         this.setState({ template, processNumber: 1, showModel: false, selectedProcessGroup: [], processGroupNumberList, orderNumber: 0 });
     }
 
@@ -209,11 +219,12 @@ export class AddDealTypeR extends Component {
         selectedProcessGroup.forEach((process, index) => {
             process.order = this.state.orderNumber + (index + 1) / 10;
         });
+
         this.setState({ selectedProcessGroup, processNumber: selectedProcessGroup.length + 1 });
     }
 
     onBlurEstimatedDays(process, e) {
-        console.log("onBlurEstimatedDays==>", process, e.target.value);
+        console.log("onBlurEstimatedDays: ", process, e.target.value);
 
         let template = JSON.parse(JSON.stringify(this.state.template));
         let selectedProcessGroup = this.state.selectedProcessGroup.slice();
@@ -247,7 +258,7 @@ export class AddDealTypeR extends Component {
     }
 
     deleteGroup(groupNumber) {
-        console.log("deleteGroup >++++++++", groupNumber);
+        console.log("deleteGroup: ", groupNumber);
         let processGroupNumberList = this.state.processGroupNumberList.slice();
         let template = JSON.parse(JSON.stringify(this.state.template));
         let count = template.processes.filter(process => groupNumber === parseInt(process.order)).length;
@@ -263,7 +274,7 @@ export class AddDealTypeR extends Component {
     }
 
     swapProcess(process, processNumber, direction) {
-        console.log("swapProcess===> ", process, processNumber, direction);
+        console.log("swapProcess: ", process, processNumber, direction);
         let selectedProcessGroup = this.state.selectedProcessGroup.slice();
         let index = -1;
         let tempOrder = 0;
@@ -277,7 +288,7 @@ export class AddDealTypeR extends Component {
             case "UP":
                 index = this._findProcessInArray(selectedProcessGroup, process);
                 tempOrder = selectedProcessGroup[index - 1].order;
-                console.log("swapProcess===> ", index, tempOrder);
+                console.log("swapProcess: ", index, tempOrder);
                 selectedProcessGroup[index - 1].order = selectedProcessGroup[index].order;
                 selectedProcessGroup[index].order = tempOrder;
                 break;
@@ -307,7 +318,7 @@ export class AddDealTypeR extends Component {
             default:
                 break;
         }
-        console.log("swapProcessGroup===> ", newGroupNumber, groupNo, direction);
+        console.log("swapProcessGroup: ", newGroupNumber, groupNo, direction);
         let count = 1;
         template.processes = template.processes.map(process => {
             if (groupNo === parseInt(process.order)) {
@@ -315,14 +326,14 @@ export class AddDealTypeR extends Component {
             }
             return process;
         });
-        console.log("swapProcessGroup===> ", template.processes);
+        console.log("swapProcessGroup: ", template.processes);
         template.processes = template.processes.map(process => {
             if (newGroupNumber === parseInt(process.order)) {
                 process.order = process.order - newGroupNumber + groupNo;
             }
             return process;
         });
-        console.log("swapProcessGroup===> ", template.processes);
+        console.log("swapProcessGroup: ", template.processes);
         template.processes = template.processes.map(process => {
             if (0 === parseInt(process.order)) {
                 process.order = process.order + newGroupNumber;
@@ -330,7 +341,7 @@ export class AddDealTypeR extends Component {
             return process;
 
         });
-        console.log("swapProcessGroup===> ", template.processes);
+        console.log("swapProcessGroup: ", template.processes);
         template.processes.sort((pA, pB) => pA.order - pB.order);
         this.setState({ template });
     }
@@ -354,9 +365,9 @@ export class AddDealTypeR extends Component {
             if (this.processTypesNotToDisplay.includes(process.processType)) {
                 if (process.processType === "Base") {
                     if (process.processStep === "Start Process")
-                        process.order = this.hardcodedGroupNos.length>0?this.hardcodedGroupNos[1]:processGroupNumberList.pop();
+                        process.order = this.hardcodedGroupNos.length > 0 ? this.hardcodedGroupNos[1] : processGroupNumberList.pop();
                     else if (process.processStep === "New Opportunity")
-                        process.order = this.hardcodedGroupNos.length>0?this.hardcodedGroupNos[0]:processGroupNumberList.pop();
+                        process.order = this.hardcodedGroupNos.length > 0 ? this.hardcodedGroupNos[0] : processGroupNumberList.pop();
                     else
                         process.order = process.order || processGroupNumberList.shift();
                 } else
@@ -375,122 +386,102 @@ export class AddDealTypeR extends Component {
 
     async saveDealType() {
         this.setState({ isUpdate: true });
-        try {
-            let dealTypeObject = this.state.dealTypeObj;
-            let defaultTemplate = false;
-			if(dealTypeObject.processes.length===1){
-				defaultTemplate = dealTypeObject.processes[0].processStep.toLowerCase() === "start process" ? true:false;
-			}
-            dealTypeObject.defaultTemplate = defaultTemplate;
-            dealTypeObject.initilaltemplate = false;
 
-            console.log("AddDealType_log : dealTypeObject ",dealTypeObject);
-
-            let requestUpdUrl = 'api/template/';
-            let options = {
-                method: dealTypeObject.id ? "PATCH" : "POST",
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    'authorization': 'Bearer ' + this.authHelper.getWebApiToken()
-                },
-                body: JSON.stringify(dealTypeObject)
-            };
-            await fetch(requestUpdUrl, options);
-            this.setState({ MessagebarText: <Trans>dealTypeAddSuccess</Trans>, isUpdate: false, isUpdateMsg: true });
-        } catch (error) {
-            this.setState({
-                MessagebarText: `${<Trans>errorOoccuredPleaseTryAgain</Trans>} : ${error.message}`,
-                isUpdate: false,
-                isUpdateMsg: true
-            });
-        } finally {
-            setTimeout(function () {
-                this.setState({ isUpdate: false, isUpdateMsg: false, MessageBarType: MessageBarType.success, MessagebarText: "" }
-                );
-            }.bind(this), 3000);
-            window.location = '/tab/generalConfigurationTab#dealType';
+        let dealTypeObject = this.state.dealTypeObj;
+        let defaultTemplate = false;
+        if (dealTypeObject.processes.length === 1) {
+            defaultTemplate = dealTypeObject.processes[0].processStep.toLowerCase() === "start process" ? true : false;
         }
-        return;
+        dealTypeObject.defaultTemplate = defaultTemplate;
+        dealTypeObject.initilaltemplate = false;
+
+        console.log("AddDealType_log : dealTypeObject ", dealTypeObject);
+
+        this.apiService.callApi('Template', dealTypeObject.id ? 'PATCH' : 'POST', { body: JSON.stringify(dealTypeObject) })
+            .then(() => {
+                this.setMessage(false, true, MessageBarType.success, <Trans>dealTypeAddSuccess</Trans>);
+            })
+            .catch(error => {
+                this.setMessage(false, true, MessageBarType.error, `${<Trans>errorOoccuredPleaseTryAgain</Trans>} : ${error.message}`);
+            })
+            .finally(() => {
+                window.location = '/tab/generalConfigurationTab#dealType';
+            });
+    }
+
+    setMessage(isUpdate, isUpdateMsg, MessageBarType, MessagebarText) {
+        //Show message
+        this.setState({ isUpdate, isUpdateMsg, MessageBarType, MessagebarText });
+
+        //Schedule message hide
+        setTimeout(function () {
+            this.setState({ isUpdate: false, isUpdateMsg: false, MessageBarType: "", MessagebarText: "" });
+        }.bind(this), 3000);
     }
 
     closePreviewModal() {
         this.setState({ showPreviewModel: false });
     }
 
-
-
     //api call to get all process types, by which we will create Deal Types
     async getAllProcessFrmSharepoint() {
-        let processList = [], pageLoading = false, processGroupNumberList = [];
-        try {
-            let requestUrl = "api/process";
-            let response = await fetch(
-                requestUrl,
-                {
-                    method: "GET",
-                    headers:
-                    {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'authorization': 'Bearer ' + this.authHelper.getWebApiToken()
-                    }
-                });
-            let data = await this.handleErrors(response).json();
-            processList = data.itemsList.map((process, key) => {
-                process.order = 0;
-                process.status = 0;
-                process.daysEstimate = 0;
-                processGroupNumberList.push(key + 1);
-                return process;
-            }); 
-            this.hardcodedGroupNos.forEach(value=>{ processGroupNumberList.splice(processGroupNumberList.indexOf(value),1);});
+        let processList = [], processGroupNumberList = [];
 
-        } catch (error) {
-            console.log(error.message);
-        } finally {
-            this.setState({ processList, pageLoading, processGroupNumberList });
-        }
+        this.apiService.callApi('Process', 'GET')
+            .then(response => this.handleErrors(response).json())
+            .then((data) => {
+                processList = data.itemsList.map((process, key) => {
+                    process.order = 0;
+                    process.status = 0;
+                    process.daysEstimate = 0;
+                    processGroupNumberList.push(key + 1);
+                    return process;
+                });
+
+                this.hardcodedGroupNos.forEach(value => { processGroupNumberList.splice(processGroupNumberList.indexOf(value), 1); });
+            })
+            .catch(error => {
+                console.log(error.message);
+            })
+            .finally(() => {
+                this.setState({ processList, pageLoading: false, processGroupNumberList });
+            });
     }
 
     async getSelectedDealTypeById(dealTypeId) {
         let template = JSON.parse(JSON.stringify(this.state.template));
         let processGroupNumberList = this.state.processGroupNumberList.slice();
-        try {
-            let requestUrl = "api/template/";
-            let response = await fetch(requestUrl, {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                method: "GET",
-                headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() }
+
+        this.apiService.callApi('Template', 'GET')
+            .then(response => this.handleErrors(response).json())
+            .then((data) => {
+                let tempObj = data.itemsList.filter(templ => templ.id === dealTypeId);
+                template.id = tempObj[0].id;
+                template.templateName = tempObj[0].templateName;
+                template.description = tempObj[0].description;
+
+                tempObj[0].processes.slice().forEach((process, key) => {
+                    if (!this.processTypesNotToDisplay.includes(process.processType)) {
+                        template.processes.push(process);
+                        processGroupNumberList.splice(processGroupNumberList.indexOf(parseInt(process.order)), 1);
+                    }
+                });
+
+                this.setState({ template, processGroupNumberList });
+            })
+            .catch(error => {
+                console.log("getSelectedDealTypeById error: ", error.message);
             });
-            let data = await this.handleErrors(response).json();
-
-            let tempObj = data.itemsList.filter(templ => templ.id === dealTypeId);
-            template.id = tempObj[0].id;
-            template.templateName = tempObj[0].templateName;
-            template.description = tempObj[0].description;
-
-            tempObj[0].processes.slice().forEach((process, key) => {
-                if (!this.processTypesNotToDisplay.includes(process.processType)) {
-                    template.processes.push(process);
-                    processGroupNumberList.splice(processGroupNumberList.indexOf(parseInt(process.order)),1);
-                }
-            });
-
-            this.setState({ template, processGroupNumberList });
-        } catch (error) {
-            console.log("getSelectedDealTypeById>== error", error.message);
-        }
     }
 
     //generic error handling functions
     handleErrors(response) {
-        console.log("handleErrors==>", response);
+        console.log("handleErrors: ", response);
         let ok = response.ok;
         if (!ok) {
             let status = response.status;
             let statusText = response.statusText;
+
             if (status >= 500) {
                 throw new Error(`ServerError: ErrorMsg ${statusText} & status code ${status}`);
             }
@@ -508,10 +499,6 @@ export class AddDealTypeR extends Component {
                 <Spinner size={SpinnerSize.large} label={<Trans>loading</Trans>} ariaLive='assertive' />
             </div>
         );
-    }
-
-    renderError() {
-
     }
 
     showMessageBar(flag, message) {
@@ -536,7 +523,6 @@ export class AddDealTypeR extends Component {
                                                 <h5>{process.processStep}</h5>
                                             </div>
                                         </div>
-
                                     </div>
                                 );
                         })

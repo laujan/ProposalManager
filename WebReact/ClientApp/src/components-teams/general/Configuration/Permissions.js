@@ -7,10 +7,7 @@ import React, { Component } from 'react';
 import { TextField } from 'office-ui-fabric-react/lib/TextField';
 import { IconButton, PrimaryButton } from 'office-ui-fabric-react/lib/Button';
 import { DetailsList, DetailsListLayoutMode, SelectionMode } from 'office-ui-fabric-react/lib/DetailsList';
-import {
-    Spinner,
-    SpinnerSize
-} from 'office-ui-fabric-react/lib/Spinner';
+import { Spinner, SpinnerSize } from 'office-ui-fabric-react/lib/Spinner';
 import { MessageBar, MessageBarType } from 'office-ui-fabric-react/lib/MessageBar';
 import { Trans } from "react-i18next";
 import { Dropdown } from 'office-ui-fabric-react/lib/Dropdown';
@@ -21,8 +18,8 @@ export class Permissions extends Component {
     constructor(props) {
         super(props);
 
-        this.sdkHelper = window.sdkHelper;
         this.authHelper = window.authHelper;
+        this.apiService = this.props.apiService;
 
         const columns = [
             {
@@ -178,97 +175,109 @@ export class Permissions extends Component {
     }
 
     async loadAllPermissionData() {
+        this.setState({ loading: true });
+
         try {
-            if (this.state.loading) {
-                let rolesList = await this.getAllRoles();
-                let permissionsList = await this.getAllPemissionTypes();
-                let data = await this.getAllPermissionsList();
-                this.setState({ items: data.items, loading: data.loading, rowItemCounter: data.rowItemCounter, permissionTypes: permissionsList, roles: rolesList });
-            }
-        } catch (error) {
-            this.setState({ loading: true });
+            let values = await Promise.all([this.getAllRoles(), this.getAllPemissionTypes(), this.getAllPermissionsList()]);
+            let rolesList = values[0];
+            let permissionsList = values[1];
+            let data = values[2];
+            this.setState({ items: data.items, rowItemCounter: data.rowItemCounter, permissionTypes: permissionsList, roles: rolesList });
+        }
+        catch (err) {
+            console.log("Permissions_loadAllPermissionData error: ", err);
+        }
+        finally {
+            this.setState({ loading: false });
         }
     }
 
     async getAllRoles() {
-        this.setState({ loading: true });
-        let requestUrl = 'api/Roles';
-        const response = await fetch(requestUrl, { method: "GET", headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() } });
-        const data = await response.json();
-
         try {
-            let allRoles = data;
-            let rolesList = allRoles.map(role => { return { "key": role.displayName, "text": role.displayName }; });
-            return rolesList;
-        }
-        catch (err) {
-            console.log("Permission.js getAllRoles :, ", err);
-            return false;
+            let response = await this.apiService.callApi('Roles', "GET");
+            let data = await response.json();
+
+            if (response.ok) {
+                let roles = data.map(role => { return { "key": role.displayName, "text": role.displayName }; });
+                return roles;
+            }
+            else {
+                throw new Error(data.error.message);
+            }
+        } catch (error) {
+            console.log("getAllRoles: ", error);
+            throw error;
         }
     }
 
     async getAllPemissionTypes() {
-        this.setState({ loading: true });
-        let requestUrl = 'api/Permissions';
-        const response = await fetch(requestUrl, { method: "GET", headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() } });
-        const data = await response.json();
         try {
-            let allPermissions = data;
-            let permissionsList = allPermissions.map(permission => { return { "key": permission.name, "text": permission.name }; });
-            return permissionsList;
+            let response = await this.apiService.callApi('Permissions', "GET");
+            let data = await response.json();
+
+            if (response.ok) {
+                let permissionsList = data.map(permission => { return { "key": permission.name, "text": permission.name }; });
+                return permissionsList;
+            }
+            else {
+                throw new Error(data.error.message);
+            }
         }
-        catch (err) {
-            console.log("Permission.js getAllPemissionTypes :, ", err);
-            return false;
+        catch (error) {
+            console.log("getAllPemissionTypes : ", error);
+            throw new Error(error);
         }
     }
 
-    async getAllPermissionsList(shadowLoading = false) {
-        if (!shadowLoading)
-            this.setState({ loading: true });
-        //WAVE-4 : Changing RoleMappong to Roles:
-        let requestUrl = 'api/Roles';
-        const response = await fetch(requestUrl, { method: "GET", headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() } });
-        const data = await response.json();
+    async getAllPermissionsList() {
         try {
-            let allPermissions = data;
+            let response = await this.apiService.callApi('Roles', "GET");
+            let data = await response.json();
 
-            for (let p = 0; p < allPermissions.length; p++) {
-                let permissionsList = [];
-                for (let i = 0; i < allPermissions[p].permissions.length; i++) {
-                    permissionsList.push(allPermissions[p].permissions[i].name);
+            if (response.ok) {
+                for (let p = 0; p < data.length; p++) {
+                    let permissionsList = [];
+                    for (let i = 0; i < data[p].permissions.length; i++) {
+                        permissionsList.push(data[p].permissions[i].name);
+                    }
+                    data[p].selPermissions = permissionsList;
                 }
-                allPermissions[p].selPermissions = permissionsList;
-            }
 
-            return { items: allPermissions, loading: false, rowItemCounter: allPermissions.length };
+                return { items: data, rowItemCounter: data.length };
+            }
+            else {
+                throw new Error(data.error.message);
+            }
         }
-        catch (err) {
-            console.log("Permission.js getAllPermissionsList :, ", err);
-            return false;
+        catch (error) {
+            console.log("getAllPermissionsList : ", error);
+            throw new Error(error);
         }
+    }
+
+    setMessage(isUpdate, isUpdateMsg, MessageBarType, MessagebarText) {
+        //Show message
+        this.setState({ isUpdate, isUpdateMsg, MessageBarType, MessagebarText });
+
+        //Schedule message hide
+        setTimeout(function () {
+            this.setState({ isUpdate: false, isUpdateMsg: false, MessageBarType: "", MessagebarText: "" });
+        }.bind(this), 2000);
     }
 
     async addRow(e, item) {
         if (this.state.isAdGroupNameError) {
-            this.setState({
-                MessagebarText: <Trans>adGroupNameExist</Trans>,
-                MessageBarType: MessageBarType.error,
-                isUpdate: false,
-                isUpdateMsg: true
-            });
-            setTimeout(function () { this.setState({ isUpdateMsg: false, isUpdate: false, MessageBarType: MessageBarType.error, MessagebarText: "" }); }.bind(this), 3000);
-            return false;
+            this.setMessage(false, true, MessageBarType.error, <Trans>adGroupNameExist</Trans>);
         }
+
         if (item.id.length === 0) {
-            await this.addOrUpdatePermission(item, "POST", <Trans>permissionAddSuccess</Trans>);
+            await this.addOrUpdatePermission(item, "POST");
         } else if (item.id.length > 0) {
-            await this.addOrUpdatePermission(item, "PATCH", <Trans>permissionUpdatedSuccess</Trans>);
+            await this.addOrUpdatePermission(item, "PATCH");
         }
     }
 
     onChangeProperty(e, item, property) {
-
         let items = JSON.parse(JSON.stringify(this.state.items));
         let permissionItem = item.id === this.state.permissionItem.id ? JSON.parse(JSON.stringify(this.state.permissionItem)) : item;
         let changeFlag = false;
@@ -283,13 +292,10 @@ export class Permissions extends Component {
                     if (isAdGroupExist) {
                         permissionItem.adGroupName = e.target.value;
                         this.setState({
-                            MessagebarText: <Trans>adGroupNameExist</Trans>,
-                            MessageBarType: MessageBarType.error,
-                            isUpdate: false,
-                            isUpdateMsg: true,
                             isAdGroupNameError: true
                         });
-                        setTimeout(function () { this.setState({ isUpdateMsg: false, isUpdate: false, MessageBarType: MessageBarType.error, MessagebarText: "" }); }.bind(this), 3000);
+                        this.setMessage(false, true, MessageBarType.error, <Trans>adGroupNameExist</Trans>);
+
                         break;
                     }
                     permissionItem.adGroupName = e.target.value;
@@ -345,12 +351,13 @@ export class Permissions extends Component {
 
         this.setState({
             items: currentItems,
-            permissionItem : this.schema
+            permissionItem: this.schema
         });
     }
 
     deleteRow(item) {
         this.setState({ isUpdate: true });
+
         let items = this.state.items;
         if (item.id === "" || item.id.length === 0) {
             items = items.filter(p => p.adGroupName !== item.adGroupName);
@@ -359,11 +366,45 @@ export class Permissions extends Component {
         } else {
             this.deletePermission(item);
         }
-                
     }
 
+    async addOrUpdatePermission(permissionItem, methodType) {
+        this.setState({ isUpdate: true });
 
-    permissionsList(columns, isCompactMode, items, selectionDetails) {
+        this.apiService.callApi('Roles', methodType, { body: JSON.stringify(permissionItem) })
+            .then(async (response) => {
+                if (response.ok) {
+                    await this.loadAllPermissionData();
+
+                    this.setMessage(false, true, MessageBarType.success, methodType === "POST" ? <Trans>permissionAddSuccess</Trans> : <Trans>permissionUpdatedSuccess</Trans>);
+                } else {
+                    this.setMessage(false, true, MessageBarType.error, <Trans>errorOoccuredPleaseTryAgain</Trans>);
+                }
+            })
+            .catch(error => {
+                console.log("addOrUpdatePermission: ", error);
+
+                this.setMessage(false, true, MessageBarType.error, <Trans>errorOoccuredPleaseTryAgain</Trans>);
+            });
+    }
+
+    async deletePermission(permissionItem) {
+        this.apiService.callApi('Roles', "DELETE", { id: permissionItem.id })
+            .then(async (response) => {
+                if (response.ok) {
+                    await this.loadAllPermissionData();
+
+                    this.setMessage(false, true, MessageBarType.success, <Trans>permissionDeletedSuccess</Trans>);
+                } else {
+                    this.setMessage(false, true, MessageBarType.error, <Trans>errorOoccuredPleaseTryAgain</Trans>);
+                }
+            })
+            .catch(error => {
+                console.log("deletePermission: ", error);
+            });
+    }
+
+    permissionsList(columns, isCompactMode, items) {
         return (
             <div className='ms-Grid-row LsitBoxAlign p20ALL '>
                 <div className='ms-Grid-col ms-sm12 ms-md12 ms-lg12'>
@@ -382,86 +423,8 @@ export class Permissions extends Component {
         );
     }
 
-    async addOrUpdatePermission(permissionItem, methodType, dispSuccessMsg) {
-        //WAVE-4 : Changing RoleMappong to Roles:
-        this.setState({ isUpdate: true });
-        this.requestUpdUrl = 'api/Roles';
-        let options = {
-            method: methodType,
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-                'authorization': 'Bearer    ' + window.authHelper.getWebApiToken()
-            },
-            body: JSON.stringify(permissionItem)
-        };
-        try {
-            let response = await fetch(this.requestUpdUrl, options);
-            console.log(response);
-            if (response.ok) {
-                let updatedPermissions = await this.getAllPermissionsList(true);
-                this.setState({
-                    items: updatedPermissions.items,
-                    isUpdate: false
-                });
-                this.setMessage(false, true, MessageBarType.success, dispSuccessMsg);
-            } else {
-                dispSuccessMsg = <Trans>errorOoccuredPleaseTryAgain</Trans>;
-                this.setMessage(false, true, MessageBarType.error, dispSuccessMsg, permissionItem = this.schema);
-            }
-        } catch (error) {
-            console.log("Permission.js getAllPermissionsList :, ", error);
-            this.setState({ isUpdate: false });
-            dispSuccessMsg = <Trans>errorOoccuredPleaseTryAgain</Trans>;
-            this.setMessage(false, true, MessageBarType.error, dispSuccessMsg, permissionItem = this.schema);
-            return false;
-        } finally {
-            await this.loadAllPermissionData();
-            setTimeout(function () { this.setMessage(false, false, "", ""); }.bind(this), 2000);
-            return "done";
-        }
-    }
-
-    setMessage(isUpdate, isUpdateMsg, MessageBarType, MessagebarText) {
-        this.setState({ isUpdate, isUpdateMsg, MessageBarType, MessagebarText });
-    }
-
-    async deletePermission(permissionItem) {
-        //WAVE-4 : Changing RoleMappong to Roles:
-        // API Update call        
-        this.requestUpdUrl = 'api/Roles/' + permissionItem.id;
-        let options = {
-            method: "DELETE",
-            headers: {
-                'authorization': 'Bearer ' + window.authHelper.getWebApiToken()
-            }
-        };
-        try {
-            let response = await fetch(this.requestUpdUrl, options);
-            if (response.ok) {
-                let updatedPermissions = await this.getAllPermissionsList(true);
-                this.setState({
-                    items: updatedPermissions.items
-                });
-                this.setMessage(false, true, MessageBarType.success, <Trans>permissionDeletedSuccess</Trans>);
-                return response.json;
-            } else {
-                this.setMessage(false, true, MessageBarType.error, <Trans>errorOoccuredPleaseTryAgain</Trans>);
-            }
-        } catch (error) {
-            this.setState({ isUpdate: false });
-            console.log("Permission getAllPermissionsList :, ", error);
-            return false;
-        } finally {
-            await this.loadAllPermissionData();
-            setTimeout(function () { this.setMessage(false, false, "", ""); }.bind(this), 2000);
-            return "done";
-        }
-    }
-
     render() {
-        const { columns, isCompactMode, items, selectionDetails } = this.state;
-        const permissionsList = this.permissionsList(columns, isCompactMode, items, selectionDetails);
+        const { columns, isCompactMode, items } = this.state;
         if (this.state.loading) {
             return (
                 <div className='ms-BasicSpinnersExample ibox-content pt15 '>
@@ -469,8 +432,9 @@ export class Permissions extends Component {
                 </div>
             );
         } else {
-            return (
+            const permissionsList = this.permissionsList(columns, isCompactMode, items);
 
+            return (
                 <div className='ms-Grid bg-white ibox-content'>
                     <div className='ms-Grid-row'>
                         <div className='ms-Grid-col ms-sm12 ms-md12 ms-lg12 p-10'>
@@ -506,8 +470,6 @@ export class Permissions extends Component {
                     </div>
                 </div>
             );
-
         }
     }
-
 }

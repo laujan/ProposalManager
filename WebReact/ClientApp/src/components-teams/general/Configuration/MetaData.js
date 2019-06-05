@@ -23,8 +23,8 @@ export class MetaData extends Component {
     constructor(props) {
         super(props);
         this.utils = new Utils();
-        this.sdkHelper = window.sdkHelper;
         this.authHelper = window.authHelper;
+        this.apiService = this.props.apiService;
         this.accessGranted = false;
         let rowCounter = 0;
 
@@ -204,7 +204,6 @@ export class MetaData extends Component {
             isCompactMode: false,
             loading: true,
             isUpdate: false,
-            updatedItems: [],
             MessagebarText: "",
             MessageBarType: MessageBarType.success,
             isUpdateMsg: false,
@@ -235,29 +234,21 @@ export class MetaData extends Component {
 
     async getMetaDataList() {
         let items = [];
-        let requestUrl = 'api/MetaData';
-        let options = {
-            method: "GET",
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-            headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() }
-        };
+        this.apiService.callApi('MetaData', 'GET')
+            .then(async (response) => {
+                if (response.ok) {
+                    let data = await response.json();
+                    items = JSON.parse(JSON.stringify(data));
+                }
+            })
+            .catch(error => {
+                this.setMessage(false, true, MessageBarType.error, error.message);
+            })
+            .finally(() => {
+                this.setState({ items, loading: false, rowItemCounter: items.length });
 
-        try {
-            let response = await fetch(requestUrl, options);
-            if (response.ok) {
-                let data = await response.json();
-                items = JSON.parse(JSON.stringify(data));
-            }
-
-        } catch (error) {
-            this.setMessage(false, true, MessageBarType.error, error.message);
-        } finally {
-           // console.log(items);
-            this.setState({ items, loading: false, rowItemCounter: items.length });
-            setTimeout(function () { this.setMessage(false, false, "", ""); }.bind(this), 2000);
-        }
-        return items;
+                return items;
+            });        
     }
 
     metaDataList(columns, isCompactMode, items) {
@@ -291,36 +282,34 @@ export class MetaData extends Component {
     }
 
     async deleteRow(item) {
+        this.apiService.callApi('MetaData', 'DELETE', { id: item.id })
+            .then(async (response) => {
+                if (response.ok) {
+                    await this.getMetaDataList();
+                    
+                    this.setMessage(false, true, MessageBarType.success, "Meta data deleted successfully.");
+                } else {
+                    throw new Error("Meta data delete failed.");
+                }
+            })
+            .catch(error => {
+                this.setState({ isUpdate: false });
 
-        this.requestUpdUrl = 'api/Metadata/' + item.id;
-        let options = {
-            method: "DELETE",
-            headers: {
-                'authorization': 'Bearer ' + window.authHelper.getWebApiToken()
-            }
-        };
-        try {
-            let response = await fetch(this.requestUpdUrl, options);
-            if (response.ok) {
-                let items = await this.getMetaDataList();
-                this.setState({ items});
-                this.setMessage(false, true, MessageBarType.success,"Meta data deleted successfully.");
-                return response.json;
-            } else {
-                throw new Error("Meta data delete failed.")
-            }
-        } catch (error) {
-            this.setState({ isUpdate: false });
-            
-            return false;
-        } finally {
-            setTimeout(function () { this.setMessage(false, false, "", ""); }.bind(this), 2000);
-            this.setState({currentItem:this.schema});
-        }
+                return false;
+            })
+            .finally(() => {
+                this.setState({ currentItem: this.schema });
+            });
     }
 
     setMessage(isUpdate, isUpdateMsg, MessageBarType, MessagebarText) {
+        //Show message
         this.setState({ isUpdate, isUpdateMsg, MessageBarType, MessagebarText });
+
+        //Schedule message hide
+        setTimeout(function () {
+            this.setState({ isUpdate: false, isUpdateMsg: false, MessageBarType: "", MessagebarText: "" });
+        }.bind(this), 2000);
     }
 
     // edit dropdown values
@@ -333,13 +322,15 @@ export class MetaData extends Component {
         let items = JSON.parse(JSON.stringify(this.state.items));
         let currentItem = JSON.parse(JSON.stringify(this.state.currentItem));
         
-        this.setState({ showDropdownValuesModel: false, items,currentItem });
+        this.setState({ showDropdownValuesModel: false, items, currentItem });
     }
 
     onAddRowModelItem() {
         let currentItem = JSON.parse(JSON.stringify(this.state.currentItem));
 
-        if(currentItem.values.length===0)  currentItem.values = [] ;
+        if (currentItem.values.length === 0) {
+            currentItem.values = [];
+        }
 
         currentItem.values.push({ name: "", typeName: "DropDownMetaDataValue", id: currentItem.values.length + 1});
 
@@ -360,19 +351,14 @@ export class MetaData extends Component {
                 currentItem.values.forEach((c) => {
                     if (c.id === item.id) {
                         c.name = value;
-                        c.id = item.id
+                        c.id = item.id;
                     }
                 });
                 
             } catch (error) {
                 console.log(error.message);
-                this.setState({ isModelUpdate: false, isModelUpdateMsg: true, modelMessageBarType: MessageBarType.error, MessagebarText: error.message });
-    
+                this.setMessage(false, true, MessageBarType.error, error.message);    
             } finally {
-                setTimeout(function () {
-                    this.setState({ isModelUpdate: false, isModelUpdateMsg: false, modelMessageBarType: "", MessagebarText: "" });
-                }.bind(this), 500);
-
                 if (currentItem.id.length === 0) {
                     items[items.length - 1] = currentItem;
                 } else {
@@ -382,9 +368,8 @@ export class MetaData extends Component {
                     }
                 }
                 this.setState({
-                    currentItem,items
+                    currentItem, items
                 });
-
             }
         }
 
@@ -395,15 +380,8 @@ export class MetaData extends Component {
         let updatedItems = this.state.currentItem.values;
         let index = updatedItems.findIndex(opt => opt.name.toLowerCase() === value.toLowerCase());
         if (index !== -1) {
-            this.setState({
-                isModelUpdate: false,
-                isModelUpdateMsg: true,
-                modelMessagebarText: <Trans>optionValueAlreadyExist</Trans>,
-                modelMessageBarType: MessageBarType.error
-            });
-            setTimeout(function () {
-                this.setMessage(false, false, "", "");
-            }.bind(this), 2000);
+            this.setMessage(false, true, MessageBarType.error, <Trans>optionValueAlreadyExist</Trans>);
+
             flag = true;
         }
         return flag;
@@ -430,7 +408,7 @@ export class MetaData extends Component {
 
     renderDropdownOptionsList(columns, isCompactMode, selDpItem) {
         let items = selDpItem.values;
-        console.log("Metadata_renderDropdownOptionsList items : ", items)
+        console.log("Metadata_renderDropdownOptionsList items : ", items);
         return (
             <div className='ms-Grid-row'>
                 <div className='ms-Grid-col ms-sm12 ms-md12 ms-lg12 p-10'>
@@ -481,7 +459,7 @@ export class MetaData extends Component {
                 break;
             default:
                 break;
-        };
+        }
 
         if (trackFlag) {
             if (item.id.length === 0) {
@@ -502,10 +480,10 @@ export class MetaData extends Component {
     async saveRow(e, item) {
         let dispSuccessMsg = "";
         if (item.id.length === 0) {
-            dispSuccessMsg = "Meta data added successfully."
+            dispSuccessMsg = "Meta data added successfully.";
             await this.addOrUpdateMetaData(item, "POST", dispSuccessMsg);
         } else if (item.id.length > 0) {
-            dispSuccessMsg = "Meta data updated successfully."
+            dispSuccessMsg = "Meta data updated successfully.";
             await this.addOrUpdateMetaData(item, "PATCH", dispSuccessMsg);
         }
         
@@ -513,42 +491,30 @@ export class MetaData extends Component {
 
 
     async addOrUpdateMetaData(metaDataItem, methodType, dispSuccessMsg) {
-        this.requestUpdUrl = 'api/MetaData';
-        let options = {
-            method: methodType,
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-                'authorization': 'Bearer    ' + window.authHelper.getWebApiToken()
-            },
-            body: JSON.stringify(metaDataItem)
-        };
-        try {
-            let response = await fetch(this.requestUpdUrl, options);
-            console.log(response);
-            if (response.ok) {
-                let metaDataList = await this.getMetaDataList();
-                this.setState({
-                    items: metaDataList
-                });
-                this.setMessage(false, true, MessageBarType.success, dispSuccessMsg);
-            } else {
+        this.apiService.callApi('MetaData', methodType, { body: JSON.stringify(metaDataItem) })
+            .then(async (response) => {
+                if (response.ok) {
+                    await this.getMetaDataList();
+
+                    this.setMessage(false, true, MessageBarType.success, dispSuccessMsg);
+                } else {
+                    dispSuccessMsg = <Trans>errorOoccuredPleaseTryAgain</Trans>;
+
+                    this.setMessage(false, true, MessageBarType.error, dispSuccessMsg);
+                }
+            })
+            .catch(() => {
                 dispSuccessMsg = <Trans>errorOoccuredPleaseTryAgain</Trans>;
                 this.setMessage(false, true, MessageBarType.error, dispSuccessMsg);
-            }
-        } catch (error) {
-            dispSuccessMsg = <Trans>errorOoccuredPleaseTryAgain</Trans>;
-            this.setMessage(false, true, MessageBarType.error, dispSuccessMsg);
-            return false;
-        } finally {
-            setTimeout(function () { this.setMessage(false, false, "", ""); }.bind(this), 2000);
-            this.setState({currentItem:this.schema});
-        }
+            })
+            .finally(() => {                
+                this.setState({ currentItem: this.schema });
+            });
     }
 
     render() {
         const { columns, isCompactMode, items } = this.state;
-        console.log("MetaData_render items : ", items)
+        console.log("MetaData_render items : ", items);
         if (this.state.loading) {
             return (
                 <div className='ms-BasicSpinnersExample ibox-content pt15 '>

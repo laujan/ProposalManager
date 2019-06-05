@@ -12,18 +12,16 @@ import { FilePicker } from '../FilePicker';
 import { Persona, PersonaSize } from 'office-ui-fabric-react/lib/Persona';
 import { Spinner, SpinnerSize } from 'office-ui-fabric-react/lib/Spinner';
 import { MessageBar, MessageBarType } from 'office-ui-fabric-react/lib/MessageBar';
-import { PeoplePickerTeamMembers } from '../PeoplePickerTeamMembers';
+import { PeoplePickerTeamMembers } from './PeoplePickerTeamMembers';
 import { Trans } from "react-i18next";
 import { getQueryVariable } from '../../../common';
-
 
 export class ChooseTeam extends Component {
     displayName = ChooseTeam.name
     constructor(props) {
         super(props);
 
-        this.sdkHelper = window.sdkHelper;
-        this.authHelper = window.authHelper;
+        this.apiService = this.props.apiService;
         this.accessGranted = false;
         const oppID = getQueryVariable('opportunityId') ? getQueryVariable('opportunityId') : "";
 
@@ -33,31 +31,19 @@ export class ChooseTeam extends Component {
         });
 
         this.state = {
-            isChecked: false,
-            checked: false,
-            OfficersList: [],
-            teamcount: 0,
-            Team: [],
-            selectedRole: {},
             selectorFiles: [],
-            selectedTeamMember: '',
-            filterOfficersList: [],
             currentSelectedItems: [],
-            peopleList: [],
-            OppDetails: {},
-            mostRecentlyUsed: [],
             oppName: "",
-            MessagebarText: "",
-            MessagebarTextFinalizeTeam: "",
-            MessageBarTypeFinalizeTeam: "",
+            messagebarText: "",
+            messagebarTextFinalizeTeam: "",
+            messageBarTypeFinalizeTeam: "",
             otherPeopleList: [],
             loading: true,
             usersPickerLoading: true,
             oppID: oppID,
             proposalDocumentFileName: "",
-            UserRoleMapList: [],
-            isEnableFinalizeTeamButton: false,
-            TeamsObject: []
+            userRoleMapList: [],
+            teamsObject: []
         };
 
         this.onFinalizeTeam = this.onFinalizeTeam.bind(this);
@@ -67,89 +53,71 @@ export class ChooseTeam extends Component {
     }
 
     async componentDidMount() {
-        console.log("Dashboard_componentDidMount isauth: " + this.authHelper.isAuthenticated());
-        if (this.authHelper.isAuthenticated()) {
-            if (!this.state.isAuthenticated) {
-                this.authHelper.callGetUserProfile()
-                    .then(userProfile => {
-                        this.setState({
-                            userProfile: userProfile,
-                            loading: true
-                        });
-                    });
-            }
-        }
-    }
+        console.log("Dashboard_componentDidMount");
 
-    async componentDidUpdate() {
-        if (this.authHelper.isAuthenticated() && !this.accessGranted) {
-            this.accessGranted = true;
-            await this.getUserRoles();
-            await this.getOpportunity();
-        }
+        this.accessGranted = true;
+        await this.getUserRoles();
+        await this.getOpportunity();
     }
 
     async getOpportunity() {
-        let requestUrl = 'api/Opportunity/?id=' + this.state.oppID;
         try {
-            let response = await fetch(requestUrl, {
-                method: "GET",
-                headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() }
-            });
+            let response = await this.apiService.callApi('Opportunity', 'GET', { query: `id=${this.state.oppID}` });
+            if (response.ok) {
+                let data = await response.json();
 
-            let data = await response.json();
-            let TeamsObject = await this.getUserProfiles();
-            console.log("ChooseTeams_log getOpportunity : ", data);
-            let oppSelTeam = [];
-            if (data.teamMembers.length > 0) {
-                for (let m = 0; m < data.teamMembers.length; m++) {
-                    let item = data.teamMembers[m];
-                    if (item.displayName.length > 0) {
-                        oppSelTeam.push(item);
+                let teamsObject = await this.getUserProfiles();
+                console.log("ChooseTeams_log getOpportunity : ", data);
+                let oppSelTeam = [];
+                if (data.teamMembers.length > 0) {
+                    for (let m = 0; m < data.teamMembers.length; m++) {
+                        let item = data.teamMembers[m];
+                        if (item.displayName.length > 0) {
+                            oppSelTeam.push(item);
+                        }
                     }
                 }
-            }
-            console.log("ChooseTeams_Log getOpportunity : ", TeamsObject);
-            console.log("ChooseTeams_Log getOpportunity : ", oppSelTeam);
-            //TODO
-            TeamsObject.forEach(team => {
-                oppSelTeam.forEach(selectedTeam => {
-                    if (selectedTeam.roleName && team.role) {
-                        if (selectedTeam.roleName.toLowerCase() === team.role.toLowerCase()) {
-                            selectedTeam.text = selectedTeam.displayName;
-                            team.selectedMemberList.push(selectedTeam);
-                        }                          
-                    }
+                console.log("ChooseTeams_Log getOpportunity : ", teamsObject);
+                console.log("ChooseTeams_Log getOpportunity : ", oppSelTeam);
+                //TODO
+                teamsObject.forEach(team => {
+                    oppSelTeam.forEach(selectedTeam => {
+                        if (selectedTeam.roleName && team.role) {
+                            if (selectedTeam.roleName.toLowerCase() === team.role.toLowerCase()) {
+                                selectedTeam.text = selectedTeam.displayName;
+                                team.selectedMemberList.push(selectedTeam);
+                            }
+                        }
+                    });
                 });
-            });
 
+                let fileName = data.proposalDocument !== null ? this.getDocumentName(data.proposalDocument["documentUri"]) : "";
 
-            let fileName = data.proposalDocument !== null ? this.getDocumentName(data.proposalDocument["documentUri"]) : "";
-
-            this.setState({
-                oppData: data,
-                oppName: data.displayName,
-                oppID: data.id,
-                currentSelectedItems: oppSelTeam,
-                loading: false,
-                proposalDocumentFileName: fileName
-            });
-
+                this.setState({
+                    oppData: data,
+                    oppName: data.displayName,
+                    oppID: data.id,
+                    currentSelectedItems: oppSelTeam,
+                    loading: false,
+                    proposalDocumentFileName: fileName
+                });
+            }
+            else {
+                console.log("ChooseTeam_getOpportunityForTeams error retrieving:", response.statusText);
+            }
         } catch (error) {
-            console.log("Choose Team Error : ", error.message);
+            console.log("ChooseTeam_getOpportunityForTeams error:", error.message);
         }
-
     }
 
     async getUserRoles() {
         //WAVE-4 : Changing RoleMappong to Roles:
-        let requestUrl = 'api/Roles';
         try {
-            let response = await fetch(requestUrl, { method: "GET", headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() } });
-            let data = await response.json();
-            console.log("ChooseTeams_Log getUserRoles : ", data);
-            try {
-                let userRoleList = [];
+            let response = await this.apiService.callApi('Roles', 'GET', {});
+            let userRoleList = [];
+            if (response.ok) {
+                let data = await response.json();
+
                 for (let i = 0; i < data.length; i++) {
                     let userRole = {};
                     userRole.id = data[i].id;
@@ -160,13 +128,14 @@ export class ChooseTeam extends Component {
                     userRoleList.push(userRole);
                 }
                 console.log("ChooseTeams_Log getUserRoles userRoleList: ", userRoleList);
-                this.setState({ UserRoleMapList: userRoleList });
             }
-            catch (err) {
-                return false;
+            else {
+                console.log("ChooseTeams_Log getUserRoles error retrieving roles: ", response.statusText);
             }
+
+            this.setState({ userRoleMapList: userRoleList });
         } catch (error) {
-            return false;
+            console.log("ChooseTeams_Log getUserRoles error: ", error);
         }
     }
 
@@ -181,59 +150,57 @@ export class ChooseTeam extends Component {
     }
 
     async getUserProfiles() {
-        let requestUrl = 'api/UserProfile/';
         try {
-            let response = await fetch(requestUrl, {
-                method: "GET",
-                headers: {
-                    'authorization': 'Bearer ' + this.authHelper.getWebApiToken()
-                }
-            });
-            let data = await response.json();
-            console.log("ChooseTeams_Log getUserProfiles : ", data);
-
+            let response = await this.apiService.callApi('UserProfile', 'GET', {});
             let itemslist = [];
-            let TeamsObject = [];
+            let teamsObject = [];
 
-            this.state.UserRoleMapList.forEach(role => {
-                if (role.roleName.toLowerCase() !== "administrator") {
-                    TeamsObject.push({ "role": role.roleName.toLowerCase(), "memberList": [], "selectedMemberList": [] });
-                }
-            });
+            if (response.ok) {
+                let data = await response.json();
 
-            if (data.ItemsList.length > 0) {
-                for (let i = 0; i < data.ItemsList.length; i++) {
-                    let item = data.ItemsList[i];
+                this.state.userRoleMapList.forEach(role => {
+                    if (role.roleName.toLowerCase() !== "administrator") {
+                        teamsObject.push({ "role": role.roleName.toLowerCase(), "memberList": [], "selectedMemberList": [] });
+                    }
+                });
 
-                    TeamsObject.forEach(team => {
-                        item.userRoles.forEach(role => {
-                            if (role.displayName.toLowerCase() === team.role.toLowerCase())
-                                team.memberList.push(item);
+                if (data.ItemsList.length > 0) {
+                    for (let i = 0; i < data.ItemsList.length; i++) {
+                        let item = data.ItemsList[i];
+
+                        teamsObject.forEach(team => {
+                            item.userRoles.forEach(role => {
+                                if (role.displayName.toLowerCase() === team.role.toLowerCase())
+                                    team.memberList.push(item);
+                            });
                         });
-                    });
 
-                    itemslist.push(item);
+                        itemslist.push(item);
+                    }
                 }
             }
-
-            console.log("ChooseTeams_Log getUserProfiles TeamsObject: ", TeamsObject);
+            else {
+                console.log("ChooseTeam_getUserProfiles error retrieving data: " + response.statusText);
+            }
 
             this.setState({
                 allOfficersList: itemslist,
                 usersPickerLoading: false,
                 otherPeopleList: [],
-                isDisableFinalizeTeamButton: TeamsObject.length > 0 ? false : true,
-                TeamsObject: TeamsObject
+                isDisableFinalizeTeamButton: teamsObject.length > 0 ? false : true,
+                teamsObject: teamsObject
             });
 
-            return TeamsObject;
+            console.log("ChooseTeams_Log getUserProfiles eamsObject: ", teamsObject);
+
+            return teamsObject;
 
         } catch (error) {
-            console.log("Opportunities_getUserProfiles error: " + JSON.stringify(error));
+            console.log("ChooseTeam_getUserProfiles error: " + JSON.stringify(error));
         }
     }
 
-    saveFile() {
+    async saveFile() {
         let files = this.state.selectorFiles;
         for (let i = 0; i < files.length; i++) {
             let fd = new FormData();
@@ -243,39 +210,26 @@ export class ChooseTeam extends Component {
             fd.append('fileName', files[0].name);
 
             this.setState({
-                IsfileUpload: true
+                isfileUpload: true
             });
 
-            let requestUrl = "api/document/UploadFile/" + encodeURIComponent(this.state.oppName) + "/ProposalTemplate";
-
-            let options = {
-                method: "PUT",
-                headers: {
-                    'authorization': 'Bearer ' + this.authHelper.getWebApiToken()
-                },
-                body: fd
-            };
             try {
-                fetch(requestUrl, options)
-                    .then(response => {
-                        if (response.ok) {
-                            return response.json;
-                        } else {
-                            console.log('Error...: ');
-                        }
-                    }).then(data => {
-                        this.setState({ IsfileUpload: false, fileUploadMsg: true, MessagebarText: <Trans>templateUploadedSuccessfully</Trans> });
-                        setTimeout(function () { this.setState({ fileUploadMsg: false, MessagebarText: "" }); }.bind(this), 3000);
-                    });
+                let response = await this.apiService.callApi('Document', 'PUT', { id: `UploadFile/${encodeURIComponent(this.state.oppName)}/ProposalTemplate`, formData: fd });
+
+                if (response.ok) {
+                    this.setState({ isfileUpload: false, fileUploadMsg: true, messagebarText: <Trans>templateUploadedSuccessfully</Trans> });
+                    setTimeout(() => { this.setState({ fileUploadMsg: false, messagebarText: "" }); }, 3000);
+                }
+                else {
+                    console.log("ChooseTeam_saveFile error: ", response.statusText);
+                }
             }
             catch (err) {
                 this.setState({
-                    IsfileUpload: false,
+                    isfileUpload: false,
                     fileUploadMsg: true,
-                    MessagebarText: <Trans>errorWhileUploadingTemplatePleaseTryAgain</Trans>
+                    messagebarText: <Trans>errorWhileUploadingTemplatePleaseTryAgain</Trans>
                 });
-                //alert("Error Uploading File");
-                return false;
             }
         }
     }
@@ -284,7 +238,7 @@ export class ChooseTeam extends Component {
         this.setState({ selectorFiles: this.state.selectorFiles.concat([file]) });
     }
 
-    onFinalizeTeam() {
+    async onFinalizeTeam() {
         let teamsSelected = this.state.currentSelectedItems;
         console.log("ChooseTeam_onFinalizeTeam teamsSelected : ", teamsSelected);
         this.setState({
@@ -294,25 +248,16 @@ export class ChooseTeam extends Component {
         let data = this.state.oppData;
         data.teamMembers = teamsSelected;
 
-        let fetchData = {
-            method: 'PATCH',
-            body: JSON.stringify(data),
-            headers: {
-                'Content-Type': 'application/json',
-                'authorization': 'Bearer ' + this.authHelper.getWebApiToken()
-            }
-        };
-
-        let requestUrl = 'api/opportunity';
-
-        fetch(requestUrl, fetchData)
-            .catch(error => console.error('Error:', error))
-            .then(response => {
-                this.setState({ isFinalizeTeam: false, finazlizeTeamMsg: true, MessagebarTextFinalizeTeam: <Trans>finalizeTeamComplete</Trans>, MessageBarTypeFinalizeTeam: MessageBarType.success });
-                setTimeout(function () {
-                    this.setState({ finazlizeTeamMsg: false, MessagebarTextFinalizeTeam: "" });
-                }.bind(this), 3000);
-            });
+        try {
+            await this.apiService.callApi('Opportunity', 'PATCH', { body: JSON.stringify(data) });
+            this.setState({ isFinalizeTeam: false, finalizeTeamMsg: true, messagebarTextFinalizeTeam: <Trans>finalizeTeamComplete</Trans>, messageBarTypeFinalizeTeam: MessageBarType.success });
+            setTimeout(() => {
+                this.setState({ finalizeTeamMsg: false, messagebarTextFinalizeTeam: "" });
+            }, 3000);
+        }
+        catch (error) {
+            console.error('ChooseTeam_onFinalizeTeam error:', error);
+        }
     }
 
     selectedTeamMemberFromDropDown(item, roleName, processStep) {
@@ -364,7 +309,7 @@ export class ChooseTeam extends Component {
 
     getPeoplePickerTeamMembers() {
         let processes = JSON.parse(JSON.stringify(this.state.oppData.template.processes));
-        let teamMembersObject = JSON.parse(JSON.stringify(this.state.TeamsObject));
+        let teamMembersObject = JSON.parse(JSON.stringify(this.state.teamsObject));
 
         let teammembertemplate = processes.map((process, index) => {
             if (process.processStep.toLowerCase() !== "start process" &&
@@ -396,6 +341,7 @@ export class ChooseTeam extends Component {
                                 defaultSelectedUsers={selUsers}
                                 onChange={(e) => this.selectedTeamMemberFromDropDown(e, process.roleName, process.processStep)}
                                 itemLimit={1}
+                                apiService={this.props.apiService}
                             />
                         </div>
                     );
@@ -484,12 +430,12 @@ export class ChooseTeam extends Component {
                                                         : ""
                                                 }
                                                 {
-                                                    this.state.finazlizeTeamMsg ?
+                                                    this.state.finalizeTeamMsg ?
                                                         <MessageBar
-                                                            messageBarType={this.state.MessageBarTypeFinalizeTeam}
+                                                            messageBarType={this.state.messageBarTypeFinalizeTeam}
                                                             isMultiline={false}
                                                         >
-                                                            {this.state.MessagebarTextFinalizeTeam}
+                                                            {this.state.messagebarTextFinalizeTeam}
                                                         </MessageBar>
                                                         : ""
                                                 }
@@ -556,7 +502,7 @@ export class ChooseTeam extends Component {
                                         </div>
                                         <div className='ms-Grid-col ms-sm12 ms-md6 ms-lg5 '>
                                             {
-                                                this.state.IsfileUpload ?
+                                                this.state.isfileUpload ?
                                                     <Spinner size={SpinnerSize.small} ariaLive='assertive' className="pull-right p-5" />
                                                     : ""
                                             }
@@ -564,7 +510,7 @@ export class ChooseTeam extends Component {
 
                                             <PrimaryButton className='pull-right' onClick={this.saveFile} disabled={
                                                 //Bug Fix, proposaldocument coming as null start
-                                                this.state.IsfileUpload ||
+                                                this.state.isfileUpload ||
                                                 (this.state.oppData.proposalDocument !== null ?
                                                     this.state.oppData.proposalDocument.documentUri ? true : false : false)
                                                 //Bug Fix, proposaldocument coming as null end
@@ -577,7 +523,7 @@ export class ChooseTeam extends Component {
                                                         messageBarType={MessageBarType.success}
                                                         isMultiline={false}
                                                     >
-                                                        {this.state.MessagebarText}
+                                                        {this.state.messagebarText}
                                                     </MessageBar>
                                                     : ""
                                             }
@@ -593,5 +539,4 @@ export class ChooseTeam extends Component {
             );
         }
     }
-
 }

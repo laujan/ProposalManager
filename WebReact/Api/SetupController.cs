@@ -47,7 +47,7 @@ namespace WebReact.Api
 
             try
             {
-                await _setupService.UpdateAppOpptionsAsync(key, value, requestId);
+                await _setupService.UpdateAppOptionsAsync(key, value, requestId);
             }
             catch (Exception ex)
             {
@@ -82,8 +82,8 @@ namespace WebReact.Api
             return NoContent();
         }
 
-        [HttpPost("CreateAllLists/{siteRootId}", Name = "CreateAllLists")]
-        public async Task<IActionResult> CreateAllLists(string siteRootId)
+        [HttpPost("CreateAllLists", Name = "CreateAllLists")]
+        public async Task<IActionResult> CreateAllLists()
         {
             var requestId = Guid.NewGuid().ToString();
             _logger.LogInformation($"RequestID:{requestId} SetupController_CreateAllLists called.");
@@ -94,7 +94,7 @@ namespace WebReact.Api
 
             try
             {
-                await _setupService.CreateAllListsAsync(siteRootId);
+                await _setupService.CreateAllListsAsync();
             }
             catch (Exception ex)
             {

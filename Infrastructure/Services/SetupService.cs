@@ -3,20 +3,20 @@
 //
 // Licensed under the MIT license. See LICENSE file in the solution root folder for full license information
 
+using ApplicationCore;
+using ApplicationCore.Entities;
+using ApplicationCore.Entities.GraphServices;
+using ApplicationCore.Helpers;
+using ApplicationCore.Interfaces;
+using Infrastructure.Helpers;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using ApplicationCore.Interfaces;
-using ApplicationCore;
-using ApplicationCore.Helpers;
-using ApplicationCore.Entities;
-using Newtonsoft.Json.Linq;
-using Infrastructure.Helpers;
-using ApplicationCore.Entities.GraphServices;
 using System.Net;
+using System.Threading.Tasks;
 using System.Xml;
 
 namespace Infrastructure.Services
@@ -26,7 +26,6 @@ namespace Infrastructure.Services
         private readonly GraphSharePointAppService _graphSharePointAppService;
         private readonly IWritableOptions<AppOptions> _writableOptions;
         private readonly IWritableOptions<DocumentIdActivatorConfiguration> documentIdActivatorConfigurationWritableOptions;
-        //protected readonly SharePointListsSchemaHelper _sharePointListsSchemaHelper;
         private readonly GraphTeamsAppService _graphTeamsAppService;
         private readonly GraphUserAppService _graphUserAppService;
         private readonly IUserContext _userContext;
@@ -53,30 +52,23 @@ namespace Infrastructure.Services
             _graphSharePointAppService = graphSharePointAppService;
             _writableOptions = writableOptions;
             this.documentIdActivatorConfigurationWritableOptions = documentIdActivatorConfigurationWritableOptions;
-            //_sharePointListsSchemaHelper = sharePointListsSchemaHelper;
             _graphTeamsAppService = graphTeamsAppService;
             _graphUserAppService = graphUserAppService;
             _userContext = userContext;
             _azureKeyVaultService = azureKeyVaultService;
-
         }
 
-        public async Task<StatusCodes> UpdateAppOpptionsAsync(string key, string value, string requestId = "")
+        public async Task<StatusCodes> UpdateAppOptionsAsync(string key, string value, string requestId = "")
         {
             _logger.LogInformation($"RequestId: {requestId} - SetupService_UpdateAppOpptionsAsync called.");
+            // Update ProposalManagementRootSiteId if empty
+            if (string.IsNullOrWhiteSpace(_writableOptions.Value.ProposalManagementRootSiteId))
+            {
+                _writableOptions.UpdateAsync(nameof(_writableOptions.Value.ProposalManagementRootSiteId), await _graphSharePointAppService.GetSharePointRootId(), requestId);
+            }
 
-            ////Save powerbi username and password to to Key Vault.
-            //if (key == "PBIUserName" || key == "PBIUserPassword")
-            //{
-            //    await _azureKeyVaultService.SetValueInVaultAsync(key, value, requestId);
-            //    return StatusCodes.Status200OK;
-            //}
-            ////save values to appsettings.
-            //else
-            //{
-                _writableOptions.UpdateAsync(key, value, requestId);
-                return StatusCodes.Status200OK;
-             //}
+            _writableOptions.UpdateAsync(key, value, requestId);
+            return StatusCodes.Status200OK;
         }
 
         public Task<StatusCodes> UpdateDocumentIdActivatorOptionsAsync(string key, string value, string requestId = "")
@@ -127,7 +119,6 @@ namespace Infrastructure.Services
                         dynamic itemJson = new JObject();
                         itemJson.fields = itemFieldsJson;
 
-
                         _logger.LogDebug($"RequestId: {requestId} - SetupService_CreateSiteProcessesAsync debug result: {itemJson}");
 
                         var result = await _graphSharePointAppService.CreateListItemAsync(siteList, itemJson.ToString());
@@ -138,9 +129,7 @@ namespace Infrastructure.Services
                     {
                         _logger.LogWarning($"RequestId: {requestId} - SetupService_CreateSiteProcessesAsync warning: {ex}");
                     }
-
                 }
-
             }
             catch (Exception ex)
             {
@@ -222,14 +211,13 @@ namespace Infrastructure.Services
             }
         }
 
-        public async Task CreateAllListsAsync(string siteRootId, string requestId = "")
+        public async Task CreateAllListsAsync(string requestId = "")
         {
             _logger.LogInformation($"RequestId: {requestId} - SetupService_CreateAllListsAsync called.");
 
             var sharepointLists = GetSharePointLists();
-            var siteList = new SiteList();
 
-            siteList.SiteId = siteRootId;
+            var siteRootId = await _graphSharePointAppService.GetSharePointRootId();
 
             foreach (var list in sharepointLists)
             {
@@ -266,7 +254,7 @@ namespace Infrastructure.Services
                             htmlBody = SharePointListsSchemaHelper.TasksJsonSchema(_appOptions.TasksListId);
                             break;
                     }
-                    await _graphSharePointAppService.CreateSiteListAsync(htmlBody,siteRootId);
+                    await _graphSharePointAppService.CreateSiteListAsync(htmlBody, siteRootId);
                 }
                 catch (Exception ex)
                 {

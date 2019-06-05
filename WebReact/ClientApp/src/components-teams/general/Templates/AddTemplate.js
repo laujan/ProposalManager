@@ -3,6 +3,8 @@
 *  See LICENSE in the source repository root for complete license information. 
 */
 
+/* eslint-disable radix */
+
 import React, { Component } from 'react';
 import {
     Pivot,
@@ -16,11 +18,9 @@ import { Trans } from "react-i18next";
 import { PrimaryButton, IconButton } from 'office-ui-fabric-react/lib/Button';
 import { TextField } from 'office-ui-fabric-react/lib/TextField';
 import { MessageBar, MessageBarType } from 'office-ui-fabric-react/lib/MessageBar';
-import { getAllTemplatesList, getAllProcess, getGroups, renderSpinner } from './TemplatesCommon';
+import TemplatesCommon from './TemplatesCommon';
 import { ProcessTab } from './ProcessTab';
-//import { ShowPreviewTemplateModel } from './ShowPreviewTemplateModel';
 import ShowPreviewTemplateModel from './ShowPreviewTemplateModel';
-
 
 export class AddTemplate extends Component {
     displayName = AddTemplate.name
@@ -28,8 +28,9 @@ export class AddTemplate extends Component {
     constructor(props) {
         super(props);
 
-        this.sdkHelper = window.sdkHelper;
         this.authHelper = window.authHelper;
+        this.apiService = this.props.apiService;
+        this.templatesCommon = new TemplatesCommon(this.apiService);
 
         this.hardcodedGroupNos = [];
         this.state = {
@@ -79,8 +80,6 @@ export class AddTemplate extends Component {
                 console.log(error);
             }
         }
-
-
     }
 
     componentDidUpdate() {
@@ -89,7 +88,7 @@ export class AddTemplate extends Component {
 
     async fnGetTemplates() {
         let templateItems = [];
-        templateItems = await getAllTemplatesList();
+        templateItems = await this.templatesCommon.getAllTemplatesList();
         if (templateItems.length > 0) {
             this.setState({
                 pageLoading: false,
@@ -101,16 +100,17 @@ export class AddTemplate extends Component {
                 items: templateItems
             });
         }
+
         console.log(this.state.templateItems);
     }
 
     async fnGetProcess() {
         let processItems = [], processGroupNumberList = [];
-        processItems = await getAllProcess();
+        processItems = await this.templatesCommon.getAllProcess();
         if (processItems.length > 0) {
 
             processItems.map((process, key) => {
-                processGroupNumberList.push(key + 1);
+                return processGroupNumberList.push(key + 1);
             });
             this.hardcodedGroupNos.forEach(value => { processGroupNumberList.splice(processGroupNumberList.indexOf(value), 1); });
             this.setState({
@@ -130,7 +130,7 @@ export class AddTemplate extends Component {
 
     async fnGetGroups() {
         let groupItems;
-        groupItems = await getGroups();
+        groupItems = await this.templatesCommon.getGroups();
         if (groupItems.length > 0) {
             groupItems = groupItems.map(group => { return { key: group.id, text: group.groupName, processes: group.processes }; });
             this.setState({
@@ -185,7 +185,6 @@ export class AddTemplate extends Component {
         this.setState({ showModel: false });
     }
 
-
     showAddTemplateName() {
         return (
             <div className="ms-Grid-row bg-grey">
@@ -222,9 +221,7 @@ export class AddTemplate extends Component {
                         id='ddlProcessGroupNamedropdown'
                         options={this.state.groupItems}
                     />
-
                 </div>
-
             </div>
         );
     }
@@ -273,43 +270,34 @@ export class AddTemplate extends Component {
 
     async saveTemplate() {
         this.setState({ isUpdate: true });
-        try {
-            let templateObject = this.state.templateObj;
-            console.log(templateObject);
-            let requestUpdUrl = 'api/template/';
-            let options = {
-                method: templateObject.id ? "PATCH" : "POST",
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    'authorization': 'Bearer ' + this.authHelper.getWebApiToken()
-                },
-                body: JSON.stringify(templateObject)
-            };
-            await fetch(requestUpdUrl, options);
-            this.setState({ MessagebarText: <Trans>dealTypeAddSuccess</Trans>, isUpdate: false, isUpdateMsg: true });
+        let templateObject = this.state.templateObj;
+        console.log(templateObject);
 
-        } catch (error) {
-            this.setState({
-                MessagebarText: `${<Trans>errorOoccuredPleaseTryAgain</Trans>} : ${error.message}`,
-                isUpdate: false,
-                isUpdateMsg: true
+        this.apiService.callApi('Template', templateObject.id ? 'PATCH' : 'POST', { body: JSON.stringify(templateObject) })
+            .then(() => {
+                this.setMessage(false, true, MessageBarType.success, <Trans>dealTypeAddSuccess</Trans>);
+            })
+            .catch(error => {
+                this.setMessage(false, true, MessageBarType.error, `${<Trans>errorOoccuredPleaseTryAgain</Trans>} : ${error.message}`);
+            })
+            .finally(() => {
+                window.location = '/tab/generalConfigurationTab#templates';
             });
-        } finally {
-            setTimeout(function () {
-                this.setState({ isUpdate: false, isUpdateMsg: false, MessageBarType: MessageBarType.success, MessagebarText: "" }
-                );
-            }.bind(this), 3000);
-            window.location = '/tab/generalConfigurationTab#templates';
-        }
-        return;
+    }
+
+    setMessage(isUpdate, isUpdateMsg, MessageBarType, MessagebarText) {
+        //Show message
+        this.setState({ isUpdate, isUpdateMsg, MessageBarType, MessagebarText });
+
+        //Schedule message hide
+        setTimeout(function () {
+            this.setState({ isUpdate: false, isUpdateMsg: false, MessageBarType: "", MessagebarText: "" });
+        }.bind(this), 3000);
     }
 
     closePreviewModal() {
         this.setState({ showPreviewModel: false });
     }
-
-    
 
     editGroupProcess(groupNumber) {
         let orderNumber = groupNumber;
@@ -327,7 +315,7 @@ export class AddTemplate extends Component {
     }
 
     deleteGroup(groupNumber) {
-        console.log("deleteGroup >++++++++", groupNumber);
+        console.log("deleteGroup: ", groupNumber);
         let processGroupNumberList = this.state.processGroupNumberList.slice();
         let template = JSON.parse(JSON.stringify(this.state.template));
         let count = template.processes.filter(process => groupNumber === parseInt(process.order)).length;
@@ -352,13 +340,12 @@ export class AddTemplate extends Component {
             }
             tempObj[key].push(template.processes[index]);
         }
-        console.log("_processGrpObjtBasedOrderNo==>", tempObj);
+        console.log("_processGrpObjtBasedOrderNo: ", tempObj);
         return tempObj;
     }
 
 
     showSelectedProcessTypeGroups() {
-        //-- let processGroupObject = this._processGrpObjtBasedOrderNo();
         let selGroups = this.state.selectedProcessGroup;
         return (
             <div className="ms-Grid-row bg-grey">
@@ -391,20 +378,15 @@ export class AddTemplate extends Component {
                                                                                     <div className="ms-Grid-col ms-sm6 ms-md6 ms-lg8">
                                                                                         <h5 className="font12 font-normal">{p.processStep}</h5>
                                                                                     </div>
-
                                                                                 </div>
-
                                                                             </div>
                                                                         </div>
-
                                                                     );
                                                                 })
                                                             }
-
                                                         </div>
                                                         : ""
                                                 }
-
                                             </div>
                                         );
                                     })
@@ -425,7 +407,6 @@ export class AddTemplate extends Component {
                 </div>
             </div>);
     }
-
 
     renderDetails() {
         return (
@@ -468,13 +449,10 @@ export class AddTemplate extends Component {
                                                 {this.showPreviewModel()}
                                             </div>
                                         </div>
-
-
                                     </PivotItem>
                                     <PivotItem linkText={<Trans>Process</Trans>} itemKey="processTab">
-                                        <ProcessTab />
+                                        <ProcessTab apiService={this.apiService} />
                                     </PivotItem>
-
                                 </Pivot>
                             </div>
                         </div>
@@ -485,7 +463,7 @@ export class AddTemplate extends Component {
 
     render() {
         return (
-            this.state.pageLoading ? renderSpinner() : this.renderDetails()
+            this.state.pageLoading ? this.templatesCommon.renderSpinner() : this.renderDetails()
         );
     }
 }

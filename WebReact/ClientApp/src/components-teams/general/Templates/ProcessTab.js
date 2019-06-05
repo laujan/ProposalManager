@@ -3,13 +3,16 @@
 *  See LICENSE in the source repository root for complete license information. 
 */
 
+/* eslint-disable radix */
+/* eslint-disable array-callback-return */
+
 import React, { Component } from 'react';
 import { DefaultButton, PrimaryButton, ActionButton } from 'office-ui-fabric-react/lib/Button';
 import { Trans } from "react-i18next";
 import { Modal } from 'office-ui-fabric-react/lib/Modal';
 import { TextField } from 'office-ui-fabric-react/lib/TextField';
 import { Dropdown } from 'office-ui-fabric-react/lib/Dropdown';
-import { getAllProcess, getGroups, renderSpinner } from './TemplatesCommon';
+import TemplatesCommon from './TemplatesCommon';
 import { MessageBar, MessageBarType } from 'office-ui-fabric-react/lib/MessageBar';
 import { Spinner, SpinnerSize } from 'office-ui-fabric-react/lib/Spinner';
 import Utils from '../../../helpers/Utils';
@@ -22,8 +25,10 @@ export class ProcessTab extends Component {
     constructor(props) {
         super(props);
         this.utils = new Utils();
-        this.sdkHelper = window.sdkHelper;
+
         this.authHelper = window.authHelper;
+        this.apiService = this.props.apiService;
+        this.templatesCommon = new TemplatesCommon(this.apiService);
 
         this.state = {
             pageLoading: true,
@@ -80,7 +85,7 @@ export class ProcessTab extends Component {
 
     async fnGetProcess() {
         let processItems = [];
-        processItems = await getAllProcess();
+        processItems = await this.templatesCommon.getAllProcess();
         // Add Select Process - to add dynamically
         let selectProcess = {
             "channel": "Select Process",
@@ -107,7 +112,7 @@ export class ProcessTab extends Component {
 
     async fnGetGroups() {
         let groupItems = [];
-        groupItems = await getGroups();
+        groupItems = await this.templatesCommon.getGroups();
         if (groupItems.length > 0) {
             groupItems = groupItems.map(group => { return { key: group.id, text: group.groupName, processes: group.processes }; });
             this.setState({
@@ -145,33 +150,22 @@ export class ProcessTab extends Component {
         this.setState({ isUpdate: true });
         let id = this.state.processItems.length + 1;
         let value = this.state.processName;
-        let requestUpdUrl = 'api/Process';
+        if (this.checkProcessTypeIsAlreadyPresent(value)) { return; }
 
-        try {
-            //Checking item is already present
-            if (this.checkProcessTypeIsAlreadyPresent(value)) return;
-
-            let response = await fetch(requestUpdUrl, {
-                method: "POST",
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    'authorization': 'Bearer    ' + window.authHelper.getWebApiToken()
-                },
-                body: JSON.stringify({
-                    "id": id, "processStep": value, "channel": value, "processType": "CheckListTab"
-                })
-            });
-            this.utils.handleErrors(response);
-            this.setMessage(false, true, MessageBarType.success, <Trans>processTypeAddSuccess</Trans>);
-        } catch (error) {
-            this.setMessage(false, true, MessageBarType.error, <Trans>errorOoccuredPleaseTryAgain</Trans> + " " + error.message);
-        } finally {
-            setTimeout(function () { this.setMessage(false, false, "", ""); }.bind(this), 2000);
-            await this.fnGetProcess();
-            this.setState({ processName: "", isProcessAdd: false, showAddProcessModel: false });
-        }
-        
+        this.apiService.callApi('Process', 'POST', {
+            body: JSON.stringify({ "id": id, "processStep": value, "channel": value, "processType": "CheckListTab" })
+        })
+            .then(response => {
+                this.utils.handleErrors(response);
+                this.setMessage(false, true, MessageBarType.success, <Trans>processTypeAddSuccess</Trans>);
+            })
+            .catch(error => {
+                this.setMessage(false, true, MessageBarType.error, <Trans>errorOoccuredPleaseTryAgain</Trans> + " " + error.message);
+            })
+            .finally(async () => {
+                await this.fnGetProcess();
+                this.setState({ processName: "", isProcessAdd: false, showAddProcessModel: false });
+            });        
     }
 
     checkProcessTypeIsAlreadyPresent(value) {
@@ -195,14 +189,18 @@ export class ProcessTab extends Component {
     }
 
     setMessage(isUpdate, isUpdateMsg, MessageBarType, MessagebarText) {
+        //Show message
         this.setState({ isUpdate, isUpdateMsg, MessageBarType, MessagebarText });
+
+        //Schedule message hide
+        setTimeout(function () {
+            this.setState({ isUpdate: false, isUpdateMsg: false, MessageBarType: "", MessagebarText: "" });
+        }.bind(this), 3000);
     }
 
     // Groups functions
     addNewGroup() {
         this.setState({
-            //showAddProcessModel: true, 
-            //isGroupAdd: true, 
             showModel: true
         });
     }
@@ -243,7 +241,6 @@ export class ProcessTab extends Component {
             isGroupAdd: false,
             showModel: false
         });
-
     }
 
     showMessageBar(flag, message) {
@@ -255,7 +252,7 @@ export class ProcessTab extends Component {
     }
 
     addProcess(process) {
-        console.log("addProcess==>", process);
+        console.log("addProcess: ", process);
         let template = JSON.parse(JSON.stringify(this.state.template));
         let { processNumber, orderNumber } = this.state;
         let selectedProcessGroup = this.state.selectedProcessGroup.slice();
@@ -283,7 +280,7 @@ export class ProcessTab extends Component {
             selectedProcessGroup.push(process);
             this.setState({ selectedProcessGroup, processNumber });
         }
-        console.log("======> Selected process");
+        console.log("Selected process: ");
         console.log(this.state.selectedProcessGroup);
     }
 
@@ -302,7 +299,7 @@ export class ProcessTab extends Component {
         let template = JSON.parse(JSON.stringify(this.state.template));
         let processGroupNumberList = this.state.processGroupNumberList.slice();
 
-        if (this.state.orderNumber === this.state.selectedOrderNumber) {//if(this.state.orderNumber === processGroupNumberList[0]){
+        if (this.state.orderNumber === this.state.selectedOrderNumber) {
             //adding a group
             processGroupNumberList.splice(processGroupNumberList.indexOf(this.state.orderNumber), 1);
             if (selectedProcessGroup.length > 1) {
@@ -332,50 +329,26 @@ export class ProcessTab extends Component {
         template.processes.sort((pA, pB) => pA.order - pB.order);
         console.log(template);
         let allGroups = this.state.groupItems;
-        
+
 
         let groupDetails = {};
         groupDetails.id = this.state.groupItems.length + 1;
         groupDetails.groupName = this.state.groupName;
         groupDetails.processes = template.processes;
-        console.log(groupDetails);
-        //allGroups.push(groupDetails);
-        console.log(allGroups);
-        console.log("============== Groups");
+        console.log("Groups: ", allGroups);
 
-
-        try {
-
-            let response = await fetch('api/Groups', {
-                method: "POST",
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    'authorization': 'Bearer    ' + window.authHelper.getWebApiToken()
-                },
-                body: JSON.stringify(groupDetails)
+        this.apiService.callApi('Groups', 'POST', { body: JSON.stringify(groupDetails) })
+            .then(response => {
+                this.utils.handleErrors(response);
+                this.setMessage(false, true, MessageBarType.success, <Trans>groupAddedSuccess</Trans>);
+            })
+            .catch(error => {
+                this.setMessage(false, true, MessageBarType.error, <Trans>errorOoccuredPleaseTryAgain</Trans> + " " + error.message);
+            })
+            .finally(async () => {
+                await this.fnGetGroups();
+                this.setState({ groupName: "", isGroupAddUpdate: false, showModel: false, selectedProcessGroup: [] });
             });
-            response = this.utils.handleErrors(response);
-            console.log(response);
-            this.setMessage(false, true, MessageBarType.success, <Trans>groupAddedSuccess</Trans>);
-        } catch (error) {
-            this.setMessage(false, true, MessageBarType.error, <Trans>errorOoccuredPleaseTryAgain</Trans> + " " + error.message);
-        } finally {
-            setTimeout(function () { this.setMessage(false, false, "", ""); }.bind(this), 2000);
-            await this.fnGetGroups();
-            this.setState({ groupName: "", isGroupAddUpdate: false, showModel: false, selectedProcessGroup: [] });
-        }
-        /*
-         * this.setState({
-            template,
-            processNumber: 1,
-            showModel: false,
-            selectedProcessGroup: [],
-            processGroupNumberList,
-            orderNumber: 0,
-            groupItems: allGroups
-        });
-        */
     }
 
     removeProcess(process) {
@@ -402,8 +375,6 @@ export class ProcessTab extends Component {
     }
 
     onBlurEstimatedDays(process, e) {
-        console.log("onBlurEstimatedDays==>", process, e.target.value);
-
         let template = JSON.parse(JSON.stringify(this.state.template));
         let selectedProcessGroup = this.state.selectedProcessGroup.slice();
 
@@ -421,7 +392,7 @@ export class ProcessTab extends Component {
     }
 
     swapProcess(process, processNumber, direction) {
-        console.log("swapProcess===> ", process, processNumber, direction);
+        console.log("swapProcess: ", process, processNumber, direction);
         let selectedProcessGroup = this.state.selectedProcessGroup.slice();
         let index = -1;
         let tempOrder = 0;
@@ -435,7 +406,7 @@ export class ProcessTab extends Component {
             case "UP":
                 index = this._findProcessInArray(selectedProcessGroup, process);
                 tempOrder = selectedProcessGroup[index - 1].order;
-                console.log("swapProcess===> ", index, tempOrder);
+                console.log("swapProcess: ", index, tempOrder);
                 selectedProcessGroup[index - 1].order = selectedProcessGroup[index].order;
                 selectedProcessGroup[index].order = tempOrder;
                 break;
@@ -452,7 +423,6 @@ export class ProcessTab extends Component {
         this.setState({ dispGroup });
     }
     showSelectedProcessTypeGroups() {
-        //-- let processGroupObject = this._processGrpObjtBasedOrderNo();
         let selGroups = this.state.dispGroup;
         console.log(selGroups);
         return (
@@ -489,30 +459,26 @@ export class ProcessTab extends Component {
 
                                                                             </div>
                                                                         </div>
-
                                                                     );
                                                                 })
                                                             }
-
                                                         </div>
                                                         : ""
                                                 }
-
                                             </div>
                                         );
                                     })
                                 }
                             </div>
                             : ""
-                    }
-                    
+                    }                    
                 </div>
             </div>);
     }
 
     render() {
         return (
-            this.state.pageLoading ? renderSpinner() :
+            this.state.pageLoading ? this.templatesCommon.renderSpinner() :
                 <div className="ms-Grid-row bg-white">
                     <div className="ms-Grid-col ms-sm12 ms-md12 ms-lg12 pull-right">
                         <DefaultButton

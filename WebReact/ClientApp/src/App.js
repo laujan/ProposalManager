@@ -5,7 +5,6 @@
 
 // Global imports
 import React, { Component } from 'react';
-import GraphSdkHelper from './helpers/GraphSdkHelper';
 import AuthHelper from './helpers/AuthHelper';
 import Utils from './helpers/Utils';
 import { AppBrowser } from './AppBrowser';
@@ -24,14 +23,6 @@ export default class App extends Component {
             // Initilize the AuthService and save it in the window object.
             this.authHelper = new AuthHelper();
             window.authHelper = this.authHelper;
-        }
-
-        if (window.sdkHelper) {
-            this.sdkHelper = window.sdkHelper;
-        } else {
-            // Initilize the AuthService and save it in the window object.
-            this.sdkHelper = new GraphSdkHelper();
-            window.sdkHelper = this.sdkHelper;
         }
 
         if (window.utils) {

@@ -5,17 +5,13 @@
 import React, { Component } from 'react';
 import { TeamsComponentContext, Panel, PanelBody, PanelFooter, PanelHeader } from 'msteams-ui-components-react';
 import { DatePicker } from 'office-ui-fabric-react/lib/DatePicker';
-import {
-    Spinner,
-    SpinnerSize
-} from 'office-ui-fabric-react/lib/Spinner';
+import { Spinner, SpinnerSize } from 'office-ui-fabric-react/lib/Spinner';
 import { Dropdown } from 'office-ui-fabric-react/lib/Dropdown';
 import { MessageBar, MessageBarType } from 'office-ui-fabric-react/lib/MessageBar';
 import { getQueryVariable } from '../common';
 import { I18n, Trans } from "react-i18next";
 import Accessdenied from '../helpers/AccessDenied';
 
-let teamContext = {};
 const DayPickerStrings = {
     months: [
         'January',
@@ -79,8 +75,8 @@ export class CustomerDecision extends Component {
     constructor(props) {
         super(props);
 
+        this.apiService = this.props.apiService;
         this.authHelper = window.authHelper;
-        this.sdkHelper = window.sdkHelper;
         this.accessGranted = false;
 
         this.onChangedTxtApprovedDate = this.onChangedTxtApprovedDate.bind(this);
@@ -101,52 +97,17 @@ export class CustomerDecision extends Component {
         };
 
         this.onStatusChange = this.onStatusChange.bind(this);
-
     }
 
     componentDidMount() {
         console.log("CustomerDecision_componentDidMount isauth: " + this.authHelper.isAuthenticated());
-        if (!this.state.isAuthenticated) {
-            this.authHelper.callGetUserProfile()
-                .then(userProfile => {
-                    this.setState({
-                        userProfile: userProfile,
-                        loading: true
-                    });
-                });
-        }
-    }
-
-
-    componentDidUpdate() {
-        if (this.authHelper.isAuthenticated() && !this.accessGranted) {
-            console.log("CustomerDecision_componentDidUpdate callCheckAccess");
-            this.accessGranted = true;
-            this.getOppStatusAll();
-            let teamName = getQueryVariable('teamName');
-            this.fnGetOpportunityData(teamName);
-        }
-    }
-
-    initialize({ groupId, channelName, teamName }) {
-
-        let tc = {
-            group: groupId,
-            channel: channelName,
-            team: teamName
-        };
-        teamContext = tc;
-
+        this.getOppStatusAll();
+        let teamName = getQueryVariable('teamName');
         this.fnGetOpportunityData(teamName);
     }
-
+    
     getOppStatusAll() {
-        let requestUrl = 'api/context/GetOpportunityStatusAll';
-
-        fetch(requestUrl, {
-            method: "GET",
-            headers: { 'authorization': 'Bearer ' + window.authHelper.getWebApiToken() }
-        })
+        this.apiService.callApi('Context', 'GET', { id: 'GetOpportunityStatusAll' })
             .then(response => response.json())
             .then(data => {
                 try {
@@ -174,72 +135,57 @@ export class CustomerDecision extends Component {
     }
 
     fnGetOpportunityData(teamName) {
-        return new Promise((resolve, reject) => {
-            // API - Fetch call
-            this.requestUrl = `api/Opportunity?name=${teamName}`;
-            fetch(this.requestUrl, {
-                method: "GET",
-                headers: { 'authorization': 'Bearer ' + window.authHelper.getWebApiToken() }
-
-            })
-                .then(response => response.json())
-                .then(data => {
-                    // If badrequest - user Access Denied 
-                    if (data.error && data.error.code.toLowerCase() === "badrequest") {
-                        this.setState({
-                            loading: false,
-                            haveGranularAccess: false
-                        });
-                        resolve(true);
-                    } else {
-                        // Start Check Access
-                        let permissionRequired = ["Opportunity_ReadWrite_All", "Opportunities_ReadWrite_All", "Administrator"];
-                        this.authHelper.callCheckAccess(permissionRequired).then(checkAccess => {
-                            if (checkAccess) {
-                                let customerDesionObj = data.customerDecision;
-                                this.setState({
-                                    loading: false,
-                                    CustomerDecision: customerDesionObj,
-                                    CustomerDecisionId: customerDesionObj.id,
-                                    LoadDisbursed: new Date(customerDesionObj.loanDisbursed),
-                                    ApprovedDate: new Date(customerDesionObj.approvedDate),
-                                    ApprovedStatus: customerDesionObj.approved,
-                                    oppData: data,
-                                    isUpdate: false,
-                                    haveGranularAccess: true
-                                });
-
-                                resolve(true);
-                            }
-                            else {
-                                this.setState({
-                                    haveGranularAccess: false,
-                                    loading: false
-                                });
-                                resolve(true);
-                            }
-                        })
-                            .catch(err => {
-                                this.setState({
-                                    loading: false,
-                                    haveGranularAccess: false
-                                });
-                                reject(err);
-                            });
-                        // End Check Access
-
-                    }
-
-                })
-                .catch(function (err) {
+        // API - Fetch call
+        this.apiService.callApi('Opportunity', 'GET', { query: `name=${teamName}` })
+            .then(response => response.json())
+            .then(data => {
+                // If badrequest - user Access Denied 
+                if (data.error && data.error.code.toLowerCase() === "badrequest") {
                     this.setState({
                         loading: false,
                         haveGranularAccess: false
                     });
-                    console.log("Error: OpportunityGetByName--");
-                    reject(err);
+                } else {
+                    // Start Check Access
+                    let permissionRequired = ["Opportunity_ReadWrite_All", "Opportunities_ReadWrite_All", "Administrator"];
+                    this.authHelper.callCheckAccess(permissionRequired).then(checkAccess => {
+                        if (checkAccess) {
+                            let customerDesionObj = data.customerDecision;
+                            this.setState({
+                                loading: false,
+                                CustomerDecision: customerDesionObj,
+                                CustomerDecisionId: customerDesionObj.id,
+                                LoadDisbursed: new Date(customerDesionObj.loanDisbursed),
+                                ApprovedDate: new Date(customerDesionObj.approvedDate),
+                                ApprovedStatus: customerDesionObj.approved,
+                                oppData: data,
+                                isUpdate: false,
+                                haveGranularAccess: true
+                            });
+                        }
+                        else {
+                            this.setState({
+                                haveGranularAccess: false,
+                                loading: false
+                            });
+                        }
+                    })
+                        .catch(err => {
+                            this.setState({
+                                loading: false,
+                                haveGranularAccess: false
+                            });
+                        });
+                    // End Check Access
+                }
+            })
+            .catch(function (err) {
+                this.setState({
+                    loading: false,
+                    haveGranularAccess: false
                 });
-        });
+                console.log("Error: OpportunityGetByName--");
+            });
     }
 
     onStatusChange = (event) => {
@@ -262,19 +208,7 @@ export class CustomerDecision extends Component {
             oppViewData.customerDecision = obj;
         }
 
-        // API Update call        
-        this.requestUpdUrl = 'api/opportunity?id=' + oppViewData.id;
-        let options = {
-            method: "PATCH",
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-                'authorization': 'Bearer    ' + window.authHelper.getWebApiToken()
-            },
-            body: JSON.stringify(oppViewData)
-        };
-
-        fetch(this.requestUpdUrl, options)
+        this.apiService.callApi('Opportunity', 'PATCH', { id: oppViewData.id, body: JSON.stringify(oppViewData) })
             .catch(error => console.error('Error:', error))
             .then(response => {
                 if (response.ok) {
@@ -286,8 +220,6 @@ export class CustomerDecision extends Component {
                 this.setState({ MessagebarText: <Trans>updatedSuccessfully</Trans> });
                 setTimeout(function () { this.setState({ isUpdate: false, MessagebarText: "" }); }.bind(this), 3000);
             });
-
-
     }
 
     onChangedTxtApprovedDate(event) {

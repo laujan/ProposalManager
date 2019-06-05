@@ -22,14 +22,13 @@ import { isTemplateEnabled } from '../../helpers/AppSettings';
 import { Tasks } from './Configuration/Tasks';
 
 export class Configuration extends Component {
-    displayName = Configuration.name
+    displayName = Configuration.name;
 
     constructor(props) {
         super(props);
 
+        this.apiService = this.props.apiService;
         this.authHelper = window.authHelper;
-        this.sdkHelper = window.sdkHelper;
-
 
         try {
             microsoftTeams.initialize();
@@ -41,26 +40,20 @@ export class Configuration extends Component {
             this.state = {
                 teamName: "",
                 groupId: "",
-                haveGranularAccess: false
+                haveGranularAccess: false,
+                selectedTabName: window.location.hash.substr(1).length > 0 ? window.location.hash.substr(1) : ""
             };
         }
     }
 
     componentDidMount() {
-        let selectedTab = window.location.hash.substr(1).length > 0 ? window.location.hash.substr(1) : "";
-        this.setState({
-            selectedTabName: selectedTab
-        });
-
         this.authHelper.callCheckAccess(["Administrator"]).then((data) => {
-            let haveGranularAccess = data;
-            this.setState({ haveGranularAccess: haveGranularAccess });
+            this.setState({ haveGranularAccess: data });
         });
     }
 
     render() {
         return (
-
             <div className='ms-Grid'>
                 <div className='ms-Grid-row'>
                     <div className='ms-Grid-col ms-sm6 ms-md8 ms-lg12  tabviewUpdates' >
@@ -69,31 +62,30 @@ export class Configuration extends Component {
                                 ?
                                 <Pivot className='tabcontrols pt35' linkFormat={PivotLinkFormat.tabs} linkSize={PivotLinkSize.large} selectedKey={this.state.selectedTabName}>
                                     <PivotItem linkText={<Trans>permissions</Trans>} itemKey="permissions">
-                                        <Permissions />
+                                        <Permissions apiService={this.apiService} />
                                     </PivotItem>
                                     <PivotItem linkText={<Trans>tasks</Trans>} itemKey="tasks">
-                                        <Tasks />
+                                        <Tasks apiService={this.apiService} />
                                     </PivotItem>
                                     <PivotItem linkText={<Trans>processTypes</Trans>} itemKey="processType">
-                                        <ProcessTypesList />
+                                        <ProcessTypesList apiService={this.apiService} />
                                     </PivotItem>
                                     {
                                         isTemplateEnabled ?
                                             <PivotItem linkText={<Trans>templates</Trans>} itemKey="templates">
-                                                <TemplateList />
+                                                <TemplateList apiService={this.apiService} />
                                             </PivotItem>
-                                            :<PivotItem linkText={<Trans>businessProcess</Trans>} itemKey="dealType">
-                                            <DealTypeListR />
-                                        </PivotItem>
+                                            : <PivotItem linkText={<Trans>businessProcess</Trans>} itemKey="dealType">
+                                                <DealTypeListR apiService={this.apiService} />
+                                            </PivotItem>
                                     }
                                     <PivotItem linkText={<Trans>dataModel</Trans>} itemKey="metaData">
-                                        <MetaData />
+                                        <MetaData apiService={this.apiService} />
                                     </PivotItem>
                                 </Pivot>
                                 :
                                 <Accessdenied />
                         }
-
                     </div>
                 </div>
             </div>

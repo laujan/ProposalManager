@@ -5,10 +5,7 @@
 
 import React, { Component } from 'react';
 import * as microsoftTeams from '@microsoft/teams-js';
-import AuthHelper from '../helpers/AuthHelper';
-import GraphSdkHelper from '../helpers/GraphSdkHelper';
 import { appUri } from '../helpers/AppSettings';
-import Utils from '../helpers/Utils';
 import { PrimaryButton } from 'office-ui-fabric-react/lib/Button';
 import { Trans } from "react-i18next";
 
@@ -18,136 +15,57 @@ export class Config extends Component {
 	constructor(props) {
 		super(props);
 
-        console.log("Config: Contructor");
-		if (window.authHelper) {
-			this.authHelper = window.authHelper;
-		} else {
-			// Initilize the AuthService and save it in the window object.
-			this.authHelper = new AuthHelper();
-			window.authHelper = this.authHelper;
-		}
+        console.log("Config: Contructor", props);
+        this.apiService = this.props.apiService;
 
-		if (window.sdkHelper) {
-			this.sdkHelper = window.sdkHelper;
-		} else {
-			// Initilize the AuthService and save it in the window object.
-			this.sdkHelper = new GraphSdkHelper();
-			window.sdkHelper = this.sdkHelper;
-		}
-
-		this.utils = new Utils();
-
-		this.authInProgress = false;
-		try {
+        try
+        {
 			microsoftTeams.initialize();
 		}
-		catch (err) {
-			console.log("ProposalManagement_ConfigTAB error initializing teams: " + JSON.stringify(err));
-		}
-		finally {
-			this.state = {
-                isAuthenticated: this.authHelper.isAuthenticated(),
-                validityState: false,
-                userRoleList: []
-            };
+        catch (err)
+        {
+			console.log("Config_constructor error initializing teams: " + JSON.stringify(err));
 		}
 	}
-
 
     componentDidMount() {
         console.log("Config_componentDidMount appSettings: ");
         console.log(this.props.appSettings);
 
-        if (this.props.appSettings.generalProposalManagementTeam.length > 0) {
+        if (this.props.appSettings.generalProposalManagementTeam.length > 0)
+        {
             this.setChannelConfig();
+        }
+        else
+        {
+            microsoftTeams.settings.setValidityState(false);
         }
 	}
 
-    componentDidUpdate() {
-        microsoftTeams.settings.setValidityState(this.state.validityState);
-	}
+	//Get Opportunitydata by TeamName
+    async getOpportunityByName()
+    {
+        let teamName = this.props.teamsContext.teamName;
 
-	getUserRoles() {
-		// call to API fetch data
-		return new Promise((resolve, reject) => {
-			console.log("Config_getUserRoles userRoleList fetch");
-			//WAVE-4 : Changing RoleMappong to Roles:
-			let requestUrl = 'api/Roles';
-			fetch(requestUrl, {
-				method: "GET",
-				headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() }
-			})
-				.then(response => response.json())
-				.then(data => {
-					try {
-						console.log("Config_getUserRoles userRoleList data lenght: " + data.length);
+        try {
+            let response = await this.apiService.callApi('Opportunity', 'GET', { query: `name=${teamName}` });
+            if (response.ok) {
+                let data = await response.json();
+                console.log("Config_getOpportunityByName userRoleList data length: " + data.length);
+                console.log(data);
 
-						let userRoleList = [];
-						//console.log(data);
-						for (let i = 0; i < data.length; i++) {
-							let userRole = {};
-							userRole.id = data[i].id;
-							userRole.adGroupName = data[i].adGroupName;
-							userRole.roleName = data[i].roleName;
-							userRole.processStep = data[i].processStep;
-							userRole.channel = data[i].channel;
-							userRole.adGroupId = data[i].adGroupId;
-							userRole.processType = data[i].processType;
-							userRoleList.push(userRole);
-						}
-						this.setState({ userRoleList: userRoleList });
-						console.log("Config_getUserRoles userRoleList lenght: " + userRoleList.length);
-						resolve(true);
-					}
-					catch (err) {
-						reject(err);
-					}
-
-				});
-		});
+                let processList = data.template.processes;
+                let oppChannels = processList.filter(x => x.channel.toLowerCase() !== "none");
+                console.log("Config_getOpportunityByName userRoleList lenght: " + oppChannels.length);
+                return { userRoleList: oppChannels };
+            }
+        }
+        catch (err) {
+            throw new Error("Error retrieving getOpportunityByName: ", err);
+        }
     }
 
-    //Get Opportunitydata by TeamName
-    getOpportunityByName() {
-        return new Promise((resolve, reject) => {
-            let teamName = this.props.teamsContext.teamName;
-
-            console.log(`Config_getUserRoles userRoleList fetch ---api/Opportunity?name=${teamName}`);
-			
-			//let requestUrl = "api/Opportunity?name='" + teamName + "'";
-			//changing to template string
-            let requestUrl = `api/Opportunity?name=${teamName}`;
-
-            console.log("Config_getOpportunityByName requestUrl: " + requestUrl);
-
-            fetch(requestUrl, {
-                method: "GET",
-                headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() }
-            })
-                .then(response => response.json())
-                .then(data => {
-                    try {
-                        console.log("Config_getOpportunityByName userRoleList data length: " + data.length);
-                        console.log(data);
-                        
-                        let processList = data.template.processes;
-                        let oppChannels = processList.filter(x => x.channel.toLowerCase() !== "none");
-                        if (oppChannels.length > 0) {
-                            console.log(oppChannels);
-                            this.setState({ userRoleList: oppChannels });
-                        }
-                        console.log("Config_getOpportunityByName userRoleList lenght: " + oppChannels.length);
-                        resolve(true);
-                    }
-                    catch (err) {
-                        reject(err);
-                    }
-
-                });
-        });
-    }
-
-    setChannelConfig() {
+    async setChannelConfig() {
         let tabName = "";
         let teamName = this.props.teamsContext.teamName;
         let channelId = this.props.teamsContext.channelId;
@@ -155,10 +73,12 @@ export class Config extends Component {
         let loginHint = this.props.teamsContext.loginHint;
         let locale = this.props.teamsContext.locale;
 
-        if (teamName !== null && teamName !== undefined && !this.state.validityState) {
+        if (teamName !== null && teamName !== undefined)
+        {
             console.log("Config_setChannelConfig generalSharePointSite: " + this.props.teamsContext.teamsAppName);
 
-            if (teamName === this.props.appSettings.generalProposalManagementTeam) {
+            if (teamName === this.props.appSettings.generalProposalManagementTeam)
+            {
                 switch (channelName) {
                     case "General":
                         tabName = "generalDashboardTab";
@@ -176,81 +96,63 @@ export class Config extends Component {
                         tabName = "helpTab";
                         break;
                     default:
-                        tabName = "generalDashboardTab";  
+                        tabName = "generalDashboardTab";
                 }
                 console.log("Config_setChannelConfig generalSharePointSite tabName: " + tabName);
-                let self =this;
-                if (tabName !== "") {
-                    microsoftTeams.settings.registerOnSaveHandler(function (saveEvent) {
-                        microsoftTeams.settings.setSettings({
-                            entityId: "PM" + channelName,
-                            contentUrl: appUri + "/tab/" + tabName + "?channelName=" + channelName + "&teamName=" + teamName + "&channelId=" + channelId + "&locale=" + locale + "&loginHint=" + encodeURIComponent(loginHint),
-                            suggestedDisplayName: self.props.appSettings.generalProposalManagementTeam,
-                            websiteUrl: appUri + "/tabMob/" + tabName + "?channelName=" + channelName + "&teamName=" + teamName + "&channelId=" + channelId + "&locale=" + locale + "&loginHint=" + encodeURIComponent(loginHint)
+            }
+            else
+            {
+                try {
+                    let res = await this.getOpportunityByName();
 
-                        });
-                        saveEvent.notifySuccess();
-                    });
+                    let channelMapping = res.userRoleList.filter(x => x.channel.toLowerCase() === channelName.toLowerCase());
+                    console.log("Config_setChannelConfig channelMapping.length:", channelMapping);
 
-                    this.setState({
-                        validityState: true
-                    });
+                    if (channelName === "General") {
+                        tabName = "rootTab";
+                    }
+                    else if (channelMapping.length > 0) {
+                        if (channelMapping.processType !== "Base" && channelMapping.processType !== "Administration") {
+                            console.log("Config_setChannelConfig channelMapping.lenght >0: " + channelMapping[0].processType);
+                            tabName = channelMapping[0].processType;
+                        }
+                    }
+                    console.log("Config_setChannelConfig tabName: " + tabName + " ChannelName: " + channelName);
                 }
+                catch (err) {
+                    console.log("Config_getOpportunityByName error: ");
+                    console.log(err);
+                    microsoftTeams.settings.setValidityState(false);
+                }
+            }
 
-            } else {
-                this.getOpportunityByName()
-                    .then(res => {
-                        let channelMapping = this.state.userRoleList.filter(x => x.channel.toLowerCase() === channelName.toLowerCase());
-                        console.log("Config_setChannelConfig channelMapping.length:");
-                        console.log(channelMapping);
+            if (tabName !== "")
+            {
+                let self = this;
+                microsoftTeams.settings.registerOnSaveHandler(function (saveEvent) {
+                    microsoftTeams.settings.setSettings({
+                        entityId: "PM" + channelName,
+                        contentUrl: appUri + "/tab/" + tabName + "?channelName=" + channelName + "&teamName=" + teamName + "&channelId=" + channelId + "&locale=" + locale + "&loginHint=" + encodeURIComponent(loginHint),
+                        suggestedDisplayName: self.props.appSettings.generalProposalManagementTeam,
+                        websiteUrl: appUri + "/tabMob/" + tabName + "?channelName=" + channelName + "&teamName=" + teamName + "&channelId=" + channelId + "&locale=" + locale + "&loginHint=" + encodeURIComponent(loginHint)
 
-                        if (channelName === "General") {
-                            tabName = "rootTab";
-                        } else if (channelMapping.length > 0) {
-                            if (channelMapping.processType !== "Base" && channelMapping.processType !== "Administration") {
-                                console.log("Config_setChannelConfig channelMapping.lenght >0: " + channelMapping[0].processType);
-                                tabName = channelMapping[0].processType;
-                            }
-                        }
-
-                        console.log("Config_setChannelConfig tabName: " + tabName + " ChannelName: " + channelName);
-
-                        if (tabName !== "") {
-                            microsoftTeams.settings.registerOnSaveHandler(function (saveEvent) {
-                                microsoftTeams.settings.setSettings({
-                                    entityId: "PM" + channelName,
-                                    contentUrl: appUri + "/tab/" + tabName + "?channelName=" + channelName + "&teamName=" + teamName + "&channelId=" + channelId + "&locale=" + locale + "&loginHint=" + encodeURIComponent(loginHint),
-                                    suggestedDisplayName: "Proposal Manager",
-                                    websiteUrl: appUri + "/tabMob/" + tabName + "?channelName=" + channelName + "&teamName=" + teamName + "&channelId=" + channelId + "&locale=" + locale + "&loginHint=" + encodeURIComponent(loginHint)
-
-                                });
-                                console.log("Config_setChannelConfig microsoftTeams.settings:");
-                                console.log(microsoftTeams.settings);
-                                saveEvent.notifySuccess();
-                            });
-
-                            this.setState({
-                                validityState: true
-                            });
-                        }
-
-                    })
-                    .catch(err => {
-                        console.log("Config_getOpportunityByName error: ");
-                        console.log(err);
                     });
+                    console.log("Config_setChannelConfig microsoftTeams.settings:");
+                    console.log(microsoftTeams.settings);
+                    saveEvent.notifySuccess();
+                });
+
+                microsoftTeams.settings.setValidityState(true);
             }
         }
-	}
+        else
+        {
+            microsoftTeams.settings.setValidityState(false);
+        }
+    }
 
-    logout() {
-        this.authHelper.logout(true)
-            .then(() => {
-                this.setState({
-                    isAuthenticated: false,
-                    displayName: ''
-                });
-            });
+    async logout() {
+        await this.authHelper.logout(true);
     }
 
 	refresh() {

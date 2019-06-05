@@ -20,20 +20,19 @@ export class Administration extends Component {
     constructor(props) {
         super(props);
 
+        this.apiService = this.props.apiService;
         this.authHelper = window.authHelper;
-        this.sdkHelper = window.sdkHelper;
         this.utils = new Utils();
         this.accessGranted = false;
+
+        const userProfile = this.props.userProfile;
         try {
             microsoftTeams.initialize();
-            console.log('in try');
-
         }
         catch (err) {
             console.log(err);
         }
         finally {
-            const userProfile = { id: "", displayName: "", mail: "", phone: "", picture: "", userPrincipalName: "", roles: [] };
             this.state = {
                 userProfile: userProfile,
                 teamName: "",
@@ -52,30 +51,12 @@ export class Administration extends Component {
         }
     }
 
-    //async componentDidMount() {
-    //    console.log("Admin_componentDidMount isauth: " + this.authHelper.isAuthenticated());
-    //    if (this.authHelper.isAuthenticated() && !this.accessGranted) {
-    //        try {
-    //            let access = await this.authHelper.callCheckAccess(["Administrator", "Opportunity_ReadWrite_Template", "Opportunities_ReadWrite_All"]);
-    //            //console.log("MetaData_componentDidUpdate callCheckAccess success");
-    //            this.accessGranted = true;
-    //            await this.getMetaDataList();
-
-    //        } catch (error) {
-    //            this.accessGranted = false;
-    //            //console.log("MetaData_componentDidUpdate error_callCheckAccess:");
-    //            console.log(error);
-    //        }
-    //    }
-    //}
-
     componentDidMount() {
-        console.log("MetaData_componentDidMount isauth: " + this.authHelper.isAuthenticated());
+        console.log("Administration_componentDidMount");
         if (this.authHelper.isAuthenticated()) {
 
             this.authHelper.callGetUserProfile()
                 .then(userProfile => {
-                    this.acquireGraphAdminTokenSilent(userProfile); // Call acquire token so it is ready when calling graph using admin token
                     this.setState({
                         userProfile: userProfile
 
@@ -83,199 +64,98 @@ export class Administration extends Component {
                 });
         }
 
-        this.authHelper.callCheckAccess(["Administrator"]).then((data) => {
-            let haveGranularAccess = data;
-            this.setState({ haveGranularAccess: haveGranularAccess });
-        });
+        this.authHelper.callCheckAccess(["Administrator"])
+            .then(async (data) => {
+                let userRoleList, itemList = [];
+                if (data) {
+                    console.log("Administration_componentDidMount getOpportunityIndex");
+                    userRoleList = await this.getUserRoles();
+                    itemList = await this.getOpportunityIndex();
+                }
 
-        if (this.state.items.length === 0) {
-            console.log("Administration_componentDidMount getOpportunityIndex");
-            this.getUserRoles().then(data => { console.log("getUserRoles..."); console.log(data); });
-            this.getOpportunityIndex()
-                .then(data => {
-                    if (data) {
-                        this.setState({
-                            loading: false
-                        });
-                    }
-                })
-                .catch(err => {
-                    // TODO: Add error message
-                    this.errorHandler(err, "Administration_componentDidMount_getOpportunityIndex");
-                });
-        }
-
-    }
-
-    resetToken() {
-        this.authHelper.logout().then(() => {
-            window.location.reload();
-        });
-    }
-
-
-
-    fetchResponseHandler(response, referenceCall) {
-        if (response.status === 401) {
-            //TODO: Handle refresh token in vNext;
-        }
+                this.setState({ haveGranularAccess: data, items: itemList, userRoleList: userRoleList, loading: false });
+            })
+            .catch(err => {
+                this.errorHandler(err, "Administration_callCheckAccess");
+                this.setState({ haveGranularAccess: false });
+            });
     }
 
     errorHandler(err, referenceCall) {
         console.log("Administration Ref: " + referenceCall + " error: " + JSON.stringify(err));
     }
 
-    acquireGraphAdminTokenSilent(userProfile) {
-        if (this.utils.getQueryVariable("admin_consent")) {
-            let isAdmin = userProfile.roles.filter(x => x.displayName === "Administrator");
+    async getOpportunityIndex()
+    {
+        let itemsList = [];
+        try {
+            let response = await this.apiService.callApi('Opportunity', 'GET', { query: 'page=1' });
+            if (response.ok) {
+                let data = await response.json();
+                if (data.error && data.error.code.toLowerCase() === "badrequest") {
+                    throw new Error(data.error);
+                }
+                else {
+                    let list = [];
+                    if (data.ItemsList.length > 0) {
+                        for (let i = 0; i < data.ItemsList.length; i++) {
+                            let item = data.ItemsList[i];
+                            let newItem = {};
+                            newItem.id = item.id;
+                            newItem.opportunity = item.displayName;
+                            newItem.client = item.customer.displayName;
+                            newItem.dealsize = item.dealSize;
+                            newItem.openedDate = new Date(item.openedDate).toLocaleDateString();
+                            newItem.statusValue = item.opportunityState;
+                            newItem.status = oppStatusClassName[item.opportunityState];
+                            list.push(newItem);
+                        }
+                    }
 
-            if (isAdmin) {
-                this.authHelper.loginPopupGraphAdmin()
-                    .then(access_token => {
-                        // TODO: For future expansion sice the toke has been handled by authHelper
-                    })
-                    .catch(err => {
-                        console.log(err);
-                        this.errorHandler(err, "Administration_acquireGraphAdminTokenSilent");
-                    });
+                    console.log("Administration_getOpportunityIndex ----", list);
+                    itemsList = list.length > 0 ? list.reverse() : list;
+                }
             }
-        } else {
-            let isAdmin = userProfile.roles.filter(x => x.displayName === "Administrator");
-            console.log("Administration_acquireGraphAdminTokenSilent getQueryVariable:adminconsent 01 : ", userProfile);
-            console.log("Administration_acquireGraphAdminTokenSilent getQueryVariable:adminconsent 03:", isAdmin);
-            if (isAdmin) {
-                this.authHelper.acquireGraphAdminTokenSilent()
-                    .then(access_token => {
-                        // TODO: For future expansion sice the toke has been handled by authHelper
-                    })
-                    .catch(err => {
-                        console.log(err);
-                        this.errorHandler(err, "Administration_acquireGraphAdminTokenSilent");
-                        console.log("Administration_acquireGraphAdminTokenSilent getQueryVariable:adminconsent 06:", err);
-                        //this.showMessageBar("Error while requesting an admin token for Graph API, please try refreshing your browser and sign-in again.", MessageBarType.error);
-                    });
+            else {
+                throw new Error(response.statusText);
             }
+        } catch (err) {
+            this.errorHandler(err, "Administration_getOpportunityIndex");
+        }
+        finally {
+            return itemsList;
         }
     }
 
-    getOpportunityIndex() {
-        return new Promise((resolve, reject) => {
-            // To get the List of Opportunities to Display on Dashboard page
-            let requestUrl = 'api/Opportunity?page=1';
+    async getUserRoles() {
+        let userRoleList = [];
+        try {
+            let response = await this.apiService.callApi('Roles', 'GET');
 
-            fetch(requestUrl, {
-                method: "GET",
-                headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() }
-            })
-                .then(response => {
-                    if (response.ok) {
-                        return response.json();
-                    } else {
-                        this.fetchResponseHandler(response, "Administration_getOpportunityIndex");
-                        reject(response);
-                    }
-                })
-                .then(data => {
-                    if (data.error && data.error.code.toLowerCase() === "badrequest") {
-                        this.setState({
-                            loading: false,
-                            haveGranularAccess: false
-                        });
-                        resolve(true);
-                    } else {
-                        let itemslist = [];
-
-                        if (data.ItemsList.length > 0) {
-                            for (let i = 0; i < data.ItemsList.length; i++) {
-
-                                let item = data.ItemsList[i];
-
-                                let newItem = {};
-
-                                newItem.id = item.id;
-                                newItem.opportunity = item.displayName;
-                                newItem.client = item.customer.displayName;
-                                newItem.dealsize = item.dealSize;
-                                newItem.openedDate = new Date(item.openedDate).toLocaleDateString();
-                                newItem.statusValue = item.opportunityState;
-                                newItem.status = oppStatusClassName[item.opportunityState];
-                                newItem.createTeamDisable = item.dealType !== null && item.dealType.id !== null ? false : true;
-                                newItem.saved = true;
-                                itemslist.push(newItem);
-                            }
-                        }
-
-                        console.log("Administration_getOpportunityIndex ----");
-                        console.log(itemslist);
-                        if (itemslist.length > 0) {
-                            this.setState({ reverseList: true });
-                        }
-                        let sortedList = this.state.reverseList ? itemslist.reverse() : itemslist;
-                        this.setState({
-                            items: sortedList,
-                            loading: false
-
-                        });
-
-                        resolve(true);
-                    }
-                })
-                .catch(err => {
-                    this.errorHandler(err, "Administration_getOpportunityIndex");
-                    this.setState({
-                        loading: false,
-                        items: []
-
-                    });
-                    reject(err);
-                });
-        });
+            if (response.ok) {
+                let data = await response.json();
+                for (let i = 0; i < data.length; i++) {
+                    let userRole = {};
+                    userRole.id = data[i].id;
+                    userRole.adGroupName = data[i].adGroupName;
+                    userRole.displayName = data[i].displayName;
+                    userRole.permissions = data[i].permissions;
+                    userRole.teamsMembership = data[i].teamsMembership;
+                    userRoleList.push(userRole);
+                }
+                console.log("Administration_getUserRoles userRoleList length: " + userRoleList.length);
+            }
+            else {
+                this.errorHandler(response.statusText, "Administration_getUserRoles");
+            }
+        }
+        catch (err) {
+            this.errorHandler(err, "Administration_getUserRoles");
+        }
+        finally {
+            return userRoleList;
+        }
     }
-
-    getUserRoles() {
-        // call to API fetch data
-        return new Promise((resolve, reject) => {
-			//WAVE-4 : Changing RoleMapping to Roles:
-            let requestUrl = 'api/Roles';
-            fetch(requestUrl, {
-                method: "GET",
-                headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() }
-            })
-                .then(response => response.json())
-                .then(data => {
-                    try {
-                        let userRoleList = [];
-                        console.log(data);
-                        for (let i = 0; i < data.length; i++) {
-                            let userRole = {};
-                            userRole.id = data[i].id;
-                            userRole.adGroupName = data[i].adGroupName;
-                            userRole.displayName = data[i].displayName;
-                            userRole.permissions = data[i].permissions;
-                            userRole.teamsMembership = data[i].teamsMembership;
-                            /*
-                             * userRole.roleName = data[i].roleName;
-                            userRole.processStep = data[i].processStep;
-                            userRole.channel = data[i].channel;
-                            userRole.adGroupId = data[i].adGroupId;
-                            userRole.processType = data[i].processType;
-                            */
-
-                            userRoleList.push(userRole);
-                        }
-                        this.setState({ userRoleList: userRoleList });
-                        console.log("Administration_getUserRoles userRoleList lenght: " + userRoleList.length);
-                        resolve(true);
-                    }
-                    catch (err) {
-                        reject(err);
-                    }
-
-                });
-        });
-    }
-
-
 
     render() {
         return (
@@ -292,12 +172,11 @@ export class Administration extends Component {
                                 :
                                 <Pivot className='tabcontrols pt35' linkFormat={PivotLinkFormat.tabs} linkSize={PivotLinkSize.large}>
                                     <PivotItem linkText={<Trans>allOpportunities</Trans>} itemKey="allOpportunities">
-                                        <AdminAllOpportunities items={this.state.items} userRoleList={this.state.userRoleList} />
+                                        <AdminAllOpportunities items={this.state.items} userRoleList={this.state.userRoleList} apiService={this.props.apiService} />
                                     </PivotItem>
                                     <PivotItem linkText={<Trans>archivedOpportunities</Trans>} itemKey="archivedOpportunities">
-                                        <AdminArchivedOpportunities items={this.state.items} userRoleList={this.state.userRoleList} />
+                                        <AdminArchivedOpportunities items={this.state.items} userRoleList={this.state.userRoleList} apiService={this.props.apiService}/>
                                     </PivotItem>
-                                    
                                 </Pivot>
                             :
                             <Accessdenied />

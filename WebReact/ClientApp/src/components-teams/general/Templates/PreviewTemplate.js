@@ -3,6 +3,8 @@
 *  See LICENSE in the source repository root for complete license information. 
 */
 
+/* eslint-disable radix */
+
 import React, { Component } from 'react';
 import { Trans } from "react-i18next";
 import { Persona, PersonaSize } from 'office-ui-fabric-react/lib/Persona';
@@ -12,7 +14,6 @@ export class PreviewTemplate extends Component {
 
     constructor(props) {
         super(props);
-        console.log("constructor==>< PROPS ", this.props.templateObject);
     }
 
     templateGroupList() {

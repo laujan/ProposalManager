@@ -4,17 +4,17 @@ function Create-NewTeam
 {   
    param (   
             [Parameter(Mandatory = $true)]
-            [string]$TeamName
+            [string]$TeamName,
+            [Parameter(Mandatory = $false)]
+            [pscredential]$Credential
          )   
   Process
     {
         Import-Module MicrosoftTeams
-        Write-Information "Enter your credentials for creating the MS Team: $TeamName"
+
+        $username = $Credential.UserName
         
-        $cred = Get-Credential
-        $username = $cred.UserName
-        
-        Connect-MicrosoftTeams -Credential $cred
+        Connect-MicrosoftTeams -Credential $Credential
 
         [int]$retriesLeft = 3
         [bool]$success = $false

@@ -3,6 +3,8 @@
 *  See LICENSE in the source repository root for complete license information. 
 */
 
+/* eslint-disable radix */
+
 import React from 'react';
 import { PrimaryButton, IconButton, ActionButton } from 'office-ui-fabric-react/lib/Button';
 import { Trans } from "react-i18next";

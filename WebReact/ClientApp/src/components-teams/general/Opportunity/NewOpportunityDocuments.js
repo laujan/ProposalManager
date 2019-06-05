@@ -26,9 +26,6 @@ export class NewOpportunityDocuments extends Component {
         this.utils = new Utils();
         this.opportunity = this.props.opportunity;
         this.metaData = this.props.metaDataList.length > 0 ? this.props.metaDataList.filter(prop => prop.screen === "Screen2") : [];
-        console.log(this.opportunity);
-        console.log("Step 2222222");
-        console.log(this.metaData);
         const columns = [
             {
                 key: 'column1',
@@ -40,7 +37,6 @@ export class NewOpportunityDocuments extends Component {
                 maxWidth: 250,
                 isRowHeader: true,
                 onRender: (item) => {
-                    //if (item.file.name)
                     let itemFileUri = "";
                     return (
                         <FilePicker
@@ -130,8 +126,6 @@ export class NewOpportunityDocuments extends Component {
                 className: 'DetailsListExample-cell--FileIcon',
                 iconClassName: 'DetailsListExample-Header-FileTypeIcon',
                 iconName: 'Page',
-                //isIconOnly: true,
-                //fieldName: 'name',
                 minWidth: 16,
                 maxWidth: 16,
                 onRender: (item) => {
@@ -161,10 +155,9 @@ export class NewOpportunityDocuments extends Component {
         };
     }
 
-    componentWillMount() {
+    componentDidMount() {
         this.opportunity = this.props.opportunity;
     }
-
 
     // Class methods
     onAddRow() {
@@ -173,7 +166,6 @@ export class NewOpportunityDocuments extends Component {
         newItems.push(this.createListItem(rowCounter));
 
         let currentItems = newItems.concat(this.state.items);
-
         this.opportunity.documentAttachments = currentItems;
 
         this.setState({
@@ -249,10 +241,8 @@ export class NewOpportunityDocuments extends Component {
         });
     }
 
-
     // For DeatlsList
-    documentsList(columns, isCompactMode, items, selectionDetails) {
-        //selection={this.selection}
+    documentsList(columns, isCompactMode, items) {
         return (
             <div className='ms-Grid-row ibox-content'>
                 <DetailsList
@@ -463,8 +453,8 @@ export class NewOpportunityDocuments extends Component {
 
 
     render() {
-        const { columns, isCompactMode, items, selectionDetails } = this.state;
-        const documentsList = this.documentsList(columns, isCompactMode, items, selectionDetails);
+        const { columns, isCompactMode, items } = this.state;
+        const documentsList = this.documentsList(columns, isCompactMode, items);
 
         return (
             <div className='ms-Grid'>

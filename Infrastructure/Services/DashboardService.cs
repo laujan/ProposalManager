@@ -126,6 +126,10 @@ namespace Infrastructure.Services
                                 var dProcess = dashboard.ProcessList.ToList().Find(x => x.ProcessName.ToLower() == process.Channel.ToLower());
                                 if (dProcess != null)
                                 {
+                                    if (checklistItm.ChecklistStatus == ActionStatus.InProgress)
+                                    {
+                                        dProcess.ProcessStartDate = date.ToString();
+                                    }
                                     if (checklistItm.ChecklistStatus == ActionStatus.Completed)
                                     {
                                         dProcess.ProcessEndDate = date.ToString();
@@ -207,7 +211,8 @@ namespace Infrastructure.Services
                 {
                     if (startDate != null && startDate != DateTimeOffset.MinValue)
                     {
-                        datediff = Convert.ToInt32((endDate - startDate).TotalDays);
+                        if (startDate.Date == endDate.Date) datediff = 1;
+                        else datediff = Convert.ToInt32((endDate - startDate).TotalDays);
                     }
                 }
             }

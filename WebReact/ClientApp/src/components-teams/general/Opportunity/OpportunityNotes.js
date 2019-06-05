@@ -8,13 +8,9 @@ import { PrimaryButton } from 'office-ui-fabric-react/lib/Button';
 import { TextField } from 'office-ui-fabric-react/lib/TextField';
 import { Glyphicon } from 'react-bootstrap';
 import { MessageBar, MessageBarType } from 'office-ui-fabric-react/lib/MessageBar';
-import {
-    Spinner,
-    SpinnerSize
-} from 'office-ui-fabric-react/lib/Spinner';
+import { Spinner, SpinnerSize } from 'office-ui-fabric-react/lib/Spinner';
 import { Trans } from "react-i18next";
 import { TeamMembers } from './TeamMembers';
-
 
 export class OpportunityNotes extends Component {
     displayName = OpportunityNotes.name
@@ -22,63 +18,40 @@ export class OpportunityNotes extends Component {
     constructor(props) {
         super(props);
 
-        this.sdkHelper = window.sdkHelper;
-        this.authHelper = window.authHelper;
+        this.apiService = this.props.apiService;
         this.utils = window.utils;
 
         const userProfile = this.props.userProfile;
 
+        console.log("OpportunityNotes_ctor", this.props);
+
         const oppId = this.props.opportunityId;
         const opportunityData = this.props.opportunityData;
 
-
         this.state = {
             loading: true,
-            NotesList: [],
+            notesList: [],
             oppData: opportunityData,
             addNotes: '',
             teamMembers: [],
             oppId: oppId,
             newNotesLoading: false,
-            MessagebarText: "",
-            MessageBarType: "",
+            messagebarText: "",
+            messageBarType: "",
             isSendDisable: true,
             userRole: userProfile.role,
             userAssignedRole: "",
-            userId: userProfile.id,
-            isAuthenticated: false,
-            isComponentDidUpdate: false
-
+            userId: userProfile.id
         };
-
-
 
         this.handleChangeNewNotes = this.handleChangeNewNotes.bind(this);
         this.fnSaveNewNotes = this.fnSaveNewNotes.bind(this);
     }
 
     async componentDidMount() {
-        console.log("OpportunityDetails_componentDidMount isauth: " + this.authHelper.isAuthenticated() + " this.accessGranted: " + this.accessGranted);
-
-        if (!this.state.isAuthenticated) {
-            this.setState({
-                isAuthenticated: this.authHelper.isAuthenticated()
-            });
-        }
-
-    }
-
-    async componentDidUpdate() {
+        console.log("OpportunityDetails_componentDidMount");
         try {
-            if (this.state.isAuthenticated && !this.state.isComponentDidUpdate && this.state.oppData) {
-                console.log("OpportunityNotes_componentDidUpdate 1", this.state.loading, this.state.isComponentDidUpdate);
-                let userProfile = await this.authHelper.callGetUserProfile();
-                await this.getOppDetails(userProfile);
-            } else {
-                if (!this.state.oppData) {
-                    console.log("OpportunityNotes_componentDidUpdate 2", this.state.loading, this.state.isComponentDidUpdate);
-                }
-            }
+            await this.getOppDetails(this.props.userProfile);
         } catch (error) {
             console.log("OpportunitySummary_componentDidUpdate error : ", error);
         }
@@ -101,12 +74,11 @@ export class OpportunityNotes extends Component {
                 let userAssignedRole = teamMemberLODetails.length > 0 ? teamMemberLODetails[0].displayName : "";
 
                 this.setState({
-                    NotesList: data.notes,
+                    notesList: data.notes,
                     loading: false,
                     teamMembers: teamMembers,
                     userAssignedRole: userAssignedRole,
-                    userProfile: userDetails,
-                    isComponentDidUpdate: true 
+                    userProfile: userDetails
                 });
             } else
                 throw Error("Data is null");
@@ -142,19 +114,7 @@ export class OpportunityNotes extends Component {
         oppViewData.notes.push(newNotesObj);
 
         // API Update call        
-        this.requestUrl = 'api/opportunity?id=' + this.state.oppId;
-        let options = {
-            method: "PATCH",
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-                'authorization': 'Bearer    ' + window.authHelper.getWebApiToken()
-            },
-            body: JSON.stringify(oppViewData)
-        };
-
-        fetch(this.requestUrl, options)
-            .catch(error => console.error('Error:', error))
+        this.apiService.callApi('Opportunity', 'PATCH', { query: `id=${this.state.oppId}`, body: JSON.stringify(oppViewData) })
             .then(response => {
                 if (response.ok) {
                     return response.json;
@@ -164,23 +124,24 @@ export class OpportunityNotes extends Component {
             }).then(json => {
                 if (!json) { //Error
                     oppViewData.notes.pop(newNotesObj);
-                    this.setState({ isNewNote: false, newNoteMsg: true, MessagebarText: "Error while adding notes. Please try ", MessageBarType: MessageBarType.warning });
-                    setTimeout(function () { this.setState({ newNoteMsg: false, MessagebarText: "", newNotesLoading: false, MessageBarType: "" }); }.bind(this), 3000);
+                    this.setState({ isNewNote: false, newNoteMsg: true, messagebarText: "Error while adding notes. Please try ", messageBarType: MessageBarType.warning });
+                    setTimeout(function () { this.setState({ newNoteMsg: false, messagebarText: "", newNotesLoading: false, MessageBarType: "" }); }.bind(this), 3000);
                     this.setState({ addNotes: '' });
                 } else { //Success
-                    this.setState({ isNewNote: false, newNoteMsg: true, MessagebarText: "New Notes Added", MessageBarType: MessageBarType.success, isSendDisable: true });
-                    setTimeout(function () { this.setState({ newNoteMsg: false, MessagebarText: "", newNotesLoading: false, MessageBarType: "" }); }.bind(this), 3000);
+                    this.setState({ isNewNote: false, newNoteMsg: true, messagebarText: "New Notes Added", MessageBarType: MessageBarType.success, isSendDisable: true });
+                    setTimeout(function () { this.setState({ newNoteMsg: false, messagebarText: "", newNotesLoading: false, MessageBarType: "" }); }.bind(this), 3000);
                     this.setState({ addNotes: '' });
                 }
-            });
+            })
+            .catch(error => console.error('Error:', error));
     }
 
-    static NotesListData(NotesList) {
-        if (typeof NotesList === 'undefined' || NotesList === null || NotesList === "")
+    notesListData(notesList) {
+        if (typeof notesList === 'undefined' || notesList === null || notesList === "")
             return null;
         return (
             <div>
-                {NotesList.map(note =>
+                {notesList.map(note =>
                     note.noteBody !== "" ?
                         <div className='ms-Grid bg-grey ' key={note.id}>
                             <div className='ms-Grid-row p-5'>
@@ -199,12 +160,11 @@ export class OpportunityNotes extends Component {
                         </div> : ""
                 )}
             </div>
-
         );
     }
 
     render() {
-        const TeamMembersView = ({ match }) => {
+        const TeamMembersView = () => {
             return (
                 <TeamMembers
                     memberslist={this.state.oppData.teamMembers}
@@ -217,7 +177,7 @@ export class OpportunityNotes extends Component {
         };
         let newNotesLoading = this.state.newNotesLoading;
         let notes = this.state.loading ? <div className='bg-white'><p><em>Loading...</em></p></div>
-            : OpportunityNotes.NotesListData(this.state.NotesList);
+            : this.notesListData(this.state.notesList);
         if (this.state.loading) {
             return (
                 <div className='ms-BasicSpinnersExample ibox-content pt15 '>
@@ -270,10 +230,10 @@ export class OpportunityNotes extends Component {
                                         {
                                             this.state.newNoteMsg ?
                                                 <MessageBar
-                                                    messageBarType={this.state.MessageBarType}
+                                                    messageBarType={this.state.messageBarType}
                                                     isMultiline={false}
                                                 >
-                                                    {this.state.MessagebarText}
+                                                    {this.state.messagebarText}
                                                 </MessageBar>
                                                 : ""
                                         }
@@ -283,7 +243,6 @@ export class OpportunityNotes extends Component {
                                     </div>
                                 </div>
                             </div>
-
                         </div>
                         <div className=' ms-Grid-col ms-sm12 ms-md12 ms-lg3 p-l-10 TeamMembersBG hide'>
                             <h3><Trans>teamMembers</Trans></h3>
@@ -291,8 +250,6 @@ export class OpportunityNotes extends Component {
                         </div>
                     </div>
                 </div>
-
-
             );
         }
     }

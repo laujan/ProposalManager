@@ -11,10 +11,10 @@ namespace ApplicationCore.Interfaces
 {
     public interface ISetupService
     {
-        Task<StatusCodes> UpdateAppOpptionsAsync(string key, string value, string requestId = "");
+        Task<StatusCodes> UpdateAppOptionsAsync(string key, string value, string requestId = "");
         Task<StatusCodes> UpdateDocumentIdActivatorOptionsAsync(string key, string value, string requestId = "");
         Task CreateSitePermissionsAsync(string requestId = "");
-        Task CreateAllListsAsync(string siteRootId,string requestId = "");
+        Task CreateAllListsAsync(string requestId = "");
         Task CreateSiteProcessesAsync(string requestId = "");
         Task CreateProposalManagerTeamAsync(string name, string requestId = "");
         Task CreateAdminGroupAsync(string name, string requestId = "");

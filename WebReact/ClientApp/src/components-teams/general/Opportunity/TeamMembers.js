@@ -9,18 +9,13 @@ import { Glyphicon } from 'react-bootstrap';
 import { PrimaryButton } from 'office-ui-fabric-react/lib/Button';
 import { Link } from 'office-ui-fabric-react/lib/Link';
 import { LinkContainer } from 'react-router-bootstrap';
-import {
-    Persona,
-    PersonaSize
-} from 'office-ui-fabric-react/lib/Persona';
+import { Persona, PersonaSize } from 'office-ui-fabric-react/lib/Persona';
 import { Trans } from "react-i18next";
 
 export class TeamMembers extends Component {
     displayName = TeamMembers.name
 	constructor(props) {
         super(props);
-
-        this.sdkHelper = window.sdkHelper;
 
         this.state = {
             redirect: false,
@@ -31,18 +26,10 @@ export class TeamMembers extends Component {
         };
 	}
 
-
     render() {
-	
-		let enableEditTeam;
         console.log("TeamMembers_render props :", this.props);
-        if (this.props.haveAccessToEditTeam ) {
-			enableEditTeam = true;
-		}
-		else {
-			enableEditTeam = false;
-		}
-			
+        let enableEditTeam = this.props.haveAccessToEditTeam;
+        
         return (
             <div className='ms-Grid'>
                 {typeof this.props.memberslist === 'undefined' ? "" :
@@ -67,7 +54,6 @@ export class TeamMembers extends Component {
                             : ""
                     )
                 }
-
                 {
                     <div className='ms-Grid-row p-10'> 
 						<div className='ms-Grid ms-sm12 ms-md12 ms-lg12'>
@@ -79,10 +65,8 @@ export class TeamMembers extends Component {
 								</LinkContainer>
 								:
 								<PrimaryButton className='ModifyButton' disabled><Trans>editTeamCollaboration</Trans></PrimaryButton>
-
 							}
 							<br />
-                            
 						</div>
 						<div className='ms-Grid ms-sm12 ms-md12 ms-lg12'>
 							{this.props.opportunityState === 1

@@ -20,6 +20,7 @@ export class ProcessTypesList extends Component {
     constructor(props) {
         super(props);
         this.utils = new Utils();
+        this.apiService = this.props.apiService;
         this.authHelper = window.authHelper;
         this.schema = {
             "id": "",
@@ -145,67 +146,53 @@ export class ProcessTypesList extends Component {
     }
 
     async getProcessTypeList() {
-        let items = this.state.items, loading = true;
-        try {
-            let requestUrl = 'api/Process';
-            let response = await fetch(requestUrl, {
-                method: "GET",
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    'authorization': 'Bearer ' + this.authHelper.getWebApiToken()
-                }
-            });
-            let data = await this.utils.handleErrors(response).json();
-            this.setState({
-                items: data
-            });
-            let processTypes = data.itemsList;
-            items = processTypes.map(process => {
-                let displayProcess = process.processType.toLowerCase();
-                let isDisable = displayProcess === 'base' || displayProcess === 'customerdecisiontab' || displayProcess === 'proposalstatustab' ? true : false;
-                return {
-                    "id": process.id,
-                    "processStep": process.processStep,
-                    "channel": process.channel,
-                    "roleId": process.roleId,
-                    "roleName": process.roleName,
-                    "processType": process.processType,
-                    "isDisable": isDisable
-                };
-            });
-            loading = false;
-        } catch (error) {
-            loading = false;
-            this.setMessage(false, true, MessageBarType.error, error.message);
-        } finally {
+        this.apiService.callApi('Process', 'GET')
+            .then(async (response) => {
+                let data = await this.utils.handleErrors(response).json();
+                this.setState({
+                    items: data
+                });
+                let processTypes = data.itemsList;
+                let items = processTypes.map(process => {
+                    let displayProcess = process.processType.toLowerCase();
+                    let isDisable = displayProcess === 'base' || displayProcess === 'customerdecisiontab' || displayProcess === 'proposalstatustab' ? true : false;
+                    return {
+                        "id": process.id,
+                        "processStep": process.processStep,
+                        "channel": process.channel,
+                        "roleId": process.roleId,
+                        "roleName": process.roleName,
+                        "processType": process.processType,
+                        "isDisable": isDisable
+                    };
+                });
 
-            console.log("ProcessTypeList_log getProcessTypeList ", items);
-            this.setState({ items, loading });
-        }
+                this.setState({ items });
+            })
+            .catch(error => {
+                this.setMessage(false, true, MessageBarType.error, error.message);
+            })
+            .finally(() => {
+                this.setState({ loading: false });
+            });
     }
 
     async getProcessRolesList() {
-        let loading = true;
-        try {
-            let requestUrl = 'api/Context/GetProcessRolesList';
-            let response = await fetch(requestUrl, {
-                method: "GET",
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    'authorization': 'Bearer ' + this.authHelper.getWebApiToken()
-                }
+        this.apiService.callApi('Context/GetProcessRolesList', 'GET')
+            .then(async (response) => {
+                let rolesList = await this.utils.handleErrors(response).json();
+
+                rolesList = rolesList.map(role => { return { "key": role.key, "text": role.roleName }; });
+                console.log("ProcessTypeList_log getProcessRolesList ", rolesList);
+
+                this.setState({ rolesList });
+            })
+            .catch(error => {
+                this.setMessage(false, true, MessageBarType.error, error.message);
+            })
+            .finally(() => {
+                this.setState({ loading: false });
             });
-            let rolesList = await this.utils.handleErrors(response).json();
-            rolesList = rolesList.map(role => { return { "key": role.key, "text": role.roleName } });
-            console.log("ProcessTypeList_log getProcessRolesList ", rolesList);
-            this.setState({ rolesList });
-        } catch (error) {
-            this.setMessage(false, true, MessageBarType.error, error.message);
-        } finally {
-            this.setState({ loading });
-        }
     }
 
     onAddRow() {
@@ -222,20 +209,11 @@ export class ProcessTypesList extends Component {
     checkProcessTypeIsAlreadyPresent(item) {
         let flag = false;
         let items = this.state.items.slice(0);
-        console.log(items.filter(process => process.id.length > 0));
         let index = items.filter(process => process.id.length > 0).findIndex(process => process.processStep.toLowerCase() === item.processStep.toLowerCase() && process.id !== item.id);
-        console.log("ProcessTypeList_log checkProcessTypeIsAlreadyPresent : ", item.processStep, index);
+
         if (index !== -1) {
-            this.setState({
-                isUpdate: false,
-                isUpdateMsg: true,
-                MessagebarText: <Trans>processTypeAlreadyExist</Trans>,
-                MessageBarType: MessageBarType.error
-            });
-            setTimeout(function () {
-                this.setMessage(false, false, "", "");
-                this.setState({ items });
-            }.bind(this), 2000);
+            this.setMessage(false, true, MessageBarType.error, <Trans>processTypeAlreadyExist</Trans>);
+            this.setState({ items });
             flag = true;
         }
         return flag;
@@ -259,10 +237,14 @@ export class ProcessTypesList extends Component {
     }
 
     setMessage(isUpdate, isUpdateMsg, MessageBarType, MessagebarText) {
+        //Show message
         this.setState({ isUpdate, isUpdateMsg, MessageBarType, MessagebarText });
+
+        //Schedule message hide
+        setTimeout(function () {
+            this.setState({ isUpdate: false, isUpdateMsg: false, MessageBarType: "", MessagebarText: "" });
+        }.bind(this), 2000);
     }
-
-
 
     async addRow(item) {
         console.log("ProcessTypeList_log : addRow ", item);
@@ -274,7 +256,6 @@ export class ProcessTypesList extends Component {
     }
 
     onChangeProperty(e, item, property) {
-
         let items = JSON.parse(JSON.stringify(this.state.items));
         let updatedItem = item.id.length === 0 ? JSON.parse(JSON.stringify(this.state.item)) : item;
         let changeFlag = false;
@@ -323,54 +304,38 @@ export class ProcessTypesList extends Component {
     async addOrUpdateProcess(item, methodType) {
         this.setState({ isUpdate: true });
 
-
-        try {
-            //Checking item is already present
-            if (this.checkProcessTypeIsAlreadyPresent(item)) return;
-
-            let options = {
-                method: methodType,
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    'authorization': 'Bearer    ' + window.authHelper.getWebApiToken()
-                },
-                body: JSON.stringify(item)
-            };
-            this.utils.handleErrors(await fetch("api/Process", options));
-            this.setMessage(false, true, MessageBarType.success, methodType === "PATCH" ? <Trans>processTypeUpdatedSuccess</Trans> : <Trans>processTypeAddSuccess</Trans>);
-        } catch (error) {
-            this.setMessage(false, true, MessageBarType.error, <Trans>errorOoccuredPleaseTryAgain</Trans> + " " + error.message);
-        } finally {
-            setTimeout(function () { this.setMessage(false, false, "", ""); }.bind(this), 2000);
-            this.setState({ item: this.schema });
-            await this.getProcessTypeList();
-        }
+        this.apiService.callApi('Process', methodType, { body: JSON.stringify(item) })
+            .then(async (response) => {
+                this.utils.handleErrors(response);
+                this.setMessage(false, true, MessageBarType.success, methodType === "PATCH" ? <Trans>processTypeUpdatedSuccess</Trans> : <Trans>processTypeAddSuccess</Trans>);
+            })
+            .catch(error => {
+                this.setMessage(false, true, MessageBarType.error, <Trans>errorOoccuredPleaseTryAgain</Trans> + " " + error.message);
+            })
+            .finally(async () => {
+                this.setState({ item: this.schema });
+                await this.getProcessTypeList();
+            });
     }
 
     async deleteRow(processTypeItem) {
         this.setState({ isUpdate: true });
-        let requestUpdUrl = 'api/Process/' + processTypeItem.id;
-        try {
-            let response = await fetch(requestUpdUrl, {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-                method: "DELETE",
-                headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() }
+
+        this.apiService.callApi('Process', 'DELETE', { id: processTypeItem.id })
+            .then(async (response) => {
+                this.utils.handleErrors(response);
+                this.setMessage(false, true, MessageBarType.success, <Trans>processTypeDeletedSuccess</Trans>);
+            })
+            .catch (error => {
+                this.setMessage(false, true, MessageBarType.error, <Trans>errorOoccuredPleaseTryAgain</Trans> + " " + error.message);
+            })
+            .finally(async () => {
+                await this.getProcessTypeList();
             });
-            this.utils.handleErrors(response);
-            this.setMessage(false, true, MessageBarType.success, <Trans>processTypeDeletedSuccess</Trans>);
-        } catch (error) {
-            this.setMessage(false, true, MessageBarType.error, <Trans>errorOoccuredPleaseTryAgain</Trans> + " " + error.message);
-        } finally {
-            setTimeout(function () { this.setMessage(false, false, "", ""); }.bind(this), 2000);
-            await this.getProcessTypeList();
-        }
-        return;
     }
 
     createRowItem() {
-        return this.schema
+        return this.schema;
     }
 
     render() {
@@ -384,9 +349,7 @@ export class ProcessTypesList extends Component {
             );
         } else {
             return (
-
                 <div className='ms-Grid bg-white ibox-content'>
-
                     <div className='ms-Grid-row'>
                         <div className='ms-Grid-col ms-sm12 ms-md12 ms-lg12'>
                             <div className='ms-Grid-col ms-sm12 ms-md12 ms-lg12 pt10'>
@@ -418,8 +381,6 @@ export class ProcessTypesList extends Component {
                     </div>
                 </div>
             );
-
         }
     }
-
 }

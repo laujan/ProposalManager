@@ -6,20 +6,14 @@
 // Global imports
 import React, { Component } from 'react';
 import * as microsoftTeams from '@microsoft/teams-js';
-import { Route } from 'react-router';
-import GraphSdkHelper from './helpers/GraphSdkHelper';
-import AuthHelper from './helpers/AuthHelper';
-import appSettingsObject from './helpers/AppSettings';
+import { Route, Switch } from 'react-router-dom';
 import Utils from './helpers/Utils';
-// Teams Add-in imports
-import { ThemeStyle } from 'msteams-ui-components-react';
-
 import { Home } from './components-teams/Home';
 import { Config } from './components-teams/Config';
 import { Privacy } from './components-teams/Privacy';
 import { TermsOfUse } from './components-teams/TermsOfUse';
-import {Setup} from './components-teams/Setup';
-import {Help} from './components-teams/Help';
+import { Setup } from './components-teams/Setup';
+import { Help } from './components-teams/Help';
 import { Checklist } from './components-teams/Checklist';
 import { RootTab } from './components-teams/RootTab'; 
 import { TabAuth } from './components-teams/TabAuth';
@@ -39,9 +33,9 @@ import { ChooseTeam } from './components-teams/general/Opportunity/ChooseTeam';
 import { AddTemplate } from './components-teams/general/Templates/AddTemplate';
 
 import i18n from './i18n';
-import { setTimeout } from 'timers';
 
-var appSettings;
+import AuthorizedRoute from './AuthorizedRoute';
+import appSettingsObject from './helpers/AppSettings';
 
 export class AppTeams extends Component {
     displayName = AppTeams.name
@@ -52,33 +46,18 @@ export class AppTeams extends Component {
         initializeIcons();
 
         // Setting the default values
-        appSettings = {
-            generalProposalManagementTeam: appSettingsObject.generalProposalManagementTeam,
-            teamsAppInstanceId: appSettingsObject.teamsAppInstanceId,
-            teamsAppName: appSettingsObject.teamsAppName,
-            reportId: appSettingsObject.reportId,
-            workspaceId: appSettingsObject.workspaceId,
-            sharePointSiteRelativeName: ""
+        this.state = {
+            teamsContext: {
+                channelName: "",
+                channelId: "",
+                teamName: "",
+                groupId: "",
+                loginHint: "",
+                locale: "",
+                localStorePrefix: ""
+            },
+            contextInit: false
         };
-
-        this.localStorePrefix = appSettingsObject.localStorePrefix;
-        if (window.authHelper) {
-            console.log("AppTeams: Auth already initialized");
-            this.authHelper = window.authHelper;
-        } else {
-            // Initilize the AuthService and save it in the window object.
-            console.log("AppTeams: Initialize auth");
-            this.authHelper = new AuthHelper();
-            window.authHelper = this.authHelper;
-        }
-
-        if (window.sdkHelper) {
-            this.sdkHelper = window.sdkHelper;
-        } else {
-            // Initialize the GraphService and save it in the window object.
-            this.sdkHelper = new GraphSdkHelper();
-            window.sdkHelper = this.sdkHelper;
-        }
 
         if (window.utils) {
             this.utils = window.utils;
@@ -97,495 +76,89 @@ export class AppTeams extends Component {
         catch (err) {
             console.log(err);
         }
-        finally {
-            let locale = (navigator.languages && navigator.languages[0]) || navigator.language || navigator.userLanguage;
-            
-            if (this.getQueryVariable('locale') !== null && this.getQueryVariable('locale') !== undefined)
-            {
-                locale = this.getQueryVariable('locale');
-            }
-
-            console.log("App Teams Locale====" + locale + " ***** getQueryVarLocale **** " + this.getQueryVariable('locale'));
-
-            this.state = {
-                isAuthenticated: false,
-                theme: ThemeStyle.Light,
-                fontSize: 16,
-                authUser: "",
-                channelName: this.getQueryVariable('channelName'),
-                channelId: this.getQueryVariable('channelId'),
-                teamName: this.getQueryVariable('teamName'),
-                groupId: this.getQueryVariable('groupId'),
-                loginHint: this.getQueryVariable('loginHint'),
-                locale: locale
-            };
-        }
     }
 
     async componentDidMount() {
-        console.log("AppTeams_componentDidMount v2 loginHint: " + this.state.loginHint + " window.location.pathname: " + window.location.pathname);
+        microsoftTeams.getContext(context => {
+            console.log("AppTeams_getTeamsContext  ==> context", context);
+            if (context) {
+                let teamsFromContext = {
+                    channelName: context.channelName,
+                    channelId: context.channelId,
+                    teamName: context.teamName,
+                    groupId: context.groupId,
+                    loginHint: context.loginHint,
+                    locale: context.locale,
+                    localStorePrefix: appSettingsObject.localStorePrefix
+                };
 
-        const tokenGraphAdmin = await this.handleGraphAdminToken();
-        console.log("AppTeams_componentDidMount handleGraphAdminToken: " + tokenGraphAdmin);
-
-        const resTeamsContext = await this.getTeamsContext();
-        console.log("AppTeams_componentDidMount getTeamsContext resTeamsContext: " + resTeamsContext);
-
-        if (resTeamsContext.includes("AppTeams_getTeamsContext success") || window.location.pathname.includes("/tabmob/")) {
-            this.setState({
-                authUser: "start"
-            });
-        }
-
-        if (window.location.pathname !== "/tab/tabauth") {
-            if (await this.authHelper.userHasWebApiToken() && appSettings.generalProposalManagementTeam.length === 0) {
-                /// adding client settings
-                this.getClientSettings()
-                    .then(res => {
-                        appSettings = {
-                            generalProposalManagementTeam: res.GeneralProposalManagementTeam,
-                            teamsAppInstanceId: res.TeamsAppInstanceId,
-                            teamsAppName: res.ProposalManagerAddInName,
-                            reportId: res.PBIReportId,
-                            workspaceId: res.PBIWorkSpaceId,
-                            sharePointSiteRelativeName: res.SharePointSiteRelativeName
-                        };
-                        console.log("AppTeams_componentDidMount_getClientSettings  ==>", res);
-                    })
-                    .catch(err => {
-                        console.log("AppTeams_componentDidMount_getClientSettings error:", err);
-                    });
+                this.setState({ teamsContext: teamsFromContext, contextInit: true });
             }
-        }
-    }
-
-    async componentDidUpdate() {
-        console.log("AppTeams_componentDidUpdate window.location.pathname: " + window.location.pathname + " state.isAuthenticated: " + this.state.isAuthenticated);
-
-        const tokenGraphAdmin = await this.handleGraphAdminToken();
-        console.log("AppTeams_componentDidUpdate handleGraphAdminToken: " + tokenGraphAdmin);
-
-        if (window.location.pathname !== "/tab/tabauth") {
-
-            if (await this.authHelper.userHasWebApiToken() && appSettings.generalProposalManagementTeam.length === 0) {
-                /// adding client settings
-                this.getClientSettings()
-                    .then(res => {
-                        appSettings = {
-                            generalProposalManagementTeam: res.GeneralProposalManagementTeam,
-                            teamsAppInstanceId: res.TeamsAppInstanceId,
-                            teamsAppName: res.ProposalManagerAddInName,
-                            reportId: res.PBIReportId,
-                            workspaceId: res.PBIWorkSpaceId,
-                            sharePointSiteRelativeName: res.SharePointSiteRelativeName
-                        };
-                        console.log("AppTeams_componentDidUpdate_getClientSettings  ==>", res);
-                    })
-                    .catch(err => {
-                        console.log("AppTeams_componentDidUpdate_getClientSettings error:", err);
-                    });
-            }
-
-            if (this.state.authUser === "start") {
-                const isAuthentcatedRes = await this.authHelper.userIsAuthenticatedAsync();
-                console.log("AppTeams_componentDidUpdate loginHint: " + this.state.loginHint + " isAuthentcatedRes: " + isAuthentcatedRes);
-
-                let loginHint = this.state.loginHint;
-                const isAdminCall = await this.isAdminCall();
-
-                console.log("AppTeams_componentDidUpdate isAdminCall: " + isAdminCall);
-
-                if (isAdminCall === "true") {
-                    const userHasGraphAdminToken = await this.authHelper.userHasGraphAdminToken();
-
-                    console.log("AppTeams_componentDidUpdate userHasGraphAdminToken: " + userHasGraphAdminToken + " isAdminCall: " + isAdminCall);
-
-                    if (!userHasGraphAdminToken) {
-                        loginHint = "";
-                    }
-                }
-
-                if (isAuthentcatedRes !== loginHint) {
-                    console.log("AppTeams_componentDidUpdate isAuthentcatedRes !== loginHint: " + loginHint + " isAuthentcatedRes: " + isAuthentcatedRes);
-                    if (window.location.pathname.includes("/tabmob/")) {
-                        await this.browserAuthentication();
-                    } else {
-                        this.teamsAuthentication();
-                    }
-                } else {
-                    this.setState({
-                        authUser: "AppTeams_teamsAuthentication_successCallback"
-                    });
-                }
-            } else if (this.state.authUser === "AppTeams_teamsAuthentication_successCallback") {
-                //const
-                const resCallGetUserProfile = await this.callGetUserProfile();
-                console.log("AppTeams_componentDidUpdate callGetUserProfile: " + resCallGetUserProfile);
-            } else {
-                console.log("AppTeams_componentDidUpdate not ready to continue auth sequence state.authUser: " + this.state.authUser);
-            }
-        }
-    }
-
-    async handleGraphAdminToken() {
-        try {
-            // Store the original request so we can detect the type of token in TabAuth
-            if (window.location.pathname !== "/tab/tabauth") {
-                localStorage.setItem(this.localStorePrefix + "appteams.request", window.location.pathname);
-                if (window.location.pathname !== "/tab/generalAdministrationTab" && window.location.pathname !== "/tab/setupTab") {
-                    // Clear GraphAdminToken in case user navigates to admin then to another non-admin tab
-                    const graphAdminTokenStoreKey = this.localStorePrefix + "AdminGraphToken";
-                    localStorage.removeItem(graphAdminTokenStoreKey);
-                }
-            }
-
-            return true;
-        } catch (err) {
-            console.log("AppTeams_handleGraphAdminToken error: " + err);
-            return false;
-        }
-    }
-
-    async isAdminCall() {
-        const appTeamsRequest = localStorage.getItem(this.localStorePrefix + "appteams.request");
-
-        try {
-            if (appTeamsRequest === "/tab/generalAdministrationTab" || appTeamsRequest=== "/tab/setupTab") {
-                return "true";
-            }
-            else {
-                return "false";
-            }
-        } catch (err) {
-            console.log("AppTeams_isAdminCall error: " + err);
-            return "false";
-        }
-    }
-
-    teamsAuthentication() {
-        setTimeout(() => {
-            microsoftTeams.authentication.authenticate({
-                url: window.location.protocol + '//' + window.location.host + '/tab/tabauth' + "?channelName=" + this.state.channelName + "&teamName=" + this.state.teamName + "&channelId=" + this.state.channelId + "&locale=" + this.state.locale + "&loginHint=" + encodeURIComponent(this.state.loginHint),
-                height: 5000,
-                width: 800,
-                successCallback: (message) => {
-                    //document.getElementById('messageDisplay').innerHTML = message;
-                    console.log("AppTeams_authUserPromise successCallback result:");
-                    console.log(message);
-
-                    //localStorage.setItem("AuthUserStatus", "AppTeams_teamsAuthentication_successCallback" + message);
-                    this.setState({
-                        isAuthenticated: true,
-                        authUser: "AppTeams_teamsAuthentication_successCallback"
-                    });
-                },
-                failureCallback: (message) => {
-                    //document.getElementById('messageDisplay').innerHTML = message;
-                    console.log("AppTeams_authUserPromise failureCallback:");
-                    console.log(message);
-
-                    //localStorage.setItem("AuthUserStatus", "AppTeams_authUserPromise_failureCallback" + message);
-                }
-            });
-        }, 2000);
-    }
-
-    // This function is used only for tab mobile, teams browser & teams client are handled via the TabAuth component
-    async browserAuthentication() {
-        let isAuthenticated = this.authHelper.userIsAuthenticated();
-        let loginHint = "";
-        if (this.props.teamsContext !== null && this.props.teamsContext !== undefined) {
-            loginHint = this.props.teamsContext.loginHint;
-        }
-
-        console.log("AppTeams_browserAuthentication v3 START authSeq: " + this.authSeq + " loginHint: " + loginHint + " isAuthenticated: " + isAuthenticated);
-
-        if (isAuthenticated.includes("error")) {
-            console.log("AppTeams_browserAuthentication isAuthenticated: " + isAuthenticated);
-
-            let extraParameters = "login_hint=" + encodeURIComponent(loginHint);
-            console.log("AppTeams_browserAuthentication acquireTokenSilentAsync extraParameters: " + extraParameters);
-
-            const tabAuthSeq1 = await this.authHelper.acquireTokenSilentAsync();
-
-            if (tabAuthSeq1.includes("error")) {
-                await this.logonInteractive();
-            } else {
-                const tabAuthSeq2 = await this.authHelper.acquireWebApiTokenSilentAsync();
-
-                //localStorage.setItem("AppTeamsState", tabAuthSeq2);
-                if (!tabAuthSeq2.includes("error")) {
-                    this.setState({
-                        authUser: "AppTeams_teamsAuthentication_successCallback"
-                    });
-                }
-            }
-        }
-
-        return "AppTeams_browserAuthentication_finish";
-    }
-
-    // This function is used only for tab mobile, teams browser & teams client are handled via the TabAuth component
-    async logonInteractive() {
-        window.setTimeout(function () {
-            this.authHelper.loginRedirect();
-        }, 500);
-
-        return "loginRedirect";
-    }
-
-    async callGetUserProfile() {
-        console.log("AppTeams_callGetUserProfile start authUser: " + this.state.authUser);
-        if (window.location.pathname !== "/tab/config") {
-            try {
-                const userProfile = await this.authHelper.callGetUserProfile();
-                console.log("AppTeams_callGetUserProfile: " + userProfile.userPrincipalName);
-
-                if (userProfile.userPrincipalName.length > 0) {
-                    this.setState({
-                        userProfile: userProfile,
-                        isAuthenticated: true,
-                        displayName: `Hello ${userProfile.displayName}!`,
-                        authUser: "callGetUserProfile_success"
-                    });
-
-                    return "callGetUserProfile_success";
-                }
-                else {
-                    console.log("AppTeams_callGetUserProfile finished authUser=callGetUserProfile userProfile.userPrincipalName empty");
-                    this.setState({
-                        authUser: "callGetUserProfile_error"
-                    });
-
-                    return "AppTeams_callGetUserProfile error finished authUser=callGetUserProfile userProfile.userPrincipalName empty";
-                }
-            } catch (err) {
-                console.log("AppTeams_callGetUserProfile error:");
-                console.log(err);
-
-                this.setState({
-                    authUser: "callGetUserProfile_error"
-                });
-
-                return "AppTeams_callGetUserProfile insideif authUser=callGetUserProfile error:" + err;
-            }
-        } else {
-            return "callGetUserProfile_success";
-        }
-    }
-
-    //getting client settings
-    async getClientSettings() {
-        try {
-            console.log("AppTeams_getClientSettings");
-            let requestUrl = 'api/Context/GetClientSettings';
-
-            let data = await fetch(requestUrl, {
-                method: "GET",
-                headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() }
-            });
-
-            return await data.json();
-        } catch (error) {
-            console.log("AppTeams_getClientSettings error: ", error);
-            return error;
-        }
-    }
-
-    async getTeamsContext() {
-        try {
-            if (this.state.loginHint.length > 0) {
-                console.log("AppTeams_getTeamsContext values already exists loginHint: " + this.state.loginHint);
-
-                return "AppTeams_getTeamsContext success loginHint: " + this.state.loginHint;
-            }
-            else {
-
-                let context = await microsoftTeams.getContext();
-                console.log("AppTeams_getTeamsContext context ==>", context);
-
-                microsoftTeams.getContext(context => {
-                    console.log("AppTeams_getTeamsContext  ==> context", context);
-                    if (context) {
-                        this.setState({
-                            channelName: context.channelName,
-                            channelId: context.channelId,
-                            teamName: context.teamName,
-                            groupId: context.groupId,
-                            loginHint: context.loginHint,
-                            locale: context.locale,
-                            authUser: "start"
-                        });
-                    }
-                });
-                console.log("AppTeams_getTeamsContext context Test ==>", context);
-                console.log(context);
-                return "AppTeams_getTeamsContext started - " + window.location.pathname;
-            }
-        } catch (err) {
-            console.log("AppTeams_getTeamsContext error: " + err);
-            return "AppTeams_getTeamsContext error: " + err;
-        }
-    }
-
-    // Sign the user out of the session.
-    logout() {
-        this.authHelper.logout()
-            .then(() => {
-                this.setState({
-                    isAuthenticated: false,
-                    displayName: ''
-                });
-            });
-    }
-
-    // Grabs the font size in pixels from the HTML element on your page.
-    pageFontSize = () => {
-        let sizeStr = window.getComputedStyle(document.getElementsByTagName('html')[0]).getPropertyValue('font-size');
-        sizeStr = sizeStr.replace('px', '');
-        let fontSize = parseInt(sizeStr, 10);
-        if (!fontSize) {
-            fontSize = 16;
-        }
-        return fontSize;
-    }
-
-    // Sets the correct theme type from the query string parameter.
-    updateTheme = (themeStr) => {
-        let theme;
-        switch (themeStr) {
-            case 'dark':
-                theme = ThemeStyle.Dark;
-                break;
-            case 'contrast':
-                theme = ThemeStyle.HighContrast;
-                break;
-            case 'default':
-            default:
-                theme = ThemeStyle.Light;
-        }
-        this.setState({ theme });
-    }
-
-    // Returns the value of a query variable.
-    getQueryVariable = (variable) => {
-        const query = window.location.search.substring(1);
-        const vars = query.split('&');
-        for (const varPairs of vars) {
-            const pair = varPairs.split('=');
-            if (decodeURIComponent(pair[0]) === variable) {
-                return decodeURIComponent(pair[1]);
-            }
-        }
-        return "";
+        });
     }
 
     render() {
-        const teamsContext = {
-            channelName: this.state.channelName,
-            channelId: this.state.channelId,
-            teamName: this.state.teamName,
-            groupId: this.state.groupId,
-            loginHint: this.state.loginHint,
-            locale: this.state.locale
-        };
+        const { teamsContext, contextInit } = this.state;
+        console.log("AppTeams_render", this.state);
 
+        let isMobile = window.location.pathname.toLocaleLowerCase().includes("tabmob");
+
+        if (!isMobile && !contextInit) {
+            return <div>Initializing applications...</div>;
+        }
+       
         //Setting the locale in Teams
-        i18n.init({ lng: this.state.locale }, function (t) {
+        i18n.init({ lng: teamsContext.locale }, function (t) {
             i18n.t('key');
         });
 
-        const ConfigView = ({ match }) => {
-            return <Config teamsContext={teamsContext} appSettings={appSettings} />;
-        };
-
-        const TabAuthView = ({ match }) => {
-            return <TabAuth teamsContext={teamsContext} />;
-        };
-
-        const RootTabView = ({ match }) => {
-            return <RootTab teamsContext={teamsContext} />;
-        };
-
-        const AdministrationView = ({ match }) => {
-            return <Administration teamsContext={teamsContext} appSettings={appSettings} />;
-        };
-
-        const ConfigurationView = ({ match }) => {
-            return <Configuration teamsContext={teamsContext} />;
-        };
-
-        const AddDealTypeViewR = ({ match }) => {
-            return <AddDealTypeR teamsContext={teamsContext} />;
-        };
-
-        const AddTemplateView = ({ match }) => {
-            return <AddTemplate teamsContext={teamsContext} />;
-        };
-
-        const GeneralView = ({ match }) => {
-            return <General teamsContext={teamsContext} appSettings={appSettings} />;
-        };
-        const CustomerDecisionView = ({ match }) => {
-            return <CustomerDecision teamsContext={teamsContext} />;
-        };
-
-        const ChecklistView = ({ match }) => {
-            return <Checklist teamsContext={teamsContext} />;
-        };
-
-        const ProposalStatusView = ({ match }) => {
-            return <ProposalStatus teamsContext={teamsContext} />;
-        };
+        const TabAuthView = () => { return <TabAuth teamsContext={teamsContext}/>; };
+        const AdministrationView = () => { return <Administration teamsContext={teamsContext}/>; };
+        const ConfigurationView = () => { return <Configuration teamsContext={teamsContext}/>; };
+        const AddTemplateView = () => { return <AddTemplate teamsContext={teamsContext}/>; };
+        const GeneralView = () => { return <General teamsContext={teamsContext}/>; };
+        const CustomerDecisionView = () => { return <CustomerDecision teamsContext={teamsContext}/>; };
+        const ChecklistView = () => { return <Checklist teamsContext={teamsContext}/>; };
+        const ProposalStatusView = () => { return <ProposalStatus teamsContext={teamsContext}/>; };
 
         // Mobile
-        const RootTabMobView = ({ match }) => {
-            return <RootTabMob teamsContext={teamsContext} />;
-        };
-
-        const SetupView = ({ match }) => {
-            return <Setup teamsContext={teamsContext} appSettings={appSettings}/>;
-        };
-
-        const HelpView = ({ match }) => {
-            return <Help teamsContext={teamsContext} />;
-        };
+        const RootTabMobView = () => { return <RootTabMob teamsContext={teamsContext}/>; };
+        const HelpView = () => { return <Help teamsContext={teamsContext}/>; };
 
         return (
             <div className="ms-font-m show">
-                <Route exact path='/tabmob/rootTab' component={RootTabMobView} />
-                <Route exact path='/tabmob/proposalStatusTab' component={ProposalStatusView} />
-                <Route exact path='/tabmob/checklistTab' component={ChecklistView} />
-                <Route exact path='/tabmob/customerDecisionTab' component={CustomerDecisionView} />
-                <Route exact path='/tabmob/generalConfigurationTab' component={ConfigurationView} />
-                <Route exact path='/tabmob/generalAdministrationTab' component={AdministrationView} />
-                <Route exact path='/tabmob/generalDashboardTab' component={GeneralView} />
-                <Route exact path='/tabmob/OpportunityDetails' component={OpportunityDetails} />
-                <Route exact path='/tabmob/ChooseTeam' component={ChooseTeam} />
-                <Route exact path='/tabmob/tabauth' component={TabAuthView} />
-                <Route exact path='/tabmob/generalAddTemplate' component={AddTemplateView} />
+                <Switch>
+                    <Route exact path='/tabmob/tabauth' component={TabAuthView} />
+                    <AuthorizedRoute exact path='/tabmob/rootTab' component={RootTabMobView} teamsContext={teamsContext} />
+                    <AuthorizedRoute exact path='/tabmob/proposalStatusTab' component={ProposalStatusView} teamsContext={teamsContext} />
+                    <AuthorizedRoute exact path='/tabmob/checklistTab' component={ChecklistView} teamsContext={teamsContext} />
+                    <AuthorizedRoute exact path='/tabmob/customerDecisionTab' component={CustomerDecisionView} teamsContext={teamsContext} />
+                    <AuthorizedRoute exact path='/tabmob/generalConfigurationTab' component={ConfigurationView} teamsContext={teamsContext} />
+                    <AuthorizedRoute exact path='/tabmob/generalAdministrationTab' component={AdministrationView} teamsContext={teamsContext} />
+                    <AuthorizedRoute exact path='/tabmob/generalDashboardTab' component={GeneralView} teamsContext={teamsContext} />
+                    <AuthorizedRoute exact path='/tabmob/OpportunityDetails' component={OpportunityDetails} teamsContext={teamsContext} />
+                    <AuthorizedRoute exact path='/tabmob/ChooseTeam' component={ChooseTeam} teamsContext={teamsContext} />
+                    <AuthorizedRoute exact path='/tabmob/generalAddTemplate' component={AddTemplateView} teamsContext={teamsContext} />
 
-                <Route exact path='/tab' component={Home} />
-                <Route exact path='/tab/config' component={ConfigView} />
-                <Route exact path='/tab/tabauth' component={TabAuthView} />
-                <Route exact path='/tab/privacy' component={Privacy} />
-                <Route exact path='/tab/termsofuse' component={TermsOfUse} />
-
-                <Route exact path='/tab/proposalStatusTab' component={ProposalStatusView} />
-                <Route exact path='/tab/checklistTab' component={ChecklistView} />
-                <Route exact path='/tab/rootTab' component={RootTabView} />
-                <Route exact path='/tab/customerDecisionTab' component={CustomerDecisionView} />
-
-                <Route exact path='/tab/generalConfigurationTab' component={ConfigurationView} />
-                <Route exact path='/tab/generalAdministrationTab' component={AdministrationView} />
-                <Route exact path='/tab/generalDashboardTab' component={GeneralView} />
-                <Route exact path='/tab/generalAddDealTypeR' component={AddDealTypeViewR} />
-                <Route exact path='/tab/OpportunityDetails' component={OpportunityDetails} />
-                <Route exact path='/tab/ChooseTeam' component={ChooseTeam} />
-                <Route exact path='/tab/generalAddTemplate' component={AddTemplateView} />
-
-                <Route exact path='/tab/setupTab' component={SetupView} />
-                <Route exact path='/tab/helpTab' component={HelpView} />
+                    <Route exact path='/tab' component={Home} />
+                    <Route exact path='/tab/privacy' component={Privacy} />
+                    <Route exact path='/tab/termsofuse' component={TermsOfUse} />
+                    <Route exact path='/tab/helpTab' component={HelpView} />
+                    <Route exact path='/tab/tabauth' component={TabAuthView} />
+                    <AuthorizedRoute exact path='/tab/config' component={Config} teamsContext={teamsContext} />
+                    <AuthorizedRoute exact path='/tab/proposalStatusTab' component={ProposalStatus} teamsContext={teamsContext} />
+                    <AuthorizedRoute exact path='/tab/checklistTab' component={Checklist} teamsContext={teamsContext} />
+                    <AuthorizedRoute exact path='/tab/rootTab' component={RootTab} teamsContext={teamsContext} />
+                    <AuthorizedRoute exact path='/tab/customerDecisionTab' component={CustomerDecision} teamsContext={teamsContext} />
+                    <AuthorizedRoute exact path='/tab/generalConfigurationTab' component={Configuration} teamsContext={teamsContext} />
+                    <AuthorizedRoute exact path='/tab/generalAdministrationTab' component={Administration} teamsContext={teamsContext} />
+                    <AuthorizedRoute exact path='/tab/generalDashboardTab' component={General} teamsContext={teamsContext} />
+                    <AuthorizedRoute exact path='/tab/generalAddDealTypeR' component={AddDealTypeR} teamsContext={teamsContext} />
+                    <AuthorizedRoute exact path='/tab/OpportunityDetails' component={OpportunityDetails} teamsContext={teamsContext} />
+                    <AuthorizedRoute exact path='/tab/ChooseTeam' component={ChooseTeam} teamsContext={teamsContext} />
+                    <AuthorizedRoute exact path='/tab/generalAddTemplate' component={AddTemplate} teamsContext={teamsContext} />
+                    <AuthorizedRoute exact path='/tab/setupTab' component={Setup} teamsContext={teamsContext} />
+                </Switch>
             </div>
         );
     }

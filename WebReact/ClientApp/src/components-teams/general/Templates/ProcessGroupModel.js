@@ -3,6 +3,8 @@
 *  See LICENSE in the source repository root for complete license information. 
 */
 
+/* eslint-disable radix */
+
 import React from 'react';
 import { Modal } from 'office-ui-fabric-react/lib/Modal';
 import { PrimaryButton, ActionButton, IconButton } from 'office-ui-fabric-react/lib/Button';
@@ -57,9 +59,7 @@ export default function ProcessGroupModel() {
                                                     <h5>{process.processStep}</h5>
                                                 </div>
                                             </div>
-
                                         </div>
-
                                     );
                                 })
                             }
@@ -162,7 +162,6 @@ export default function ProcessGroupModel() {
                                                                 />
                                                             </div>
                                                         </div>
-
                                                     </div>
                                                     <div className="ms-Grid-col ms-sm6 ms-md6 ms-lg3 ">
                                                         {this.state.selectedProcessGroup.length > 1 ? idx === 1 ?
@@ -208,15 +207,10 @@ export default function ProcessGroupModel() {
                                     </div>
                                 </div>
                             </div>
-
                         </div>
                     </div>
                 </div>
-
-
             </div>
-
-
         </Modal>
-        );
+    );
 }

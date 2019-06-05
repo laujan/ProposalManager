@@ -66,8 +66,6 @@ exports.channels = [
 	}
 ];
 
-
-
 exports.userRoles = ['Loan Officer', 'Relationship Manager', 'Credit Analyst', 'Legal Counsel', 'Senior Risk Officer'];
 
 // Get the value of query parameter

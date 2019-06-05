@@ -30,15 +30,15 @@ export class General extends Component {
     constructor(props) {
         super(props);
 
+        this.apiService = this.props.apiService;
         this.authHelper = window.authHelper;
-        this.sdkHelper = window.sdkHelper;
         this.utils = new Utils();
         this.accessGranted = false;
         try {
-            console.log("General_Constructor  ");
+            console.log("General_Constructor");
         }
         catch (err) {
-            console.log("General_Constructor : error => ", err.message);
+            console.log("General_Constructor: error => ", err.message);
         }
         finally {
             // Wave4 - adding permission key for userprofiles
@@ -68,12 +68,14 @@ export class General extends Component {
         this.onClickOppCancel = this.onClickOppCancel.bind(this);
         this.onClickOppBack = this.onClickOppBack.bind(this);
     }
+
     async componentDidMount() {
         console.log("Dashboard_componentDidMount isauth: " + this.authHelper.isAuthenticated());
         await this.getAllData();
     }
+
     async componentDidUpdate() {
-        console.log("Dashboard_componentDidMount isauth: " + this.authHelper.isAuthenticated());
+        console.log("Dashboard_componentDidUpdate isauth: " + this.authHelper.isAuthenticated());
         await this.getAllData();
     }
 
@@ -103,147 +105,125 @@ export class General extends Component {
     }
 
     async getOpportunityIndex() {
-        // To get the List of Opportunities to Display on Dashboard page
-        let requestUrl = 'api/Opportunity?page=1';
-        let options = {
-            method: "GET",
-            headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() }
-        };
-        let itemslist = [];
-        try {
-            let response = await fetch(requestUrl, options);
-            if (response.ok) {
-                let data = await response.json();
+        //Opportunity list
+        this.apiService.callApi('Opportunity', 'GET', { query: 'page=1' })
+            .then(async (response) => {
+                if (response.ok) {
+                    let data = await response.json();
+                    let itemslist = [];
 
-                if (data.ItemsList.length > 0) {
-                    for (let i = 0; i < data.ItemsList.length; i++) {
+                    if (data.ItemsList.length > 0) {
+                        for (let i = 0; i < data.ItemsList.length; i++) {
 
-                        let item = data.ItemsList[i];
-                        console.log("General_getOpportunityIndex item : ", item);
-                        let newItem = {};
+                            let item = data.ItemsList[i];
+                            console.log("General_getOpportunityIndex item : ", item);
+                            let newItem = {};
 
-                        newItem.id = item.id;
-                        newItem.opportunity = item.displayName;
-                        newItem.client = item.customer.displayName;
-                        newItem.dealsize = item.dealsize;
-                        newItem.openedDate = new Date(item.openedDate).toLocaleDateString();
-                        newItem.stausValue = item.opportunityState;
-                        newItem.status = oppStatusClassName[item.opportunityState];
-                        itemslist.push(newItem);
+                            newItem.id = item.id;
+                            newItem.opportunity = item.displayName;
+                            newItem.client = item.customer.displayName;
+                            newItem.dealsize = item.dealsize;
+                            newItem.openedDate = new Date(item.openedDate).toLocaleDateString();
+                            newItem.stausValue = item.opportunityState;
+                            newItem.status = oppStatusClassName[item.opportunityState];
+                            itemslist.push(newItem);
+                        }
                     }
-                }
-                if (itemslist.length > 0) {
-                    this.setState({ reverseList: true });
-                }
+                    if (itemslist.length > 0) {
+                        this.setState({ reverseList: true });
+                    }
 
-                let sortedList = this.state.reverseList ? itemslist.reverse() : itemslist;
+                    let sortedList = this.state.reverseList ? itemslist.reverse() : itemslist;
+                    this.setState({
+                        dashboardList: sortedList
+                    });
+                }
+            })
+            .catch(error => {
+                this.errorHandler(error, "Opportunities_getOpportunityIndex");
+            })
+            .finally(() => {
                 this.setState({
                     loading: false,
-                    dashboardList: sortedList,
                     haveGranularAccess: true
                 });
-            }
-
-        } catch (err) {
-            this.errorHandler(err, "Opportunities_getOpportunityIndex");
-        } finally {
-            this.setState({
-                loading: false,
-                dashboardList: itemslist,
-                haveGranularAccess: true
             });
-        }
-
     }
 
     async getMetaData() {
-        let categoryList = [];
-        let requestUrl = 'api/MetaData';
-        let options = {
-            method: "GET",
-            headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() }
-        };
-        let metaDataList = [];
-        try {
-            let response = await fetch(requestUrl, options);
-            if (response.ok) {
-                let data = await response.json();
+        this.apiService.callApi('MetaData', 'GET')
+            .then(async (response) => {
+                if (response.ok) {
+                    let data = await response.json();
+                    let categoryList = [];
+                    let metaDataList = [];
 
-                for (let i = 0; i < data.length; i++) {
-                    metaDataList.push(data[i]);
+                    for (let i = 0; i < data.length; i++) {
+                        metaDataList.push(data[i]);
+                    }
+                    let temp = metaDataList.find(x => x.displayName === "Category" && x.fieldType.name === "DropDown").values;
+                    categoryList = temp.map(x => { return { 'key': x.id, 'text': x.name }; });
+                    this.setState({ metaDataList, categoryList });
                 }
-                let temp = metaDataList.find(x => x.displayName === "Category" && x.fieldType.name === "DropDown").values;
-                categoryList = temp.map(x => { return { 'key': x.id, 'text': x.name }; });
-                this.setState({ metaDataList, categoryList });
-            }
-
-        } catch (err) {
-            this.errorHandler(err, "Opportunities_CreateNew_getCategories");
-        }
+            })
+            .catch(error => {
+                this.errorHandler(error, "Opportunities_CreateNew_getCategories");
+            });
     }
 
     async getUserProfiles() {
-        let requestUrl = 'api/UserProfile/';
-        let options = {
-            method: "GET",
-            headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() }
-        };
-        let teamMembers = [];
-        try {
-            let response = await fetch(requestUrl, options);
-            if (response.ok) {
-                let data = await response.json();
-                if (data.ItemsList.length > 0) {
-                    teamMembers = data.ItemsList;
-                }
-                console.log("General_getUserProfiles : ", teamMembers);
-                this.setState({ teamMembers });
-            }
+        this.apiService.callApi('UserProfile', 'GET')
+            .then(async (response) => {
+                if (response.ok) {
+                    let data = await response.json();
+                    let teamMembers = [];
 
-        } catch (err) {
-            this.setState({
-                teamMembers
+                    if (data.ItemsList.length > 0) {
+                        teamMembers = data.ItemsList;
+                    }
+                    console.log("General_getUserProfiles : ", teamMembers);
+
+                    this.setState({ teamMembers });
+                }
+            })
+            .catch(error => {
+                this.setState({ teamMembers: [] });
+                this.errorHandler(error, "Opportunities_CreateNew_getUserProfiles");
             });
-            this.errorHandler(err, "Opportunities_CreateNew_getUserProfiles");
-        }
     }
 
     // Wave4 - Get all templates
     async getTemplatesLists() {
-        let requestUrl = "api/template/";
-        try {
-            let response = await fetch(requestUrl, {
-                method: "GET",
-                headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() }
+        this.apiService.callApi('template', 'GET')
+            .then(async (response) => {
+                let data = await response.json();
+                let templateItemsList = [];
+                let templateList = [];
+
+                for (let i = 0; i < data.itemsList.length; i++) {
+                    templateItemsList.push(data.itemsList[i]);
+                    let template = {};
+                    template.key = data.itemsList[i].id;
+                    template.text = data.itemsList[i].templateName;
+                    template.defaultTemplate = data.itemsList[i].defaultTemplate;
+                    templateList.push(template);
+                }
+
+                this.setState({
+                    templateItems: templateItemsList,
+                    templateList: templateList,
+                    templateLoading: false
+                });
+            })
+            .catch(error => {
+                console.log("OpportunitySummary_getDealTypeLists error ", error);
             });
-            let data = await response.json();
-            let templateItemsList = [];
-            let templateList = [];
-            for (let i = 0; i < data.itemsList.length; i++) {
-                templateItemsList.push(data.itemsList[i]);
-                let template = {};
-                template.key = data.itemsList[i].id;
-                template.text = data.itemsList[i].templateName;
-                template.defaultTemplate = data.itemsList[i].defaultTemplate;
-                templateList.push(template);
-            }
-            this.setState({
-                templateItems: templateItemsList,
-                templateList: templateList,
-                templateLoading: false
-            });
-            return true;
-        } catch (error) {
-            console.log("OpportunitySummary_getDealTypeLists error ", error);
-            return false;
-        }
     }
 
     fetchResponseHandler(response, referenceCall) {
         if (response.status === 401) {
             // Handle refresh token
         }
-
     }
 
     errorHandler(err, referenceCall) {
@@ -341,7 +321,6 @@ export class General extends Component {
     }
 
     onClickCreateOppNext() {
-
         console.log("General_onClickCreateOppNext : ", this.newOpportunity);
 
         if (this.state.viewState === "createStep1") {
@@ -410,7 +389,6 @@ export class General extends Component {
             messageBarEnabled: enabled,
             messageBarText: text,
             messageBarType: type
-
         });
     }
 
@@ -436,7 +414,7 @@ export class General extends Component {
             }
             this.newOpportunity.documentAttachments = cleanAttachments;
 
-            console.log("General_createopportunity metadata : ", this.newOpportunity.metaDataFields);
+            console.log("General_createopportunity metadata: ", this.newOpportunity.metaDataFields);
             //adding default bussinees process
             if (this.newOpportunity.template.id.length === 0) {
                 let defaultTemplateAvailable = this.state.templateList.some(name => name.defaultTemplate);
@@ -445,35 +423,21 @@ export class General extends Component {
                 }
             }
 
-            let requestUrl = 'api/opportunity/';
-
-            let options = {
-                method: "POST",
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    'authorization': 'Bearer    ' + this.authHelper.getWebApiToken()
-                },
-                body: JSON.stringify(this.newOpportunity)
-            };
-
-            fetch(requestUrl, options)
-                .then(response => this.fetchResponseHandler(response, "createOpportunity"))
-                .then(data => {
-                    resolve(data);
+            this.apiService.callApi('Opportunity', 'POST', { body: JSON.stringify(this.newOpportunity) })
+                .then((response) => {
+                    this.fetchResponseHandler(response, "createOpportunity");
+                    resolve(response);
                 })
-                .catch(err => {
+                .catch(error => {
                     this.setMessageBar(true, i18n.t('errorSavingOpportunityData'), MessageBarType.error);
-                    reject(err);
+                    reject(error);
                 });
         });
-
     }
 
     // Upload files
     uploadFiles() {
         return new Promise((resolve, reject) => {
-
             let files = this.filesToUpload;
             for (let i = 0; i < files.length; i++) {
                 this.setMessageBar(true, i18n.t('uploadingFiles') + (i + 1) + "/" + this.filesToUpload.length, MessageBarType.info);
@@ -483,23 +447,12 @@ export class General extends Component {
                 fd.append('opportunityName', this.newOpportunity.displayName);
                 fd.append('fileName', files[i].file.name);
 
-                let requestUrl = 'api/document/UploadFile/' + encodeURIComponent(this.newOpportunity.displayName) + "/Attachment";
-
-                let options = {
-                    method: "PUT",
-                    headers: {
-                        'authorization': 'Bearer    ' + this.authHelper.getWebApiToken()
-                    },
-                    body: fd
-                };
-
-                fetch(requestUrl, options)
-                    .then(response => this.fetchResponseHandler(response, "uploadFile"))
-                    .then(data => {
-                        resolve(data);
-                    })
-                    .catch(err => {
-                        reject(false);
+                this.apiService.callApi(`Document/UploadFile/${encodeURIComponent(this.newOpportunity.displayName)}/Attachment`, 'PUT', { formData: fd })
+                    .then((response) => {
+                        this.fetchResponseHandler(response, "uploadFile");
+                        resolve(response);
+                    }).catch(error => {
+                        reject(error);
                     });
             }
         });
@@ -507,9 +460,9 @@ export class General extends Component {
 
     render() {
         const viewState = this.state.viewState;
-        console.log("General ==>appSettings", this.props.appSettings);
+        console.log("General: appSettings: ", this.props.appSettings);
         const DashboardView = ({ match }) => {
-            return <Dashboard appSettings={this.props.appSettings} />;
+            return <Dashboard appSettings={this.props.appSettings} apiService={this.props.apiService} />;
         };
 
         return (
@@ -543,6 +496,7 @@ export class General extends Component {
                                                     {
                                                         viewState === "dashboard" &&
                                                         <OpportunityList
+                                                            apiService={this.props.apiService}
                                                             userProfile={this.state.userProfile}
                                                             dashboardList={this.state.dashboardList}
                                                             onClickCreateOpp={this.onClickCreateOpp}
@@ -558,14 +512,11 @@ export class General extends Component {
                                                             <DashboardView />
                                                         </PivotItem>
                                                 }
-
-
                                             </Pivot>
                                         }
                                         {
                                             viewState === "createStep1" &&
                                             <NewOpportunity
-                                                userProfile={this.state.userProfile}
                                                 opportunity={this.newOpportunity}
                                                 dashboardList={this.state.dashboardList}
                                                 onClickCancel={this.onClickOppCancel}
@@ -573,11 +524,9 @@ export class General extends Component {
                                                 metaDataList={this.state.metaDataList}
                                             />
                                         }
-
                                         {
                                             viewState === "createStep2" &&
                                             <NewOpportunityDocuments
-                                                userProfile={this.state.userProfile}
                                                 opportunity={this.newOpportunity}
                                                 categories={this.state.categoryList}
                                                 onClickBack={this.onClickOppBack}
@@ -585,7 +534,6 @@ export class General extends Component {
                                                 metaDataList={this.state.metaDataList}
                                             />
                                         }
-
                                         {
                                             viewState === "createStep3" &&
                                             <NewOpportunityOthers
@@ -597,14 +545,13 @@ export class General extends Component {
                                                 onClickBack={this.onClickOppBack}
                                                 onClickNext={this.onClickCreateOppNext.bind(this, this.newOpportunity)}
                                                 metaDataList={this.state.metaDataList}
+                                                apiService={this.props.apiService}
                                             />
                                         }
                                     </div>
-
                                     :
                                     <AccessDenied />
                         }
-
                     </div>
                 </div>
             </div>

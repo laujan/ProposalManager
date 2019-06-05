@@ -3,13 +3,13 @@
 *  See LICENSE in the source repository root for complete license information.
 */
 
+/* eslint-disable radix */
+
 import React, { Component } from 'react';
 import { Link } from 'react-router-dom';
 import { PrimaryButton, IconButton } from 'office-ui-fabric-react/lib/Button';
 import { SearchBox } from 'office-ui-fabric-react/lib/SearchBox';
 import { MessageBar, MessageBarType } from 'office-ui-fabric-react/lib/MessageBar';
-import { FocusZone, FocusZoneDirection } from 'office-ui-fabric-react/lib/FocusZone';
-import { List } from 'office-ui-fabric-react/lib/List';
 import { oppStatusText, oppStatusClassName } from '../../../common';
 import '../../../Style.css';
 import { DetailsList, DetailsListLayoutMode, SelectionMode } from 'office-ui-fabric-react/lib/DetailsList';
@@ -22,7 +22,7 @@ export class OpportunityList extends Component {
 
     constructor(props) {
         super(props);
-        this.sdkHelper = window.sdkHelper;
+        this.apiService = this.props.apiService;
         this.authHelper = window.authHelper;
         console.log("OpportunityList : ");
         const dashboardList = this.props.dashboardList;
@@ -165,26 +165,13 @@ export class OpportunityList extends Component {
             items: dashboardList,
             itemsOriginal: dashboardList,
             loading: true,
-            reverseList: false, //Seems there are issues with Reverse function on arrays
-            authUserId: this.props.userProfile.id,
-            authUserDisplayName: this.props.userProfile.displayName,
-            authUserMail: this.props.userProfile.mail,
-            authUserPhone: this.props.userProfile.phone,
-            authUserPicture: this.props.userProfile.picture,
-            authUserUPN: this.props.userProfile.userPrincipalName,
-            authUserRoles: this.props.userProfile.roles,
-            authUserPermissions: this.props.userProfile.permissions,
             messageBarEnabled: false,
             messageBarText: "",
-            MessagebarTextOpp: "",
-            MessagebarTexCust: "",
-            MessagebarTexDealSize: "",
-            loadSpinner: true,
             columns: columns,
             isCompactMode: false,
             isDelteOpp: false,
-            MessageDeleteOpp: "",
-            MessageBarTypeDeleteOpp: "",
+            messageDeleteOpp: "",
+            messageBarTypeDeleteOpp: "",
             haveGranularAccess: false
         };
 
@@ -195,40 +182,33 @@ export class OpportunityList extends Component {
 
     //Granular Access start:
     //Oppportunity create access
-    componentDidMount() {
+    async componentDidMount() {
         console.log("OpportunityList componentDidMount: enter");
-        this.authHelper.callCheckAccess(this.checkCreate).then((data) => {
-            console.log("Granular Dashboard: ", data);
-            if (data) {
-                let haveGranularAccess = data;
-                this.setState({ haveGranularAccess });
-            }
-            
-        });
+        let haveGranularAccess, canReadWrite = false;
 
-        this.authHelper.callCheckAccess(this.checkReadWrite).then((data) => {
-            console.log("Granular Dashboard: ", data);
-            if (data) {
-                //let columns = this.state.columns;
-                //columns.push(this.actionColumn);
-                this.setState({ columns: this.state.columns.concat(this.actionColumn) });
-                console.log(this.state.columns);
-            }
+        try
+        {
+            haveGranularAccess = await this.authHelper.callCheckAccess(this.checkCreate);
+        }
+        catch (e)
+        {
+            console.log("OpportunityList checkCreate: error: ", e);
+            haveGranularAccess = false;
+        }
 
-        });
+        try {
+            canReadWrite = await this.authHelper.callCheckAccess(this.checkReadWrite);
+        }
+        catch (e)
+        {
+            console.log("OpportunityList checkReadWrite: error: ", e);
+            canReadWrite = false;
+        }
+
+        let columns = canReadWrite ? this.state.columns.concat(this.actionColumn) : [];
+        this.setState({ haveGranularAccess: haveGranularAccess, columns: columns });
     }
     //Granular Access end:
-
-    fetchResponseHandler(response, referenceCall) {
-        if (response.status === 401) {
-            // TODO: This has been deprecated with the new token refresh functionality leaving the code for future expansion
-        }
-    }
-
-    errorHandler(err, referenceCall) {
-        console.log("Dashboard Ref: " + referenceCall + " error: " + JSON.stringify(err));
-    }
-
 
     delay(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
@@ -236,26 +216,20 @@ export class OpportunityList extends Component {
 
     async hideMessagebar() {
         await this.delay(2000);
-        this.setState({ isDelteOpp: false, MessageDeleteOpp: "", MessageBarTypeDeleteOpp: "" });
+        this.setState({ isDelteOpp: false, messageDeleteOpp: "", messageBarTypeDeleteOpp: "" });
     }
 
     async deleteRow(item) {
         try {
-            let fetchData = {
-                method: 'delete',
-                headers: {
-                    'authorization': 'Bearer ' + this.authHelper.getWebApiToken()
-                }
-            };
-            this.requestUrl = 'api/opportunity/' + item.id;
-            this.setState({ isDelteOpp: true, MessageDeleteOpp: " Deleting Opportunity - " + item.opportunity, MessageBarTypeDeleteOpp: MessageBarType.info });
-            let response = await fetch(this.requestUrl, fetchData);
+            this.setState({ isDelteOpp: true, messageDeleteOpp: " Deleting Opportunity - " + item.opportunity, messageBarTypeDeleteOpp: MessageBarType.info });
+
+            let response = await this.apiService.callApi('Opportunity', 'DELETE', { id: item.id });
             if (response) {
                 if (response.ok) {
                     let currentItems = this.state.items.filter(x => x.id !== item.id);
                     this.setState({
-                        MessageDeleteOpp: "Deleted opportunity " + item.opportunity,
-                        MessageBarTypeDeleteOpp: MessageBarType.success,
+                        messageDeleteOpp: "Deleted opportunity " + item.opportunity,
+                        messageBarTypeDeleteOpp: MessageBarType.success,
                         items: currentItems
                     });
                 } else
@@ -264,8 +238,8 @@ export class OpportunityList extends Component {
                 throw new Error("Server throwed error on deleting");
         } catch (error) {
             this.setState({
-                MessageDeleteOpp: "Error " + error,
-                MessageBarTypeDeleteOpp: MessageBarType.error
+                messageDeleteOpp: "Error " + error,
+                messageBarTypeDeleteOpp: MessageBarType.error
             });
             console.log("Setup_ConfigureAppIDAndGroupID error : ", error);
         }
@@ -313,19 +287,6 @@ export class OpportunityList extends Component {
                     </div>
                 </div>
             </div>
-        );
-    }
-
-    opportunitiesList(itemsList, itemsListOriginal) {
-        const items = itemsList;
-        return (
-            <FocusZone direction={FocusZoneDirection.vertical}>
-                <List
-                    items={items}
-                    onRenderCell={this._onRenderCell}
-                    className='ms-List'
-                />
-            </FocusZone>
         );
     }
 
@@ -398,7 +359,7 @@ export class OpportunityList extends Component {
                             {
                                 this.state.isDelteOpp ?
                                     <MessageBar messageBarType={this.state.MessageBarTypeDeleteOpp} isMultiline={false}>
-                                        {this.state.MessageDeleteOpp}
+                                        {this.state.messageDeleteOpp}
                                     </MessageBar>
                                     : ""
                             }
@@ -422,12 +383,10 @@ export class OpportunityList extends Component {
                                     <div><Trans>noOpportunities</Trans></div>
                             }
                         </div>
-
                     </div>
                     <br /><br />
                 </div>
             </div>
         );
     }
-
 }
