@@ -83,11 +83,17 @@ namespace Infrastructure.DealTypeServices
 
             try
             {
+                string memberId = String.Empty;
+                if (opportunity.Content.TeamMembers.Any())
+                {
+                    memberId = opportunity.Content.TeamMembers.FirstOrDefault()?.Id;
+                }
+
                 var groupID = String.Empty;
                 try
-                {
-                    var responce = await _graphTeamsAppService.CreateTeamAsync(opportunity.DisplayName, requestId);
-                    groupID = responce["id"].ToString();
+                {                    
+                    var response = await _graphTeamsAppService.CreateTeamAsync(opportunity.DisplayName, memberId, requestId);
+                    groupID = response["id"].ToString();
                 }
                 catch(Exception ex)
                 {

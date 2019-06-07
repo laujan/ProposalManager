@@ -50,7 +50,7 @@ namespace Infrastructure.GraphApi
         /// </summary>
         public GraphServiceClient GraphClient => _graphClientContext?.GraphClient;
 
-        public async Task<JObject> CreateGroupAsync(string displayName, string description = "")
+        public async Task<JObject> CreateGroupAsync(string displayName, string description = "", string ownerId = "")
         {
             // POST: https://graph.microsoft.com/v1.0/groups
             // EXAMPLE: https://graph.microsoft.com/v1.0/groups
@@ -64,7 +64,16 @@ namespace Infrastructure.GraphApi
                 var groupTypesObject = new List<string> { "Unified" };
 
                 //get owner
-                string objectId = _userContext.User.FindFirst(AzureAdConstants.ObjectIdClaimType).Value;
+                string objectId;
+                if (string.IsNullOrEmpty(ownerId))
+                {
+                    objectId = _userContext.User.FindFirst(AzureAdConstants.ObjectIdClaimType).Value;
+                }
+                else
+                {
+                    objectId = ownerId;
+                }
+
                 var userId = $"https://graph.microsoft.com/v1.0/Users/{objectId}";
                 string owner = $",\"owners@odata.bind\": [\"{userId}\"]";
                 var member = $",\"members@odata.bind\": [\"{userId}\"]";
@@ -258,7 +267,7 @@ namespace Infrastructure.GraphApi
             }
         }
 
-        public async Task<JObject> CreateTeamAsync(string displayName, string description = "")
+        public async Task<JObject> CreateTeamAsync(string displayName, string creatorId, string description = "")
         {
             // 2 step process: create group then create team using the if from create group
             // PUT: https://graph.microsoft.com/beta/groups/{group-id-for-teams}/team
@@ -269,7 +278,17 @@ namespace Infrastructure.GraphApi
             {
                 Guard.Against.Null(displayName, nameof(displayName));
 
-                var createGroup = await CreateGroupAsync(displayName, description);
+                JObject createGroup;
+
+                if(_userContext.User.Identity.Name != null)
+                {
+                    createGroup = await CreateGroupAsync(displayName, description);
+                }
+                else
+                {
+                    createGroup = await CreateGroupAsync(displayName, description, creatorId);
+                }
+
                 var groupId = createGroup["id"].ToString();
 
                 // Create JSON object with team settings

@@ -37,6 +37,7 @@ The professional performing the setup needs to have appropriate administrative p
       ---|-----
       `OrganizationUri`|**Organization's web API url**
       `RootDrive`|**Name of the Proposal Manager SharePoint site root drive**
+      `DefaultDealType`|You can specify a default Deal Type here to be assigned to all opportunities created through Dynamics 365. This causes an automatic Team creation in Microsoft Teams with all the channels dictated by the Deal Type. If this is desired, you must enter the full display name of the Deal Type between quotes.
       `OpportunityMapping`|Please refer to the Mapping configuration document included in this repo for more details on this field. The settings that ship with the solution will satisfy most of your needs.
    2. In the `OneDrive` section:
    

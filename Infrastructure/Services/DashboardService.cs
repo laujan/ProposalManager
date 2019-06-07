@@ -143,7 +143,6 @@ namespace Infrastructure.Services
                                     dProcess.ProcessStartDate = date.ToString();
                                     dProcess.NoOfDays = 0;
                                     dashboard.ProcessList.Add(dProcess);
-
                                 }
 
                                 var processEndDateObj = dashboard.ProcessEndDateList.ToList().Find(x => x.Process.ToLower() == process.Channel.ToLower() + "enddate");

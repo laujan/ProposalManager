@@ -14,7 +14,8 @@ namespace ApplicationCore
 		public string OrganizationUri { get; set; }
 		public int ProposalManagerCategoryId { get; set; }
 		public string RootDrive { get; set; }
-        public OpportunityMappingConfiguration OpportunityMapping { get; set; }
+		public string DefaultDealType { get; set; }
+		public OpportunityMappingConfiguration OpportunityMapping { get; set; }
 	}
 
 	public class OpportunityMappingConfiguration

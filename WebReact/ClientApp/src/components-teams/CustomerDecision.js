@@ -208,7 +208,7 @@ export class CustomerDecision extends Component {
             oppViewData.customerDecision = obj;
         }
 
-        this.apiService.callApi('Opportunity', 'PATCH', { id: oppViewData.id, body: JSON.stringify(oppViewData) })
+        this.apiService.callApi('Opportunity', 'PATCH', { body: JSON.stringify(oppViewData) })
             .catch(error => console.error('Error:', error))
             .then(response => {
                 if (response.ok) {

@@ -212,6 +212,30 @@ namespace WebReact.Api
 
                 var proposalManagerClient = await proposalManagerClientFactory.GetProposalManagerClientAsync();
 
+                if (!string.IsNullOrEmpty(dynamicsConfiguration.DefaultDealType))
+                {
+                    var processResult = await proposalManagerClient.GetAsync("/api/Template");
+                    if (!processResult.IsSuccessStatusCode)
+                    {
+                        _logger.LogError("DYNAMICS INTEGRATION ENGINE: Proposal Manager did not return a success status code on process request.");
+                        return BadRequest();
+                    }
+
+                    var processList = await processResult.Content.ReadAsAsync<TemplateListViewModel>();
+                    var dealType = processList.ItemsList.FirstOrDefault(x => x.TemplateName == dynamicsConfiguration.DefaultDealType);
+
+                    if (dealType == null)
+                    {
+                        _logger.LogError("DYNAMICS INTEGRATION ENGINE: Default deal type doesn't exist in Proposal Manager.");
+                        return BadRequest();
+                    }
+
+                    //Asign Deal Type to Opportunity. Doing same process as UI...
+                    opp.Template = dealType;
+                    opp.Template.ProcessList.First(p => p.ProcessStep == "Start Process").Status = ActionStatus.Completed;
+                    opp.OpportunityState = OpportunityStateModel.InProgress;
+                }
+
                 var metaDataResult = await proposalManagerClient.GetAsync("/api/MetaData");
                 if (!metaDataResult.IsSuccessStatusCode)
                 {
