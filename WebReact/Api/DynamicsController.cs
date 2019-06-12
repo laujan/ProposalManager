@@ -157,8 +157,8 @@ namespace WebReact.Api
 
                 var opportunityId = jopp["Id"].ToString();
 
-                jopp = jopp["Attributes"];
-                var attributes = jopp.ToDictionary(p => p["key"], v => v["value"]);
+                var attributes = jopp["Attributes"].ToDictionary(p => p["key"], v => v["value"]);
+                var formattedValues = jopp["FormattedValues"].ToDictionary(p => p["key"], v => v["value"]);
 
                 var opportunityName = GetAttribute(attributes, opportunityMapping.NameProperty)?.ToString();
                 var creator = dynamicsLinkService.GetUserData(data["InitiatingUserId"].ToString());
@@ -254,7 +254,7 @@ namespace WebReact.Api
                         opp.MetaDataFields.Add(new OpportunityMetaDataFields
                         {
                             DisplayName = metadata.DisplayName,
-                            Values = GetAttribute(attributes, mappingName.From, metadata.FieldType),
+                            Values = GetNativeAttribute(attributes, formattedValues, mappingName.From, metadata.FieldType),
                             FieldType = metadata.FieldType,
                             Screen = metadata.Screen
                         });
@@ -463,21 +463,73 @@ namespace WebReact.Api
             };
         }
 
-        private JToken GetAttribute(Dictionary<JToken, JToken> input, string memberName)
+        /// <summary>
+        /// Returns the required attribute as a JToken object.
+        /// </summary>
+        /// <param name="attributes">The list of attributes to search in.</param>
+        /// <param name="memberName">The attribute name to search for.</param>
+        /// <returns></returns>
+        private JToken GetAttribute(Dictionary<JToken, JToken> attributes, string memberName)
         {
-            input.TryGetValue(memberName, out var value);
+            attributes.TryGetValue(memberName, out var jToken);
 
-            if (value != null && value.HasValues && value["Value"] != null)
+            if (jToken != null && jToken.HasValues && jToken["Value"] != null)
             {
-                value = value["Value"];
+                jToken = jToken["Value"];
             }
 
-            return value;
+            return jToken;
         }
 
-        private dynamic GetAttribute(Dictionary<JToken, JToken> input, string memberName, FieldType type)
+        /// <summary>
+        /// Returns the required attribute as a JToken object, checking if it comes from an OptionSet.
+        /// </summary>
+        /// <param name="attributes">The list of attributes to search in.</param>
+        /// <param name="formattedValues">The list of formattedValues to look up if the attribute comes from an OptionSet</param>
+        /// <param name="memberName">The attribute name to search for.</param>
+        /// <param name="formattedValue">If the attribute comes from an OptionSet, this string will be completed with the corresponding formatted value</param>
+        /// <returns></returns>
+        private JToken GetAttribute(Dictionary<JToken, JToken> attributes, Dictionary<JToken, JToken> formattedValues, string memberName, out string formattedValue)
         {
-            var value = GetAttribute(input, memberName);
+            formattedValue = null;
+
+            attributes.TryGetValue(memberName, out var jToken);
+
+            if (jToken != null && jToken.HasValues && jToken["Value"] != null)
+            {
+                if (jToken["__type"] != null && jToken["__type"].Value<string>().StartsWith("OptionSetValue", StringComparison.OrdinalIgnoreCase))
+                {
+                    //This attribute comes from an OptionSet. Try to get its formatted value
+                    formattedValues.TryGetValue(memberName, out var jTokenFormatted);
+
+                    if (jTokenFormatted != null)
+                    {
+                        formattedValue = jTokenFormatted.ToObject<string>();
+                    }
+                }
+
+                jToken = jToken["Value"];
+            }
+
+            return jToken;
+        }
+
+        /// <summary>
+        /// Returns the required attribute as a .NET object with the appropiate type.
+        /// </summary>
+        /// <param name="attributes">The list of attributes to search in.</param>
+        /// <param name="formattedValues">The list of formattedValues to look up if the attribute comes from an OptionSet</param>
+        /// <param name="memberName">The attribute name to search for.</param>
+        /// <param name="type">The expected type for the attribute.</param>
+        /// <returns></returns>
+        private dynamic GetNativeAttribute(Dictionary<JToken, JToken> attributes, Dictionary<JToken, JToken> formattedValues, string memberName, FieldType type)
+        {
+            var value = GetAttribute(attributes, formattedValues, memberName, out var formattedValue);
+
+            if (formattedValue != null && type.Value == FieldType.String.Value)
+            {
+                return formattedValue;
+            }
 
             if (value == null)
             {
@@ -489,11 +541,11 @@ namespace WebReact.Api
                 {
                     return (double)0;
                 }
-                else if (type.Value == FieldType.Int)
+                else if (type.Value == FieldType.Int.Value)
                 {
                     return 0;
                 }
-                else if (type.Value == FieldType.String)
+                else if (type.Value == FieldType.String.Value)
                 {
                     return String.Empty;
                 }
@@ -509,7 +561,8 @@ namespace WebReact.Api
                     return DateTimeOffset.TryParse(value.ToString(), out var dto) ? dto : DateTimeOffset.Now;
                 }
 
-                return value;
+                //This returns a .NET object instead of a JToken
+                return ((JValue)value).Value;
             }
         }
     }

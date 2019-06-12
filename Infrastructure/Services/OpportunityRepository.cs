@@ -100,16 +100,26 @@ namespace Infrastructure.Services
                 dynamic opportunityFieldsJson = new JObject();
                 opportunityFieldsJson.Name = opportunity.DisplayName;
                 opportunityFieldsJson.OpportunityState = opportunity.Metadata.OpportunityState.Name;
+
                 try
                 {
                     opportunityFieldsJson.OpportunityObject = JsonConvert.SerializeObject(opportunity, Formatting.Indented);
+
                     //TODO
-                    opportunityFieldsJson.TemplateLoaded = opportunity.TemplateLoaded.ToString();
+                    if (opportunity.Content.Template.ProcessList.Count > 1 && !opportunity.TemplateLoaded)
+                    {
+                        opportunityFieldsJson.TemplateLoaded = "True";
+                    }
+                    else
+                    {
+                        opportunityFieldsJson.TemplateLoaded = opportunity.TemplateLoaded.ToString();
+                    }
                 }
                 catch(Exception ex)
                 {
                     _logger.LogError($"RequestId: {requestId} - OpportunityRepository_CreateItemAsync create dashboard entry Exception: {ex}");
                 }
+
                 opportunityFieldsJson.Reference = opportunity.Reference ?? String.Empty;
 
                 dynamic opportunityJson = new JObject();
@@ -186,8 +196,11 @@ namespace Infrastructure.Services
                     if (opportunity.Content.Template.ProcessList.Count > 1 && !opportunity.TemplateLoaded)
                     {
                         opportunityJson.TemplateLoaded = "True";
-                    }else opportunityJson.TemplateLoaded = opportunity.TemplateLoaded.ToString();
-
+                    }
+                    else
+                    {
+                        opportunityJson.TemplateLoaded = opportunity.TemplateLoaded.ToString();
+                    }
                 }
                 catch
                 {
