@@ -21,6 +21,7 @@ export class Tasks extends Component {
         this.utils = new Utils();
         this.authHelper = window.authHelper;
         this.apiService = this.props.apiService;
+        this.logService = this.props.logService;
 
         const columns = [
             {

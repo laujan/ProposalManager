@@ -27,6 +27,7 @@ export class NewOpportunityOthers extends Component {
             });
         });
 
+        this.logService = this.props.logService;
         this.opportunity = this.props.opportunity;
         this.metaData = this.props.metaDataList.length > 0 ? this.props.metaDataList.filter(prop=>prop.screen ==="Screen3") : [];
         this.state = {
@@ -209,7 +210,7 @@ export class NewOpportunityOthers extends Component {
                         <h3 className="pageheading">{loanOfficerADName}</h3>
                         <div className='ms-lg12 ibox-content pb20'>
                             <div className='docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg6'>
-                                <PeoplePickerTeamMembers teamMembers={this.state.teamMembers} defaultSelectedUsers={selectedUsers} onChange={(e) => this.onChangeLoanOfficer(e)} apiService={this.props.apiService}/>
+                                <PeoplePickerTeamMembers teamMembers={this.state.teamMembers} defaultSelectedUsers={selectedUsers} onChange={(e) => this.onChangeLoanOfficer(e)} apiService={this.props.apiService} logService={this.props.logService} />
                             </div>
                         </div>
                     </div>

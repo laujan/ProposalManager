@@ -18,7 +18,6 @@ import { Spinner, SpinnerSize } from 'office-ui-fabric-react/lib/Spinner';
 import Utils from '../../../helpers/Utils';
 import ProcessGroupModel from './ProcessGroupModel';
 
-
 export class ProcessTab extends Component {
     displayName = ProcessTab.name
 
@@ -28,7 +27,8 @@ export class ProcessTab extends Component {
 
         this.authHelper = window.authHelper;
         this.apiService = this.props.apiService;
-        this.templatesCommon = new TemplatesCommon(this.apiService);
+        this.logService = this.props.logService;
+        this.templatesCommon = new TemplatesCommon(this.apiService, this.logService);
 
         this.state = {
             pageLoading: true,
@@ -61,26 +61,20 @@ export class ProcessTab extends Component {
     }
 
     async componentDidMount() {
-        console.log("code-review commments implementation");
-        console.log("ProcessTab_componentDidMount isauth: " + this.authHelper.isAuthenticated());
+        this.logService.log("ProcessTab_componentDidMount");
         if (this.authHelper.isAuthenticated() && !this.accessGranted) {
             try {
                 await this.authHelper.callCheckAccess(["Administrator", "Opportunity_ReadWrite_Template", "Opportunities_ReadWrite_All"]);
-                console.log("ProcessTab_componentDidMount callCheckAccess success");
+                this.logService.log("ProcessTab_componentDidMount callCheckAccess success");
                 this.accessGranted = true;
                 await this.fnGetProcess();
                 await this.fnGetGroups();
 
             } catch (error) {
                 this.accessGranted = false;
-                console.log("ProcessTab_componentDidUpdate error_callCheckAccess:");
-                console.log(error);
+                this.logService.log("ProcessTab_componentDidUpdate error_callCheckAccess:", error);
             }
         }
-    }
-
-    componentDidUpdate() {
-        console.log("ProcessTab_componentDidUpdate isauth: " + this.authHelper.isAuthenticated() + " this.accessGranted: " + this.accessGranted);
     }
 
     async fnGetProcess() {
@@ -217,7 +211,7 @@ export class ProcessTab extends Component {
         let grpIndex = allGroups.findIndex(g => {
             return g.text.toLowerCase() === groupName.toLowerCase();
         });
-        console.log("Group check..... " + grpIndex); 
+        this.logService.log("Group check..... " + grpIndex); 
         //check group name exist or not
         if (grpIndex !== -1) {
             messagebarGroupName = <Trans>groupNameAlreadyExist</Trans>;
@@ -252,11 +246,11 @@ export class ProcessTab extends Component {
     }
 
     addProcess(process) {
-        console.log("addProcess: ", process);
+        this.logService.log("addProcess: ", process);
         let template = JSON.parse(JSON.stringify(this.state.template));
         let { processNumber, orderNumber } = this.state;
         let selectedProcessGroup = this.state.selectedProcessGroup.slice();
-        console.log(selectedProcessGroup);
+        this.logService.log(selectedProcessGroup);
         let isProcessExist = false;
         let processAlreadyExistErrText = "";
 
@@ -280,8 +274,7 @@ export class ProcessTab extends Component {
             selectedProcessGroup.push(process);
             this.setState({ selectedProcessGroup, processNumber });
         }
-        console.log("Selected process: ");
-        console.log(this.state.selectedProcessGroup);
+        this.logService.log("Selected process: ", this.state.selectedProcessGroup);
     }
 
     _findProcessInArray(tempList, process) {
@@ -327,7 +320,7 @@ export class ProcessTab extends Component {
             });
         }
         template.processes.sort((pA, pB) => pA.order - pB.order);
-        console.log(template);
+        this.logService.log(template);
         let allGroups = this.state.groupItems;
 
 
@@ -335,7 +328,7 @@ export class ProcessTab extends Component {
         groupDetails.id = this.state.groupItems.length + 1;
         groupDetails.groupName = this.state.groupName;
         groupDetails.processes = template.processes;
-        console.log("Groups: ", allGroups);
+        this.logService.log("Groups: ", allGroups);
 
         this.apiService.callApi('Groups', 'POST', { body: JSON.stringify(groupDetails) })
             .then(response => {
@@ -392,7 +385,7 @@ export class ProcessTab extends Component {
     }
 
     swapProcess(process, processNumber, direction) {
-        console.log("swapProcess: ", process, processNumber, direction);
+        this.logService.log("swapProcess: ", process, processNumber, direction);
         let selectedProcessGroup = this.state.selectedProcessGroup.slice();
         let index = -1;
         let tempOrder = 0;
@@ -406,7 +399,7 @@ export class ProcessTab extends Component {
             case "UP":
                 index = this._findProcessInArray(selectedProcessGroup, process);
                 tempOrder = selectedProcessGroup[index - 1].order;
-                console.log("swapProcess: ", index, tempOrder);
+                this.logService.log("swapProcess: ", index, tempOrder);
                 selectedProcessGroup[index - 1].order = selectedProcessGroup[index].order;
                 selectedProcessGroup[index].order = tempOrder;
                 break;
@@ -424,7 +417,7 @@ export class ProcessTab extends Component {
     }
     showSelectedProcessTypeGroups() {
         let selGroups = this.state.dispGroup;
-        console.log(selGroups);
+        this.logService.log(selGroups);
         return (
             <div className="ms-Grid-row bg-grey">
                 <div className='ms-Grid-col ms-sm12 ms-md6 ms-lg12 p15 AddDealScrollEdit bg-white'>

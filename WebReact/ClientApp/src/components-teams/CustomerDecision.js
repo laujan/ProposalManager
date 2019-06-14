@@ -76,6 +76,7 @@ export class CustomerDecision extends Component {
         super(props);
 
         this.apiService = this.props.apiService;
+        this.logService = this.props.logService;
         this.authHelper = window.authHelper;
         this.accessGranted = false;
 
@@ -100,7 +101,7 @@ export class CustomerDecision extends Component {
     }
 
     componentDidMount() {
-        console.log("CustomerDecision_componentDidMount isauth: " + this.authHelper.isAuthenticated());
+        this.logService.log("CustomerDecision_componentDidMount");
         this.getOppStatusAll();
         let teamName = getQueryVariable('teamName');
         this.fnGetOpportunityData(teamName);
@@ -129,7 +130,7 @@ export class CustomerDecision extends Component {
                     });
                 }
                 catch (err) {
-                    console.log(err);
+                    this.logService.log(err);
                 }
             });
     }
@@ -184,7 +185,7 @@ export class CustomerDecision extends Component {
                     loading: false,
                     haveGranularAccess: false
                 });
-                console.log("Error: OpportunityGetByName--");
+                this.logService.log("Error: OpportunityGetByName:", err);
             });
     }
 
@@ -209,12 +210,12 @@ export class CustomerDecision extends Component {
         }
 
         this.apiService.callApi('Opportunity', 'PATCH', { body: JSON.stringify(oppViewData) })
-            .catch(error => console.error('Error:', error))
+            .catch(error => this.logService.error('Error:', error))
             .then(response => {
                 if (response.ok) {
                     return response.json;
                 } else {
-                    console.log('Error...: ');
+                    this.logService.log('Error...: ');
                 }
             }).then(json => {
                 this.setState({ MessagebarText: <Trans>updatedSuccessfully</Trans> });

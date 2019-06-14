@@ -9,6 +9,7 @@ import * as microsoftTeams from '@microsoft/teams-js';
 import { PrimaryButton } from 'office-ui-fabric-react/lib/Button';
 import { Spinner, SpinnerSize } from 'office-ui-fabric-react/lib/Spinner';
 import { Trans } from "react-i18next";
+import LoggingService from '../helpers/LoggingService';
 
 export class TabAuth extends Component {
     displayName = TabAuth.name
@@ -16,16 +17,15 @@ export class TabAuth extends Component {
     constructor(props) {
         super(props);
 
+        this.logService = new LoggingService();
         this.authHelper = window.authHelper;
         this.utils = new Utils();
-
-        this.localStorePrefix = this.props.teamsContext.localStorePrefix;
 
         try {
             microsoftTeams.initialize();
         }
         catch (err) {
-            console.log("TabAuth error initializing teams:", err);
+            this.logService.log("TabAuth error initializing teams:", err);
         }
     }
 
@@ -35,10 +35,10 @@ export class TabAuth extends Component {
                 microsoftTeams.authentication.notifySuccess(token);
             })
             .catch(err => {
-                console.log("TabAuth_componentDidMount_acquiringWebApiToken error:", err);
+                this.logService.log("TabAuth_componentDidMount_acquiringWebApiToken error:", err);
                 this.authHelper.loginRedirect()
                     .catch(loginError => {
-                        console.log("TabAuth_logonInteractive_loginRedirect:", loginError);
+                        this.logService.log("TabAuth_logonInteractive_loginRedirect:", loginError);
                         microsoftTeams.authentication.notifyFailure(loginError);
                     });
             });

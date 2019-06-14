@@ -30,7 +30,8 @@ export class AddTemplate extends Component {
 
         this.authHelper = window.authHelper;
         this.apiService = this.props.apiService;
-        this.templatesCommon = new TemplatesCommon(this.apiService);
+        this.logService = this.props.logService;
+        this.templatesCommon = new TemplatesCommon(this.apiService, this.logService);
 
         this.hardcodedGroupNos = [];
         this.state = {
@@ -63,12 +64,11 @@ export class AddTemplate extends Component {
     }
 
     async componentDidMount() {
-        console.log("code-review commments implementation");
-        console.log("AddTemplate_componentDidMount isauth: " + this.authHelper.isAuthenticated());
+        this.logService.log("AddTemplate_componentDidMount");
         if (this.authHelper.isAuthenticated() && !this.accessGranted) {
             try {
                 await this.authHelper.callCheckAccess(["Administrator", "Opportunity_ReadWrite_Template", "Opportunities_ReadWrite_All"]);
-                console.log("Templatelist_componentDidUpdate callCheckAccess success");
+                this.logService.log("Templatelist_componentDidUpdate callCheckAccess success");
                 this.accessGranted = true;
                 await this.fnGetTemplates();
                 await this.fnGetProcess();
@@ -76,14 +76,9 @@ export class AddTemplate extends Component {
 
             } catch (error) {
                 this.accessGranted = false;
-                console.log("Templatelist_componentDidUpdate error_callCheckAccess:");
-                console.log(error);
+                this.logService.log("Templatelist_componentDidUpdate error_callCheckAccess:", error);
             }
         }
-    }
-
-    componentDidUpdate() {
-        console.log("AddTemplate_componentDidUpdate isauth: " + this.authHelper.isAuthenticated() + " this.accessGranted: " + this.accessGranted);
     }
 
     async fnGetTemplates() {
@@ -101,7 +96,7 @@ export class AddTemplate extends Component {
             });
         }
 
-        console.log(this.state.templateItems);
+        this.logService.log(this.state.templateItems);
     }
 
     async fnGetProcess() {
@@ -125,7 +120,7 @@ export class AddTemplate extends Component {
                 processGroupNumberList
             });
         }
-        console.log(this.state.processGroupNumberList);
+        this.logService.log(this.state.processGroupNumberList);
     }
 
     async fnGetGroups() {
@@ -157,7 +152,7 @@ export class AddTemplate extends Component {
     }
 
     removeSelGroup(group) {
-        console.log(group);
+        this.logService.log(group);
         let curGroupItems = this.state.groupItems;
         curGroupItems.push(group);
         let selGroups = this.state.selectedProcessGroup;
@@ -253,7 +248,7 @@ export class AddTemplate extends Component {
         // Check "Select Process" exist in process list
         const checkSelectProcess = obj => obj.processStep === 'Selcect Process';
         if (checkSelectProcess) templateObj.isSelectProcess = true;
-        console.log(templateObj);
+        this.logService.log(templateObj);
         this.setState({ templateObj, showPreviewModel: true });
     }
 
@@ -271,7 +266,7 @@ export class AddTemplate extends Component {
     async saveTemplate() {
         this.setState({ isUpdate: true });
         let templateObject = this.state.templateObj;
-        console.log(templateObject);
+        this.logService.log(templateObject);
 
         this.apiService.callApi('Template', templateObject.id ? 'PATCH' : 'POST', { body: JSON.stringify(templateObject) })
             .then(() => {
@@ -315,7 +310,7 @@ export class AddTemplate extends Component {
     }
 
     deleteGroup(groupNumber) {
-        console.log("deleteGroup: ", groupNumber);
+        this.logService.log("deleteGroup: ", groupNumber);
         let processGroupNumberList = this.state.processGroupNumberList.slice();
         let template = JSON.parse(JSON.stringify(this.state.template));
         let count = template.processes.filter(process => groupNumber === parseInt(process.order)).length;
@@ -340,10 +335,9 @@ export class AddTemplate extends Component {
             }
             tempObj[key].push(template.processes[index]);
         }
-        console.log("_processGrpObjtBasedOrderNo: ", tempObj);
+        this.logService.log("_processGrpObjtBasedOrderNo: ", tempObj);
         return tempObj;
     }
-
 
     showSelectedProcessTypeGroups() {
         let selGroups = this.state.selectedProcessGroup;
@@ -451,7 +445,7 @@ export class AddTemplate extends Component {
                                         </div>
                                     </PivotItem>
                                     <PivotItem linkText={<Trans>Process</Trans>} itemKey="processTab">
-                                        <ProcessTab apiService={this.apiService} />
+                                        <ProcessTab apiService={this.apiService} logService={this.logService} />
                                     </PivotItem>
                                 </Pivot>
                             </div>

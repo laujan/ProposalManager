@@ -3,10 +3,9 @@ import { Spinner, SpinnerSize } from 'office-ui-fabric-react/lib/Spinner';
 import { Trans } from "react-i18next";
 
 export default class TemplatesCommon {
-    apiService;
-
-    constructor(apiService) {
+    constructor(apiService, logService) {
         this.apiService = apiService;
+        this.logService = logService;
     }
 
     async getAllTemplatesList() {
@@ -26,7 +25,7 @@ export default class TemplatesCommon {
 
                 return templateItemList;
             })
-            .catch(error => console.log("TemplatesList getTemplatesList: " + error));
+            .catch(error => this.logService.log("TemplatesList getTemplatesList: ", error));
     }
 
     async getAllProcess() {
@@ -35,7 +34,7 @@ export default class TemplatesCommon {
         return await this.apiService.callApi('Process', 'GET')
             .then(response => this.handleErrors(response).json())
             .then(data => {
-                console.log(data);
+                this.logService.log(data);
                 processList = data.itemsList.map((process, key) => {
                     process.order = 0;
                     process.status = 0;
@@ -46,7 +45,7 @@ export default class TemplatesCommon {
 
                 return processList;
             })
-            .catch(error => console.log(error.message));
+            .catch(error => this.logService.log(error.message));
     }
 
     async getGroups() {
@@ -55,16 +54,16 @@ export default class TemplatesCommon {
         return await this.apiService.callApi('Groups', 'GET')
             .then(response => this.handleErrors(response).json())
             .then(data => {
-                console.log(data);
+                this.logService.log(data);
                 groupList = data;
 
                 return groupList;
             })
-            .catch(error => console.log(error.message));
+            .catch(error => this.logService.log(error.message));
     }
 
     handleErrors(response) {
-        console.log("handleErrors: ", response);
+        this.logService.log("handleErrors: ", response);
         let ok = response.ok;
         if (!ok) {
             let status = response.status;

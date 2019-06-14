@@ -21,6 +21,7 @@ export class Administration extends Component {
         super(props);
 
         this.apiService = this.props.apiService;
+        this.logService = this.props.logService;
         this.authHelper = window.authHelper;
         this.utils = new Utils();
         this.accessGranted = false;
@@ -30,7 +31,7 @@ export class Administration extends Component {
             microsoftTeams.initialize();
         }
         catch (err) {
-            console.log(err);
+            this.logService.log(err);
         }
         finally {
             this.state = {
@@ -52,7 +53,7 @@ export class Administration extends Component {
     }
 
     componentDidMount() {
-        console.log("Administration_componentDidMount");
+        this.logService.log("Administration_componentDidMount");
         if (this.authHelper.isAuthenticated()) {
 
             this.authHelper.callGetUserProfile()
@@ -68,7 +69,7 @@ export class Administration extends Component {
             .then(async (data) => {
                 let userRoleList, itemList = [];
                 if (data) {
-                    console.log("Administration_componentDidMount getOpportunityIndex");
+                    this.logService.log("Administration_componentDidMount getOpportunityIndex");
                     userRoleList = await this.getUserRoles();
                     itemList = await this.getOpportunityIndex();
                 }
@@ -82,7 +83,7 @@ export class Administration extends Component {
     }
 
     errorHandler(err, referenceCall) {
-        console.log("Administration Ref: " + referenceCall + " error: " + JSON.stringify(err));
+        this.logService.log("Administration Ref: " + referenceCall + " error: " + JSON.stringify(err));
     }
 
     async getOpportunityIndex()
@@ -112,7 +113,7 @@ export class Administration extends Component {
                         }
                     }
 
-                    console.log("Administration_getOpportunityIndex ----", list);
+                    this.logService.log("Administration_getOpportunityIndex ----", list);
                     itemsList = list.length > 0 ? list.reverse() : list;
                 }
             }
@@ -143,7 +144,7 @@ export class Administration extends Component {
                     userRole.teamsMembership = data[i].teamsMembership;
                     userRoleList.push(userRole);
                 }
-                console.log("Administration_getUserRoles userRoleList length: " + userRoleList.length);
+                this.logService.log("Administration_getUserRoles userRoleList length: " + userRoleList.length);
             }
             else {
                 this.errorHandler(response.statusText, "Administration_getUserRoles");
@@ -172,10 +173,10 @@ export class Administration extends Component {
                                 :
                                 <Pivot className='tabcontrols pt35' linkFormat={PivotLinkFormat.tabs} linkSize={PivotLinkSize.large}>
                                     <PivotItem linkText={<Trans>allOpportunities</Trans>} itemKey="allOpportunities">
-                                        <AdminAllOpportunities items={this.state.items} userRoleList={this.state.userRoleList} apiService={this.props.apiService} />
+                                        <AdminAllOpportunities items={this.state.items} userRoleList={this.state.userRoleList} apiService={this.props.apiService} logService={this.props.logService} />
                                     </PivotItem>
                                     <PivotItem linkText={<Trans>archivedOpportunities</Trans>} itemKey="archivedOpportunities">
-                                        <AdminArchivedOpportunities items={this.state.items} userRoleList={this.state.userRoleList} apiService={this.props.apiService}/>
+                                        <AdminArchivedOpportunities items={this.state.items} userRoleList={this.state.userRoleList} apiService={this.props.apiService} logService={this.props.logService} />
                                     </PivotItem>
                                 </Pivot>
                             :

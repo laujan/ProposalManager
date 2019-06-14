@@ -24,6 +24,7 @@ export class OpportunitySummary extends Component {
         super(props);
 
         this.apiService = this.props.apiService;
+        this.logService = this.props.logService;
         this.authHelper = window.authHelper;
         this.utils = window.utils;
         const opportunityData = this.props.opportunityData;
@@ -67,7 +68,7 @@ export class OpportunitySummary extends Component {
     }
 
     async componentDidMount() {
-        console.log("OpportunityDetails_componentDidMount");
+        this.logService.log("OpportunityDetails_componentDidMount");
 
         try {
             if (this.state.oppData) {
@@ -76,13 +77,13 @@ export class OpportunitySummary extends Component {
                 await this.getDealTypeLists();
                 await this.getOppDetails();
             } else {
-                console.log("OpportunitySummary_componentDidUpdate 2", this.state.loading);
+                this.logService.log("OpportunitySummary_componentDidUpdate 2", this.state.loading);
                 if (typeof this.state.teamsContext !== 'undefined' && this.state.loading) {
                     await this.getOpportunityForTeams(this.state.teamsContext.teamName);
                 }
             }
         } catch (error) {
-            console.log("OpportunitySummary_componentDidUpdate error : ", error);
+            this.logService.log("OpportunitySummary_componentDidUpdate error : ", error);
         }
     }
     
@@ -94,20 +95,20 @@ export class OpportunitySummary extends Component {
                 oppData = await response.json();
             }
             else {
-                console.log("getOpportunityForTeams", response.statusText);
+                this.logService.log("getOpportunityForTeams", response.statusText);
             }
 
             this.setState({ oppData });
             return oppData;
         }
         catch (err) {
-            console.log("OpportunitySummar_getOppDetails err:", err);
+            this.logService.log("OpportunitySummar_getOppDetails err:", err);
             return oppData;
         }
     }
 
     async getOppStatusAll() {
-        console.log("OpportunitySummary_getOppStatusAll ");
+        this.logService.log("OpportunitySummary_getOppStatusAll ");
 
         try {
             let response = await this.apiService.callApi('Context', 'GET', { id: 'GetOpportunityStatusAll' });
@@ -130,11 +131,11 @@ export class OpportunitySummary extends Component {
                 return true;
             }
             else {
-                console.log("OpportunitySummary_getOppStatusAll error: ", response.statusText);
+                this.logService.log("OpportunitySummary_getOppStatusAll error: ", response.statusText);
                 return false;
             }
         } catch (error) {
-            console.log("OpportunitySummary_getOppStatusAll error : ", error);
+            this.logService.log("OpportunitySummary_getOppStatusAll error : ", error);
             return false;
         }
     }
@@ -162,19 +163,19 @@ export class OpportunitySummary extends Component {
                     }
                 }
 
-                console.log("OpportunitySummary_getUserProfiles peopleList : ", peopleList);
+                this.logService.log("OpportunitySummary_getUserProfiles peopleList : ", peopleList);
                 let teamlist = this.utils.getMembersWithTemplateProperties(data.ItemsList);
 
-                console.log("OpportunitySummary_getUserProfiles peopleList : ", teamlist);
+                this.logService.log("OpportunitySummary_getUserProfiles peopleList : ", teamlist);
                 this.setState({ peopleList: teamlist, usersPickerLoading: peopleList > 0 ? true : false });
                 return true;
             }
             else {
-                console.log("OpportunitySummary_getUserProfiles error : ", response.statusText);
+                this.logService.log("OpportunitySummary_getUserProfiles error : ", response.statusText);
                 return false;
             }
         } catch (error) {
-            console.log("OpportunitySummary_getUserProfiles error : ", error);
+            this.logService.log("OpportunitySummary_getUserProfiles error : ", error);
             return false;
         }
     }
@@ -183,7 +184,7 @@ export class OpportunitySummary extends Component {
     {       
         try
         {
-            console.log("OpportunitySummary_getDealTypeLists");
+            this.logService.log("OpportunitySummary_getDealTypeLists");
             let response = await this.apiService.callApi('Template', 'GET');
             if (response.ok) {
                 let data = await response.json();
@@ -205,11 +206,11 @@ export class OpportunitySummary extends Component {
                 return true;
             }
             else {
-                console.log("OpportunitySummary_getDealTypeLists error: ", response.statusText);
+                this.logService.log("OpportunitySummary_getDealTypeLists error: ", response.statusText);
                 return false;
             }
         } catch (error) {
-            console.log("OpportunitySummary_getDealTypeLists error ", error);
+            this.logService.log("OpportunitySummary_getDealTypeLists error ", error);
             return false;
         }
     }
@@ -219,13 +220,13 @@ export class OpportunitySummary extends Component {
         try {
             let data = this.state.oppData;
             if (data) {
-                console.log("OpportunitySummary_getOppDetails data: ", data.teamMembers);
+                this.logService.log("OpportunitySummary_getOppDetails data: ", data.teamMembers);
                 let userDetails = this.props.userProfile;
                 let teamMembers = [];
                 teamMembers = data.teamMembers;
                 let loanOfficerObj = this.utils.getLoanOficers(data.teamMembers);
                 let officer = {};
-                console.log("OpportunitySummary_getOppDetails loanOfficerObj: ", loanOfficerObj);
+                this.logService.log("OpportunitySummary_getOppDetails loanOfficerObj: ", loanOfficerObj);
                 if (loanOfficerObj.length > 0) {
                     officer.loanOfficerPic = "";
                     officer.loanOfficerName = loanOfficerObj[0].text;
@@ -237,26 +238,27 @@ export class OpportunitySummary extends Component {
                     let userpro = await this.authHelper.callGetUserProfile();
                     currentUserId = userpro.id;
                 }
-                console.log("OpportunitySummary_getOppDetails currentUserId: ", currentUserId);
+                this.logService.log("OpportunitySummary_getOppDetails currentUserId: ", currentUserId);
                 let teamMemberDetails = teamMembers.filter(function (k) {
                     return k.id === currentUserId;
                 });
                 let userAssignedRole = teamMemberDetails.displayName;
-                console.log("OpportunitySummary_getOppDetails teamMemberDetails: ", teamMemberDetails);
+                this.logService.log("OpportunitySummary_getOppDetails teamMemberDetails: ", teamMemberDetails);
                 // Check access to edit dealtype
                 this.authHelper.callCheckAccess(["Opportunity_ReadWrite_Dealtype"]).then((data) => {
                     this.setState({ haveAccessToEditDealType: data });
-                });
+                }).catch(err => { this.setState({ haveAccessToEditDealType: false }); });
 
                 // Check access to edit team member
                 this.authHelper.callCheckAccess(["Opportunity_Readwrite_Team"]).then((data) => {
                     this.setState({ haveAccessToEditTeam: data });
-                });
+                }).catch(err => { this.setState({ haveAccessToEditTeam: false }); });
 
                 // Check access to change Status, enable loan officer  link
                 this.authHelper.callCheckAccess(["Opportunity_Create"]).then((data) => {
                     this.setState({ haveAccessToChangeLO: data, haveAccessToChangeStatus: data });
-                });
+                }).catch(err => { this.setState({ haveAccessToChangeStatus: false }); });
+
                 this.setState({
                     teamMembers: teamMembers,
                     loanOfficer: loanOfficerObj.length === 0 ? loanOfficerObj : [],
@@ -271,19 +273,19 @@ export class OpportunitySummary extends Component {
             this.setState({
                 loading: false
             });
-            console.log("OpportunitySummary_getOppDetails error : ", err);
+            this.logService.log("OpportunitySummary_getOppDetails error : ", err);
             return;
         }
 
     }
 
     onChangeDealType(e) {
-        console.log(e);
+        this.logService.log(e);
         let selDealType = this.state.dealTypeItems.filter(function (d) {
             return d.id === e.key;
         });
-        console.log("OPportunity_summary onChangeDealType : ", selDealType);
-        console.log("OPportunity_summary oppData : ", this.state.oppData.template);
+        this.logService.log("OPportunity_summary onChangeDealType : ", selDealType);
+        this.logService.log("OPportunity_summary oppData : ", this.state.oppData.template);
 
         let oppData = JSON.parse(JSON.stringify(this.state.oppData));
         oppData.template = selDealType[0];
@@ -296,7 +298,7 @@ export class OpportunitySummary extends Component {
     async startProcessClick() {
 
         this.setState({ isUpdateOpp: true, dealTypeUpdated : true });
-        console.log("OpportunitySummary_startProcessClick : ", this.state.oppData);
+        this.logService.log("OpportunitySummary_startProcessClick : ", this.state.oppData);
         let msg = "";
         let type = null;
         let dealTypeUpdated = false;
@@ -306,7 +308,7 @@ export class OpportunitySummary extends Component {
             type = MessageBarType.success;
             dealTypeUpdated = true;
         } catch (error) {
-            console.log("OpportunitySummary_startProcessClick : ", error.message);
+            this.logService.log("OpportunitySummary_startProcessClick : ", error.message);
             msg = error.message;
             type = MessageBarType.error;
             dealTypeUpdated = false;
@@ -324,11 +326,11 @@ export class OpportunitySummary extends Component {
     }
 
     async updateOpportunity(opportunity) {
-        console.log("OpportubitySummary_updateOpportunity");
+        this.logService.log("OpportubitySummary_updateOpportunity");
         try {
             return await this.apiService.callApi('Opportunity', 'PATCH', { body: JSON.stringify(opportunity)});
         } catch (error) {
-            console.log("OpportubitySummary_updateOpportunity error: ", error.message);
+            this.logService.log("OpportubitySummary_updateOpportunity error: ", error.message);
             throw new Error(error);
         }
     }
@@ -359,8 +361,8 @@ export class OpportunitySummary extends Component {
     renderSummaryDetails(oppDeatils) {
         let loanOfficerArr = [];
         loanOfficerArr = this.utils.getLoanOficers(oppDeatils.teamMembers);
-        console.log("OPportunity_summary : renderSummaryDetails,loanOfficerArr ", oppDeatils);
-        console.log("Opportunity_summary : this.state.showPicker ", this.state.showPicker);
+        this.logService.log("OPportunity_summary : renderSummaryDetails,loanOfficerArr ", oppDeatils);
+        this.logService.log("Opportunity_summary : this.state.showPicker ", this.state.showPicker);
         let loanOfficerADName = <Trans>loanOfficer</Trans>; // TODO getting it from appsettings js
         if (loanOfficerArr.length > 0) {
              loanOfficerADName = loanOfficerArr[0].adGroupName;
@@ -462,7 +464,7 @@ export class OpportunitySummary extends Component {
                                     </div>
                                     :
                                     <div>
-                                        <PeoplePickerTeamMembers teamMembers={this.state.peopleList} onChange={(e) => this.fnChangeLoanOfficer(e)} defaultSelectedUsers={[]} apiService={this.props.apiService}/>
+                                        <PeoplePickerTeamMembers teamMembers={this.state.peopleList} onChange={(e) => this.fnChangeLoanOfficer(e)} defaultSelectedUsers={[]} apiService={this.props.apiService} logService={this.props.logService}/>
                                         <br />
                                         <PrimaryButton
                                             buttonType={0}
@@ -641,7 +643,7 @@ export class OpportunitySummary extends Component {
             loanOfficerPic: '', 
             loanOfficerRole: userRoles[0]
         });
-        console.log(selLoanOfficer);
+        this.logService.log(selLoanOfficer);
         let role = selLoanOfficer[0].userRoles.find(role => {
             if (role.permissions.find(permission => permission.name === "Opportunity_ReadWrite_Dealtype"))
                 return role.id;
@@ -658,7 +660,7 @@ export class OpportunitySummary extends Component {
         updatedTeamMembers.push(this.addBaseProcessPersonal(selLoanOfficer, role, "Customer Decision"));
 
         oppDetails.teamMembers = updatedTeamMembers;
-        console.log(oppDetails.teamMembers);
+        this.logService.log(oppDetails.teamMembers);
 
         await this.fnUpdateOpportunity(oppDetails, "LO");
     }
@@ -683,7 +685,7 @@ export class OpportunitySummary extends Component {
         try {
             await this.updateOpportunity(oppViewData);
         } catch (e) {
-            console.log("error");
+            this.logService.log("error", e);
         } finally {
             if (Updtype === "LO") {
                 this.setState({ isUpdate: false, showPicker: false, loading: false });
@@ -707,11 +709,11 @@ export class OpportunitySummary extends Component {
                     return obj;
                 }
             });
-            console.log("General_createopportunity metadata filteredTeammembers: ", filteredTeammembers);
-            console.log("General_createopportunity metadata teamMembers: ", this.state.oppData.teamMembers);
+            this.logService.log("General_createopportunity metadata filteredTeammembers: ", filteredTeammembers);
+            this.logService.log("General_createopportunity metadata teamMembers: ", this.state.oppData.teamMembers);
         }
 
-        const TeamMembersView = ({ match }) => {
+        const TeamMembersView = () => {
             return (
                 <TeamMembers
                     memberslist={filteredTeammembers}
@@ -719,6 +721,7 @@ export class OpportunitySummary extends Component {
                     opportunityName={this.state.oppData.displayName}
                     opportunityState={this.state.oppData.opportunityState}
                     haveAccessToEditTeam={this.state.haveAccessToEditTeam}
+                    logService={this.props.logService}
                 />
             );
         };

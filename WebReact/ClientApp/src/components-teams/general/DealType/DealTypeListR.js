@@ -4,21 +4,13 @@
 */
 
 import React, { Component } from 'react';
-import {
-    DetailsList,
-    DetailsListLayoutMode,
-    Selection,
-    SelectionMode
-} from 'office-ui-fabric-react/lib/DetailsList';
+import { DetailsList, DetailsListLayoutMode, Selection, SelectionMode } from 'office-ui-fabric-react/lib/DetailsList';
 import { MarqueeSelection } from 'office-ui-fabric-react/lib/MarqueeSelection';
 import { DefaultButton, PrimaryButton, IconButton } from 'office-ui-fabric-react/lib/Button';
 import { SearchBox } from 'office-ui-fabric-react/lib/SearchBox';
 import { TooltipHost } from 'office-ui-fabric-react/lib/Tooltip';
 import { I18n, Trans } from "react-i18next";
-import {
-    Spinner,
-    SpinnerSize
-} from 'office-ui-fabric-react/lib/Spinner';
+import { Spinner, SpinnerSize } from 'office-ui-fabric-react/lib/Spinner';
 import { MessageBar, MessageBarType } from 'office-ui-fabric-react/lib/MessageBar';
 import { LinkContainer } from 'react-router-bootstrap';
 import i18n from '../../../i18n';
@@ -32,6 +24,7 @@ export class DealTypeListR extends Component {
 
         this.authHelper = window.authHelper;
         this.apiService = this.props.apiService;
+        this.logService = this.props.logService;
         this.accessGranted = false;
         const columns = [
             {
@@ -110,17 +103,16 @@ export class DealTypeListR extends Component {
     }
 
     async componentDidMount() {
-        console.log("Dealtypelist_componentDidMount isauth: " + this.authHelper.isAuthenticated() + this.accessGranted);
+        this.logService.log("Dealtypelist_componentDidMount isauth: " + this.authHelper.isAuthenticated() + this.accessGranted);
         if (this.authHelper.isAuthenticated() && !this.accessGranted) {
             try {
                 await this.authHelper.callCheckAccess(["Administrator", "Opportunity_ReadWrite_Dealtype", "Opportunities_ReadWrite_All"]);
-                console.log("Dealtypelist_componentDidUpdate callCheckAccess success");
+                this.logService.log("Dealtypelist_componentDidUpdate callCheckAccess success");
                 this.accessGranted = true;
                 await this.getDealTypeLists();
             } catch (error) {
                 this.accessGranted = false;
-                console.log("Dealtypelist_componentDidUpdate error_callCheckAccess:");
-                console.log(error);
+                this.logService.log("Dealtypelist_componentDidUpdate error_callCheckAccess:", error);
             }
         }
     }
@@ -142,7 +134,7 @@ export class DealTypeListR extends Component {
                 }
             })
             .catch(error => {
-                console.log("getDealTypeLists: " + error);
+                this.logService.log("getDealTypeLists: ", error);
             })
             .finally(() => {
                 this.setState({
@@ -194,7 +186,7 @@ export class DealTypeListR extends Component {
                 }
             })
             .catch(error => {
-                console.error('deleteTemplate: ', error);
+                this.logService.error('deleteTemplate: ', error);
             })
             .finally(() => {
                 this.setState({ isUpdate: false });

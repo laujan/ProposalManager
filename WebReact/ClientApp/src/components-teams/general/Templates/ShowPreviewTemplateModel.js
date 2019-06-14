@@ -12,7 +12,6 @@ import { MessageBar } from 'office-ui-fabric-react/lib/MessageBar';
 import { PreviewTemplate } from './PreviewTemplate';
 
 export default function ShowPreviewTemplateModel() {
-    console.log("ShowPreviewTemplateModel==>,", this.state);
     return (
         <Modal
             isOpen={this.state.showPreviewModel}

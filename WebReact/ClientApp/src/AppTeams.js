@@ -31,18 +31,18 @@ import { AddDealTypeR } from './components-teams/general/DealType/AddDealTypeR';
 import { OpportunityDetails } from './components-teams/general/Opportunity/OpportunityDetails';
 import { ChooseTeam } from './components-teams/general/Opportunity/ChooseTeam';
 import { AddTemplate } from './components-teams/general/Templates/AddTemplate';
-
 import i18n from './i18n';
-
 import AuthorizedRoute from './AuthorizedRoute';
 import appSettingsObject from './helpers/AppSettings';
+import LoggingService from './helpers/LoggingService';
 
 export class AppTeams extends Component {
     displayName = AppTeams.name
 
     constructor(props) {
         super(props);
-        console.log("AppTeams: Contructor");
+        this.logService = new LoggingService();
+        this.logService.log("AppTeams: Contructor");
         initializeIcons();
 
         // Setting the default values
@@ -74,13 +74,13 @@ export class AppTeams extends Component {
             microsoftTeams.initialize();
         }
         catch (err) {
-            console.log(err);
+            this.logService.log(err);
         }
     }
 
     async componentDidMount() {
         microsoftTeams.getContext(context => {
-            console.log("AppTeams_getTeamsContext  ==> context", context);
+            this.logService.log("AppTeams_getTeamsContext  ==> context", context);
             if (context) {
                 let teamsFromContext = {
                     channelName: context.channelName,
@@ -99,7 +99,7 @@ export class AppTeams extends Component {
 
     render() {
         const { teamsContext, contextInit } = this.state;
-        console.log("AppTeams_render", this.state);
+        this.logService.log("AppTeams_render", this.state);
 
         let isMobile = window.location.pathname.toLocaleLowerCase().includes("tabmob");
 
@@ -112,39 +112,25 @@ export class AppTeams extends Component {
             i18n.t('key');
         });
 
-        const TabAuthView = () => { return <TabAuth teamsContext={teamsContext}/>; };
-        const AdministrationView = () => { return <Administration teamsContext={teamsContext}/>; };
-        const ConfigurationView = () => { return <Configuration teamsContext={teamsContext}/>; };
-        const AddTemplateView = () => { return <AddTemplate teamsContext={teamsContext}/>; };
-        const GeneralView = () => { return <General teamsContext={teamsContext}/>; };
-        const CustomerDecisionView = () => { return <CustomerDecision teamsContext={teamsContext}/>; };
-        const ChecklistView = () => { return <Checklist teamsContext={teamsContext}/>; };
-        const ProposalStatusView = () => { return <ProposalStatus teamsContext={teamsContext}/>; };
-
-        // Mobile
-        const RootTabMobView = () => { return <RootTabMob teamsContext={teamsContext}/>; };
-        const HelpView = () => { return <Help teamsContext={teamsContext}/>; };
-
         return (
             <div className="ms-font-m show">
                 <Switch>
-                    <Route exact path='/tabmob/tabauth' component={TabAuthView} />
-                    <AuthorizedRoute exact path='/tabmob/rootTab' component={RootTabMobView} teamsContext={teamsContext} />
-                    <AuthorizedRoute exact path='/tabmob/proposalStatusTab' component={ProposalStatusView} teamsContext={teamsContext} />
-                    <AuthorizedRoute exact path='/tabmob/checklistTab' component={ChecklistView} teamsContext={teamsContext} />
-                    <AuthorizedRoute exact path='/tabmob/customerDecisionTab' component={CustomerDecisionView} teamsContext={teamsContext} />
-                    <AuthorizedRoute exact path='/tabmob/generalConfigurationTab' component={ConfigurationView} teamsContext={teamsContext} />
-                    <AuthorizedRoute exact path='/tabmob/generalAdministrationTab' component={AdministrationView} teamsContext={teamsContext} />
-                    <AuthorizedRoute exact path='/tabmob/generalDashboardTab' component={GeneralView} teamsContext={teamsContext} />
+                    <AuthorizedRoute exact path='/tabmob/rootTab' component={RootTabMob} teamsContext={teamsContext} />
+                    <AuthorizedRoute exact path='/tabmob/proposalStatusTab' component={ProposalStatus} teamsContext={teamsContext} />
+                    <AuthorizedRoute exact path='/tabmob/checklistTab' component={Checklist} teamsContext={teamsContext} />
+                    <AuthorizedRoute exact path='/tabmob/customerDecisionTab' component={CustomerDecision} teamsContext={teamsContext} />
+                    <AuthorizedRoute exact path='/tabmob/generalConfigurationTab' component={Configuration} teamsContext={teamsContext} />
+                    <AuthorizedRoute exact path='/tabmob/generalAdministrationTab' component={Administration} teamsContext={teamsContext} />
+                    <AuthorizedRoute exact path='/tabmob/generalDashboardTab' component={General} teamsContext={teamsContext} />
                     <AuthorizedRoute exact path='/tabmob/OpportunityDetails' component={OpportunityDetails} teamsContext={teamsContext} />
                     <AuthorizedRoute exact path='/tabmob/ChooseTeam' component={ChooseTeam} teamsContext={teamsContext} />
-                    <AuthorizedRoute exact path='/tabmob/generalAddTemplate' component={AddTemplateView} teamsContext={teamsContext} />
+                    <AuthorizedRoute exact path='/tabmob/generalAddTemplate' component={AddTemplate} teamsContext={teamsContext} />
 
-                    <Route exact path='/tab' component={Home} />
-                    <Route exact path='/tab/privacy' component={Privacy} />
-                    <Route exact path='/tab/termsofuse' component={TermsOfUse} />
-                    <Route exact path='/tab/helpTab' component={HelpView} />
-                    <Route exact path='/tab/tabauth' component={TabAuthView} />
+                    <Route exact path='/tab' component={Home} teamsContext={teamsContext} />
+                    <Route exact path='/tab/privacy' component={Privacy} teamsContext={teamsContext} />
+                    <Route exact path='/tab/termsofuse' component={TermsOfUse} teamsContext={teamsContext} />
+                    <Route exact path='/tab/helpTab' component={Help} teamsContext={teamsContext} />
+                    <Route exact path='/tab/tabauth' component={TabAuth} teamsContext={teamsContext} />
                     <AuthorizedRoute exact path='/tab/config' component={Config} teamsContext={teamsContext} />
                     <AuthorizedRoute exact path='/tab/proposalStatusTab' component={ProposalStatus} teamsContext={teamsContext} />
                     <AuthorizedRoute exact path='/tab/checklistTab' component={Checklist} teamsContext={teamsContext} />

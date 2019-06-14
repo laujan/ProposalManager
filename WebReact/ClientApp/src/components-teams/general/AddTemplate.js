@@ -4,13 +4,7 @@
 */
 
 import React, { Component } from 'react';
-import * as ReactDOM from 'react-dom';
-import * as microsoftTeams from '@microsoft/teams-js';
-import { DefaultButton, PrimaryButton, IconButton } from 'office-ui-fabric-react/lib/Button';
-import { I18n, Trans } from "react-i18next";
-import { Link as LinkRoute } from 'react-router-dom';
-import { iconButton } from 'msteams-ui-styles-core';
-
+import { IconButton } from 'office-ui-fabric-react/lib/Button';
 
 export class AddTemplate extends Component {
     displayName = AddTemplate.name
@@ -20,7 +14,6 @@ export class AddTemplate extends Component {
     }
 
     render() {
-        let templatesObj = this.props.templatesObj;
         return (
             <div>
                 {

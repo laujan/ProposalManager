@@ -24,6 +24,7 @@ export class AddDealTypeR extends Component {
         super(props);
         this.authHelper = window.authHelper;
         this.apiService = this.props.apiService;
+        this.logService = this.props.logService;
 
         //hardcoded group numbers for "START PROCESS and NEW OPPORTUNITY".
         //To make it even more dynamic, we need to remove the use of this two arrays
@@ -63,7 +64,7 @@ export class AddDealTypeR extends Component {
         await this.getAllProcessFrmSharepoint();
 
         let dealTypeId = getQueryVariable('dealTypeId');
-        console.log("componentDidMount: ", dealTypeId);
+        this.logService.log("componentDidMount: ", dealTypeId);
 
         if (dealTypeId !== null) {
             await this.getSelectedDealTypeById(dealTypeId);
@@ -88,12 +89,12 @@ export class AddDealTypeR extends Component {
             tempObj[key].push(template.processes[index]);
         }
 
-        console.log("_processGrpObjtBasedOrderNo: ", tempObj);
+        this.logService.log("_processGrpObjtBasedOrderNo: ", tempObj);
         return tempObj;
     }
 
     setProcessGroupNumberNo(e) {
-        console.log("setProcessGroupNumberNo: ", e.key);
+        this.logService.log("setProcessGroupNumberNo: ", e.key);
         let orderNumber = this.state.orderNumber;
         if (orderNumber !== e.key) {
             orderNumber = e.key;
@@ -125,7 +126,7 @@ export class AddDealTypeR extends Component {
     }
 
     addProcess(process) {
-        console.log("addProcess: ", process);
+        this.logService.log("addProcess: ", process);
         let template = JSON.parse(JSON.stringify(this.state.template));
         let { processNumber, orderNumber } = this.state;
         let selectedProcessGroup = this.state.selectedProcessGroup.slice();
@@ -224,7 +225,7 @@ export class AddDealTypeR extends Component {
     }
 
     onBlurEstimatedDays(process, e) {
-        console.log("onBlurEstimatedDays: ", process, e.target.value);
+        this.logService.log("onBlurEstimatedDays: ", process, e.target.value);
 
         let template = JSON.parse(JSON.stringify(this.state.template));
         let selectedProcessGroup = this.state.selectedProcessGroup.slice();
@@ -258,7 +259,7 @@ export class AddDealTypeR extends Component {
     }
 
     deleteGroup(groupNumber) {
-        console.log("deleteGroup: ", groupNumber);
+        this.logService.log("deleteGroup: ", groupNumber);
         let processGroupNumberList = this.state.processGroupNumberList.slice();
         let template = JSON.parse(JSON.stringify(this.state.template));
         let count = template.processes.filter(process => groupNumber === parseInt(process.order)).length;
@@ -274,7 +275,7 @@ export class AddDealTypeR extends Component {
     }
 
     swapProcess(process, processNumber, direction) {
-        console.log("swapProcess: ", process, processNumber, direction);
+        this.logService.log("swapProcess: ", process, processNumber, direction);
         let selectedProcessGroup = this.state.selectedProcessGroup.slice();
         let index = -1;
         let tempOrder = 0;
@@ -288,7 +289,7 @@ export class AddDealTypeR extends Component {
             case "UP":
                 index = this._findProcessInArray(selectedProcessGroup, process);
                 tempOrder = selectedProcessGroup[index - 1].order;
-                console.log("swapProcess: ", index, tempOrder);
+                this.logService.log("swapProcess: ", index, tempOrder);
                 selectedProcessGroup[index - 1].order = selectedProcessGroup[index].order;
                 selectedProcessGroup[index].order = tempOrder;
                 break;
@@ -318,7 +319,7 @@ export class AddDealTypeR extends Component {
             default:
                 break;
         }
-        console.log("swapProcessGroup: ", newGroupNumber, groupNo, direction);
+        this.logService.log("swapProcessGroup: ", newGroupNumber, groupNo, direction);
         let count = 1;
         template.processes = template.processes.map(process => {
             if (groupNo === parseInt(process.order)) {
@@ -326,14 +327,14 @@ export class AddDealTypeR extends Component {
             }
             return process;
         });
-        console.log("swapProcessGroup: ", template.processes);
+        this.logService.log("swapProcessGroup: ", template.processes);
         template.processes = template.processes.map(process => {
             if (newGroupNumber === parseInt(process.order)) {
                 process.order = process.order - newGroupNumber + groupNo;
             }
             return process;
         });
-        console.log("swapProcessGroup: ", template.processes);
+        this.logService.log("swapProcessGroup: ", template.processes);
         template.processes = template.processes.map(process => {
             if (0 === parseInt(process.order)) {
                 process.order = process.order + newGroupNumber;
@@ -341,7 +342,7 @@ export class AddDealTypeR extends Component {
             return process;
 
         });
-        console.log("swapProcessGroup: ", template.processes);
+        this.logService.log("swapProcessGroup: ", template.processes);
         template.processes.sort((pA, pB) => pA.order - pB.order);
         this.setState({ template });
     }
@@ -395,7 +396,7 @@ export class AddDealTypeR extends Component {
         dealTypeObject.defaultTemplate = defaultTemplate;
         dealTypeObject.initilaltemplate = false;
 
-        console.log("AddDealType_log : dealTypeObject ", dealTypeObject);
+        this.logService.log("AddDealType_log : dealTypeObject ", dealTypeObject);
 
         this.apiService.callApi('Template', dealTypeObject.id ? 'PATCH' : 'POST', { body: JSON.stringify(dealTypeObject) })
             .then(() => {
@@ -441,7 +442,7 @@ export class AddDealTypeR extends Component {
                 this.hardcodedGroupNos.forEach(value => { processGroupNumberList.splice(processGroupNumberList.indexOf(value), 1); });
             })
             .catch(error => {
-                console.log(error.message);
+                this.logService.log(error.message);
             })
             .finally(() => {
                 this.setState({ processList, pageLoading: false, processGroupNumberList });
@@ -470,13 +471,13 @@ export class AddDealTypeR extends Component {
                 this.setState({ template, processGroupNumberList });
             })
             .catch(error => {
-                console.log("getSelectedDealTypeById error: ", error.message);
+                this.logService.log("getSelectedDealTypeById error: ", error.message);
             });
     }
 
     //generic error handling functions
     handleErrors(response) {
-        console.log("handleErrors: ", response);
+        this.logService.log("handleErrors: ", response);
         let ok = response.ok;
         if (!ok) {
             let status = response.status;

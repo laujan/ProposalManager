@@ -23,6 +23,7 @@ export class NewOpportunityDocuments extends Component {
     constructor(props) {
         super(props);
 
+        this.logService = this.props.logService;
         this.utils = new Utils();
         this.opportunity = this.props.opportunity;
         this.metaData = this.props.metaDataList.length > 0 ? this.props.metaDataList.filter(prop => prop.screen === "Screen2") : [];
@@ -325,7 +326,7 @@ export class NewOpportunityDocuments extends Component {
         if (e.target.value.length !== 0) {
             this.opportunity.metaDataFields.forEach(obj => {
                 if (obj.id === key) {
-                    console.log("NewOpportunityDocuments_onBlurProperty : ", obj.id);
+                    this.logService.log("NewOpportunityDocuments_onBlurProperty : ", obj.id);
                     obj.values = e.target.value;
                 }
             });
@@ -335,7 +336,7 @@ export class NewOpportunityDocuments extends Component {
     _onSelectTargetDate = (date, key) => {
         this.opportunity.metaDataFields.forEach(obj => {
             if (obj.id === key) {
-                console.log("NewOpportunity_onChangeDropDown : ", obj.id, this._onFormatDate(date));
+                this.logService.log("NewOpportunity_onChangeDropDown : ", obj.id, this._onFormatDate(date));
                 obj.values = this._onFormatDate(date);
             }
         });
@@ -381,7 +382,7 @@ export class NewOpportunityDocuments extends Component {
         if (e.text.length > 0) {
             this.opportunity.metaDataFields.forEach(obj => {
                 if (obj.id === key) {
-                    console.log("NewOpportunity_onChangeDropDown : ", obj.id);
+                    this.logService.log("NewOpportunity_onChangeDropDown : ", obj.id);
                     obj.values = e.text;
                 }
             });

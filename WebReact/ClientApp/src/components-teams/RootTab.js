@@ -3,7 +3,6 @@
 *  See LICENSE in the source repository root for complete license information. 
 */
 import React, { Component } from 'react';
-import * as microsoftTeams from '@microsoft/teams-js';
 import { Pivot, PivotItem, PivotLinkFormat, PivotLinkSize } from 'office-ui-fabric-react/lib/Pivot';
 import { PrimaryButton } from 'office-ui-fabric-react/lib/Button';
 import { Label } from 'office-ui-fabric-react/lib/Label';
@@ -26,32 +25,25 @@ export class RootTab extends Component {
         super(props);
 
         this.apiService = this.props.apiService;
+        this.logService = this.props.logService;
         this.authHelper = window.authHelper;
         this.utils = window.utils;
         this.accessGranted = false;
 
-        try {
-            microsoftTeams.initialize();
-        }
-        catch (err) {
-            console.log(err);
-        }
-        finally {
-            this.state = {
-                teamMembers: [],
-                errorLoading: false,
-                oppName: "",
-                oppDetails: "",
-                otherRoleTeamMembers: [],
-                loading: true,
-                haveGranularAccess: false,
-                isAuthenticated: false
-            };
-        }
+        this.state = {
+            teamMembers: [],
+            errorLoading: false,
+            oppName: "",
+            oppDetails: "",
+            otherRoleTeamMembers: [],
+            loading: true,
+            haveGranularAccess: false,
+            isAuthenticated: false
+        };
     }
 
     componentDidMount() {
-        console.log("Dashboard_componentDidMount");
+        this.logService.log("Dashboard_componentDidMount");
         this.fnGetOpportunityData();
     }
 
@@ -70,15 +62,15 @@ export class RootTab extends Component {
                         let teamMembers = data.teamMembers;
                         let processList = data.template.processes;
 
-                        console.log("RootTab_fnGetOpportunityData teamMembers : ", teamMembers);
-                        console.log("RootTab_fnGetOpportunityData processList : ", processList);
+                        this.logService.log("RootTab_fnGetOpportunityData teamMembers : ", teamMembers);
+                        this.logService.log("RootTab_fnGetOpportunityData processList : ", processList);
 
                         //code refactored - display checklist page processtype users
                         let otherRolesMapping = processList.filter(function (k) {
                             return k.processType.toLowerCase() === "checklisttab";
                         });
 
-                        console.log("RootTab_fnGetOpportunityData otherRolesMapping : ", otherRolesMapping);
+                        this.logService.log("RootTab_fnGetOpportunityData otherRolesMapping : ", otherRolesMapping);
 
                         let otherRolesArr1 = [];
                         for (let j = 0; j < otherRolesMapping.length; j++) {
@@ -144,7 +136,7 @@ export class RootTab extends Component {
                 }
             })
             .catch(function (err) {
-                console.log("Error: OpportunityGetByName", err);
+                this.logService.log("Error: OpportunityGetByName", err);
             });
     }
 
@@ -157,7 +149,7 @@ export class RootTab extends Component {
 
     render() {
         const { teamMembers, otherRoleTeamMembers, oppDetails, groupId, oppStatus, errorLoading, loading, haveGranularAccess, oppName } = this.state;
-        const { teamsContext, userProfile, apiService } = this.props;
+        const { teamsContext, userProfile, apiService, logService } = this.props;
         const channelId = teamsContext.channelId;
         let loanOfficerRealManagerArr = [];
 
@@ -165,10 +157,10 @@ export class RootTab extends Component {
         let loanOfficerRealManagerArr2 = this.utils.getRelationShipManagers(teamMembers);
 
         loanOfficerRealManagerArr = loanOfficerRealManagerArr1.concat(loanOfficerRealManagerArr2);
-        console.log("RootTab_fnGetOpportunityData loanOfficerRealManagerArr : ", loanOfficerRealManagerArr);
-        console.log("RootTab_fnGetOpportunityData OtherRoleTeamMembers : ", otherRoleTeamMembers);
+        this.logService.log("RootTab_fnGetOpportunityData loanOfficerRealManagerArr : ", loanOfficerRealManagerArr);
+        this.logService.log("RootTab_fnGetOpportunityData OtherRoleTeamMembers : ", otherRoleTeamMembers);
         const OpportunitySummaryView = () => {
-            return <OpportunitySummary teamsContext={teamsContext} opportunityData={oppDetails} opportunityId={oppDetails.id} userProfile={userProfile} apiService={apiService} />;
+            return <OpportunitySummary teamsContext={teamsContext} opportunityData={oppDetails} opportunityId={oppDetails.id} userProfile={userProfile} apiService={apiService} logService={this.logService}/>;
         };
         return (
 
@@ -210,7 +202,7 @@ export class RootTab extends Component {
                                                             </PivotItem>
                                                             <PivotItem linkText={<Trans>workflow</Trans>} width='100%' >
                                                                 <div className='ms-Grid-row mt20 pl15 bg-white'>
-                                                                    <Label><Workflow memberslist={teamMembers} oppStaus={oppStatus} oppDetails={oppDetails} /></Label>
+                                                                    <Label><Workflow memberslist={teamMembers} oppStaus={oppStatus} oppDetails={oppDetails} logService={this.logService}/></Label>
                                                                 </div>
                                                             </PivotItem>
                                                             <PivotItem linkText={<Trans>teamUpdate</Trans>}>
@@ -225,7 +217,7 @@ export class RootTab extends Component {
                                                                                 obj.map((member, j) => {
                                                                                     return (
                                                                                         <div className=' ms-Grid-col ms-sm12 ms-md8 ms-lg4 p-5' key={j}>
-                                                                                            <TeamUpdate memberslist={member} channelId={channelId} groupId={groupId} oppName={oppName} />
+                                                                                            <TeamUpdate memberslist={member} channelId={channelId} groupId={groupId} oppName={oppName} logService={this.logService}/>
                                                                                         </div>
                                                                                     );
                                                                                 }
@@ -241,7 +233,7 @@ export class RootTab extends Component {
                                                                         loanOfficerRealManagerArr.map((member, ind) => {
                                                                             return (
                                                                                 <div className=' ms-Grid-col ms-sm12 ms-md8 ms-lg4 p-5' key={ind} >
-                                                                                    <TeamUpdate memberslist={member} channelId={channelId} groupId={groupId} oppName={oppName} />
+                                                                                    <TeamUpdate memberslist={member} channelId={channelId} groupId={groupId} oppName={oppName} logService={this.logService}/>
                                                                                 </div>
                                                                             );
                                                                         })
@@ -250,7 +242,7 @@ export class RootTab extends Component {
                                                             </PivotItem>
                                                             <PivotItem linkText={<Trans>notes</Trans>} width='100%' itemKey="Notes" >
                                                                 <div className='ms-Grid-col ms-sm12 ms-md8 ms-lg12' >
-                                                                    <OpportunityNotes userProfile={userProfile} apiService={apiService} opportunityData={oppDetails} opportunityId={oppDetails.id} />
+                                                                    <OpportunityNotes userProfile={userProfile} apiService={apiService} opportunityData={oppDetails} opportunityId={oppDetails.id} logService={this.logService}/>
                                                                 </div>
                                                             </PivotItem>
                                                         </Pivot>

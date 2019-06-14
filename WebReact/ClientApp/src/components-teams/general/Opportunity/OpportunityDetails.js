@@ -4,6 +4,7 @@ import { Spinner, SpinnerSize } from 'office-ui-fabric-react/lib/Spinner';
 import { OpportunitySummary } from './OpportunitySummary';
 import { getQueryVariable } from '../../../common';
 import { Trans } from "react-i18next";
+import Accessdenied from '../../../helpers/AccessDenied';
 
 export class OpportunityDetails extends Component {
     displayName = OpportunityDetails.name
@@ -12,35 +13,38 @@ export class OpportunityDetails extends Component {
         super(props);
 
         this.apiService = this.props.apiService;
+        this.logService = this.props.logService;
+        this.authHelper = window.authHelper;
         const oppData = this.props.oppDetails;
         this.state = {
             loading: true,
             oppData: oppData
         };
+
+        this.checkReadWrite = ["Administrator", "Opportunity_ReadWrite_All", "Opportunity_ReadWrite_Partial"];
     }
 
     async componentDidMount() {
-        console.log("OpportunityDetails_componentDidMount isauth");
-        try
-        {
-            let oppData = this.state.oppData;
-            if (!oppData) {
-                oppData = await this.getOppDetails(this.props.teamname);
-                console.log("OpportunityDetails_componentDidUpdate oppdata: ", oppData);
+        this.logService.log("OpportunityDetails_componentDidMount");
+        let oppData = this.state.oppData;
+        try {
+            let data = await this.authHelper.callCheckAccess(this.checkReadWrite);
+            
+            if (data) {
+                if (!oppData) {
+                    oppData = await this.getOppDetails(this.props.teamname);
+                    this.logService.log("OpportunityDetails_componentDidUpdate oppdata: ", oppData);
+                }
             }
-
-            this.setState({ oppData, loading: false });
-        } catch (error) {
-            if (this.state.loading) {
-                this.setState({ loading: false });
-            }
-            console.log("OpportunityDetails_componentDidUpdate error :", error);
+            this.setState({ hasAccess: data, oppData, loading: false });
+        }
+        catch (e) {
+            this.logService.log("OpportunityDetails_componentDidUpdate error: ", e);
+            this.setState({ hasAccess: false, loading: false, oppData });
         }
     }
 
     async getOppDetails(teamname) {
-        let data = "";
-
         try {
             let args = `name=${teamname}`;
 
@@ -50,31 +54,33 @@ export class OpportunityDetails extends Component {
             }
 
             let response = await this.apiService.callApi('Opportunity', 'GET', { query: args });
+            let data = await response.json();
 
             if (response.ok) {
-                data = await response.json();
+                return data;
             }
             else {
-                console.log("OpportunityDetails_getOppDetails error retrieving:", response.statusText);
+                throw new Error(data.error.message);
             }
         } catch (err) {
-            console.log("OpportunityDetails_getOppDetails err:", err);
-        }
-        finally {
-            return data;
+            let errorMessage = `OpportunityDetails_getOppDetails error retrieving: ${err}`;
+            this.logService.log(errorMessage);
+            throw new Error(errorMessage);
         }
     }
 
     render() {
         const OpportunitySummaryView = () => {
-            return <OpportunitySummary opportunityData={this.state.oppData} userProfile={this.props.userProfile} apiService={this.props.apiService}/>;
+            return <OpportunitySummary opportunityData={this.state.oppData} userProfile={this.props.userProfile} apiService={this.props.apiService} logService={this.props.logService} />;
         };
 
         return (
             <div className='ms-Grid'>
+                {this.state.hasAccess 
+                ?
                 <div className='ms-Grid-row'>
                     <div className='ms-Grid-col ms-sm12 ms-md8 ms-lg12' />
-                    {this.state.loading && this.state.oppData && this.state.userProfile
+                    {this.state.loading && this.state.oppData && this.props.userProfile
                         ?
                         <div className='ms-BasicSpinnersExample'>
                             <Spinner size={SpinnerSize.large} label={<Trans>loading</Trans>} ariaLive='assertive' />
@@ -88,7 +94,10 @@ export class OpportunityDetails extends Component {
                             </PivotItem>
                         </Pivot>
                     }
-                </div>
+                    </div>
+                    :
+                    <Accessdenied />
+                }
             </div>
         );
     }

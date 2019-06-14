@@ -1,0 +1,167 @@
+{
+	"rolemapping" : [
+										{
+											"id":100,
+											"adGroupName": "Relationship Manager",
+											"displayName": "RelationshipManager",
+											"permissions": [
+												{
+												  "id": "",
+												  "name": "Opportunities_ReadWrite_All"
+												},
+												{
+													"id": "",
+													"name": "Opportunity_Create"
+												}
+											  ],
+											"teamsMembership": {
+													"name": "Owner",
+													"value": 0
+												}
+										},
+										{
+											"id":101,
+											"adGroupName": "Loan Officer",
+											"displayName": "LoanOfficer",
+											"permissions": [
+												{
+													"id": "",
+													"name": "Opportunities_ReadWrite_All"
+												},
+												{
+												  "id": "",
+												  "name": "Opportunity_ReadWrite_Team"
+												},
+												{
+													"id": "",
+													"name": "Opportunity_ReadWrite_Dealtype"
+												}
+											  ],
+											"teamsMembership": {
+													"name": "Owner",
+													"value": 0
+												}
+										},
+										{
+											"id":102,
+											"adGroupName": "Credit Analyst",
+											"displayName": "CreditAnalyst",
+											"permissions": [
+												{
+												  "id": "",
+												  "name": "Opportunity_ReadWrite_All"
+												}
+											  ],
+                      "teamsMembership": {
+													"name": "Member",
+													"value": 1
+											}
+										},
+										{
+											"id":103,
+											"adGroupName": "Legal Counsel",
+											"displayName": "LegalCounsel",
+											"permissions": [
+												{
+												  "id": "",
+												  "name": "Opportunity_ReadWrite_All"
+												}
+											  ],
+                      "teamsMembership": {
+													"name": "Member",
+													"value": 1
+											}
+										},
+										{
+											"id":104,
+											"adGroupName": "Risk Officer",
+											"displayName": "RiskOfficer",
+											"permissions": [
+												{
+												  "id": "",
+												  "name": "Opportunity_ReadWrite_All"
+												}
+											  ],
+                      "teamsMembership": {
+													"name": "Member",
+													"value": 1
+											}
+										}
+									],
+	"processes" : [
+									{
+										"processStep": "CreditCheck",
+										"channel": "CreditCheck",
+										"processType": "CheckListTab",
+										"roleName": "CreditAnalyst",
+										"roleId":102
+									},
+									{
+										"processStep": "LegalCounsel",
+										"channel": "LegalCounsel",
+										"processType": "CheckListTab",
+										"roleName": "LegalCounsel",
+										"roleId":103
+                                    },
+                                    {
+										"processStep": "RiskAssesment",
+										"channel": "RiskAssesment",
+										"processType": "CheckListTab",
+										"roleName": "RiskOfficer",
+										"roleId":104
+                                    }
+								],
+	"template" : {
+				  "templateName": "Com-Lend Business Process",
+				  "processes": [
+                    {
+                        "processStep": "Start Process",
+                        "channel": "None",
+                        "processType": "Base",
+                        "roleName": "",
+                        "roleId":"",
+					    "order": 1.1
+					},
+					{
+
+                        "processStep": "CreditCheck",
+                        "channel": "CreditCheck",
+                        "processType": "CheckListTab",
+                        "roleName": "CreditAnalyst",
+                        "roleId":102,
+					    "order": 2.1
+					},
+					{
+                        "processStep": "LegalCounsel",
+                        "channel": "LegalCounsel",
+                        "processType": "CheckListTab",
+                        "roleName": "LegalCounsel",
+                        "roleId":103,
+					    "order": 2.2
+					},
+					{
+                        "processStep": "RiskAssesment",
+                        "channel": "RiskAssesment",
+                        "processType": "CheckListTab",
+                        "roleName": "RiskOfficer",
+                        "roleId":104,
+					    "order": 2.3
+                    },
+                    {
+                        "processStep": "Customer Decision",
+                        "channel": "Customer Decision",
+                        "processType": "customerDecisionTab",
+                        "roleName": "",
+                        "roleId":"",
+					    "order": 3.1
+                    },
+                    {
+                        "processStep": "Formal Proposal",
+                        "channel": "Formal Proposal",
+                        "processType": "proposalStatusTab",
+                        "roleName": "",
+                        "roleId":"",
+					    "order": 4.1
+					}]
+				}
+}

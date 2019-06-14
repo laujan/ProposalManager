@@ -3,12 +3,10 @@
 *  See LICENSE in the source repository root for complete license information. 
 */
 import React, { Component } from 'react';
-
 import { Spinner, SpinnerSize } from 'office-ui-fabric-react/lib/Spinner';
 import { MessageBar } from 'office-ui-fabric-react/lib/MessageBar';
 import { DefaultButton } from 'office-ui-fabric-react/lib/Button';
 import { SearchBox } from 'office-ui-fabric-react/lib/SearchBox';
-
 import '../../teams.css';
 import Utils from '../../../helpers/Utils';
 import { I18n, Trans } from "react-i18next";
@@ -23,6 +21,7 @@ export class AdminArchivedOpportunities extends Component {
         super(props);
 
         this.apiService = this.props.apiService;
+        this.logService = this.props.logService;
         this.authHelper = window.authHelper;
         this.utils = new Utils();
 
@@ -119,7 +118,7 @@ export class AdminArchivedOpportunities extends Component {
     }
 
     componentDidMount() {
-        console.log("AdminArchivedOpportunites_componentDidMount");
+        this.logService.log("AdminArchivedOpportunites_componentDidMount");
         this.getData();
     }
 
@@ -130,7 +129,7 @@ export class AdminArchivedOpportunities extends Component {
     }
 
     errorHandler(err, referenceCall) {
-        console.log("Administration Ref: " + referenceCall + " error: " + JSON.stringify(err));
+        this.logService.log("Administration Ref: " + referenceCall + " error: " + JSON.stringify(err));
     }
 
     getData() {
@@ -202,7 +201,7 @@ export class AdminArchivedOpportunities extends Component {
     }
 
     unArchiveOpportunity(items) {
-        console.log(items);
+        this.logService.log(items);
     }
 
     render() {
@@ -234,9 +233,6 @@ export class AdminArchivedOpportunities extends Component {
                     </div>
                 </div>
                 <div className='ms-Grid-row p-10'>
-
-
-
                     {
                         this.state.result &&
                         <MessageBar
@@ -248,9 +244,7 @@ export class AdminArchivedOpportunities extends Component {
                             {this.state.result.text}
                         </MessageBar>
                     }
-
                     {
-
                         this.state.loading ?
                             <div>
                                 <br /><br /><br />
@@ -258,8 +252,6 @@ export class AdminArchivedOpportunities extends Component {
                             </div>
                             :
                             items.length > 0 ?
-
-
                                 <MarqueeSelection selection={this._selection}>
                                     <DetailsList
                                         items={this.state.items}
@@ -276,13 +268,9 @@ export class AdminArchivedOpportunities extends Component {
                                 </MarqueeSelection>
                                 :
                                 <div><Trans>noOpportunitiesWithStatusArchived</Trans></div>
-
                     }
-
-
                     <div className='ms-grid-row'>
                         <div className='ms-Grid-col ms-sm6 ms-md6 ms-lg6 pl0'><br />
-
                         </div>
                         <div className='ms-Grid-col ms-sm12 ms-md6 ms-lg6'><br />
                             {
@@ -300,5 +288,4 @@ export class AdminArchivedOpportunities extends Component {
             </div>
         );
     }
-
 }

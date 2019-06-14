@@ -4,13 +4,7 @@
 */
 import React, { Component } from 'react';
 import * as microsoftTeams from '@microsoft/teams-js';
-
-import {
-    Pivot,
-    PivotItem,
-    PivotLinkFormat,
-    PivotLinkSize
-} from 'office-ui-fabric-react/lib/Pivot';
+import { Pivot, PivotItem, PivotLinkFormat, PivotLinkSize } from 'office-ui-fabric-react/lib/Pivot';
 import { Trans } from "react-i18next";
 import { DealTypeListR } from './DealType/DealTypeListR';
 import { ProcessTypesList } from './Configuration/ProcessTypesList';
@@ -28,13 +22,14 @@ export class Configuration extends Component {
         super(props);
 
         this.apiService = this.props.apiService;
+        this.logService = this.props.logService;
         this.authHelper = window.authHelper;
 
         try {
             microsoftTeams.initialize();
         }
         catch (err) {
-            console.log(err);
+            this.logService.log(err);
         }
         finally {
             this.state = {
@@ -49,7 +44,7 @@ export class Configuration extends Component {
     componentDidMount() {
         this.authHelper.callCheckAccess(["Administrator"]).then((data) => {
             this.setState({ haveGranularAccess: data });
-        });
+        }).catch(err => { this.setState({ haveGranularAccess: false }); });
     }
 
     render() {
@@ -62,25 +57,25 @@ export class Configuration extends Component {
                                 ?
                                 <Pivot className='tabcontrols pt35' linkFormat={PivotLinkFormat.tabs} linkSize={PivotLinkSize.large} selectedKey={this.state.selectedTabName}>
                                     <PivotItem linkText={<Trans>permissions</Trans>} itemKey="permissions">
-                                        <Permissions apiService={this.apiService} />
+                                        <Permissions apiService={this.apiService} logService={this.logService} />
                                     </PivotItem>
                                     <PivotItem linkText={<Trans>tasks</Trans>} itemKey="tasks">
-                                        <Tasks apiService={this.apiService} />
+                                        <Tasks apiService={this.apiService} logService={this.logService} />
                                     </PivotItem>
                                     <PivotItem linkText={<Trans>processTypes</Trans>} itemKey="processType">
-                                        <ProcessTypesList apiService={this.apiService} />
+                                        <ProcessTypesList apiService={this.apiService} logService={this.logService} />
                                     </PivotItem>
                                     {
                                         isTemplateEnabled ?
                                             <PivotItem linkText={<Trans>templates</Trans>} itemKey="templates">
-                                                <TemplateList apiService={this.apiService} />
+                                                <TemplateList apiService={this.apiService} logService={this.logService} />
                                             </PivotItem>
                                             : <PivotItem linkText={<Trans>businessProcess</Trans>} itemKey="dealType">
-                                                <DealTypeListR apiService={this.apiService} />
+                                                <DealTypeListR apiService={this.apiService} logService={this.logService} />
                                             </PivotItem>
                                     }
                                     <PivotItem linkText={<Trans>dataModel</Trans>} itemKey="metaData">
-                                        <MetaData apiService={this.apiService} />
+                                        <MetaData apiService={this.apiService} logService={this.logService} />
                                     </PivotItem>
                                 </Pivot>
                                 :

@@ -79,6 +79,7 @@ export class NewOpportunity extends Component {
         this.metaData = this.props.metaDataList.length > 0 ? this.props.metaDataList.filter(prop=>prop.screen ==="Screen1") : [];
         this.opportunity = this.props.opportunity;
         this.dashboardList = this.props.dashboardList;
+        this.logService = this.props.logService;
 
         this.state = {
             nextDisabled: false
@@ -136,7 +137,7 @@ export class NewOpportunity extends Component {
         this.opportunity.metaDataFields.forEach(element => {
             if (["opportunity", "customer", "openeddate", "targetdate"].includes(element.id)) {
                 if(element.values.length>0) {
-                    console.log("_checkNextEnabled : ",count);
+                    this.logService.log("_checkNextEnabled : ",count);
                     ++count;
                 }
             }
@@ -148,7 +149,7 @@ export class NewOpportunity extends Component {
     _onSelectTargetDate = (date,key) => {
         this.opportunity.metaDataFields.forEach(obj=>{
             if(obj.id===key){
-                console.log("NewOpportunity_onChangeDropDown : ", obj.id,this._onFormatDate(date));
+                this.logService.log("NewOpportunity_onChangeDropDown : ", obj.id,this._onFormatDate(date));
                 obj.values=this._onFormatDate(date);
             }
         });

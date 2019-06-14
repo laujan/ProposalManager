@@ -17,12 +17,13 @@ export class Dashboard extends Component {
     constructor(props) {
         super(props);
         this.apiService = this.props.apiService;
+        this.logService = this.props.logService;
         this.authHelper = window.authHelper;
         this.utils = new Utils();
         this.accessGranted = false;
         const reportId = this.props.appSettings.reportId;
         const workspaceId = this.props.appSettings.workspaceId;
-        console.log("Dashboard_render: appSettings ", reportId, workspaceId);
+        this.logService.log("Dashboard_render: appSettings ", reportId, workspaceId);
         this.state = {
             loading: true,
             aadToken: "",
@@ -37,11 +38,12 @@ export class Dashboard extends Component {
     }
 
     async componentDidMount() {
-        console.log("Dashboard_componentDidMount isauth: " + this.authHelper.isAuthenticated() + " this.accessGranted: " + this.accessGranted);
+        this.logService.log("Dashboard_componentDidMount");
+
 
         if (!this.state.reportId) {
             let clientSettings = await this.getClientSettings();
-            console.log("Dashboard_componentDidMount clientSettings: ", clientSettings);
+            this.logService.log("Dashboard_componentDidMount clientSettings: ", clientSettings);
 
             let reportId = clientSettings.PBIReportId;
             let workspaceId = clientSettings.PBIWorkSpaceId;
@@ -55,10 +57,6 @@ export class Dashboard extends Component {
                 this.setState({ embedConfig, workspaceId, reportId });
             }
         }
-    }
-
-    async componentDidUpdate() {
-        console.log("Dashboard_componentDidUpdate isauth: " + this.authHelper.isAuthenticated() + " this.accessGranted: " + this.accessGranted);
 
         try {
             if (this.state.isAuthenticated && !this.accessGranted && this.state.loading) {
@@ -70,19 +68,16 @@ export class Dashboard extends Component {
             }
         } catch (error) {
             this.accessGranted = false;
-            console.log("Dashboard_componentDidUpdate error_callCheckAccess: ", error);
+            this.logService.log("Dashboard_componentDidUpdate error_callCheckAccess: ", error);
         }
     }
 
     async setAccessGranted() {
         try {
-            console.log("Dashboard_setAccessGranted isauth: " + this.authHelper.isAuthenticated() + " this.accessGranted: " + this.accessGranted);
-            let access = await this.authHelper.callCheckAccess(["Administrator", "Opportunities_ReadWrite_All", "Opportunity_ReadWrite_All"]);
-            if (typeof access === 'boolean' && access === true) {
-                this.accessGranted = true;
-                return true;
-            }
-            return false;
+            this.logService.log("Dashboard_setAccessGranted isauth: " + this.authHelper.isAuthenticated() + " this.accessGranted: " + this.accessGranted);
+            await this.authHelper.callCheckAccess(["Administrator", "Opportunities_ReadWrite_All", "Opportunity_ReadWrite_All"]).then((data) => {
+                this.setState({ haveGranularAccess: data });
+            }).catch(err => { this.setState({ haveGranularAccess: false }); });
         }
         catch (error) {
             this.accessGranted = false;
@@ -90,14 +85,14 @@ export class Dashboard extends Component {
             setTimeout(function () {
                 self.setState({ loading: false });
             }, 1000);
-            console.log("Dashboard_setAccessGranted error: ", error);
+            this.logService.log("Dashboard_setAccessGranted error: ", error);
             return false;
         }
     }
 
     //getting client settings
     async getClientSettings() {
-        console.log("AppTeams_getClientSettings");
+        this.logService.log("AppTeams_getClientSettings");
 
         return await this.apiService.callApi('Context/GetClientSettings', 'GET')
             .then(response => {
@@ -107,7 +102,7 @@ export class Dashboard extends Component {
                 return data;
             })
             .catch(error => {
-                console.log("AppTeams_getClientSettings error: ", error);
+                this.logService.log("AppTeams_getClientSettings error: ", error);
 
                 return error;
             });
@@ -148,17 +143,17 @@ export class Dashboard extends Component {
                 // Embed the report and display it within the div container.
                 var reportContainer = this.refs.reportContainerRef;
 
-                console.log("Dashboard_getDataForDashboard reportContainer: " + reportContainer);
+                this.logService.log("Dashboard_getDataForDashboard reportContainer: " + reportContainer);
                 powerbi.embed(reportContainer, config); //TODO: Do we need this?
             })
             .catch(error => {
-                console.log("Dashboard_getDataForDashboard error_fetch: ", error);
+                this.logService.log("Dashboard_getDataForDashboard error_fetch: ", error);
             });
     }
 
     render() {
         const isLoading = this.state.loading;
-        console.log("Dashboard_render: isLoading ", isLoading);
+        this.logService.log("Dashboard_render: isLoading ", isLoading);
         return (
             <div className='ms-Grid'>
                 <div className='ms-Grid-row bg-white'>

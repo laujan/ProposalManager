@@ -18,6 +18,7 @@ export class Permissions extends Component {
     constructor(props) {
         super(props);
 
+        this.logService = this.props.logService;
         this.authHelper = window.authHelper;
         this.apiService = this.props.apiService;
 
@@ -51,7 +52,6 @@ export class Permissions extends Component {
                 maxWidth: 200,
                 isRowHeader: true,
                 onRender: (item) => {
-                    //console.log("Permissions_Log onrender item : ", item);
                     return (
                         <TextField
                             id={'txtRole' + item.id}
@@ -185,7 +185,7 @@ export class Permissions extends Component {
             this.setState({ items: data.items, rowItemCounter: data.rowItemCounter, permissionTypes: permissionsList, roles: rolesList });
         }
         catch (err) {
-            console.log("Permissions_loadAllPermissionData error: ", err);
+            this.logService.log("Permissions_loadAllPermissionData error: ", err);
         }
         finally {
             this.setState({ loading: false });
@@ -205,7 +205,7 @@ export class Permissions extends Component {
                 throw new Error(data.error.message);
             }
         } catch (error) {
-            console.log("getAllRoles: ", error);
+            this.logService.log("getAllRoles: ", error);
             throw error;
         }
     }
@@ -224,7 +224,7 @@ export class Permissions extends Component {
             }
         }
         catch (error) {
-            console.log("getAllPemissionTypes : ", error);
+            this.logService.log("getAllPemissionTypes : ", error);
             throw new Error(error);
         }
     }
@@ -250,7 +250,7 @@ export class Permissions extends Component {
             }
         }
         catch (error) {
-            console.log("getAllPermissionsList : ", error);
+            this.logService.log("getAllPermissionsList : ", error);
             throw new Error(error);
         }
     }
@@ -382,8 +382,7 @@ export class Permissions extends Component {
                 }
             })
             .catch(error => {
-                console.log("addOrUpdatePermission: ", error);
-
+                this.logService.log("addOrUpdatePermission: ", error);
                 this.setMessage(false, true, MessageBarType.error, <Trans>errorOoccuredPleaseTryAgain</Trans>);
             });
     }
@@ -400,7 +399,7 @@ export class Permissions extends Component {
                 }
             })
             .catch(error => {
-                console.log("deletePermission: ", error);
+                this.logService.log("deletePermission: ", error);
             });
     }
 

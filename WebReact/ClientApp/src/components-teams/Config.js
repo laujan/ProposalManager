@@ -15,22 +15,22 @@ export class Config extends Component {
 	constructor(props) {
 		super(props);
 
-        console.log("Config: Contructor", props);
         this.apiService = this.props.apiService;
+        this.logService = this.props.logService;
 
+        this.logService.log("Config: Contructor", props);
         try
         {
 			microsoftTeams.initialize();
 		}
         catch (err)
         {
-			console.log("Config_constructor error initializing teams: " + JSON.stringify(err));
+            this.logService.log("Config_constructor error initializing teams: " + JSON.stringify(err));
 		}
 	}
 
     componentDidMount() {
-        console.log("Config_componentDidMount appSettings: ");
-        console.log(this.props.appSettings);
+        this.logService.log("Config_componentDidMount appSettings: ", this.props.appSettings);
 
         if (this.props.appSettings.generalProposalManagementTeam.length > 0)
         {
@@ -51,12 +51,11 @@ export class Config extends Component {
             let response = await this.apiService.callApi('Opportunity', 'GET', { query: `name=${teamName}` });
             if (response.ok) {
                 let data = await response.json();
-                console.log("Config_getOpportunityByName userRoleList data length: " + data.length);
-                console.log(data);
+                this.logService.log("Config_getOpportunityByName userRoleList data length: ", data.length, data);
 
                 let processList = data.template.processes;
                 let oppChannels = processList.filter(x => x.channel.toLowerCase() !== "none");
-                console.log("Config_getOpportunityByName userRoleList lenght: " + oppChannels.length);
+                this.logService.log("Config_getOpportunityByName userRoleList lenght: ", oppChannels.length);
                 return { userRoleList: oppChannels };
             }
         }
@@ -75,7 +74,7 @@ export class Config extends Component {
 
         if (teamName !== null && teamName !== undefined)
         {
-            console.log("Config_setChannelConfig generalSharePointSite: " + this.props.teamsContext.teamsAppName);
+            this.logService.log("Config_setChannelConfig generalSharePointSite: ", this.props.teamsContext.teamsAppName);
 
             if (teamName === this.props.appSettings.generalProposalManagementTeam)
             {
@@ -98,7 +97,7 @@ export class Config extends Component {
                     default:
                         tabName = "generalDashboardTab";
                 }
-                console.log("Config_setChannelConfig generalSharePointSite tabName: " + tabName);
+                this.logService.log("Config_setChannelConfig generalSharePointSite tabName: ", tabName);
             }
             else
             {
@@ -106,22 +105,21 @@ export class Config extends Component {
                     let res = await this.getOpportunityByName();
 
                     let channelMapping = res.userRoleList.filter(x => x.channel.toLowerCase() === channelName.toLowerCase());
-                    console.log("Config_setChannelConfig channelMapping.length:", channelMapping);
+                    this.logService.log("Config_setChannelConfig channelMapping.length:", channelMapping);
 
                     if (channelName === "General") {
                         tabName = "rootTab";
                     }
                     else if (channelMapping.length > 0) {
                         if (channelMapping.processType !== "Base" && channelMapping.processType !== "Administration") {
-                            console.log("Config_setChannelConfig channelMapping.lenght >0: " + channelMapping[0].processType);
+                            this.logService.log("Config_setChannelConfig channelMapping.lenght >0: " + channelMapping[0].processType);
                             tabName = channelMapping[0].processType;
                         }
                     }
-                    console.log("Config_setChannelConfig tabName: " + tabName + " ChannelName: " + channelName);
+                    this.logService.log("Config_setChannelConfig tabName: ", tabName, " ChannelName: ", channelName);
                 }
                 catch (err) {
-                    console.log("Config_getOpportunityByName error: ");
-                    console.log(err);
+                    this.logService.log("Config_getOpportunityByName error: ", err);
                     microsoftTeams.settings.setValidityState(false);
                 }
             }
@@ -137,8 +135,7 @@ export class Config extends Component {
                         websiteUrl: appUri + "/tabMob/" + tabName + "?channelName=" + channelName + "&teamName=" + teamName + "&channelId=" + channelId + "&locale=" + locale + "&loginHint=" + encodeURIComponent(loginHint)
 
                     });
-                    console.log("Config_setChannelConfig microsoftTeams.settings:");
-                    console.log(microsoftTeams.settings);
+                    self.logService.log("Config_setChannelConfig microsoftTeams.settings: ", microsoftTeams.settings);
                     saveEvent.notifySuccess();
                 });
 

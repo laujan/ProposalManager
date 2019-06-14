@@ -16,7 +16,7 @@ export class TeamMembers extends Component {
     displayName = TeamMembers.name
 	constructor(props) {
         super(props);
-
+        this.logService = this.props.logService;
         this.state = {
             redirect: false,
             teamName: this.props.opportunityName,
@@ -27,7 +27,7 @@ export class TeamMembers extends Component {
 	}
 
     render() {
-        console.log("TeamMembers_render props :", this.props);
+        this.logService.log("TeamMembers_render props :", this.props);
         let enableEditTeam = this.props.haveAccessToEditTeam;
         
         return (

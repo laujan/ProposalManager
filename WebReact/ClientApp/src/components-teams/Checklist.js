@@ -5,7 +5,6 @@
 
 import React, { Component } from 'react';
 import * as microsoftTeams from '@microsoft/teams-js';
-
 import { IconButton } from 'office-ui-fabric-react/lib/Button';
 import { TextField } from 'office-ui-fabric-react/lib/TextField';
 import { Dropdown } from 'office-ui-fabric-react/lib/Dropdown';
@@ -31,7 +30,8 @@ export class Checklist extends Component {
 
     constructor(props) {
         super(props);
-
+        this.logService = this.props.logService;
+        this.apiService = this.props.apiService;
         this.accessGranted = false;
         //Granular Access Start
         if (window.authHelper) {
@@ -237,7 +237,7 @@ export class Checklist extends Component {
     }
 
     async componentWillMount() {
-        console.log("Checklist_componentWillMount isauth: " + this.authHelper.isAuthenticated());
+        this.logService.log("Checklist_componentWillMount isauth: " + this.authHelper.isAuthenticated());
         if (this.authHelper.isAuthenticated() && !this.accessGranted) {
             try {
                 this.accessGranted = true;
@@ -245,8 +245,7 @@ export class Checklist extends Component {
                 //await this.getOpportunity(teamName, channelName);
             } catch (error) {
                 this.accessGranted = false;
-                console.log("Checklist_componentDidUpdate error_callCheckAccess:");
-                console.log(error);
+                this.logService.log("Checklist_componentDidUpdate error_callCheckAccess:", error);
             }
         }
     }
@@ -271,13 +270,12 @@ export class Checklist extends Component {
     }
 
     errorHandler(err, referenceCall) {
-        console.log("Checklist Ref: " + referenceCall + " error: ");
-        console.log(err);
+        this.logService.log("Checklist Ref: ", referenceCall, " error: ", err);
     }
     async getOppDetails() {
         let teamName = getQueryVariable('teamName');
         let channelName = getQueryVariable('channelName');
-        console.log("checklist_Log callCheckAccess channelName, teamName : ", channelName + " **** " + teamName);
+        this.logService.log("checklist_Log callCheckAccess channelName, teamName : ", channelName + " **** " + teamName);
         this.setState({
             teamName,
             channelName
@@ -294,12 +292,7 @@ export class Checklist extends Component {
         this.setState({ isLoading: true });
         try {
 
-            let requestUrl = `api/Opportunity?name=${teamName}`;
-
-            let response = await fetch(requestUrl, {
-                method: "GET",
-                headers: { 'authorization': 'Bearer ' + this.authHelper.getWebApiToken() }
-            });
+            let response = await this.apiService.callApi('Opportunity', 'GET', { query: `name=${teamName}` });
             data = await response.json();
 
             if (data === 'undefined' || data === null) {
@@ -307,11 +300,11 @@ export class Checklist extends Component {
             }
 
             checkListObj = data.checklists;
-            console.log("checklist_Log checkListObj 1: ", checkListObj);
+            this.logService.log("checklist_Log checkListObj 1: ", checkListObj);
 
             if (checkListObj.length > 0) {
                 checkListObj = data.checklists.filter(x => x.checklistChannel === channelName);
-                console.log("checklist_Log checkListObj : 2", checkListObj);
+                this.logService.log("checklist_Log checkListObj : 2", checkListObj);
                 if (checkListObj.length > 0) {
                     checkListStatusKey = checkListObj[0].checklistStatus;
                     selChTaskList = checkListObj[0].checklistTaskList;
@@ -338,7 +331,7 @@ export class Checklist extends Component {
 
         } catch (error) {
 
-            console.log("checklist_Log error : ", error.message);
+            this.logService.log("checklist_Log error : ", error.message);
             this.setState({
                 opportunity: data,
                 checklist: checkListObj,
@@ -359,21 +352,9 @@ export class Checklist extends Component {
             // Foreach in opportunity.checklists to find this one then replace with state one, then replace items in checklist then add to oppotunity and update
             // when copy the items, get rid of file which holds the file for upload
 
-            let requestUrl = 'api/opportunity';
-
-            let options = {
-                method: "PATCH",
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    'authorization': 'Bearer ' + this.authHelper.getWebApiToken()
-                },
-                body: JSON.stringify(opportunity)
-            };
-
-            fetch(requestUrl, options)
+            this.apiService.callApi('Opportunity', 'PATCH', { body: JSON.stringify(opportunity) })
                 .then(response => {
-                    console.log("Checklist_updateOpportunity_fetch response: " + response.status + " - " + response.statusText);
+                    this.logService.log("Checklist_updateOpportunity response: " + response.status + " - " + response.statusText);
                     if (response.status === 401) {
                         // TODO: For v2 see how we pass to authHelper to force token refresh
                     }
@@ -419,27 +400,15 @@ export class Checklist extends Component {
         });
 
         if (updateOpp) {
-
-            let requestUrl = 'api/opportunity';
-
-            let options = {
-                method: "PATCH",
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    'authorization': 'Bearer ' + this.authHelper.getWebApiToken()
-                },
-                body: JSON.stringify(opportunity)
-            };
             try {
-                let response = await fetch(requestUrl, options);
-                console.log("Checklist_updateOpportunity_fetch response: " + response.status + " - " + response.statusText);
+                let response = await this.apiService.callApi('Opportunity', 'PATCH', { body: JSON.stringify(opportunity) });
+                this.logService.log("Checklist_updateOpportunity response: ", response.status, " - ", response.statusText);
                 if (response.ok) {
                     await this.getOppDetails();
                 }
 
             } catch (e) {
-                console.log("Checklist UpdateOpportunity: " + e);
+                this.logService.log("Checklist UpdateOpportunity: " + e);
                 this.errorHandler(e, "Checklist_updateOpportunity");
                 this.setState({
                     updateStatus: true,
@@ -470,26 +439,16 @@ export class Checklist extends Component {
         fd.append('file', file);
         fd.append('opportunityName', this.state.opportunity.displayName);
         fd.append('fileName', file.name);
-        let requestUrl = "api/document/UploadFile/" + encodeURIComponent(this.state.opportunity.displayName) + "/ChecklistDocument=" + this.state.channelName + "," + checklistItemId;
-
-        let options = {
-            method: "PUT",
-            headers: {
-                'authorization': 'Bearer ' + this.authHelper.getWebApiToken()
-            },
-            body: fd
-        };
-
+        
         try {
-            let response = await fetch(requestUrl, options);
-            console.log("Checklist_uploadfile response: " + response.status + " - " + response.statusText);
+            let response = await this.apiService.callApi(`Document/UploadFile/${encodeURIComponent(this.state.opportunity.displayName)}/ChecklistDocument=${this.state.channelName},${checklistItemId}`, 'PUT', { formData: fd });
+            this.logService.log("Checklist_uploadfile response: ", response.status, " - ", response.statusText);
             if (response.ok) {
-                console.log(response);
+                this.logService.log(response);
                 this.setState({ updateStatus: false, MessagebarText: "" });
             }
         } catch (e) {
-            console.log("Checklist_uploadFile response not ok:");
-            console.log(e);
+            this.logService.log("Checklist_uploadFile response not ok:", e);
             this.setState({ updateStatus: true, MessagebarText: <Trans>errorWhileUploadingFile</Trans> });
             this.hideMessagebar();
         }
@@ -594,16 +553,13 @@ export class Checklist extends Component {
         let updCurrentResp = this.updateCurrentItems(currentItems, null, false);
         if (updCurrentResp) {
             let updFileResp = await this.uploadFile(currentItems[itemIdx].file, currentItems[itemIdx].id);
-            console.log("updFileResp");
-            console.log(updFileResp);
+            this.logService.log("updFileResp", updFileResp);
             await this.getOppDetails();
         } else {
-            console.log("Checklist_onChangeFile Error:");
-            console.log(updCurrentResp);
+            this.logService.log("Checklist_onChangeFile Error:", updCurrentResp);
             this.setState({ updateStatus: true, MessagebarText: <Trans>errorWhileUploadingFile</Trans> });
             this.hideMessagebar();
         }
-
     }
 
     onStatusChange(e) {
@@ -698,7 +654,7 @@ export class Checklist extends Component {
 
     render() {
         const { columns, isCompactMode, items } = this.state;
-        console.log("CheckList_render : ", this.state.haveGranularAccess);
+        this.logService.log("CheckList_render : ", this.state.haveGranularAccess);
         return (
             <TeamsComponentContext fontSize={this.state.fontSize} theme={this.state.theme}>
                 <div className='ms-Grid bg-white'>

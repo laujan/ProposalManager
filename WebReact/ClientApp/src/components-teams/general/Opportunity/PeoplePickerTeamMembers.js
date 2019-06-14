@@ -15,6 +15,7 @@ export class PeoplePickerTeamMembers extends Component {
     constructor(props) {
         super(props);
         this.apiService = this.props.apiService;
+        this.logService = this.props.logService;
         // Set the initial state for the picker data source.
         // The people list is populated in the _onFilterChanged function.
         this._peopleList = [];
@@ -42,7 +43,7 @@ export class PeoplePickerTeamMembers extends Component {
     }
 
     errorHandler(err, referenceCall) {
-        console.log("PeoplePickerTeamMembers Ref: " + referenceCall + " error: " + JSON.stringify(err));
+        this.logService.log("PeoplePickerTeamMembers Ref: ", referenceCall, " error: " + JSON.stringify(err));
     }
 
     getUserProfilesSearch(searchText, callback) {
@@ -101,12 +102,11 @@ export class PeoplePickerTeamMembers extends Component {
 
     // Map user properties to persona properties.
     _mapUsersToPersonas(users, useMailProp) {
-        
         return users.map((p) => {
 
             // The email property is returned differently from the /users and /people endpoints.
             let email = p.mail ? p.mail : p.userPrincipalName;
-            console.log("ChooseTeams_Log _mapUsersToPersonas : p", p);
+            this.logService.log("ChooseTeams_Log _mapUsersToPersonas : p", p);
             let persona = {
                 id: p.id,
                 text: p.displayName ? p.displayName : "USER NAME",
@@ -161,7 +161,6 @@ export class PeoplePickerTeamMembers extends Component {
         });
         return new Promise((resolve) => {
             this.getUserProfilesSearch(searchText.toLowerCase(), (err, people) => {
-                // console.log("ONMORERES: " + JSON.stringify(people));
                 if (!err) {
                     this._searchResults = this._mapUsersToPersonas(people, true);
                     this.setState({

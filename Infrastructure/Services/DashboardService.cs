@@ -130,7 +130,7 @@ namespace Infrastructure.Services
                                     {
                                         dProcess.ProcessStartDate = date.ToString();
                                     }
-                                    if (checklistItm.ChecklistStatus == ActionStatus.Completed)
+                                    if (checklistItm.ChecklistStatus == ActionStatus.Completed && dProcess.NoOfDays == 0)
                                     {
                                         dProcess.ProcessEndDate = date.ToString();
                                         dProcess.NoOfDays = GetDateDifference(DateTime.Parse(dProcess.ProcessStartDate), date);

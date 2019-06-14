@@ -6,15 +6,11 @@
 import React, { Component } from 'react';
 import * as microsoftTeams from '@microsoft/teams-js';
 import { Glyphicon } from 'react-bootstrap';
-import {
-	Persona,
-	PersonaSize
-} from 'office-ui-fabric-react/lib/Persona';
+import { Persona, PersonaSize } from 'office-ui-fabric-react/lib/Persona';
 import { TeamsComponentContext, Anchor } from 'msteams-ui-components-react';
-import {  redirectUri } from '../../helpers/AppSettings';
+import { redirectUri } from '../../helpers/AppSettings';
 import { appUri, clientId} from '../../helpers/AppSettings';
-import {   Trans } from "react-i18next";
-
+import { Trans } from "react-i18next";
 
 export class TeamUpdate extends Component {
     displayName = TeamUpdate.name
@@ -23,6 +19,7 @@ export class TeamUpdate extends Component {
 
 		let teamName = this.props.oppName;
         let channelId = this.props.channelId;
+        this.logService = this.props.logService;
         try {
 			/* Initialize the Teams library before any other SDK calls.
 			 * Initialize throws if called more than once and hence is wrapped in a try-catch to perform a safe initialization.
@@ -30,7 +27,7 @@ export class TeamUpdate extends Component {
             microsoftTeams.initialize();
         }
         catch (err) {
-            console.log(err);
+            this.logService.log(err);
         }
         finally {
             this.state = {
@@ -43,11 +40,8 @@ export class TeamUpdate extends Component {
 
     componentDidMount() {
         // Get the teams context
-        console.log("code-review commments implementation");
 		this.getTeamsContext();
-	
-    }
-
+	}
 
     getTeamsContext() {
         microsoftTeams.getContext(context => {
@@ -63,7 +57,6 @@ export class TeamUpdate extends Component {
             });
         });
     }
-
 
 	render() {
 	

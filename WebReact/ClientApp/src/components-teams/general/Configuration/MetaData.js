@@ -6,10 +6,7 @@ import React, { Component } from 'react';
 import { TextField } from 'office-ui-fabric-react/lib/TextField';
 import { IconButton, ActionButton, PrimaryButton } from 'office-ui-fabric-react/lib/Button';
 import { DetailsList, DetailsListLayoutMode, SelectionMode } from 'office-ui-fabric-react/lib/DetailsList';
-import {
-    Spinner,
-    SpinnerSize
-} from 'office-ui-fabric-react/lib/Spinner';
+import { Spinner, SpinnerSize } from 'office-ui-fabric-react/lib/Spinner';
 import { MessageBar, MessageBarType } from 'office-ui-fabric-react/lib/MessageBar';
 import { Trans } from "react-i18next";
 import { Dropdown } from 'office-ui-fabric-react/lib/Dropdown';
@@ -24,6 +21,7 @@ export class MetaData extends Component {
         super(props);
         this.utils = new Utils();
         this.authHelper = window.authHelper;
+        this.logService = this.props.logService;
         this.apiService = this.props.apiService;
         this.accessGranted = false;
         let rowCounter = 0;
@@ -219,7 +217,7 @@ export class MetaData extends Component {
     }
 
     async componentDidMount() {
-        console.log("MetaData_componentDidMount isauth: " + this.authHelper.isAuthenticated());
+        this.logService.log("MetaData_componentDidMount isauth: " + this.authHelper.isAuthenticated());
         if (this.authHelper.isAuthenticated() && !this.accessGranted) {
             try {
                 await this.authHelper.callCheckAccess(["Administrator", "Opportunity_ReadWrite_Template", "Opportunities_ReadWrite_All"]);
@@ -227,7 +225,7 @@ export class MetaData extends Component {
                 await this.getMetaDataList();
             } catch (error) {
                 this.accessGranted = false;
-                console.log(error);
+                this.logService.log(error);
             }
         }
     }
@@ -343,7 +341,7 @@ export class MetaData extends Component {
         let value = e.target.value;
         let currentItem = JSON.parse(JSON.stringify(this.state.currentItem));
         let items = JSON.parse(JSON.stringify(this.state.items));
-        console.log("MetaData_onBlurTxtName : ", currentItem , item ,value);
+        this.logService.log("MetaData_onBlurTxtName : ", currentItem , item ,value);
         if(value){
             try {
                 //Checking item is already present
@@ -356,7 +354,7 @@ export class MetaData extends Component {
                 });
                 
             } catch (error) {
-                console.log(error.message);
+                this.logService.log(error.message);
                 this.setMessage(false, true, MessageBarType.error, error.message);    
             } finally {
                 if (currentItem.id.length === 0) {
@@ -388,17 +386,12 @@ export class MetaData extends Component {
     }
 
     dropDownValueDeleteRow(dpValOptionItem) {
-        console.log(dpValOptionItem);
-        console.log(dpValOptionItem.name);
         let allItems = this.state.items;
         let selDpItem = this.state.currentItem;
-        console.log(selDpItem);
         let dropListValues = selDpItem.values;
         dropListValues = dropListValues.filter(prop => prop.name !== dpValOptionItem.name);
-        console.log(dropListValues);
         selDpItem.values = dropListValues;
         allItems[selDpItem.id] = selDpItem;
-        console.log(allItems);
         this.setState({
             currentItem: selDpItem,
             items: allItems
@@ -408,7 +401,7 @@ export class MetaData extends Component {
 
     renderDropdownOptionsList(columns, isCompactMode, selDpItem) {
         let items = selDpItem.values;
-        console.log("Metadata_renderDropdownOptionsList items : ", items);
+        this.logService.log("Metadata_renderDropdownOptionsList items : ", items);
         return (
             <div className='ms-Grid-row'>
                 <div className='ms-Grid-col ms-sm12 ms-md12 ms-lg12 p-10'>
@@ -514,7 +507,7 @@ export class MetaData extends Component {
 
     render() {
         const { columns, isCompactMode, items } = this.state;
-        console.log("MetaData_render items : ", items);
+        this.logService.log("MetaData_render items : ", items);
         if (this.state.loading) {
             return (
                 <div className='ms-BasicSpinnersExample ibox-content pt15 '>

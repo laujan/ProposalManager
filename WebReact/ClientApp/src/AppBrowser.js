@@ -10,13 +10,14 @@ import { CommandBar } from 'office-ui-fabric-react/lib/CommandBar';
 import { Link } from 'office-ui-fabric-react/lib/Link';
 import { Col, Grid, Row } from 'react-bootstrap';
 import { Trans } from "react-i18next";
+import LoggingService from './helpers/LoggingService';
 
 export class AppBrowser extends Component {
     displayName = AppBrowser.name
 
     constructor(props) {
         super(props);
-
+        this.logService = new LoggingService();
         if (window.authHelper) {
             this.authHelper = window.authHelper;
         } else {
@@ -34,19 +35,19 @@ export class AppBrowser extends Component {
     async login() {
         this.authHelper.loginPopupAsync()
             .then(res => {
-                console.log("AppBrowser_acquireTokenSilentAsync acquired token", res);
+                this.logService.log("AppBrowser_acquireTokenSilentAsync acquired token", res);
                 this.authHelper.acquireWebApiTokenSilentAsync()
                     .then(res => {
                         const user = this.authHelper.getUser();
                         this.setState({ isAuthenticated: true, userDisplayName: user.name });
                     })
                     .catch(err => {
-                        console.log(`TabAuth_acquireTokenSilenAsync error: ${err}`);
+                        this.logService.log(`TabAuth_acquireTokenSilenAsync error: ${err}`);
                         this.setState({ isAuthenticated: false });
                     });
             })
             .catch(errPopup => {
-                console.log("errorPopup", errPopup);
+                this.logService.log("errorPopup", errPopup);
             });
     }
 
@@ -64,7 +65,7 @@ export class AppBrowser extends Component {
     render() {
         const { userDisplayName, isAuthenticated } = this.state;
 
-        console.log("App browswer : render isAuthenticated", isAuthenticated);
+        this.logService.log("App browswer : render isAuthenticated", isAuthenticated);
 
         return (
             <div>

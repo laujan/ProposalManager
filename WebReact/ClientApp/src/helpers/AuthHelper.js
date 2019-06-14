@@ -7,6 +7,7 @@ import { UserAgentApplication, Logger } from 'msal';
 import { appUri, clientId, graphScopes, webApiScopes, authority} from '../helpers/AppSettings';
 import appSettingsObject from '../helpers/AppSettings';
 import Promise from 'promise';
+import LoggingService from '../helpers/LoggingService';
 const localStorePrefix = appSettingsObject.localStorePrefix;
 const webApiTokenStoreKey = localStorePrefix + 'WebApiToken';
 const userProfilPermissions = localStorePrefix + "UserProfilPermissions";
@@ -15,10 +16,11 @@ const optionsUserAgentApp = {
     navigateToLoginRequestUrl: true,
 	cacheLocation: 'localStorage',
 	logger: new Logger((level, message, containsPII) => {
-		console.log(`AD: ${message}`);
+        logService.log(`AD: ${message}`);
     })
 };
 
+const logService = new LoggingService();
 // Initialize th library
 let userAgentApplication = new UserAgentApplication(
 	clientId,
@@ -32,20 +34,20 @@ function getUserAgentApplication() {
 
 function handleWebApiToken(idToken) {
 	if (idToken) {
-		console.log("handleWebApiToken-not empty");
+        logService.log("handleWebApiToken-not empty");
 		localStorage.setItem(webApiTokenStoreKey, idToken);
 	}
 }
 
 function handleUserProfilPermissions(userProfile) {
 	if (userProfile) {
-		console.log("handleUserProfilPermissions-not empty");
+        logService.log("handleUserProfilPermissions-not empty");
 		localStorage.setItem(userProfilPermissions, userProfile);
 	}
 }
 
 function handleError(error) {
-    console.log(`AuthHelper: ${error}`);
+    logService.log(`AuthHelper: ${error}`);
 }
 
 function handleRemoveAuthFlags() {
@@ -78,10 +80,10 @@ function tokenReceivedCallback(errorMessage, token, error, tokenType) {
 
 export default class AuthClient {
     constructor() {
-        console.log("AuthClient_ctor");
+        logService.log("AuthClient_ctor");
         // Get the instance of UserAgentApplication.
         this.authClient = getUserAgentApplication();
-        console.log("authclient", this.authClient);
+        logService.log("authclient", this.authClient);
         this.userProfile = [];
     }
 
@@ -134,11 +136,11 @@ export default class AuthClient {
             permissions: [],
             permissionsObj: []
         };
-        console.log("AuthHelper_callGetUserProfile enter: ");
+        logService.log("AuthHelper_callGetUserProfile enter: ");
         try {
             localStorage.setItem("AuthStatusUP", "AuthHelper_callGetUserProfile start");
             const userPrincipalName = await this.getUser();
-            console.log("AuthHelper_callGetUserProfile getUser: " + userPrincipalName.displayableId);
+            logService.log("AuthHelper_callGetUserProfile getUser: " + userPrincipalName.displayableId);
 
             if (userPrincipalName.displayableId.length > 0) {
                 const endpoint = appUri + "/api/UserProfile?upn=" + userPrincipalName.displayableId;
@@ -148,7 +150,7 @@ export default class AuthClient {
 
                 let data = await this.callWebApiWithToken(endpoint, "GET");
                 if (data) {
-                    console.log("AuthHelper_callGetUserProfile data: ", data);
+                    logService.log("AuthHelper_callGetUserProfile data: ", data);
                     this.userProfile = data;
                     if (data.userRoles.length > 0) {
                         let userpermissions = data.userRoles.map((userrole) => {
@@ -160,7 +162,7 @@ export default class AuthClient {
                         let uniqueUserPermissions = userpermissions.filter((item, index) => {
                             return userpermissions.indexOf(item) >= index;
                         });
-                        console.log("AuthHelper_callGetUserProfile userpermissions: ", uniqueUserPermissions);
+                        logService.log("AuthHelper_callGetUserProfile userpermissions: ", uniqueUserPermissions);
                         handleUserProfilPermissions(uniqueUserPermissions);
 
                         returnObj.roles = data.userRoles;
@@ -183,7 +185,7 @@ export default class AuthClient {
     }
 
     clearCache() {
-        console.log("AuthHelper clearCache");
+        logService.log("AuthHelper clearCache");
         localStorage.removeItem(webApiTokenStoreKey);
         handleRemoveAuthFlags();
         localStorage.removeItem(userProfilPermissions);
@@ -210,9 +212,9 @@ export default class AuthClient {
     }
 
     getUserProfilPermissions() {
-        console.log("getUserProfilPermissions enter");
+        logService.log("getUserProfilPermissions enter");
         let permissions = localStorage.getItem(userProfilPermissions);
-        console.log("getUserProfilPermissions permissions : ", permissions);
+        logService.log("getUserProfilPermissions permissions : ", permissions);
         return permissions;
     }
 
@@ -222,8 +224,8 @@ export default class AuthClient {
 
             if (permissions) {
                 permissions = permissions.split(',').map(permission => permission.toLowerCase());
-                console.log("AuthHelper_callCheckAccess PermissionsUserHave: ", permissions);
-                console.log("AuthHelper_callCheckAccess PermissionsRequested: ", permissionRequested);
+                logService.log("AuthHelper_callCheckAccess PermissionsUserHave: ", permissions);
+                logService.log("AuthHelper_callCheckAccess PermissionsRequested: ", permissionRequested);
                 if (permissions.length > 0) {
                     for (let i = 0; i < permissionRequested.length; i++) {
                         if (permissions.indexOf(permissionRequested[i].toLowerCase()) > -1) {
@@ -264,7 +266,7 @@ export default class AuthClient {
 
     getWebApiToken() {
         if (!this.isAuthenticated()) {
-            console.log("getWebApiToken isAuth: false");
+            logService.log("getWebApiToken isAuth: false");
         }
         return localStorage.getItem(webApiTokenStoreKey);
     }
@@ -311,8 +313,8 @@ export default class AuthClient {
                                 resolve(data);
                             })
                             .catch(function (err) {
-                                console.log("AuthHelper_callWebApiWithToken error:");
-                                console.log(err);
+                                logService.log("AuthHelper_callWebApiWithToken error:");
+                                logService.log(err);
 
                                 // Detect expired token and request interactive logon
                                 let errorText = localStorage.getItem("AuthError");
@@ -324,20 +326,18 @@ export default class AuthClient {
                     } else {
                         response.json()
                             .then(function (data) {
-                                console.log("AuthHelper_callWebApiWithToken data error: " + data.error.code);
+                                logService.log("AuthHelper_callWebApiWithToken data error: " + data.error.code);
                                 // Display response as error in the page
                                 reject("AuthHelper_callWebApiWithToken data error: " + data.error.code);
                             })
                             .catch(function (err) {
-                                console.log("AuthHelper_callWebApiWithToken end point: " + endpoint + " error:");
-                                console.log(err);
+                                logService.log("AuthHelper_callWebApiWithToken end point: ", endpoint, " error:", err);
                                 reject("callWebApiWithToken error: " + err);
                             });
                     }
                 })
                 .catch(function (err) {
-                    console.log("AuthHelper_callWebApiWithToken end point: " + endpoint + " error:");
-                    console.log(err);
+                    logService.log("AuthHelper_callWebApiWithToken end point: ", endpoint, " error:", err);
                     reject("callWebApiWithToken fetch endpoint: " + endpoint + " error: " + err);
                 });
         });

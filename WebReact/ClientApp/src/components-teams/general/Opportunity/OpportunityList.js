@@ -23,8 +23,8 @@ export class OpportunityList extends Component {
     constructor(props) {
         super(props);
         this.apiService = this.props.apiService;
+        this.logService = this.props.logService;
         this.authHelper = window.authHelper;
-        console.log("OpportunityList : ");
         const dashboardList = this.props.dashboardList;
 
         let columns = [
@@ -155,7 +155,7 @@ export class OpportunityList extends Component {
             }
         }
         ];
-        this.checkReadWrite = ["Opportunities_ReadWrite_All", "Opportunity_ReadWrite_All", "Opportunity_ReadWrite_Partial"];
+        this.checkReadWrite = ["Administrator", "Opportunities_ReadWrite_All", "Opportunity_ReadWrite_All", "Opportunity_ReadWrite_Partial"];
         this.checkCreate = ["Opportunity_Create"];
         this.actionColumn = actionColumn;
 
@@ -183,7 +183,7 @@ export class OpportunityList extends Component {
     //Granular Access start:
     //Oppportunity create access
     async componentDidMount() {
-        console.log("OpportunityList componentDidMount: enter");
+        this.logService.log("OpportunityList componentDidMount: enter");
         let haveGranularAccess, canReadWrite = false;
 
         try
@@ -192,7 +192,7 @@ export class OpportunityList extends Component {
         }
         catch (e)
         {
-            console.log("OpportunityList checkCreate: error: ", e);
+            this.logService.log("OpportunityList checkCreate: error: ", e);
             haveGranularAccess = false;
         }
 
@@ -201,7 +201,7 @@ export class OpportunityList extends Component {
         }
         catch (e)
         {
-            console.log("OpportunityList checkReadWrite: error: ", e);
+            this.logService.log("OpportunityList checkReadWrite: error: ", e);
             canReadWrite = false;
         }
 
@@ -241,7 +241,7 @@ export class OpportunityList extends Component {
                 messageDeleteOpp: "Error " + error,
                 messageBarTypeDeleteOpp: MessageBarType.error
             });
-            console.log("Setup_ConfigureAppIDAndGroupID error : ", error);
+            this.logService.log("Setup_ConfigureAppIDAndGroupID error : ", error);
         }
         await this.hideMessagebar();
     }
@@ -269,7 +269,7 @@ export class OpportunityList extends Component {
     }
 
     _onRenderCell(item, index) {
-        console.log("General_getOpportunityIndex item : ", item);
+        this.logService.log("General_getOpportunityIndex item : ", item);
         return (
             <div className='ms-List-itemCell' data-is-focusable='true'>
                 <div className='ms-List-itemContent'>
@@ -291,7 +291,7 @@ export class OpportunityList extends Component {
     }
 
     render() {
-        console.log("OpportunityList render: enter" + this.state.haveGranularAccess);
+        this.logService.log("OpportunityList render: enter" + this.state.haveGranularAccess);
         const { columns, isCompactMode, items, haveGranularAccess } = this.state;
 
         return (

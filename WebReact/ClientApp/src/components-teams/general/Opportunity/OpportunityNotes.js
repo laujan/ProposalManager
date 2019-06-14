@@ -19,11 +19,12 @@ export class OpportunityNotes extends Component {
         super(props);
 
         this.apiService = this.props.apiService;
+        this.logService = this.props.logService;
         this.utils = window.utils;
 
         const userProfile = this.props.userProfile;
 
-        console.log("OpportunityNotes_ctor", this.props);
+        this.logService.log("OpportunityNotes_ctor", this.props);
 
         const oppId = this.props.opportunityId;
         const opportunityData = this.props.opportunityData;
@@ -49,11 +50,11 @@ export class OpportunityNotes extends Component {
     }
 
     async componentDidMount() {
-        console.log("OpportunityDetails_componentDidMount");
+        this.logService.log("OpportunityDetails_componentDidMount");
         try {
             await this.getOppDetails(this.props.userProfile);
         } catch (error) {
-            console.log("OpportunitySummary_componentDidUpdate error : ", error);
+            this.logService.log("OpportunitySummary_componentDidUpdate error : ", error);
         }
     }
 
@@ -82,17 +83,13 @@ export class OpportunityNotes extends Component {
                 });
             } else
                 throw Error("Data is null");
-
         }
         catch (err) {
-            console.log("Error");
-            console.log(err);
+            this.logService.log("Error: ", err);
         }
-
     }
 
     handleChangeNewNotes(value) {
-
         this.setState({
             isSendDisable: value.length > 0 ? false : true,
             addNotes: value
@@ -133,7 +130,7 @@ export class OpportunityNotes extends Component {
                     this.setState({ addNotes: '' });
                 }
             })
-            .catch(error => console.error('Error:', error));
+            .catch(error => this.logService.error('Error:', error));
     }
 
     notesListData(notesList) {
@@ -172,6 +169,7 @@ export class OpportunityNotes extends Component {
                     opportunityName={this.state.oppData.displayName}
                     opportunityState={this.state.oppData.opportunityState}
                     userRole={this.state.userAssignedRole}
+                    logService={this.props.logService}
                 />
             );
         };

@@ -3,12 +3,7 @@
 *  See LICENSE in the source repository root for complete license information. 
 */
 import React, { Component } from 'react';
-import {
-    Pivot,
-    PivotItem,
-    PivotLinkFormat,
-    PivotLinkSize
-} from 'office-ui-fabric-react/lib/Pivot';
+import { Pivot, PivotItem, PivotLinkFormat, PivotLinkSize } from 'office-ui-fabric-react/lib/Pivot';
 import { Trans } from "react-i18next";
 import Utils from '../../helpers/Utils';
 import { OpportunityList } from './Opportunity/OpportunityList';
@@ -23,7 +18,6 @@ import { MessageBar, MessageBarType } from 'office-ui-fabric-react/lib/MessageBa
 import '../../Style.css';
 import AccessDenied from '../../helpers/AccessDenied';
 
-
 export class General extends Component {
     displayName = General.name
 
@@ -31,14 +25,15 @@ export class General extends Component {
         super(props);
 
         this.apiService = this.props.apiService;
+        this.logService = this.props.logService;
         this.authHelper = window.authHelper;
         this.utils = new Utils();
         this.accessGranted = false;
         try {
-            console.log("General_Constructor");
+            this.logService.log("General_Constructor");
         }
         catch (err) {
-            console.log("General_Constructor: error => ", err.message);
+            this.logService.log("General_Constructor: error => ", err.message);
         }
         finally {
             // Wave4 - adding permission key for userprofiles
@@ -70,12 +65,7 @@ export class General extends Component {
     }
 
     async componentDidMount() {
-        console.log("Dashboard_componentDidMount isauth: " + this.authHelper.isAuthenticated());
-        await this.getAllData();
-    }
-
-    async componentDidUpdate() {
-        console.log("Dashboard_componentDidUpdate isauth: " + this.authHelper.isAuthenticated());
+        this.logService.log("Dashboard_componentDidMount");
         await this.getAllData();
     }
 
@@ -116,7 +106,7 @@ export class General extends Component {
                         for (let i = 0; i < data.ItemsList.length; i++) {
 
                             let item = data.ItemsList[i];
-                            console.log("General_getOpportunityIndex item : ", item);
+                            this.logService.log("General_getOpportunityIndex item : ", item);
                             let newItem = {};
 
                             newItem.id = item.id;
@@ -181,7 +171,7 @@ export class General extends Component {
                     if (data.ItemsList.length > 0) {
                         teamMembers = data.ItemsList;
                     }
-                    console.log("General_getUserProfiles : ", teamMembers);
+                    this.logService.log("General_getUserProfiles : ", teamMembers);
 
                     this.setState({ teamMembers });
                 }
@@ -216,7 +206,7 @@ export class General extends Component {
                 });
             })
             .catch(error => {
-                console.log("OpportunitySummary_getDealTypeLists error ", error);
+                this.logService.log("OpportunitySummary_getDealTypeLists error ", error);
             });
     }
 
@@ -227,7 +217,7 @@ export class General extends Component {
     }
 
     errorHandler(err, referenceCall) {
-        console.log("Opportunities Ref: " + referenceCall + " error: " + JSON.stringify(err));
+        this.logService.log("Opportunities Ref: " + referenceCall + " error: " + JSON.stringify(err));
     }
 
     async onClickCreateOpp() {
@@ -280,14 +270,14 @@ export class General extends Component {
                         templateName: ""
                     }
                 };
-                console.log("General_onClickCreateOpp : ", this.newOpportunity);
+                this.logService.log("General_onClickCreateOpp : ", this.newOpportunity);
                 this.setState({
                     viewState: "createStep1"
                 });
             }
 
         } catch (err) {
-            console.log(err);
+            this.logService.log(err);
         }
     }
 
@@ -321,7 +311,7 @@ export class General extends Component {
     }
 
     onClickCreateOppNext() {
-        console.log("General_onClickCreateOppNext : ", this.newOpportunity);
+        this.logService.log("General_onClickCreateOppNext : ", this.newOpportunity);
 
         if (this.state.viewState === "createStep1") {
             this.setState({
@@ -414,7 +404,7 @@ export class General extends Component {
             }
             this.newOpportunity.documentAttachments = cleanAttachments;
 
-            console.log("General_createopportunity metadata: ", this.newOpportunity.metaDataFields);
+            this.logService.log("General_createopportunity metadata: ", this.newOpportunity.metaDataFields);
             //adding default bussinees process
             if (this.newOpportunity.template.id.length === 0) {
                 let defaultTemplateAvailable = this.state.templateList.some(name => name.defaultTemplate);
@@ -460,9 +450,9 @@ export class General extends Component {
 
     render() {
         const viewState = this.state.viewState;
-        console.log("General: appSettings: ", this.props.appSettings);
-        const DashboardView = ({ match }) => {
-            return <Dashboard appSettings={this.props.appSettings} apiService={this.props.apiService} />;
+        this.logService.log("General: appSettings: ", this.props.appSettings);
+        const DashboardView = () => {
+            return <Dashboard appSettings={this.props.appSettings} apiService={this.props.apiService} logService={this.logService} />;
         };
 
         return (
@@ -501,6 +491,7 @@ export class General extends Component {
                                                             dashboardList={this.state.dashboardList}
                                                             onClickCreateOpp={this.onClickCreateOpp}
                                                             metaDataList={this.state.metaDataList}
+                                                            logService={this.logService} 
                                                         />
                                                     }
                                                 </PivotItem>
@@ -522,6 +513,7 @@ export class General extends Component {
                                                 onClickCancel={this.onClickOppCancel}
                                                 onClickNext={this.onClickCreateOppNext.bind(this, this.newOpportunity)}
                                                 metaDataList={this.state.metaDataList}
+                                                logService={this.logService} 
                                             />
                                         }
                                         {
@@ -532,6 +524,7 @@ export class General extends Component {
                                                 onClickBack={this.onClickOppBack}
                                                 onClickNext={this.onClickCreateOppNext.bind(this, this.newOpportunity)}
                                                 metaDataList={this.state.metaDataList}
+                                                logService={this.logService} 
                                             />
                                         }
                                         {
@@ -546,6 +539,7 @@ export class General extends Component {
                                                 onClickNext={this.onClickCreateOppNext.bind(this, this.newOpportunity)}
                                                 metaDataList={this.state.metaDataList}
                                                 apiService={this.props.apiService}
+                                                logService={this.logService} 
                                             />
                                         }
                                     </div>

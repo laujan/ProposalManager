@@ -3,16 +3,14 @@
 *  See LICENSE in the source repository root for complete license information. 
 */
 import React, { Component } from 'react';
-
 import { Spinner, SpinnerSize } from 'office-ui-fabric-react/lib/Spinner';
 import { MessageBar } from 'office-ui-fabric-react/lib/MessageBar';
 import { DefaultButton } from 'office-ui-fabric-react/lib/Button';
 import { SearchBox } from 'office-ui-fabric-react/lib/SearchBox';
-
 import '../../teams.css';
 import Utils from '../../../helpers/Utils';
 import { I18n, Trans } from "react-i18next";
-import { oppStatusText, oppStatusClassName } from '../../../common';
+import { oppStatusText } from '../../../common';
 import { DetailsList, DetailsListLayoutMode, Selection } from 'office-ui-fabric-react/lib/DetailsList';
 import { MarqueeSelection } from 'office-ui-fabric-react/lib/MarqueeSelection';
 
@@ -23,6 +21,7 @@ export class AdminAllOpportunities extends Component {
         super(props);
 
         this.apiService = this.props.apiService;
+        this.logService = this.props.logService;
         this.utils = new Utils();
 
         const columns = [
@@ -117,7 +116,7 @@ export class AdminAllOpportunities extends Component {
     }
 
     componentDidMount() {
-        console.log("AdminAllOpportunites_componentDidMount");
+        this.logService.log("AdminAllOpportunites_componentDidMount");
         this.getData();
     }
 
@@ -128,7 +127,7 @@ export class AdminAllOpportunities extends Component {
     }
 
     errorHandler(err, referenceCall) {
-        console.log("Administration Ref: " + referenceCall + " error: " + JSON.stringify(err));
+        this.logService.log("Administration Ref: " + referenceCall + " error: " + JSON.stringify(err));
     }
 
     getData() {
@@ -236,7 +235,7 @@ export class AdminAllOpportunities extends Component {
     }
 
     archiveOpportunity(selectedItems) {
-        console.log(selectedItems);
+        this.logService.log(selectedItems);
         let i, j;
         let allItems = this.state.items;
 
@@ -262,7 +261,7 @@ export class AdminAllOpportunities extends Component {
                     }
                 })
                 .catch(err => {
-                    console.log("AdminAllOpportunities_archiveOpportunity error: ", err);
+                    this.logService.log("AdminAllOpportunities_archiveOpportunity error: ", err);
                     this.setState({ refreshing: false });
                 });
 

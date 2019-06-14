@@ -1,10 +1,15 @@
-﻿/* 
+﻿import LoggingService from "./LoggingService";
+
+/* 
 *  Copyright (c) Microsoft. All rights reserved. Licensed under the MIT license. 
 *  See LICENSE in the source repository root for complete license information. 
 */
 
 export default class Utils {
-    
+    constructor() {
+        this.logService = new LoggingService();
+    }
+
     decimalToHex(number) {
         var hex = number.toString(16);
         while (hex.length < 2) {
@@ -125,7 +130,7 @@ export default class Utils {
 
     //generic error handling functions
     handleErrors(response) {
-        console.log("handleErrors==>", response);
+        this.logService.log("handleErrors==>", response);
         let ok = response.ok;
         if (!ok) {
             let status = response.status;
@@ -148,11 +153,12 @@ export default class Utils {
     //member selection based on deal type propoerties
     getMembersWithTemplateProperties(userRoleList){
         let teamlist = [];
+        let self = this;
         userRoleList.forEach(element => {
             element.userRoles.forEach((userrole)=>{
                 userrole.permissions.forEach((per)=>{
                     if(per.name.toLowerCase()==="Opportunity_ReadWrite_Dealtype".toLocaleLowerCase()){
-                        console.log("getMembersWithTemplateProperties element : ", element);
+                        self.logService.log("getMembersWithTemplateProperties element : ", element);
                         if(!teamlist.includes(element))teamlist.push(element);
                     }
                 });
@@ -165,10 +171,11 @@ export default class Utils {
     getLoanOficers(teamMembers){
         let teamlist = [];
         let teamMemberIds = [];
+        let self = this;
         teamMembers.forEach(function (teammembr) {
             teammembr.permissions.forEach((per)=>{
                 if(per.name.toLowerCase()==="Opportunity_ReadWrite_Dealtype".toLocaleLowerCase()){
-                    console.log("Utils_getLoanOficers element : ", teammembr);
+                    self.logService.log("Utils_getLoanOficers element : ", teammembr);
                     if(!teamMemberIds.includes(teammembr.id)){
                         teamlist.push(teammembr);
                         teamMemberIds.push(teammembr.id);
@@ -176,17 +183,18 @@ export default class Utils {
                 }
             });
         });
-        console.log("Utils_getLoanOficers : ", teamlist);
+        this.logService.log("Utils_getLoanOficers : ", teamlist);
         return teamlist;
     }
 
     getRelationShipManagers(teamMembers){
         let teamlist = [];
         let teamMemberIds = [];
+        let self = this;
         teamMembers.forEach(function (teammembr) {
             teammembr.permissions.forEach((per)=>{
                 if(per.name.toLowerCase()==="Opportunity_Create".toLocaleLowerCase()){
-                    console.log("Utils_getLoanOficers element : ", teammembr);
+                    self.logService.log("Utils_getLoanOficers element : ", teammembr);
                     if(!teamMemberIds.includes(teammembr.id)){
                         teamlist.push(teammembr);
                         teamMemberIds.push(teammembr.id);
@@ -194,7 +202,7 @@ export default class Utils {
                 }
             });
         });
-        console.log("Utils_getLoanOficers : ", teamlist);
+        this.logService.log("Utils_getLoanOficers : ", teamlist);
         return teamlist;
     }
 }

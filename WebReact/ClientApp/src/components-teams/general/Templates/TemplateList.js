@@ -4,21 +4,13 @@
 */
 
 import React, { Component } from 'react';
-import {
-    DetailsList,
-    DetailsListLayoutMode,
-    Selection,
-    SelectionMode
-} from 'office-ui-fabric-react/lib/DetailsList';
+import { DetailsList, DetailsListLayoutMode, Selection, SelectionMode } from 'office-ui-fabric-react/lib/DetailsList';
 import { MarqueeSelection } from 'office-ui-fabric-react/lib/MarqueeSelection';
 import { DefaultButton, PrimaryButton, IconButton } from 'office-ui-fabric-react/lib/Button';
 import { SearchBox } from 'office-ui-fabric-react/lib/SearchBox';
 import { TooltipHost } from 'office-ui-fabric-react/lib/Tooltip';
 import { I18n, Trans } from "react-i18next";
-import {
-    Spinner,
-    SpinnerSize
-} from 'office-ui-fabric-react/lib/Spinner';
+import { Spinner, SpinnerSize } from 'office-ui-fabric-react/lib/Spinner';
 import { MessageBar, MessageBarType } from 'office-ui-fabric-react/lib/MessageBar';
 import { LinkContainer } from 'react-router-bootstrap';
 import i18n from '../../../i18n';
@@ -33,7 +25,8 @@ export class TemplateList extends Component {
 
         this.authHelper = window.authHelper;
         this.apiService = this.props.apiService;
-        this.templatesCommon = new TemplatesCommon(this.apiService);
+        this.logService = this.props.logService;
+        this.templatesCommon = new TemplatesCommon(this.apiService, this.logService);
 
         this.accessGranted = false;
         const columns = [
@@ -110,26 +103,20 @@ export class TemplateList extends Component {
     }
 
     async componentDidMount() {
-        console.log("code-review commments implementation");
-        console.log("Templatelist_componentDidMount isauth: " + this.authHelper.isAuthenticated());
+        this.logService.log("Templatelist_componentDidMount");
         if (this.authHelper.isAuthenticated() && !this.accessGranted) {
             try {
                 await this.authHelper.callCheckAccess(["Administrator", "Opportunity_ReadWrite_Template", "Opportunities_ReadWrite_All"]);
-                console.log("Templatelist_componentDidUpdate callCheckAccess success");
+                this.logService.log("Templatelist_componentDidUpdate callCheckAccess success");
                 this.accessGranted = true;
                 await this.fnGetTemplates();
                 await this.fnGetProcess();
 
             } catch (error) {
                 this.accessGranted = false;
-                console.log("Templatelist_componentDidUpdate error_callCheckAccess:");
-                console.log(error);
+                this.logService.log("Templatelist_componentDidUpdate error_callCheckAccess:", error);
             }
         }
-    }
-
-    componentDidUpdate() {
-        console.log("Templatelist_componentDidUpdate isauth: " + this.authHelper.isAuthenticated() + " this.accessGranted: " + this.accessGranted);
     }
 
     async fnGetTemplates() {
@@ -145,7 +132,7 @@ export class TemplateList extends Component {
     async fnGetProcess() {
         let processItems, processItemsOriginal = [];
         processItems = await this.templatesCommon.getAllProcess();
-        console.log(processItems);
+        this.logService.log(processItems);
         if (processItems.length > 0) {
             this.setState({
                 loading: false,
@@ -162,7 +149,7 @@ export class TemplateList extends Component {
     }
 
     errorHandler(err, referenceCall) {
-        console.log("Get TemplatesList Ref: " + referenceCall + " error: " + JSON.stringify(err));
+        this.logService.log("Get TemplatesList Ref: " + referenceCall + " error: " + JSON.stringify(err));
     }
 
     _selection = new Selection({

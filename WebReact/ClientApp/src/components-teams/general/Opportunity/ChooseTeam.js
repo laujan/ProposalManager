@@ -22,6 +22,7 @@ export class ChooseTeam extends Component {
         super(props);
 
         this.apiService = this.props.apiService;
+        this.logService = this.props.logService;
         this.accessGranted = false;
         const oppID = getQueryVariable('opportunityId') ? getQueryVariable('opportunityId') : "";
 
@@ -53,7 +54,7 @@ export class ChooseTeam extends Component {
     }
 
     async componentDidMount() {
-        console.log("Dashboard_componentDidMount");
+        this.logService.log("Dashboard_componentDidMount");
 
         this.accessGranted = true;
         await this.getUserRoles();
@@ -67,7 +68,7 @@ export class ChooseTeam extends Component {
                 let data = await response.json();
 
                 let teamsObject = await this.getUserProfiles();
-                console.log("ChooseTeams_log getOpportunity : ", data);
+                this.logService.log("ChooseTeams_log getOpportunity : ", data);
                 let oppSelTeam = [];
                 if (data.teamMembers.length > 0) {
                     for (let m = 0; m < data.teamMembers.length; m++) {
@@ -77,8 +78,8 @@ export class ChooseTeam extends Component {
                         }
                     }
                 }
-                console.log("ChooseTeams_Log getOpportunity : ", teamsObject);
-                console.log("ChooseTeams_Log getOpportunity : ", oppSelTeam);
+                this.logService.log("ChooseTeams_Log getOpportunity : ", teamsObject);
+                this.logService.log("ChooseTeams_Log getOpportunity : ", oppSelTeam);
                 //TODO
                 teamsObject.forEach(team => {
                     oppSelTeam.forEach(selectedTeam => {
@@ -103,10 +104,10 @@ export class ChooseTeam extends Component {
                 });
             }
             else {
-                console.log("ChooseTeam_getOpportunityForTeams error retrieving:", response.statusText);
+                this.logService.log("ChooseTeam_getOpportunityForTeams error retrieving:", response.statusText);
             }
         } catch (error) {
-            console.log("ChooseTeam_getOpportunityForTeams error:", error.message);
+            this.logService.log("ChooseTeam_getOpportunityForTeams error:", error.message);
         }
     }
 
@@ -127,15 +128,15 @@ export class ChooseTeam extends Component {
                     userRole.teamsMembership = data[i].teamsMembership;
                     userRoleList.push(userRole);
                 }
-                console.log("ChooseTeams_Log getUserRoles userRoleList: ", userRoleList);
+                this.logService.log("ChooseTeams_Log getUserRoles userRoleList: ", userRoleList);
             }
             else {
-                console.log("ChooseTeams_Log getUserRoles error retrieving roles: ", response.statusText);
+                this.logService.log("ChooseTeams_Log getUserRoles error retrieving roles: ", response.statusText);
             }
 
             this.setState({ userRoleMapList: userRoleList });
         } catch (error) {
-            console.log("ChooseTeams_Log getUserRoles error: ", error);
+            this.logService.log("ChooseTeams_Log getUserRoles error: ", error);
         }
     }
 
@@ -180,7 +181,7 @@ export class ChooseTeam extends Component {
                 }
             }
             else {
-                console.log("ChooseTeam_getUserProfiles error retrieving data: " + response.statusText);
+                this.logService.log("ChooseTeam_getUserProfiles error retrieving data: ", response.statusText);
             }
 
             this.setState({
@@ -191,12 +192,12 @@ export class ChooseTeam extends Component {
                 teamsObject: teamsObject
             });
 
-            console.log("ChooseTeams_Log getUserProfiles eamsObject: ", teamsObject);
+            this.logService.log("ChooseTeams_Log getUserProfiles eamsObject: ", teamsObject);
 
             return teamsObject;
 
         } catch (error) {
-            console.log("ChooseTeam_getUserProfiles error: " + JSON.stringify(error));
+            this.logService.log("ChooseTeam_getUserProfiles error: ", JSON.stringify(error));
         }
     }
 
@@ -221,7 +222,7 @@ export class ChooseTeam extends Component {
                     setTimeout(() => { this.setState({ fileUploadMsg: false, messagebarText: "" }); }, 3000);
                 }
                 else {
-                    console.log("ChooseTeam_saveFile error: ", response.statusText);
+                    this.logService.log("ChooseTeam_saveFile error: ", response.statusText);
                 }
             }
             catch (err) {
@@ -240,7 +241,7 @@ export class ChooseTeam extends Component {
 
     async onFinalizeTeam() {
         let teamsSelected = this.state.currentSelectedItems;
-        console.log("ChooseTeam_onFinalizeTeam teamsSelected : ", teamsSelected);
+        this.logService.log("ChooseTeam_onFinalizeTeam teamsSelected : ", teamsSelected);
         this.setState({
             isFinalizeTeam: true
         });
@@ -256,14 +257,13 @@ export class ChooseTeam extends Component {
             }, 3000);
         }
         catch (error) {
-            console.error('ChooseTeam_onFinalizeTeam error:', error);
+            this.logService.error('ChooseTeam_onFinalizeTeam error:', error);
         }
     }
 
     selectedTeamMemberFromDropDown(item, roleName, processStep) {
-        console.log("ChooseTeams_Log selectedTeamMemberFromDropDown item : ", item);
-        console.log("ChooseTeams_Log selectedTeamMemberFromDropDown processStep : ", roleName);
-
+        this.logService.log("ChooseTeams_Log selectedTeamMemberFromDropDown item : ", item);
+        this.logService.log("ChooseTeams_Log selectedTeamMemberFromDropDown processStep : ", roleName);
 
         let tempSelectedTeamMembers = this.state.currentSelectedItems;
         let finalTeam = [];
@@ -285,7 +285,7 @@ export class ChooseTeam extends Component {
             let role = item[0].userRoles.find(role => {
                 if (role.displayName.toLowerCase() === roleName.toLowerCase()) return role.id;
             });
-            console.log("ChooseTeams_Log selectedTeamMemberFromDropDown role : ", role);
+            this.logService.log("ChooseTeams_Log selectedTeamMemberFromDropDown role : ", role);
             let newMember = {};
             newMember.status = 0;
             newMember.id = item[0].id;
@@ -319,7 +319,7 @@ export class ChooseTeam extends Component {
                         return team;
                     }
                 });
-                console.log("getPeoplePickerTeamMembers : ", members);
+                this.logService.log("getPeoplePickerTeamMembers : ", members);
 
                 if (typeof members !== 'undefined') {
                     // get unique values from selectedMemberList
@@ -342,6 +342,7 @@ export class ChooseTeam extends Component {
                                 onChange={(e) => this.selectedTeamMemberFromDropDown(e, process.roleName, process.processStep)}
                                 itemLimit={1}
                                 apiService={this.props.apiService}
+                                logService={this.props.logService}
                             />
                         </div>
                     );
@@ -349,7 +350,7 @@ export class ChooseTeam extends Component {
             }
         });
         teammembertemplate = teammembertemplate.filter(obj => typeof obj !== 'undefined');
-        console.log("ChooseTeams_Log getPeoplePickerTeamMembers : ", teammembertemplate);
+        this.logService.log("ChooseTeams_Log getPeoplePickerTeamMembers : ", teammembertemplate);
         return <div className='ms-Grid-row bg-white'>{teammembertemplate}</div>;
     }
 
@@ -360,7 +361,6 @@ export class ChooseTeam extends Component {
         if (!this.state.loading) {
             disableBrowseButton = this.state.oppData.proposalDocument === null ?
                 true : this.state.oppData.proposalDocument.documentUri ? false : true;
-            console.log("somevalue : ", this.state.oppData.proposalDocument === null);
         }
 
         let filteredTeammembers = JSON.parse(JSON.stringify(this.state.currentSelectedItems));
@@ -373,7 +373,7 @@ export class ChooseTeam extends Component {
             }
         });
 
-        console.log("ChooseTeams_Log_render currentselected : ", this.state.currentSelectedItems);
+        this.logService.log("ChooseTeams_Log_render currentselected : ", this.state.currentSelectedItems);
         if (this.state.loading) {
             return (
                 <div className='ms-BasicSpinnersExample ibox-content pt15 '>

@@ -8,6 +8,7 @@ import { TextField } from 'office-ui-fabric-react/lib/TextField';
 import { Spinner, SpinnerSize } from 'office-ui-fabric-react/lib/Spinner';
 import { I18n, Trans } from "react-i18next";
 import { MessageBar, MessageBarType } from 'office-ui-fabric-react/lib/MessageBar';
+import ImportDealType from './general/DealType/ImportDealType';
 
 export class Setup extends Component {
     displayName = Setup.name
@@ -15,8 +16,9 @@ export class Setup extends Component {
     constructor(props) {
         super(props);
         this.apiService = this.props.apiService;
+        this.logService = this.props.logService;
         
-        console.log("Setup : Constructor");
+        this.logService.log("Setup : Constructor");
         this.state = {
             loading: true,
             isUpdateOpp: false,
@@ -100,7 +102,7 @@ export class Setup extends Component {
     }
 
     async componentDidMount() {
-        console.log("SetUp_componentDidMount");
+        this.logService.log("SetUp_componentDidMount");
         await this.setClientSettings();
     }
 
@@ -135,7 +137,7 @@ export class Setup extends Component {
             }
         }
 
-        console.log("SetUp_setClientSettings: ", ProposalManagement_Misc, ProposalManagement_Sharepoint, ProposalManagement_bot, ProposalManagement_BI, ProposalManagement_Team, DocumentIdActivator);
+        this.logService.log("SetUp_setClientSettings: ", ProposalManagement_Misc, ProposalManagement_Sharepoint, ProposalManagement_bot, ProposalManagement_BI, ProposalManagement_Team, DocumentIdActivator);
         this.setState(
             {
                 ProposalManagement_Misc,
@@ -154,11 +156,11 @@ export class Setup extends Component {
 
     async getClientSettings() {
         try {
-            console.log("Setup_getClientSettings");
+            this.logService.log("Setup_getClientSettings");
             let data = await this.apiService.callApi('Context', 'GET', { id: 'GetClientSettings'});
             return await data.json();
         } catch (error) {
-            console.log("Setup_getClientSettings error: ", error.message);
+            this.logService.log("Setup_getClientSettings error: ", error.message);
             return { "setupPage": "" };
         }
     }
@@ -277,7 +279,7 @@ export class Setup extends Component {
             dlAnchorElem.setAttribute("download", "appsettings_ProposalManagement.json");
             dlAnchorElem.click();
         } catch (error) {
-            console.log("Setup_downloadJsonObject error: ", error.message);
+            this.logService.log("Setup_downloadJsonObject error: ", error.message);
         }
 
         this.setSpinnerAndMsg(false, false, "");
@@ -286,39 +288,39 @@ export class Setup extends Component {
 
     async UpdateAppSettings(key, value) {
         try {
-            console.log("SetUp_updateAppSettings");
+            this.logService.log("SetUp_updateAppSettings");
             // check vaultbaseurl contains http(s) - remove it
             value = key === "VaultBaseUrl" ? value.replace(/https?:\/\//, "") : value;
             
             let data = await this.apiService.callApi('Setup', 'POST', { id: `${key}/${value}`});
-            console.log("SetUp_updateAppSettings response: ", data);
+            this.logService.log("SetUp_updateAppSettings response: ", data);
             return true;
         } catch (error) {
-            console.log("SetUp_updateAppSettings error: ", error.message);
+            this.logService.log("SetUp_updateAppSettings error: ", error.message);
             return false;
         }
     }
 
     async UpdateDocumentIdActivatorSettings(key, value) {
         try {
-            console.log("SetUp_updateDocumentIdActivatorSettings");
+            this.logService.log("SetUp_updateDocumentIdActivatorSettings");
             let postData = {
                 key: key,
                 value: value
             };
 
             let data = await this.apiService.callApi('Setup', 'POST', { id: 'documentId', body: JSON.stringify(postData) });
-            console.log("SetUp_updateDocumentIdActivatorSettings response: ", data);
+            this.logService.log("SetUp_updateDocumentIdActivatorSettings response: ", data);
             return true;
         } catch (error) {
-            console.log("SetUp_updateDocumentIdActivatorSettings error: ", error.message);
+            this.logService.log("SetUp_updateDocumentIdActivatorSettings error: ", error.message);
             return false;
         }
     }
 
     //Setp 3 & //Setp 4
     async SetAppSetting_JsonKeys(ProposalManagement, group, key = false) {
-        console.log("SetAppSetting_JsonKeys: ", ProposalManagement);
+        this.logService.log("SetAppSetting_JsonKeys: ", ProposalManagement);
         this.spinnerOff(group, true);
         this.setSpinnerAndMsg(true, false, "");
 
@@ -327,10 +329,10 @@ export class Setup extends Component {
                 try {
                     if (Objkey !== "ProposalManagementRootSiteId") {
                         const contents = await this.UpdateAppSettings(Objkey, ProposalManagement[Objkey]);
-                        console.log(`SetAppSetting_JsonKeys_${Objkey} : `, contents);
+                        this.logService.log(`SetAppSetting_JsonKeys_${Objkey} : `, contents);
                     }
                 } catch (error) {
-                    console.log(`SetAppSetting_JsonKeys_${Objkey}_err : `, error.message);
+                    this.logService.log(`SetAppSetting_JsonKeys_${Objkey}_err : `, error.message);
                 }
             }
 
@@ -338,15 +340,15 @@ export class Setup extends Component {
 
         } catch (error) {
             this.setSpinnerAndMsg(false, true, error.message, MessageBarType.error);
-            console.log(`SetAppSetting_JsonKeys_err : `, error.message);
+            this.logService.log(`SetAppSetting_JsonKeys_err : `, error.message);
         }
         this.hideMessagebar();
         this.spinnerOff(group, false);
     }
 
     async SetDocumentIdActivatorSetting_JsonKeys(DocumentIdActivator, group, key = false) {
-        console.log("SetDocumentIdActivatorSetting_JsonKeys   : ", DocumentIdActivator);
-        console.log("SetDocumentIdActivatorSetting_JsonKeys   : ", DocumentIdActivator.constructor.name);
+        this.logService.log("SetDocumentIdActivatorSetting_JsonKeys   : ", DocumentIdActivator);
+        this.logService.log("SetDocumentIdActivatorSetting_JsonKeys   : ", DocumentIdActivator.constructor.name);
         this.spinnerOff(group, true);
 
         if (!DocumentIdActivator.SharePointAppId || !DocumentIdActivator.SharePointAppSecret) {
@@ -359,9 +361,9 @@ export class Setup extends Component {
                 for (const Objkey of Object.keys(DocumentIdActivator)) {
                     try {
                         const contents = await this.UpdateDocumentIdActivatorSettings(Objkey, DocumentIdActivator[Objkey]);
-                        console.log(`SetDocumentIdActivatorSetting_JsonKeys_${Objkey} : `, contents);
+                        this.logService.log(`SetDocumentIdActivatorSetting_JsonKeys_${Objkey} : `, contents);
                     } catch (error) {
-                        console.log(`SetDocumentIdActivatorSetting_JsonKeys_${Objkey}_err : `, error.message);
+                        this.logService.log(`SetDocumentIdActivatorSetting_JsonKeys_${Objkey}_err : `, error.message);
                     }
                 }
 
@@ -369,7 +371,7 @@ export class Setup extends Component {
 
             } catch (error) {
                 this.setSpinnerAndMsg(false, true, error.message, MessageBarType.error);
-                console.log(`SetDocumentIdActivatorSetting_JsonKeys_err : `, error.message);
+                this.logService.log(`SetDocumentIdActivatorSetting_JsonKeys_err : `, error.message);
             }
         }
         this.hideMessagebar();
@@ -378,12 +380,12 @@ export class Setup extends Component {
 
     async CreateAllLists() {
         try {
-            console.log("Setup_createAllLists");
+            this.logService.log("Setup_createAllLists");
             let data = await this.apiService.callApi('Setup', 'POST', { id: 'CreateAllLists' });
-            console.log("Setup_createAllLists response: ", data);
+            this.logService.log("Setup_createAllLists response: ", data);
             return true;
         } catch (error) {
-            console.log("Setup_createAllLists error: ", error.message);
+            this.logService.log("Setup_createAllLists error: ", error.message);
             return false;
         }
     }
@@ -416,7 +418,7 @@ export class Setup extends Component {
 
         } catch (error) {
             this.setSpinnerAndMsg(false, true, error.message, MessageBarType.error);
-            console.log("Setup_CreateAdminPermissions error : ", error.message);
+            this.logService.log("Setup_CreateAdminPermissions error : ", error.message);
         }
 
         await this.hideMessagebar();        
@@ -445,20 +447,20 @@ export class Setup extends Component {
                 throw new Error(`Meta data get api error: ${data.error.message}`);
             }
         } catch (error) {
-            console.log("everything creeted : ", error.message);
+            this.logService.log("everything creeted : ", error.message);
             return false;
         }
     }
        //Setp 1
     async CreateProposalManagerTeam(PMTeamName) {
         try {
-            console.log("Setup_CreateProposalManagerTeam", PMTeamName);
+            this.logService.log("Setup_CreateProposalManagerTeam", PMTeamName);
             if (PMTeamName) {
                 await this.apiService.callApi('Setup', 'POST', {id: `CreateProposalManagerTeam/${PMTeamName}` });
             } 
         } catch (error) {
             this.setSpinnerAndMsg(false, true, error.message, MessageBarType.error);
-            console.log("Setup_CreateProposalManagerTeam error : ", error.message);
+            this.logService.log("Setup_CreateProposalManagerTeam error : ", error.message);
         }
     }
 
@@ -466,18 +468,18 @@ export class Setup extends Component {
     async loadDataForPermision_Process_Roles() {
         let requestUriArray = ["CreateSitePermissions","CreateSiteProcesses","CreateMetaDataList","CreateDefaultBusinessProcess"];
         try {
-            console.log("Setup_loadDataForPermision_Process_Roles");
+            this.logService.log("Setup_loadDataForPermision_Process_Roles");
             for (const uri of requestUriArray) {
                 try {
                     let data = await this.apiService.callApi('Setup', 'POST', { id: uri });
-                    console.log("Setup_loadDataForPermision_Process_Roles response: ", data);
+                    this.logService.log("Setup_loadDataForPermision_Process_Roles response: ", data);
                 } catch (error) {
-                    console.log(error.message);
+                    this.logService.log(error.message);
                 }
             }
             return true;
         } catch (error) {
-            console.log("Setup_loadDataForPermision_Process_Roles: ", error.message);
+            this.logService.log("Setup_loadDataForPermision_Process_Roles: ", error.message);
             return false;
         }
     }
@@ -485,15 +487,15 @@ export class Setup extends Component {
     //step 1
     async CreateProposalManagerAdminGroup(AdGroupName) {
         try {
-            console.log("Setup_CreateProposalManagerAdminGroup", AdGroupName);
+            this.logService.log("Setup_CreateProposalManagerAdminGroup", AdGroupName);
             if (AdGroupName) {
                 let data = await this.apiService.callApi('Setup', 'POST', { id: `CreateProposalManagerAdminGroup/${AdGroupName}` });
-                console.log("Setup_CreateProposalManagerAdminGroup response: ", data);
+                this.logService.log("Setup_CreateProposalManagerAdminGroup response: ", data);
                 return true;
             } else
                 throw new Error("PMAddinName cannot be empty");
         } catch (error) {
-            console.log("Setup_CreateProposalManagerAdminGroup error : ", error.message);
+            this.logService.log("Setup_CreateProposalManagerAdminGroup error : ", error.message);
         }
     }
 
@@ -590,6 +592,29 @@ export class Setup extends Component {
             obj[key] = value;
             this.setState({ ProposalManagement_WebhookAddress });
         }
+    }
+    renderStep_10() {
+        const margin = { margin: '10px' };
+        const bold = { 'fontWeight': 'bold' };
+
+        return (
+            <div className='ms-Grid bg-white ibox-content p-10'>
+                <h4 style={bold} className="pageheading"><Trans>stepbusinnesprocess</Trans></h4>
+                <div>
+                    <span>
+                        <Trans>stepbusinessprocesslabel</Trans>
+                        <Trans>stepbusinessprocesslabel1</Trans>
+                    </span>
+                </div>
+                <br />
+                <ImportDealType apiService={this.apiService}/>
+                <br />
+                <div>
+                    <span>
+                        <Trans>stepbusinessprocesslabel2</Trans>
+                    </span>
+                </div>
+            </div>);
     }
 
     renderStep_9() {
@@ -837,6 +862,9 @@ export class Setup extends Component {
                     </div>
                     <div className='ms-Grid bg-white ibox-content'>
                         {this.renderStep_7()}
+                    </div>
+                    <div className='ms-Grid bg-white ibox-content'>
+                        {this.renderStep_10()}
                     </div>
                     <div className='ms-Grid bg-white ibox-content'>
                         {this.renderStep_8()}

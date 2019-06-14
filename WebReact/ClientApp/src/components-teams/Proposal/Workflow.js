@@ -9,14 +9,8 @@ import React, { Component } from 'react';
 import { Label } from 'office-ui-fabric-react/lib/Label';
 import { EmployeeStatusCard } from '../../components-teams/general/Opportunity/EmployeeStatusCard';
 import { GroupEmployeeStatusCard } from '../../components-teams/general/Opportunity/GroupEmployeeStatusCard';
-import {
-    Spinner,
-    SpinnerSize
-} from 'office-ui-fabric-react/lib/Spinner';
-import {
-    Persona,
-    PersonaSize
-} from 'office-ui-fabric-react/lib/Persona';
+import { Spinner, SpinnerSize } from 'office-ui-fabric-react/lib/Spinner';
+import { Persona, PersonaSize } from 'office-ui-fabric-react/lib/Persona';
 import '../teams.css';
 import { Trans } from "react-i18next";
 
@@ -26,6 +20,7 @@ export class Workflow extends Component {
     constructor(props) {
         super(props);
         this.authHelper = window.authHelper;
+        this.logService = this.props.logService;
         this.utils = window.utils;
 
         this.state = {
@@ -36,7 +31,7 @@ export class Workflow extends Component {
     }
 
     componentDidMount() {
-        console.log("code-review commments implementation");
+        this.logService.log("code-review commments implementation");
         this.getUserRoles();
     }
     getUserRoles() {

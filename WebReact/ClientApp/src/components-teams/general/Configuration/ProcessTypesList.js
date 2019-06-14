@@ -21,6 +21,7 @@ export class ProcessTypesList extends Component {
         super(props);
         this.utils = new Utils();
         this.apiService = this.props.apiService;
+        this.logService = this.props.logService;
         this.authHelper = window.authHelper;
         this.schema = {
             "id": "",
@@ -63,7 +64,6 @@ export class ProcessTypesList extends Component {
                 maxWidth: 300,
                 isRowHeader: true,
                 onRender: (item) => {
-                    //console.log("Permissions_onrender item : ",item)
                     return (
                         <div className="docs-DropdownExample">
                             <Dropdown
@@ -88,7 +88,6 @@ export class ProcessTypesList extends Component {
                 maxWidth: 300,
                 isRowHeader: true,
                 onRender: (item) => {
-                    // console.log("ProcessTypeList_log item : ",item)
                     return (
                         <div className="docs-DropdownExample">
                             <Dropdown
@@ -183,7 +182,7 @@ export class ProcessTypesList extends Component {
                 let rolesList = await this.utils.handleErrors(response).json();
 
                 rolesList = rolesList.map(role => { return { "key": role.key, "text": role.roleName }; });
-                console.log("ProcessTypeList_log getProcessRolesList ", rolesList);
+                this.logService.log("ProcessTypeList_log getProcessRolesList ", rolesList);
 
                 this.setState({ rolesList });
             })
@@ -247,7 +246,7 @@ export class ProcessTypesList extends Component {
     }
 
     async addRow(item) {
-        console.log("ProcessTypeList_log : addRow ", item);
+        this.logService.log("ProcessTypeList_log : addRow ", item);
         if (item.id.length === 0) {
             await this.addOrUpdateProcess(item, "POST");
         } else if (item.id.length > 0) {
@@ -256,10 +255,9 @@ export class ProcessTypesList extends Component {
     }
 
     onChangeProperty(e, item, property) {
-        let items = JSON.parse(JSON.stringify(this.state.items));
-        let updatedItem = item.id.length === 0 ? JSON.parse(JSON.stringify(this.state.item)) : item;
+        let items = this.state.items;
+        let updatedItem = item.id.length === 0 ? this.state.item : item;
         let changeFlag = false;
-        console.log("ProcessTypeList_log : item ", item, e.target, e.text);
 
         switch (property) {
             case "processStep":
@@ -294,8 +292,8 @@ export class ProcessTypesList extends Component {
                 }
             }
 
-            console.log("ProcessTypeList_log : updatedItem ", updatedItem);
-            console.log("ProcessTypeList_log : items ", items);
+            this.logService.log("ProcessTypeList_log : updatedItem ", updatedItem);
+            this.logService.log("ProcessTypeList_log : items ", items);
 
             this.setState({ item: updatedItem, items });
         }

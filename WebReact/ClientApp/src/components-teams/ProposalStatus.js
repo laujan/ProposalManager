@@ -81,6 +81,7 @@ export class ProposalStatus extends Component {
         super(props);
 
         this.apiService = this.props.apiService;
+        this.logService = this.props.logService;
         this.authHelper = window.authHelper;
         this.state = {
             fontSize: 16,
@@ -104,7 +105,7 @@ export class ProposalStatus extends Component {
     }
 
     async componentDidMount() {
-        console.log("FormalProposal_componentDidMount");
+        this.logService.log("FormalProposal_componentDidMount");
         let teamName = getQueryVariable('teamName');
         this.fnGetOpportunityData(teamName);
     }
@@ -182,7 +183,7 @@ export class ProposalStatus extends Component {
                 }
             })
             .catch(function (err) {
-                console.log("Error: OpportunityGetByName--");
+                this.logService.log("Error: OpportunityGetByName:", err);
                 this.setState({
                     loading: false,
                     haveGranularAccess: false
@@ -194,15 +195,15 @@ export class ProposalStatus extends Component {
         this.setState({ isUpdate: true, MessagebarText: <Trans>updating</Trans> });
         // API Update call        
         this.apiService.callApi('Opportunity', 'PATCH', { query: `id=${oppViewData.id}`, body: JSON.stringify(oppViewData) })
-            .catch(error => console.error('Error:', error))
+            .catch(error => this.logService.error('Error:', error))
             .then(response => {
                 if (response.ok) {
                     return response.json;
                 } else {
-                    console.log('Error...: ', response.statusText);
+                    this.logService.log('Error...: ', response.statusText);
                 }
             }).then(json => {
-                console.log(json);
+                this.logService.log(json);
                 this.setState({ MessagebarText: <Trans>updatedSuccessfully</Trans> });
                 setTimeout(function () { this.setState({ isUpdate: false, MessagebarText: "" }); }.bind(this), 3000);
             });
@@ -359,7 +360,7 @@ export class ProposalStatus extends Component {
                 <div className='ms-List-itemContent'>
                     <div className='ms-List-itemSections'>{item.displayName}</div>
                     <div className='ms-List-itemOwner'>
-                        <PeoplePickerTeamMembers teamMembers={this.state.peopleList} onChange={(e) => this.fnChangeOwnerNew(e, idx)} itemLimit='1' defaultSelectedUsers={item.owner.displayName.length > 0 ? [item.owner] : []} apiService={this.apiService}/>
+                        <PeoplePickerTeamMembers teamMembers={this.state.peopleList} onChange={(e) => this.fnChangeOwnerNew(e, idx)} itemLimit='1' defaultSelectedUsers={item.owner.displayName.length > 0 ? [item.owner] : []} apiService={this.apiService} logService={this.logService}/>
                     </div>
                     <div className='ms-List-itemStatus'>
                         <Dropdown

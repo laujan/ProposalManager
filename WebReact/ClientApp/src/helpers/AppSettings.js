@@ -20,6 +20,7 @@ const localStorePrefix = "env1_"; //Local Store Prefix.
 const teamsAppName = ""; //The short Name specified in the appllication manifest file.
 const reportId = ""; //PowerBI Report Id.
 const workspaceId = ""; //PowerBI WorkSpace Id.
+const logEnabled = false; //Client-side logging.
 
 export const appSettingsObject = {
     generalProposalManagementTeam,
@@ -32,5 +33,5 @@ export const appSettingsObject = {
 
 export default appSettingsObject;
 
-// Template tab enabled based on this falg in Configuration page
+// Template tab enabled based on this flag in Configuration page
 export const isTemplateEnabled = false;

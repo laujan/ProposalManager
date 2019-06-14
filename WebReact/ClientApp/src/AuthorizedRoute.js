@@ -11,13 +11,15 @@ import ApiService from './helpers/ApiService';
 import Accessdenied from './helpers/AccessDenied';
 import { PrimaryButton } from 'office-ui-fabric-react/lib/Button';
 import Utils from './helpers/Utils';
+import LoggingService from './helpers/LoggingService';
 
 export class AuthorizedRoute extends Route
 {
     constructor(props)
     {
-        console.log("AuthorizedRoute ctor", props);
         super(props);
+        this.logService = new LoggingService();
+        this.logService.log("AuthorizedRoute ctor", props);
         
         this.state = { isAuthorized: false, appSettings: {}, userProfile: {}, refreshRequired: false };
 
@@ -38,7 +40,7 @@ export class AuthorizedRoute extends Route
             microsoftTeams.initialize();
         }
         catch (err) {
-            console.log(err);
+            this.logService.log(err);
         }
     }
 
@@ -52,7 +54,7 @@ export class AuthorizedRoute extends Route
                 headers: { 'authorization': 'Bearer ' + apiToken }
             });
         } catch (error) {
-            console.log("AppTeams_getClientSettings error: ", error);
+            this.logService.log("AppTeams_getClientSettings error: ", error);
             return error;
         }
     }
@@ -74,9 +76,14 @@ export class AuthorizedRoute extends Route
         let user = this.authHelper.getUser();
         let loginHint = this.props.teamsContext.loginHint;
 
+        let isMobile = window.location.pathname.toLocaleLowerCase().includes("tabmob");
+        if (isMobile) {
+            this.handleMobileAuth(user, loginHint);
+        }
+
         if (user && user.displayableId === loginHint)
         {
-            console.log("AuthorizedRoute check user", user.displayableId, loginHint);
+            this.logService.log("AuthorizedRoute check user", user.displayableId, loginHint);
             let token = this.authHelper.getWebApiToken();
             this.authorizeUser(token);
         }
@@ -84,21 +91,21 @@ export class AuthorizedRoute extends Route
         {
             // The users are different then clear cache
             if (user && user.displayableId !== loginHint) {
-                console.log("clearing msal cache");
+                this.logService.log("clearing msal cache");
                 this.authHelper.clearCache();
             }
             
-            console.log("AuthorizedRoute_componentDidMount teamsContext", teamsContext);
+            this.logService.log("AuthorizedRoute_componentDidMount teamsContext", teamsContext);
             microsoftTeams.authentication.authenticate({
                 url: window.location.protocol + '//' + window.location.host + '/tab/tabauth' + "?channelName=" + teamsContext.channelName + "&teamName=" + teamsContext.teamName + "&channelId=" + teamsContext.channelId + "&locale=" + teamsContext.locale + "&loginHint=" + encodeURIComponent(teamsContext.loginHint),
                 height: 5000,
                 width: 800,
                 successCallback: (token) => {
-                    console.log("microsoftTeams.authentication success", token);
+                    this.logService.log("microsoftTeams.authentication success", token);
                     this.authorizeUser(token);
                 },
                 failureCallback: (message) => {
-                    console.log("microsoftTeams.authentication failureCallback:", message);
+                    this.logService.log("microsoftTeams.authentication failureCallback:", message);
                     this.setState({ isAuthorized: false });
                 }
             });
@@ -108,32 +115,43 @@ export class AuthorizedRoute extends Route
     async authorizeUser(token) {
         this.getClientSettings(token)
             .then(async response => {
-                console.log("getClientSettings", response);
+                this.logService.log("getClientSettings", response);
 
                 if (response.status === 401) {
                     this.setState({ refreshRequired: true });
                 }
 
                 let data = await response.json();
+                let appSettings = this.mapAppSettings(data);
                 let channelName = this.utils.getQueryVariable("channelName");
 
                 if (channelName && channelName.toLocaleLowerCase() !== "setup") {
                     let userProfileResponse = await this.authHelper.callGetUserProfile();
-                    this.setState({ isAuthorized: true, appSettings: this.mapAppSettings(data), userProfile: { ...userProfileResponse }, apiService: new ApiService(token) });
+                    this.setState({ isAuthorized: true, appSettings: appSettings, userProfile: { ...userProfileResponse }, apiService: new ApiService(token), logService: new LoggingService() });
                 }
                 else {
-                    this.setState({ isAuthorized: true, appSettings: this.mapAppSettings(data), apiService: new ApiService(token) });
+                    this.setState({ isAuthorized: true, appSettings: appSettings, apiService: new ApiService(token), logService: new LoggingService() });
                 }
             })
             .catch(err => {
-                console.log("Error retrieving client settings:", err);
+                this.logService.log("Error retrieving client settings:", err);
                 this.setState({ isAuthorized: false });
             });
     }
 
+    handleMobileAuth(user, loginHint) {
+        if (user && user.displayableId === loginHint) {
+            let token = this.authHelper.getWebApiToken();
+            this.authorizeUser(token);
+        }
+        else {
+            this.authHelper.loginRedirect();
+        }
+    }
+
     render()
     {
-        const { isAuthorized, appSettings, apiService, userProfile, refreshRequired } = this.state;
+        const { isAuthorized, appSettings, apiService, userProfile, refreshRequired, logService } = this.state;
         
         const { component: Component, ...rest} = this.props;
 
@@ -152,8 +170,8 @@ export class AuthorizedRoute extends Route
 
             if (isAuthorized)
             {
-                console.log("AuthorizedRoute authorized", appSettings, userProfile, this.props, this.state);
-                return <Component {...this.props} appSettings={appSettings} apiService={apiService} userProfile={userProfile}/>;
+                this.logService.log("AuthorizedRoute authorized", appSettings, userProfile, this.props, this.state);
+                return <Component {...this.props} appSettings={appSettings} apiService={apiService} userProfile={userProfile} logService={logService} />;
             }
             else
             {
