@@ -79,7 +79,7 @@ namespace Infrastructure.GraphApi
                 var member = $",\"members@odata.bind\": [\"{userId}\"]";
                 //remove unsupported charachters
                 Regex rx = new Regex(@"[^a-zA-Z0-9-.\/s]");
-                string mailNickname = rx.Replace(displayName,"");
+                string mailNickname = rx.Replace(displayName, "");
 
                 dynamic groupSettingsObject = new JObject();
                 groupSettingsObject.description = description;
@@ -87,8 +87,8 @@ namespace Infrastructure.GraphApi
                 groupSettingsObject.groupTypes = JToken.FromObject(groupTypesObject);
                 groupSettingsObject.mailEnabled = true;
                 groupSettingsObject.mailNickname = mailNickname;
-                groupSettingsObject.securityEnabled = false;                
-                var completeGroupSettingsObject = groupSettingsObject.ToString().Replace("}","") + owner + member +  "}";
+                groupSettingsObject.securityEnabled = false;
+                var completeGroupSettingsObject = groupSettingsObject.ToString().Replace("}", "") + owner + member + "}";
                 var requestUrl = _appOptions.GraphRequestUrl + "groups";
                 // Create the request message and add the content.
                 HttpRequestMessage hrm = new HttpRequestMessage(HttpMethod.Post, requestUrl)
@@ -280,7 +280,7 @@ namespace Infrastructure.GraphApi
 
                 JObject createGroup;
 
-                if(_userContext.User.Identity.Name != null)
+                if (_userContext.User.Identity.Name != null)
                 {
                     createGroup = await CreateGroupAsync(displayName, description);
                 }
@@ -334,7 +334,7 @@ namespace Infrastructure.GraphApi
                     _logger.LogInformation("CreateTeamAsync end.");
                     return responseJObject;
                 }
-               
+
             }
             catch (ServiceException ex)
             {
@@ -547,9 +547,9 @@ namespace Infrastructure.GraphApi
             }
         }
 
-        public async Task<System.Net.HttpStatusCode> AddTab(string displayName, string groupId, string channelId, string teamName,string baseURl)
+        public async Task<System.Net.HttpStatusCode> AddTab(string displayName, string groupId, string channelId, string teamName, string baseURl)
         {
-            
+
             // Add tab
             try
             {
@@ -617,7 +617,7 @@ namespace Infrastructure.GraphApi
                 Guard.Against.Null(groupId, nameof(groupId));
 
                 // Create JSON object to with team settings
-                var json = "{ \"teamsApp@odata.bind\":\"https://graph.microsoft.com/v1.0/appCatalogs/teamsApps/"+ await GetTeamsAppInstanceIdAsync() + "\" }";
+                var json = "{ \"teamsApp@odata.bind\":\"https://graph.microsoft.com/v1.0/appCatalogs/teamsApps/" + await GetTeamsAppInstanceIdAsync() + "\" }";
 
                 var requestUrl = _appOptions.GraphRequestUrl + "teams/" + groupId + "/installedApps";
 
@@ -1139,9 +1139,9 @@ namespace Infrastructure.GraphApi
                         {
                             throw new Exception($"Error retrieving TeamsAppInstanceId: {response.ReasonPhrase}");
                         }
-                });
+                    });
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _logger.LogError("Error retrieving TeamsAppInstanceId from catalog: " + ex.Message);
                 throw ex;

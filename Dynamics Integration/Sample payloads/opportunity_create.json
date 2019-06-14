@@ -1,0 +1,1028 @@
+{
+    "BusinessUnitId": "58541ada-a858-e911-a85f-000d3a4edd1c",
+    "CorrelationId": "f897b37e-1293-4601-84ac-6125f2318335",
+    "Depth": 1,
+    "InitiatingUserId": "cc03d281-c95c-e911-a979-000d3a1cc8fe",
+    "InputParameters": [
+      {
+        "key": "Target",
+        "value": {
+          "__type": "Entity:http://schemas.microsoft.com/xrm/2011/Contracts",
+          "Attributes": [
+            {
+              "key": "confirminterest",
+              "value": false
+            },
+            {
+              "key": "statecode",
+              "value": {
+                "__type": "OptionSetValue:http://schemas.microsoft.com/xrm/2011/Contracts",
+                "Value": 0
+              }
+            },
+            {
+              "key": "filedebrief",
+              "value": false
+            },
+            {
+              "key": "isprivate",
+              "value": false
+            },
+            {
+              "key": "msdyn_forecastcategory",
+              "value": {
+                "__type": "OptionSetValue:http://schemas.microsoft.com/xrm/2011/Contracts",
+                "Value": 100000001
+              }
+            },
+            {
+              "key": "traversedpath",
+              "value": null
+            },
+            {
+              "key": "resolvefeedback",
+              "value": false
+            },
+            {
+              "key": "salesstagecode",
+              "value": {
+                "__type": "OptionSetValue:http://schemas.microsoft.com/xrm/2011/Contracts",
+                "Value": 1
+              }
+            },
+            {
+              "key": "description",
+              "value": "test"
+            },
+            {
+              "key": "pursuitdecision",
+              "value": false
+            },
+            {
+              "key": "opportunityratingcode",
+              "value": {
+                "__type": "OptionSetValue:http://schemas.microsoft.com/xrm/2011/Contracts",
+                "Value": 2
+              }
+            },
+            {
+              "key": "identifypursuitteam",
+              "value": false
+            },
+            {
+              "key": "developproposal",
+              "value": false
+            },
+            {
+              "key": "prioritycode",
+              "value": {
+                "__type": "OptionSetValue:http://schemas.microsoft.com/xrm/2011/Contracts",
+                "Value": 1
+              }
+            },
+            {
+              "key": "captureproposalfeedback",
+              "value": false
+            },
+            {
+              "key": "ownerid",
+              "value": {
+                "__type": "EntityReference:http://schemas.microsoft.com/xrm/2011/Contracts",
+                "Id": "cc03d281-c95c-e911-a979-000d3a1cc8fe",
+                "KeyAttributes": [],
+                "LogicalName": "systemuser",
+                "Name": null,
+                "RowVersion": null
+              }
+            },
+            {
+              "key": "totallineitemdiscountamount",
+              "value": {
+                "__type": "Money:http://schemas.microsoft.com/xrm/2011/Contracts",
+                "Value": 0
+              }
+            },
+            {
+              "key": "name",
+              "value": "DealType Test II"
+            },
+            {
+              "key": "stageid",
+              "value": null
+            },
+            {
+              "key": "sendthankyounote",
+              "value": false
+            },
+            {
+              "key": "totalamountlessfreight",
+              "value": {
+                "__type": "Money:http://schemas.microsoft.com/xrm/2011/Contracts",
+                "Value": 0
+              }
+            },
+            {
+              "key": "createdon",
+              "value": "/Date(1560529070000)/"
+            },
+            {
+              "key": "identifycompetitors",
+              "value": false
+            },
+            {
+              "key": "transactioncurrencyid",
+              "value": {
+                "__type": "EntityReference:http://schemas.microsoft.com/xrm/2011/Contracts",
+                "Id": "71d20dd9-b658-e911-a85f-000d3a4edd1c",
+                "KeyAttributes": [],
+                "LogicalName": "transactioncurrency",
+                "Name": null,
+                "RowVersion": null
+              }
+            },
+            {
+              "key": "isrevenuesystemcalculated",
+              "value": false
+            },
+            {
+              "key": "pricingerrorcode",
+              "value": {
+                "__type": "OptionSetValue:http://schemas.microsoft.com/xrm/2011/Contracts",
+                "Value": 0
+              }
+            },
+            {
+              "key": "parentcontactid",
+              "value": {
+                "__type": "EntityReference:http://schemas.microsoft.com/xrm/2011/Contracts",
+                "Id": "96b8c134-7370-e911-a957-000d3a1bca89",
+                "KeyAttributes": [],
+                "LogicalName": "contact",
+                "Name": null,
+                "RowVersion": null
+              }
+            },
+            {
+              "key": "totaldiscountamount",
+              "value": {
+                "__type": "Money:http://schemas.microsoft.com/xrm/2011/Contracts",
+                "Value": 0
+              }
+            },
+            {
+              "key": "opportunityid",
+              "value": "0f82f6f2-bf8e-e911-a95a-000d3a1bca89"
+            },
+            {
+              "key": "modifiedby",
+              "value": {
+                "__type": "EntityReference:http://schemas.microsoft.com/xrm/2011/Contracts",
+                "Id": "cc03d281-c95c-e911-a979-000d3a1cc8fe",
+                "KeyAttributes": [],
+                "LogicalName": "systemuser",
+                "Name": null,
+                "RowVersion": null
+              }
+            },
+            {
+              "key": "identifycustomercontacts",
+              "value": false
+            },
+            {
+              "key": "statuscode",
+              "value": {
+                "__type": "OptionSetValue:http://schemas.microsoft.com/xrm/2011/Contracts",
+                "Value": 1
+              }
+            },
+            {
+              "key": "modifiedonbehalfby",
+              "value": null
+            },
+            {
+              "key": "decisionmaker",
+              "value": false
+            },
+            {
+              "key": "evaluatefit",
+              "value": false
+            },
+            {
+              "key": "owningbusinessunit",
+              "value": {
+                "__type": "EntityReference:http://schemas.microsoft.com/xrm/2011/Contracts",
+                "Id": "58541ada-a858-e911-a85f-000d3a4edd1c",
+                "KeyAttributes": [],
+                "LogicalName": "businessunit",
+                "Name": null,
+                "RowVersion": null
+              }
+            },
+            {
+              "key": "totalamount",
+              "value": {
+                "__type": "Money:http://schemas.microsoft.com/xrm/2011/Contracts",
+                "Value": 0
+              }
+            },
+            {
+              "key": "totallineitemamount",
+              "value": {
+                "__type": "Money:http://schemas.microsoft.com/xrm/2011/Contracts",
+                "Value": 0
+              }
+            },
+            {
+              "key": "totaltax",
+              "value": {
+                "__type": "Money:http://schemas.microsoft.com/xrm/2011/Contracts",
+                "Value": 0
+              }
+            },
+            {
+              "key": "presentfinalproposal",
+              "value": false
+            },
+            {
+              "key": "presentproposal",
+              "value": false
+            },
+            {
+              "key": "createdby",
+              "value": {
+                "__type": "EntityReference:http://schemas.microsoft.com/xrm/2011/Contracts",
+                "Id": "cc03d281-c95c-e911-a979-000d3a1cc8fe",
+                "KeyAttributes": [],
+                "LogicalName": "systemuser",
+                "Name": null,
+                "RowVersion": null
+              }
+            },
+            {
+              "key": "completefinalproposal",
+              "value": false
+            },
+            {
+              "key": "processid",
+              "value": "00000000-0000-0000-0000-000000000000"
+            },
+            {
+              "key": "completeinternalreview",
+              "value": false
+            },
+            {
+              "key": "msbnk_dealtype",
+              "value": {
+                "__type": "OptionSetValue:http://schemas.microsoft.com/xrm/2011/Contracts",
+                "Value": 100000000
+              }
+            },
+            {
+              "key": "customerid",
+              "value": {
+                "__type": "EntityReference:http://schemas.microsoft.com/xrm/2011/Contracts",
+                "Id": "96b8c134-7370-e911-a957-000d3a1bca89",
+                "KeyAttributes": [],
+                "LogicalName": "contact",
+                "Name": null,
+                "RowVersion": null
+              }
+            },
+            {
+              "key": "modifiedon",
+              "value": "/Date(1560529070000)/"
+            },
+            {
+              "key": "participatesinworkflow",
+              "value": false
+            },
+            {
+              "key": "skippricecalculation",
+              "value": {
+                "__type": "OptionSetValue:http://schemas.microsoft.com/xrm/2011/Contracts",
+                "Value": 0
+              }
+            },
+            {
+              "key": "exchangerate",
+              "value": 1
+            },
+            {
+              "key": "totallineitemamount_base",
+              "value": {
+                "__type": "Money:http://schemas.microsoft.com/xrm/2011/Contracts",
+                "Value": 0
+              }
+            },
+            {
+              "key": "totallineitemdiscountamount_base",
+              "value": {
+                "__type": "Money:http://schemas.microsoft.com/xrm/2011/Contracts",
+                "Value": 0
+              }
+            },
+            {
+              "key": "totalamountlessfreight_base",
+              "value": {
+                "__type": "Money:http://schemas.microsoft.com/xrm/2011/Contracts",
+                "Value": 0
+              }
+            },
+            {
+              "key": "totaldiscountamount_base",
+              "value": {
+                "__type": "Money:http://schemas.microsoft.com/xrm/2011/Contracts",
+                "Value": 0
+              }
+            },
+            {
+              "key": "totalamount_base",
+              "value": {
+                "__type": "Money:http://schemas.microsoft.com/xrm/2011/Contracts",
+                "Value": 0
+              }
+            },
+            {
+              "key": "totaltax_base",
+              "value": {
+                "__type": "Money:http://schemas.microsoft.com/xrm/2011/Contracts",
+                "Value": 0
+              }
+            }
+          ],
+          "EntityState": null,
+          "FormattedValues": [
+            {
+              "key": "confirminterest",
+              "value": "SÃ­"
+            },
+            {
+              "key": "statecode",
+              "value": "Abierta"
+            },
+            {
+              "key": "filedebrief",
+              "value": "Marcar como terminado"
+            },
+            {
+              "key": "isprivate",
+              "value": "No"
+            },
+            {
+              "key": "msdyn_forecastcategory",
+              "value": "CanalizaciÃ³n (baja confianza)"
+            },
+            {
+              "key": "resolvefeedback",
+              "value": "SÃ­"
+            },
+            {
+              "key": "salesstagecode",
+              "value": "Valor predeterminado"
+            },
+            {
+              "key": "pursuitdecision",
+              "value": "SÃ­"
+            },
+            {
+              "key": "opportunityratingcode",
+              "value": "Algo interesado"
+            },
+            {
+              "key": "identifypursuitteam",
+              "value": "Marcar como terminado"
+            },
+            {
+              "key": "developproposal",
+              "value": "Marcar como terminado"
+            },
+            {
+              "key": "prioritycode",
+              "value": "Valor predeterminado"
+            },
+            {
+              "key": "captureproposalfeedback",
+              "value": "SÃ­"
+            },
+            {
+              "key": "totallineitemdiscountamount",
+              "value": "$0.00"
+            },
+            {
+              "key": "sendthankyounote",
+              "value": "Marcar como terminado"
+            },
+            {
+              "key": "totalamountlessfreight",
+              "value": "$0.00"
+            },
+            {
+              "key": "createdon",
+              "value": "2019-06-14T13:17:50-03:00"
+            },
+            {
+              "key": "identifycompetitors",
+              "value": "Marcar como terminado"
+            },
+            {
+              "key": "isrevenuesystemcalculated",
+              "value": "Proporcionado por el usuario"
+            },
+            {
+              "key": "pricingerrorcode",
+              "value": "Ninguno"
+            },
+            {
+              "key": "totaldiscountamount",
+              "value": "$0.00"
+            },
+            {
+              "key": "identifycustomercontacts",
+              "value": "Marcar como terminado"
+            },
+            {
+              "key": "statuscode",
+              "value": "En curso"
+            },
+            {
+              "key": "decisionmaker",
+              "value": "Marcar como terminado"
+            },
+            {
+              "key": "evaluatefit",
+              "value": "SÃ­"
+            },
+            {
+              "key": "totalamount",
+              "value": "$0.00"
+            },
+            {
+              "key": "totallineitemamount",
+              "value": "$0.00"
+            },
+            {
+              "key": "totaltax",
+              "value": "$0.00"
+            },
+            {
+              "key": "presentfinalproposal",
+              "value": "Marcar como terminado"
+            },
+            {
+              "key": "presentproposal",
+              "value": "Marcar como terminado"
+            },
+            {
+              "key": "completefinalproposal",
+              "value": "Marcar como terminado"
+            },
+            {
+              "key": "completeinternalreview",
+              "value": "Marcar como terminado"
+            },
+            {
+              "key": "msbnk_dealtype",
+              "value": "Normal Deal"
+            },
+            {
+              "key": "modifiedon",
+              "value": "2019-06-14T13:17:50-03:00"
+            },
+            {
+              "key": "participatesinworkflow",
+              "value": "No"
+            },
+            {
+              "key": "skippricecalculation",
+              "value": "DoPriceCalcAlways"
+            }
+          ],
+          "Id": "0f82f6f2-bf8e-e911-a95a-000d3a1bca89",
+          "KeyAttributes": [],
+          "LogicalName": "opportunity",
+          "RelatedEntities": [],
+          "RowVersion": null
+        }
+      }
+    ],
+    "IsExecutingOffline": false,
+    "IsInTransaction": false,
+    "IsOfflinePlayback": false,
+    "IsolationMode": 1,
+    "MessageName": "Create",
+    "Mode": 1,
+    "OperationCreatedOn": "/Date(1560529070000+0000)/",
+    "OperationId": "1282f6f2-bf8e-e911-a95a-000d3a1bca89",
+    "OrganizationId": "bfddc525-7e84-4d76-a946-a2a895fb8887",
+    "OrganizationName": "orgfecc0b84",
+    "OutputParameters": [
+      {
+        "key": "id",
+        "value": "0f82f6f2-bf8e-e911-a95a-000d3a1bca89"
+      }
+    ],
+    "OwningExtension": {
+      "Id": "67440e11-6570-e911-a957-000d3a1bca89",
+      "KeyAttributes": [],
+      "LogicalName": "sdkmessageprocessingstep",
+      "Name": null,
+      "RowVersion": null
+    },
+    "ParentContext": {
+      "BusinessUnitId": "58541ada-a858-e911-a85f-000d3a4edd1c",
+      "CorrelationId": "f897b37e-1293-4601-84ac-6125f2318335",
+      "Depth": 1,
+      "InitiatingUserId": "cc03d281-c95c-e911-a979-000d3a1cc8fe",
+      "InputParameters": [
+        {
+          "key": "Target",
+          "value": {
+            "__type": "Entity:http://schemas.microsoft.com/xrm/2011/Contracts",
+            "Attributes": [
+              {
+                "key": "presentfinalproposal",
+                "value": false
+              },
+              {
+                "key": "developproposal",
+                "value": false
+              },
+              {
+                "key": "isrevenuesystemcalculated",
+                "value": false
+              },
+              {
+                "key": "presentproposal",
+                "value": false
+              },
+              {
+                "key": "completefinalproposal",
+                "value": false
+              },
+              {
+                "key": "msbnk_dealtype",
+                "value": {
+                  "__type": "OptionSetValue:http://schemas.microsoft.com/xrm/2011/Contracts",
+                  "Value": 100000000
+                }
+              },
+              {
+                "key": "parentcontactid",
+                "value": {
+                  "__type": "EntityReference:http://schemas.microsoft.com/xrm/2011/Contracts",
+                  "Id": "96b8c134-7370-e911-a957-000d3a1bca89",
+                  "KeyAttributes": [],
+                  "LogicalName": "contact",
+                  "Name": null,
+                  "RowVersion": null
+                }
+              },
+              {
+                "key": "statuscode",
+                "value": {
+                  "__type": "OptionSetValue:http://schemas.microsoft.com/xrm/2011/Contracts",
+                  "Value": 1
+                }
+              },
+              {
+                "key": "identifypursuitteam",
+                "value": false
+              },
+              {
+                "key": "name",
+                "value": "DealType Test II"
+              },
+              {
+                "key": "filedebrief",
+                "value": false
+              },
+              {
+                "key": "sendthankyounote",
+                "value": false
+              },
+              {
+                "key": "identifycompetitors",
+                "value": false
+              },
+              {
+                "key": "completeinternalreview",
+                "value": false
+              },
+              {
+                "key": "description",
+                "value": "test"
+              },
+              {
+                "key": "traversedpath",
+                "value": ""
+              },
+              {
+                "key": "processid",
+                "value": "00000000-0000-0000-0000-000000000000"
+              },
+              {
+                "key": "decisionmaker",
+                "value": false
+              },
+              {
+                "key": "transactioncurrencyid",
+                "value": {
+                  "__type": "EntityReference:http://schemas.microsoft.com/xrm/2011/Contracts",
+                  "Id": "71d20dd9-b658-e911-a85f-000d3a4edd1c",
+                  "KeyAttributes": [],
+                  "LogicalName": "transactioncurrency",
+                  "Name": null,
+                  "RowVersion": null
+                }
+              },
+              {
+                "key": "ownerid",
+                "value": {
+                  "__type": "EntityReference:http://schemas.microsoft.com/xrm/2011/Contracts",
+                  "Id": "cc03d281-c95c-e911-a979-000d3a1cc8fe",
+                  "KeyAttributes": [],
+                  "LogicalName": "systemuser",
+                  "Name": null,
+                  "RowVersion": null
+                }
+              },
+              {
+                "key": "stageid",
+                "value": null
+              },
+              {
+                "key": "identifycustomercontacts",
+                "value": false
+              },
+              {
+                "key": "pursuitdecision",
+                "value": false
+              },
+              {
+                "key": "confirminterest",
+                "value": false
+              },
+              {
+                "key": "captureproposalfeedback",
+                "value": false
+              },
+              {
+                "key": "prioritycode",
+                "value": {
+                  "__type": "OptionSetValue:http://schemas.microsoft.com/xrm/2011/Contracts",
+                  "Value": 1
+                }
+              },
+              {
+                "key": "skippricecalculation",
+                "value": {
+                  "__type": "OptionSetValue:http://schemas.microsoft.com/xrm/2011/Contracts",
+                  "Value": 0
+                }
+              },
+              {
+                "key": "evaluatefit",
+                "value": false
+              },
+              {
+                "key": "pricingerrorcode",
+                "value": {
+                  "__type": "OptionSetValue:http://schemas.microsoft.com/xrm/2011/Contracts",
+                  "Value": 0
+                }
+              },
+              {
+                "key": "resolvefeedback",
+                "value": false
+              },
+              {
+                "key": "participatesinworkflow",
+                "value": false
+              },
+              {
+                "key": "salesstagecode",
+                "value": {
+                  "__type": "OptionSetValue:http://schemas.microsoft.com/xrm/2011/Contracts",
+                  "Value": 1
+                }
+              },
+              {
+                "key": "opportunityratingcode",
+                "value": {
+                  "__type": "OptionSetValue:http://schemas.microsoft.com/xrm/2011/Contracts",
+                  "Value": 2
+                }
+              },
+              {
+                "key": "msdyn_forecastcategory",
+                "value": {
+                  "__type": "OptionSetValue:http://schemas.microsoft.com/xrm/2011/Contracts",
+                  "Value": 100000001
+                }
+              },
+              {
+                "key": "opportunityid",
+                "value": "0f82f6f2-bf8e-e911-a95a-000d3a1bca89"
+              },
+              {
+                "key": "totallineitemamount",
+                "value": {
+                  "__type": "Money:http://schemas.microsoft.com/xrm/2011/Contracts",
+                  "Value": 0
+                }
+              },
+              {
+                "key": "totallineitemdiscountamount",
+                "value": {
+                  "__type": "Money:http://schemas.microsoft.com/xrm/2011/Contracts",
+                  "Value": 0
+                }
+              },
+              {
+                "key": "totalamountlessfreight",
+                "value": {
+                  "__type": "Money:http://schemas.microsoft.com/xrm/2011/Contracts",
+                  "Value": 0
+                }
+              },
+              {
+                "key": "totalamount",
+                "value": {
+                  "__type": "Money:http://schemas.microsoft.com/xrm/2011/Contracts",
+                  "Value": 0
+                }
+              },
+              {
+                "key": "totaldiscountamount",
+                "value": {
+                  "__type": "Money:http://schemas.microsoft.com/xrm/2011/Contracts",
+                  "Value": 0
+                }
+              },
+              {
+                "key": "totaltax",
+                "value": {
+                  "__type": "Money:http://schemas.microsoft.com/xrm/2011/Contracts",
+                  "Value": 0
+                }
+              },
+              {
+                "key": "isprivate",
+                "value": false
+              },
+              {
+                "key": "customerid",
+                "value": {
+                  "__type": "EntityReference:http://schemas.microsoft.com/xrm/2011/Contracts",
+                  "Id": "96b8c134-7370-e911-a957-000d3a1bca89",
+                  "KeyAttributes": [],
+                  "LogicalName": "contact",
+                  "Name": null,
+                  "RowVersion": null
+                }
+              },
+              {
+                "key": "statecode",
+                "value": {
+                  "__type": "OptionSetValue:http://schemas.microsoft.com/xrm/2011/Contracts",
+                  "Value": 0
+                }
+              }
+            ],
+            "EntityState": null,
+            "FormattedValues": [
+              {
+                "key": "presentfinalproposal",
+                "value": "False"
+              },
+              {
+                "key": "developproposal",
+                "value": "False"
+              },
+              {
+                "key": "isrevenuesystemcalculated",
+                "value": "False"
+              },
+              {
+                "key": "presentproposal",
+                "value": "False"
+              },
+              {
+                "key": "completefinalproposal",
+                "value": "False"
+              },
+              {
+                "key": "identifypursuitteam",
+                "value": "False"
+              },
+              {
+                "key": "filedebrief",
+                "value": "False"
+              },
+              {
+                "key": "sendthankyounote",
+                "value": "False"
+              },
+              {
+                "key": "identifycompetitors",
+                "value": "False"
+              },
+              {
+                "key": "completeinternalreview",
+                "value": "False"
+              },
+              {
+                "key": "decisionmaker",
+                "value": "False"
+              },
+              {
+                "key": "identifycustomercontacts",
+                "value": "False"
+              },
+              {
+                "key": "pursuitdecision",
+                "value": "False"
+              },
+              {
+                "key": "confirminterest",
+                "value": "False"
+              },
+              {
+                "key": "captureproposalfeedback",
+                "value": "False"
+              },
+              {
+                "key": "prioritycode",
+                "value": ""
+              },
+              {
+                "key": "skippricecalculation",
+                "value": ""
+              },
+              {
+                "key": "evaluatefit",
+                "value": "False"
+              },
+              {
+                "key": "pricingerrorcode",
+                "value": ""
+              },
+              {
+                "key": "resolvefeedback",
+                "value": "False"
+              },
+              {
+                "key": "participatesinworkflow",
+                "value": "False"
+              },
+              {
+                "key": "salesstagecode",
+                "value": ""
+              },
+              {
+                "key": "opportunityratingcode",
+                "value": ""
+              },
+              {
+                "key": "msdyn_forecastcategory",
+                "value": ""
+              }
+            ],
+            "Id": "0f82f6f2-bf8e-e911-a95a-000d3a1bca89",
+            "KeyAttributes": [],
+            "LogicalName": "opportunity",
+            "RelatedEntities": [],
+            "RowVersion": null
+          }
+        },
+        {
+          "key": "SuppressDuplicateDetection",
+          "value": false
+        }
+      ],
+      "IsExecutingOffline": false,
+      "IsInTransaction": false,
+      "IsOfflinePlayback": false,
+      "IsolationMode": 1,
+      "MessageName": "Create",
+      "Mode": 1,
+      "OperationCreatedOn": "/Date(1560529070000+0000)/",
+      "OperationId": "1282f6f2-bf8e-e911-a95a-000d3a1bca89",
+      "OrganizationId": "bfddc525-7e84-4d76-a946-a2a895fb8887",
+      "OrganizationName": "orgfecc0b84",
+      "OutputParameters": [],
+      "OwningExtension": {
+        "Id": "67440e11-6570-e911-a957-000d3a1bca89",
+        "KeyAttributes": [],
+        "LogicalName": "sdkmessageprocessingstep",
+        "Name": null,
+        "RowVersion": null
+      },
+      "ParentContext": {
+        "BusinessUnitId": "58541ada-a858-e911-a85f-000d3a4edd1c",
+        "CorrelationId": "f897b37e-1293-4601-84ac-6125f2318335",
+        "Depth": 1,
+        "InitiatingUserId": "cc03d281-c95c-e911-a979-000d3a1cc8fe",
+        "InputParameters": [
+          {
+            "key": "Requests",
+            "value": null
+          },
+          {
+            "key": "ReturnResponses",
+            "value": true
+          }
+        ],
+        "IsExecutingOffline": false,
+        "IsInTransaction": false,
+        "IsOfflinePlayback": false,
+        "IsolationMode": 1,
+        "MessageName": "Create",
+        "Mode": 1,
+        "OperationCreatedOn": "/Date(1560529070000+0000)/",
+        "OperationId": "1282f6f2-bf8e-e911-a95a-000d3a1bca89",
+        "OrganizationId": "bfddc525-7e84-4d76-a946-a2a895fb8887",
+        "OrganizationName": "orgfecc0b84",
+        "OutputParameters": [],
+        "OwningExtension": {
+          "Id": "67440e11-6570-e911-a957-000d3a1bca89",
+          "KeyAttributes": [],
+          "LogicalName": "sdkmessageprocessingstep",
+          "Name": null,
+          "RowVersion": null
+        },
+        "ParentContext": null,
+        "PostEntityImages": [],
+        "PreEntityImages": [],
+        "PrimaryEntityId": "0f82f6f2-bf8e-e911-a95a-000d3a1bca89",
+        "PrimaryEntityName": "none",
+        "RequestId": "6f586bcb-f564-4108-b029-b99abc4ab5e2",
+        "SecondaryEntityName": "none",
+        "SharedVariables": [
+          {
+            "key": "ChangedEntityTypes",
+            "value": [
+              {
+                "__type": "KeyValuePairOfstringstring:#System.Collections.Generic",
+                "key": "opportunity",
+                "value": "Update"
+              }
+            ]
+          }
+        ],
+        "Stage": 30,
+        "UserId": "cc03d281-c95c-e911-a979-000d3a1cc8fe"
+      },
+      "PostEntityImages": [],
+      "PreEntityImages": [],
+      "PrimaryEntityId": "0f82f6f2-bf8e-e911-a95a-000d3a1bca89",
+      "PrimaryEntityName": "opportunity",
+      "RequestId": "6f586bcb-f564-4108-b029-b99abc4ab5e2",
+      "SecondaryEntityName": "none",
+      "SharedVariables": [
+        {
+          "key": "DefaultsAddedFlag",
+          "value": true
+        }
+      ],
+      "Stage": 30,
+      "UserId": "cc03d281-c95c-e911-a979-000d3a1cc8fe"
+    },
+    "PostEntityImages": [
+      {
+        "key": "AsynchronousStepPrimaryName",
+        "value": {
+          "Attributes": [
+            {
+              "key": "name",
+              "value": "DealType Test II"
+            },
+            {
+              "key": "opportunityid",
+              "value": "0f82f6f2-bf8e-e911-a95a-000d3a1bca89"
+            }
+          ],
+          "EntityState": null,
+          "FormattedValues": [],
+          "Id": "0f82f6f2-bf8e-e911-a95a-000d3a1bca89",
+          "KeyAttributes": [],
+          "LogicalName": "opportunity",
+          "RelatedEntities": [],
+          "RowVersion": null
+        }
+      }
+    ],
+    "PreEntityImages": [],
+    "PrimaryEntityId": "0f82f6f2-bf8e-e911-a95a-000d3a1bca89",
+    "PrimaryEntityName": "opportunity",
+    "RequestId": "6f586bcb-f564-4108-b029-b99abc4ab5e2",
+    "SecondaryEntityName": "none",
+    "SharedVariables": [
+      {
+        "key": "DefaultsAddedFlag",
+        "value": true
+      }
+    ],
+    "Stage": 40,
+    "UserId": "cc03d281-c95c-e911-a979-000d3a1cc8fe"
+  }

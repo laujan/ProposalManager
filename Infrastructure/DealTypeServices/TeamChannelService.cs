@@ -28,7 +28,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace Infrastructure.DealTypeServices
 {
-    public class TeamChannelService  : BaseService<TeamChannelService>, ITeamChannelService
+    public class TeamChannelService : BaseService<TeamChannelService>, ITeamChannelService
     {
         private readonly CardNotificationService _cardNotificationService;
         private readonly IAuthorizationService _authorizationService;
@@ -91,11 +91,11 @@ namespace Infrastructure.DealTypeServices
 
                 var groupID = String.Empty;
                 try
-                {                    
+                {
                     var response = await _graphTeamsAppService.CreateTeamAsync(opportunity.DisplayName, memberId, requestId);
                     groupID = response["id"].ToString();
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     throw new ResponseException($"RequestId: {requestId} - CreateWorkflowAsync Service Exception: {ex}");
                 }
@@ -118,7 +118,7 @@ namespace Infrastructure.DealTypeServices
 
                 foreach (var process in opportunity.Content.Template.ProcessList)
                 {
-                    if (process.Channel.ToLower() != "none" && process.ProcessType.ToLower() !="none")
+                    if (process.Channel.ToLower() != "none" && process.ProcessType.ToLower() != "none")
                     {
                         var response = await _graphTeamsAppService.CreateChannelAsync(groupID, process.Channel, process.Channel + " Channel");
                         channelInfo.Add(new Tuple<string, string>(process.Channel, response["id"].ToString()));
@@ -226,18 +226,18 @@ namespace Infrastructure.DealTypeServices
                 var channelInfo = new List<Tuple<string, string>>();
                 foreach (var process in opportunity.Content.Template.ProcessList)
                 {
-                    if (process.Channel.ToLower() != "none" && process.ProcessType.ToLower() !="none")
+                    if (process.Channel.ToLower() != "none" && process.ProcessType.ToLower() != "none")
                     {
                         try
                         {
                             var response = await _graphTeamsAppService.CreateChannelAsync(groupID, process.Channel, process.Channel + " Channel");
                             channelInfo.Add(new Tuple<string, string>(process.Channel, response["id"].ToString()));
                         }
-                        catch(Exception ex)
+                        catch (Exception ex)
                         {
                             _logger.LogError($"RequestId: {requestId} - Adding new channel Exception: {ex}");
                         }
-                     
+
                     }
                 }
 

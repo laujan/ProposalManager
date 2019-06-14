@@ -115,7 +115,7 @@ namespace Infrastructure.Services
                         opportunityFieldsJson.TemplateLoaded = opportunity.TemplateLoaded.ToString();
                     }
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     _logger.LogError($"RequestId: {requestId} - OpportunityRepository_CreateItemAsync create dashboard entry Exception: {ex}");
                 }
@@ -273,7 +273,7 @@ namespace Infrastructure.Services
                         throw new AccessDeniedException($"RequestId: {requestId} - OpportunityRepository_GetItemByIdAsync current user: {currentUser} AccessDeniedException");
                     }
                 }
-    
+
                 oppArtifact.Id = obj.SelectToken("id")?.ToString();
                 oppArtifact.TemplateLoaded = obj.SelectToken("TemplateLoaded") != null ? obj.SelectToken("TemplateLoaded").ToString() == "True" : false;
                 return oppArtifact;
@@ -294,7 +294,7 @@ namespace Infrastructure.Services
                 Guard.Against.NullOrEmpty(name, nameof(name), requestId);
 
                 //Granular Access : Start
-                var access = await CheckAccessAsync(PermissionNeededTo.ReadPartial,PermissionNeededTo.Read, PermissionNeededTo.ReadAll, requestId);
+                var access = await CheckAccessAsync(PermissionNeededTo.ReadPartial, PermissionNeededTo.Read, PermissionNeededTo.ReadAll, requestId);
                 var currentUser = (_userContext.User.Claims).ToList().Find(x => x.Type == "preferred_username")?.Value;
                 if (!access.haveSuperAcess && !access.haveAccess && !access.havePartial)
                 {
@@ -344,14 +344,14 @@ namespace Infrastructure.Services
 
                             //Granular Access : Start
                             if (!access.haveSuperAcess)
-                               {
-                                   if (!CheckTeamMember(oppArtifact,currentUser))
-                                   {
-                                       // This user is not having any write permissions, so he won't be able to update
-                                       _logger.LogError($"RequestId: {requestId} - OpportunityRepository_GetItemByIdAsync current user: {currentUser} AccessDeniedException");
-                                       throw new AccessDeniedException($"RequestId: {requestId} - OpportunityRepository_GetItemByIdAsync current user: {currentUser} AccessDeniedException");
-                                   }
-                               }
+                            {
+                                if (!CheckTeamMember(oppArtifact, currentUser))
+                                {
+                                    // This user is not having any write permissions, so he won't be able to update
+                                    _logger.LogError($"RequestId: {requestId} - OpportunityRepository_GetItemByIdAsync current user: {currentUser} AccessDeniedException");
+                                    throw new AccessDeniedException($"RequestId: {requestId} - OpportunityRepository_GetItemByIdAsync current user: {currentUser} AccessDeniedException");
+                                }
+                            }
                             //Granular Access : End
                             return oppArtifact;
                         }
@@ -380,7 +380,7 @@ namespace Infrastructure.Services
                 Guard.Against.NullOrEmpty(reference, nameof(reference), requestId);
 
                 //Granular Access : Start
-                var access = await CheckAccessAsync(PermissionNeededTo.ReadPartial,PermissionNeededTo.Read, PermissionNeededTo.ReadAll, requestId);
+                var access = await CheckAccessAsync(PermissionNeededTo.ReadPartial, PermissionNeededTo.Read, PermissionNeededTo.ReadAll, requestId);
                 var currentUser = (_userContext.User.Claims).ToList().Find(x => x.Type == "preferred_username")?.Value;
                 if (!access.haveSuperAcess && !access.haveAccess && !access.havePartial)
                 {
@@ -424,7 +424,7 @@ namespace Infrastructure.Services
                             //Granular Access : Start
                             if (!access.haveSuperAcess)
                             {
-                                if (!CheckTeamMember(oppArtifact,currentUser))
+                                if (!CheckTeamMember(oppArtifact, currentUser))
                                 {
                                     // This user is not having any write permissions, so he won't be able to update
                                     _logger.LogError($"RequestId: {requestId} - OpportunityRepository_GetItemByIdAsync current user: {currentUser} AccessDeniedException");
@@ -464,7 +464,7 @@ namespace Infrastructure.Services
                 };
 
                 //Granular Access : Start
-                var access = await CheckAccessAsync(PermissionNeededTo.ReadPartial,PermissionNeededTo.Read, PermissionNeededTo.ReadAll, requestId);
+                var access = await CheckAccessAsync(PermissionNeededTo.ReadPartial, PermissionNeededTo.Read, PermissionNeededTo.ReadAll, requestId);
                 var currentUser = (_userContext.User.Claims).ToList().Find(x => x.Type == "preferred_username")?.Value;
                 //Granular Access : End
                 var currentUserScope = (_userContext.User.Claims).ToList().Find(x => x.Type == "http://schemas.microsoft.com/identity/claims/scope")?.Value;
@@ -494,7 +494,8 @@ namespace Infrastructure.Services
                 if (callerUser.Fields.UserRoles.Find(x => x.TeamsMembership == TeamsMembership.Owner) != null)
                 {
                     isOwner = true;
-                }else if(callerUser.Fields.UserRoles.Find(x => x.TeamsMembership == TeamsMembership.Member) != null)
+                }
+                else if (callerUser.Fields.UserRoles.Find(x => x.TeamsMembership == TeamsMembership.Member) != null)
                 {
                     isMember = true;
                 }
@@ -552,7 +553,7 @@ namespace Infrastructure.Services
                 Guard.Against.Null(id, nameof(id), requestId);
 
                 //Granular Access : Start
-                var access = await CheckAccessAsync(PermissionNeededTo.WritePartial ,PermissionNeededTo.Write, PermissionNeededTo.WriteAll, requestId);
+                var access = await CheckAccessAsync(PermissionNeededTo.WritePartial, PermissionNeededTo.Write, PermissionNeededTo.WriteAll, requestId);
                 var currentUser = (_userContext.User.Claims).ToList().Find(x => x.Type == "preferred_username")?.Value;
                 if (!access.haveAccess && !access.haveSuperAcess)
                 {
@@ -613,7 +614,7 @@ namespace Infrastructure.Services
                 throw new ResponseException($"RequestId: {requestId} - OpportunityRepository_DeleteItemAsync Service Exception: {ex}");
             }
         }
-        
+
 
         // Private methods
         private void CreateDashBoardEntryAsync(string requestId, string id, Opportunity opportunity)
@@ -672,7 +673,7 @@ namespace Infrastructure.Services
                 var usersList = (await _userProfileRepository.GetAllAsync(requestId)).ToList();
                 var teamMembers = opportunity.Content.TeamMembers.ToList();
                 var updatedTeamMembers = new List<TeamMember>();
-                
+
                 foreach (var item in teamMembers)
                 {
                     var updatedItem = TeamMember.Empty;
@@ -720,12 +721,12 @@ namespace Infrastructure.Services
         }
 
         //Granular Access : Start
-        private async Task<(bool havePartial,bool haveAccess, bool haveSuperAcess)>CheckAccessAsync(PermissionNeededTo partialAccess,PermissionNeededTo actionAccess, PermissionNeededTo superAccess, string requestId)
+        private async Task<(bool havePartial, bool haveAccess, bool haveSuperAcess)> CheckAccessAsync(PermissionNeededTo partialAccess, PermissionNeededTo actionAccess, PermissionNeededTo superAccess, string requestId)
         {
             bool haveAccess = false, haveSuperAcess = false, havePartial = false;
             if (StatusCodes.Status200OK == await _authorizationService.CheckAccessFactoryAsync(superAccess, requestId))
             {
-                havePartial = true; haveAccess = true;haveSuperAcess = true;
+                havePartial = true; haveAccess = true; haveSuperAcess = true;
             }
             else
             {
@@ -743,7 +744,7 @@ namespace Infrastructure.Services
                 }
             }
 
-            return(havePartial: havePartial,haveAccess: haveAccess, haveSuperAcess: haveSuperAcess);
+            return (havePartial: havePartial, haveAccess: haveAccess, haveSuperAcess: haveSuperAcess);
         }
         //Granular Access : End
     }

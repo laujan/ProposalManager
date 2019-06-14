@@ -126,6 +126,13 @@ namespace WebReact.Api
             }
         }
 
+        /// <summary>
+        /// Processes the creation of an Opportunity from Dynamics 365. 
+        /// Example payload avaliable in Dynamics Integration/Sample payloads/opportunity_creation.json
+        /// </summary>
+        /// <param name="event"></param>
+        /// <param name="data"></param>
+        /// <returns></returns>
         [AllowAnonymous]
         [HttpPost]
         [DynamicsCRMWebHook(Id = "opportunity")]
@@ -211,29 +218,34 @@ namespace WebReact.Api
                 };
 
                 var proposalManagerClient = await proposalManagerClientFactory.GetProposalManagerClientAsync();
+                string dealTypeToAssign = string.Empty;
 
+                //Deal type can be assigned either by configuration, or by Lookup in Dynamics.
                 if (!string.IsNullOrEmpty(dynamicsConfiguration.DefaultDealType))
                 {
-                    var processResult = await proposalManagerClient.GetAsync("/api/Template");
-                    if (!processResult.IsSuccessStatusCode)
+                    dealTypeToAssign = dynamicsConfiguration.DefaultDealType;
+                }
+                else
+                {
+                    string dealType = GetNativeAttribute(attributes, formattedValues, "msbnk_dealtype", FieldType.String);
+                    if (!string.IsNullOrEmpty(dealType))
                     {
-                        _logger.LogError("DYNAMICS INTEGRATION ENGINE: Proposal Manager did not return a success status code on process request.");
+                        dealTypeToAssign = dealType;
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(dealTypeToAssign))
+                {
+                    var updatedOpp = await TryAssignDealType(opp, proposalManagerClient, dealTypeToAssign);
+
+                    if (updatedOpp == null)
+                    {
                         return BadRequest();
                     }
-
-                    var processList = await processResult.Content.ReadAsAsync<TemplateListViewModel>();
-                    var dealType = processList.ItemsList.FirstOrDefault(x => x.TemplateName == dynamicsConfiguration.DefaultDealType);
-
-                    if (dealType == null)
+                    else
                     {
-                        _logger.LogError("DYNAMICS INTEGRATION ENGINE: Default deal type doesn't exist in Proposal Manager.");
-                        return BadRequest();
+                        opp = updatedOpp;
                     }
-
-                    //Asign Deal Type to Opportunity. Doing same process as UI...
-                    opp.Template = dealType;
-                    opp.Template.ProcessList.First(p => p.ProcessStep == "Start Process").Status = ActionStatus.Completed;
-                    opp.OpportunityState = OpportunityStateModel.InProgress;
                 }
 
                 var metaDataResult = await proposalManagerClient.GetAsync("/api/MetaData");
@@ -325,6 +337,10 @@ namespace WebReact.Api
             }
         }
 
+        /// <summary>
+        /// Processes the creation of a Connection from Dynamics 365. 
+        /// Example payload avaliable in Dynamics Integration/Sample payloads/connection_creation.json
+        /// </summary>
         [AllowAnonymous]
         [HttpPost]
         [DynamicsCRMWebHook(Id = "connection")]
@@ -440,27 +456,37 @@ namespace WebReact.Api
             }
         }
 
-        private TeamMemberModel CreateBaseProcessPersonal(UserProfileViewModel user, RoleModel role, string processStep)
+        /// <summary>
+        /// Tries searching for a deal type by its name in the Proposal Manager API. If found, assigns it to the provided opportunity.
+        /// </summary>
+        /// <param name="opportunity">The opportunity to modify.</param>
+        /// <param name="proposalManagerClient">A initialized Proposal Manager client.</param>
+        /// <param name="dealTypeName">The name of the deal type to assign.</param>
+        /// <returns></returns>
+        private async Task<OpportunityViewModel> TryAssignDealType(OpportunityViewModel opportunity, HttpClient proposalManagerClient, string dealTypeName)
         {
-            return new TeamMemberModel
+            var processResult = await proposalManagerClient.GetAsync("/api/Template");
+            if (!processResult.IsSuccessStatusCode)
             {
-                Id = user.Id,
-                DisplayName = user.DisplayName,
-                Mail = user.Mail,
-                UserPrincipalName = user.UserPrincipalName,
-                RoleId = role.Id,
-                RoleName = role.DisplayName,
-                AdGroupName = role.DisplayName,
-                TeamsMembership = new TeamsMembershipModel()
-                {
-                    Name = role.TeamsMembership.Name,
-                    Value = role.TeamsMembership.Value,
-                },
+                _logger.LogError("DYNAMICS INTEGRATION ENGINE: Proposal Manager did not return a success status code on Template request.");
+                return null;
+            }
 
-                Permissions = role.UserPermissions.Select(r => new PermissionModel { Id = r.Id, Name = r.Name }).ToList(),
+            var processList = await processResult.Content.ReadAsAsync<TemplateListViewModel>();
+            var dealType = processList.ItemsList.FirstOrDefault(x => x.TemplateName == dealTypeName);
 
-                ProcessStep = processStep
-            };
+            if (dealType == null)
+            {
+                _logger.LogError($"DYNAMICS INTEGRATION ENGINE: Required deal type ({dealTypeName}) doesn't exist in Proposal Manager.");
+                return null;
+            }
+
+            //Deal Type found. Assign it to Opportunity. Doing same process as UI...
+            opportunity.Template = dealType;
+            opportunity.Template.ProcessList.First(p => p.ProcessStep == "Start Process").Status = ActionStatus.Completed;
+            opportunity.OpportunityState = OpportunityStateModel.InProgress;
+
+            return opportunity;
         }
 
         /// <summary>
@@ -518,7 +544,7 @@ namespace WebReact.Api
         /// Returns the required attribute as a .NET object with the appropiate type.
         /// </summary>
         /// <param name="attributes">The list of attributes to search in.</param>
-        /// <param name="formattedValues">The list of formattedValues to look up if the attribute comes from an OptionSet</param>
+        /// <param name="formattedValues">The list of formattedValues to look up if the attribute comes from an OptionSet.</param>
         /// <param name="memberName">The attribute name to search for.</param>
         /// <param name="type">The expected type for the attribute.</param>
         /// <returns></returns>
@@ -564,6 +590,36 @@ namespace WebReact.Api
                 //This returns a .NET object instead of a JToken
                 return ((JValue)value).Value;
             }
+        }
+
+        /// <summary>
+        /// Initializes and returns a TeamMemberModel ready to be added to the TeamMembers list of an opportunity
+        /// </summary>
+        /// <param name="user">The user to add as a TeamMember.</param>
+        /// <param name="role">The role of the user.</param>
+        /// <param name="processStep">The name of the process step.</param>
+        /// <returns></returns>
+        private TeamMemberModel CreateBaseProcessPersonal(UserProfileViewModel user, RoleModel role, string processStep)
+        {
+            return new TeamMemberModel
+            {
+                Id = user.Id,
+                DisplayName = user.DisplayName,
+                Mail = user.Mail,
+                UserPrincipalName = user.UserPrincipalName,
+                RoleId = role.Id,
+                RoleName = role.DisplayName,
+                AdGroupName = role.DisplayName,
+                TeamsMembership = new TeamsMembershipModel()
+                {
+                    Name = role.TeamsMembership.Name,
+                    Value = role.TeamsMembership.Value,
+                },
+
+                Permissions = role.UserPermissions.Select(r => new PermissionModel { Id = r.Id, Name = r.Name }).ToList(),
+
+                ProcessStep = processStep
+            };
         }
     }
 }

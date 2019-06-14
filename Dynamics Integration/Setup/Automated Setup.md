@@ -58,3 +58,6 @@ After executing the script, it will generate an *appsettings-\<random-GUID>.json
 After pasting the configuration, you need to complete the ProposalManager section of the configuration file. Please follow step 5.3 of the Setup Guide.
 
 Finally, you need to give the Integration permission to access the Proposal Manager API. This can be done following the step 7 of the Setup Guide.
+
+### 4. _Optional._ Deal types configuration in Dynamics.
+If your organization needs to assign a Deal Type directly from the Opportunity form in Dynamics 365, you should manually update the OptionSet linked to the lookup. Follow step 8 of the Setup Guide.

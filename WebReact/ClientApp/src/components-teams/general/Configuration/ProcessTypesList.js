@@ -333,6 +333,14 @@ export class ProcessTypesList extends Component {
     }
 
     createRowItem() {
+        this.schema.id = "";
+        this.schema.processStep = "";
+        this.schema.channel = "";
+        this.schema.roleName = "";
+        this.schema.processType = "";
+        this.schema.roleId = "";
+        this.schema.isDisable = false;
+
         return this.schema;
     }
 

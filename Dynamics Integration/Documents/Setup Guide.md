@@ -37,7 +37,7 @@ The professional performing the setup needs to have appropriate administrative p
       ---|-----
       `OrganizationUri`|**Organization's web API url**
       `RootDrive`|**Name of the Proposal Manager SharePoint site root drive**
-      `DefaultDealType`|You can specify a default Deal Type here to be assigned to all opportunities created through Dynamics 365. This causes an automatic Team creation in Microsoft Teams with all the channels dictated by the Deal Type. If this is desired, you must enter the full display name of the Deal Type between quotes.
+      `DefaultDealType`|You can specify a default Deal Type here to be assigned to all opportunities created through Dynamics 365. This causes an automatic Team creation in Microsoft Teams with all the channels dictated by the Deal Type. If this is desired, you must enter the full display name of the Deal Type between quotes. Otherwise, you can use the provided Lookup field in the Opportunity form.
       `OpportunityMapping`|Please refer to the Mapping configuration document included in this repo for more details on this field. The settings that ship with the solution will satisfy most of your needs.
    2. In the `OneDrive` section:
    
@@ -104,6 +104,17 @@ The professional performing the setup needs to have appropriate administrative p
       * For _Type_, select "Member"
    6. Once you provided all the necessary values, click in the save icon to save the changes. A green toast notification should appear below the list stating that the changes have been saved.
 
+8.  _Optional._ If your organization needs to assign a Deal Type directly from the Opportunity form in Dynamics 365, you should update the OptionSet linked to the lookup. Note that these steps should be done after all Deal Types has been defined in Proposal Manager; keep a list of them in handy:
+   1. In Dynamics 365, go to Settings > Customizations > Customize system.
+   2. A new window will open, with a tree view on the left. In the Components node, look for "Option sets". Click on it.
+   3. In the grid, search for an option set with the "Deal Type" display name. Its internal name its "msbnk_dealtype".
+   4. Double click on it. This will open another window.
+   5. In the lower left corner of the window, you will see the list of options of the set. You should add an option for each Deal Type defined on Proposal Manager. Click on the green Plus symbol (+) to add an option, and enter the Display Name of the deal type in the "Label" field. The list will update as soon as the field loses focus.
+   6. Repeat step 6 until all Deal Types are loaded. Then click on the Save and Close button on the upper left corner of the window. 
+   7. Return to the window of step 2. Click on the "Publish all customizations" button on the upper side of the window. A small modal will appear during the publishing process, and will go away as soon as it finishes. Don't worry if your web browser informs that the pages are unresponsive; this is normal.
+   8. After the modal dissapears, you can close this window. Try to create an opportunity and verify, in the Deal Type field, that all options are present.
+
+**Important**: Be mindful when typing the deal types' names in the option set; the Label must match the deal type name _exactly_, otherwise the Integration will malfunction.
 
 ## Troubleshooting
 ### SharePoint Site entity is read-only in Unified Interface mode (UCI)
@@ -138,7 +149,7 @@ var updateSetting = function(url, newValue) {
 updateSetting("https://<YOUR_TENANT_NAME_HERE>.crm.dynamics.com", true);
 ```
 
-2. Replace the <YOUR_TENANT_NAME_HERE> tag in the last line with the name of your tenant. The result should be something similar to https://contoso.crm.dynamics.com.
+2. Replace the <YOUR_TENANT_NAME_HERE> tag in the last line with the name of your tenant. The result should be something similar to https://contoso.crm.dynamics.com, or https://contoso0.crm.dynamics.com.
 3. Keep that code in handy. With a PC browser, login to your Dynamics 365 tenant as any user member of the System Administrator role.
 4. After the login, and after the main view has been loaded, open the JavaScript console of your browser. On Edge, this can be done pressing the F12 key; by default it should open a new window with the Console tab already open.
 5. Copy the entire code from your notepad, paste it onto the console, and execute the code by pressing ENTER.
