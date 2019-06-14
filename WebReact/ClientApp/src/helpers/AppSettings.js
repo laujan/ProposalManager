@@ -28,7 +28,8 @@ export const appSettingsObject = {
     localStorePrefix,
     teamsAppName,
     reportId,
-    workspaceId
+    workspaceId,
+    logEnabled
 };
 
 export default appSettingsObject;
