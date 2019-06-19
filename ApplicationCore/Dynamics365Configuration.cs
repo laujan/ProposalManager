@@ -8,25 +8,25 @@ using System.Linq;
 
 namespace ApplicationCore
 {
-	public class Dynamics365Configuration
-	{
-		public const string ConfigurationName = "Dynamics365";
-		public string OrganizationUri { get; set; }
-		public int ProposalManagerCategoryId { get; set; }
-		public string RootDrive { get; set; }
-		public string DefaultDealType { get; set; }
-		public OpportunityMappingConfiguration OpportunityMapping { get; set; }
-	}
+    public class Dynamics365Configuration
+    {
+        public const string ConfigurationName = "Dynamics365";
+        public string OrganizationUri { get; set; }
+        public int ProposalManagerCategoryId { get; set; }
+        public string RootDrive { get; set; }
+        public string DefaultDealType { get; set; }
+        public OpportunityMappingConfiguration OpportunityMapping { get; set; }
+    }
 
-	public class OpportunityMappingConfiguration
-	{
+    public class OpportunityMappingConfiguration
+    {
         public string EntityName { get; set; }
         public string OpportunityLinkPropertyName { get; set; }
         public string NameProperty { get; set; }
-        public ICollection<OpportunityMapping> MetadataFields { get; set;  }
+        public ICollection<OpportunityMapping> MetadataFields { get; set; }
         public ICollection<OpportunityStatusMapping> Status { get; set; }
-		public int MapStatusCode(int statusCode) => Status?.FirstOrDefault(s => s.From == statusCode)?.To ?? statusCode;
-	}
+        public int MapStatusCode(int statusCode) => Status?.FirstOrDefault(s => s.From == statusCode)?.To ?? statusCode;
+    }
 
     public class OpportunityStatusMapping
     {
@@ -35,8 +35,8 @@ namespace ApplicationCore
     }
 
     public class OpportunityMapping
-	{
-		public string From { get; set; }
-		public string To { get; set; }
-	}
+    {
+        public string From { get; set; }
+        public string To { get; set; }
+    }
 }

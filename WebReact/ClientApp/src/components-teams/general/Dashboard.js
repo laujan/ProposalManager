@@ -59,6 +59,7 @@ export class Dashboard extends Component {
         }
 
         try {
+            console.log("isAuth: " + this.state.isAuthenticated + "-- accessGranted: " + this.accessGranted + " --- Loading: " + this.state.loading);
             if (this.state.isAuthenticated && !this.accessGranted && this.state.loading) {
                 if (await this.setAccessGranted()) {
                     if (this.state.aadToken === "") {
@@ -75,9 +76,24 @@ export class Dashboard extends Component {
     async setAccessGranted() {
         try {
             this.logService.log("Dashboard_setAccessGranted isauth: " + this.authHelper.isAuthenticated() + " this.accessGranted: " + this.accessGranted);
-            await this.authHelper.callCheckAccess(["Administrator", "Opportunities_ReadWrite_All", "Opportunity_ReadWrite_All"]).then((data) => {
-                this.setState({ haveGranularAccess: data });
-            }).catch(err => { this.setState({ haveGranularAccess: false }); });
+            let res = await this.authHelper.callCheckAccess(["Administrator", "Opportunities_ReadWrite_All", "Opportunity_ReadWrite_All"]);
+            if (res) {
+                this.accessGranted = true;
+                console.log("accessGranted: " + this.accessGranted);
+                if (this.state.aadToken === "") {
+                    console.log("aadToken---" + this.state.aadToken);
+                    await this.getDataForDashboard();
+                }
+                return true;
+            } else {
+                this.accessGranted = false;
+                let self = this;
+                setTimeout(function () {
+                    self.setState({ loading: false });
+                }, 1000);
+                this.logService.log("Dashboard_setAccessGranted error: " + res);
+                return false;
+            }
         }
         catch (error) {
             this.accessGranted = false;
