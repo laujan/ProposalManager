@@ -22,7 +22,8 @@
 
     if(!$RelativeReplyUrls)
     {
-        $RelativeReplyUrls = @('Setup', 'tab/config', 'tab/tabauth', 'tab', [string]::Empty)
+        $RelativeReplyUrls = @('Setup', 'tab/config', 'tab/tabauth', 'tab', 'tabMob/generalDashboardTab', 'tabMob/generalAdministrationTab', 
+        'tabMob/generalConfigurationTab', 'tabMob/customerDecisionTab', 'tabMob/checklistTab', 'tabMob/proposalStatusTab', 'tabMob/rootTab', [string]::Empty)
     }
 
     Connect-AzureAD -Credential $Credential

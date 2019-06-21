@@ -4,7 +4,7 @@
 */
 
 import { UserAgentApplication, Logger } from 'msal';
-import { appUri, clientId, graphScopes, webApiScopes, authority} from '../helpers/AppSettings';
+import { appUri, clientId, graphScopes, webApiScopes, authority } from '../helpers/AppSettings';
 import appSettingsObject from '../helpers/AppSettings';
 import Promise from 'promise';
 import LoggingService from '../helpers/LoggingService';
@@ -14,8 +14,8 @@ const userProfilPermissions = localStorePrefix + "UserProfilPermissions";
 
 const optionsUserAgentApp = {
     navigateToLoginRequestUrl: true,
-	cacheLocation: 'localStorage',
-	logger: new Logger((level, message, containsPII) => {
+    cacheLocation: 'localStorage',
+    logger: new Logger((level, message, containsPII) => {
         logService.log(`AD: ${message}`);
     })
 };
@@ -23,59 +23,50 @@ const optionsUserAgentApp = {
 const logService = new LoggingService();
 // Initialize th library
 let userAgentApplication = new UserAgentApplication(
-	clientId,
-	authority,
-	tokenReceivedCallback,
-	optionsUserAgentApp);
+    clientId,
+    authority,
+    tokenReceivedCallback,
+    optionsUserAgentApp);
 
 function getUserAgentApplication() {
-	return userAgentApplication;
+    return userAgentApplication;
 }
 
 function handleWebApiToken(idToken) {
-	if (idToken) {
+    if (idToken) {
         logService.log("handleWebApiToken-not empty");
-		localStorage.setItem(webApiTokenStoreKey, idToken);
-	}
+        localStorage.setItem(webApiTokenStoreKey, idToken);
+    }
 }
 
 function handleUserProfilPermissions(userProfile) {
-	if (userProfile) {
+    if (userProfile) {
         logService.log("handleUserProfilPermissions-not empty");
-		localStorage.setItem(userProfilPermissions, userProfile);
-	}
+        localStorage.setItem(userProfilPermissions, userProfile);
+    }
 }
 
 function handleError(error) {
     logService.log(`AuthHelper: ${error}`);
 }
 
-function handleRemoveAuthFlags() {
-    localStorage.setItem("AuthError", "");
-    localStorage.setItem("AuthSeq", "start");
-    localStorage.setItem("AuthSeqStatus", "");
-    localStorage.setItem("AuthStatus", "");
-    localStorage.setItem("AuthUserStatus", "");
-    localStorage.setItem("AppTeams", "");
-}
-
 function tokenReceivedCallback(errorMessage, token, error, tokenType) {
-	//This function is called after loginRedirect and acquireTokenRedirect. Use tokenType to determine context. 
-	//For loginRedirect, tokenType = "id_token". For acquireTokenRedirect, tokenType:"access_token".
-	localStorage.setItem("loginRedirect", `${tokenType}|||${token}`);
+    //This function is called after loginRedirect and acquireTokenRedirect. Use tokenType to determine context. 
+    //For loginRedirect, tokenType = "id_token". For acquireTokenRedirect, tokenType:"access_token".
+    localStorage.setItem("tokenReceivedCallback", `${tokenType}|||${token}`);
     if (!errorMessage && token) {
-        this.acquireTokenSilent(graphScopes)
+        this.acquireTokenSilent(webApiScopes)
             .then(accessToken => {
                 // Store token in localStore
+                localStorage.setItem("tokenReceivedCallback_accessToken", `${tokenType}|||${accessToken}`);
                 handleWebApiToken(accessToken);
             })
             .catch(error => {
                 handleError("tokenReceivedCallback-acquireTokenSilent: " + error);
-                // TODO: need to add aquiretokenpopup or similar
             });
-	} else {
-		handleError("tokenReceivedCallback: " + error);
-	}
+    } else {
+        handleError("tokenReceivedCallback: " + error);
+    }
 }
 
 export default class AuthClient {
@@ -101,8 +92,6 @@ export default class AuthClient {
     }
 
     loginRedirect() {
-        localStorage.setItem("loginRedirect", "start");
-        localStorage.setItem("AuthRedirect", "start");
         return this.authClient.loginRedirect(graphScopes);
     }
 
@@ -120,6 +109,7 @@ export default class AuthClient {
         try {
             const res = await this.authClient.loginPopup(graphScopes);
             handleWebApiToken(res);
+            logService.log("AuthHelper_loginPopupAsync", res);
             return res;
         } catch (err) {
             throw new Error("AuthHelper_loginPopupAsync error: " + err);
@@ -138,16 +128,12 @@ export default class AuthClient {
         };
         logService.log("AuthHelper_callGetUserProfile enter: ");
         try {
-            localStorage.setItem("AuthStatusUP", "AuthHelper_callGetUserProfile start");
             const userPrincipalName = await this.getUser();
             logService.log("AuthHelper_callGetUserProfile getUser: " + userPrincipalName.displayableId);
 
             if (userPrincipalName.displayableId.length > 0) {
                 const endpoint = appUri + "/api/UserProfile?upn=" + userPrincipalName.displayableId;
                 let token = window.authHelper.getWebApiToken();
-
-                localStorage.setItem("AuthStatusUP", "AuthHelper_callGetUserProfile userPrincipalName: " + userPrincipalName.displayableId + " token: " + token);
-
                 let data = await this.callWebApiWithToken(endpoint, "GET");
                 if (data) {
                     logService.log("AuthHelper_callGetUserProfile data: ", data);
@@ -187,7 +173,6 @@ export default class AuthClient {
     clearCache() {
         logService.log("AuthHelper clearCache");
         localStorage.removeItem(webApiTokenStoreKey);
-        handleRemoveAuthFlags();
         localStorage.removeItem(userProfilPermissions);
 
         return this.authClient.clearCache();
@@ -195,20 +180,6 @@ export default class AuthClient {
 
     getUser() {
         return this.authClient.getUser();
-    }
-
-    getUserProfile() {
-        return new Promise((resolve, reject) => {
-            if (this.userProfile) {
-                let userResult = this.getUser();
-                if (userResult.displayableId === this.userProfile.userPrincipalName) {
-                    resolve(this.userProfile);
-                }
-                reject('null if');
-            } else {
-                reject('null if'); // TODO: Temporal return for debug
-            }
-        });
     }
 
     getUserProfilPermissions() {
@@ -278,7 +249,6 @@ export default class AuthClient {
     logout(softLogout = false) {
         return new Promise((resolve, reject) => {
             localStorage.removeItem(webApiTokenStoreKey);
-            handleRemoveAuthFlags();
             //Granular access start
             localStorage.removeItem(userProfilPermissions);
             //Granular access end
@@ -319,7 +289,7 @@ export default class AuthClient {
                                 // Detect expired token and request interactive logon
                                 let errorText = localStorage.getItem("AuthError");
                                 if (errorText.includes("login is required") || errorText.includes("login_required")) {
-                                    localStorage.setItem("AuthSeq", "user_login_required");
+                                    logService.log("user_login_required");
                                 }
                                 reject(err);
                             });

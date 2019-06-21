@@ -13,22 +13,20 @@ import { PrimaryButton } from 'office-ui-fabric-react/lib/Button';
 import Utils from './helpers/Utils';
 import LoggingService from './helpers/LoggingService';
 
-export class AuthorizedRoute extends Route
-{
-    constructor(props)
-    {
+export class AuthorizedRoute extends Route {
+    constructor(props) {
         super(props);
         this.logService = new LoggingService();
         this.logService.log("AuthorizedRoute ctor", props);
-        
+
         this.state = { isAuthorized: false, appSettings: {}, userProfile: {}, refreshRequired: false };
 
         if (window.authHelper) {
-			this.authHelper = window.authHelper;
-		} else {
-			// Initilize the AuthService and save it in the window object.
-			this.authHelper = new AuthHelper();
-			window.authHelper = this.authHelper;
+            this.authHelper = window.authHelper;
+        } else {
+            // Initilize the AuthService and save it in the window object.
+            this.authHelper = new AuthHelper();
+            window.authHelper = this.authHelper;
         }
 
         this.utils = new Utils();
@@ -69,32 +67,30 @@ export class AuthorizedRoute extends Route
         };
     }
 
-    async componentDidMount()
-    {
+    async componentDidMount() {
         const { teamsContext } = this.props;
-        
+
         let user = this.authHelper.getUser();
         let loginHint = this.props.teamsContext.loginHint;
 
         let isMobile = window.location.pathname.toLocaleLowerCase().includes("tabmob");
         if (isMobile) {
-            this.handleMobileAuth(user, loginHint);
+            this.handleMobileAuth(user);
+            return;
         }
 
-        if (user && user.displayableId === loginHint)
-        {
+        if (user && user.displayableId === loginHint) {
             this.logService.log("AuthorizedRoute check user", user.displayableId, loginHint);
             let token = this.authHelper.getWebApiToken();
             this.authorizeUser(token);
         }
-        else
-        {
+        else {
             // The users are different then clear cache
             if (user && user.displayableId !== loginHint) {
                 this.logService.log("clearing msal cache");
                 this.authHelper.clearCache();
             }
-            
+
             this.logService.log("AuthorizedRoute_componentDidMount teamsContext", teamsContext);
             microsoftTeams.authentication.authenticate({
                 url: window.location.protocol + '//' + window.location.host + '/tab/tabauth' + "?channelName=" + teamsContext.channelName + "&teamName=" + teamsContext.teamName + "&channelId=" + teamsContext.channelId + "&locale=" + teamsContext.locale + "&loginHint=" + encodeURIComponent(teamsContext.loginHint),
@@ -139,24 +135,39 @@ export class AuthorizedRoute extends Route
             });
     }
 
-    handleMobileAuth(user, loginHint) {
-        if (user && user.displayableId === loginHint) {
+    handleMobileAuth(user) {
+        if (user) {
             let token = this.authHelper.getWebApiToken();
             this.authorizeUser(token);
         }
         else {
-            this.authHelper.loginRedirect();
+            this.authHelper.loginPopupAsync()
+                .then(idToken => {
+                    this.logService.log(`AuthorizedRoute_handleMobile idToken: ${idToken}`);
+                    this.authHelper.acquireWebApiTokenSilentAsync()
+                        .then(accessToken => {
+                            this.logService.log(`AuthorizedRoute_handleMobile acquireWebApiTokenSilentAsync: ${accessToken}`);
+                            this.authorizeUser(accessToken);
+                        })
+                        .catch(err => {
+                            this.logService.log("AuthorizedRoute_handleMobile acquireWebApiTokenSilentAsync err:", err);
+                            this.setState({ isAuthorized: false });
+                        });
+                    
+                })
+                .catch(errPopup => {
+                    this.logService.log("AuthorizedRoute_handleMobile", errPopup);
+                    this.setState({ isAuthorized: false });
+                });
         }
     }
 
-    render()
-    {
+    render() {
         const { isAuthorized, appSettings, apiService, userProfile, refreshRequired, logService } = this.state;
-        
-        const { component: Component, ...rest} = this.props;
 
-        const renderApp = () =>
-        {
+        const { component: Component, ...rest } = this.props;
+
+        const renderApp = () => {
             if (refreshRequired) {
                 return (
                     <div className='ms-Grid'>
@@ -165,23 +176,21 @@ export class AuthorizedRoute extends Route
                             <PrimaryButton text="Sign in" onClick={() => { this.authHelper.clearCache(); window.location.reload(); }} />
                         </div>
                     </div>
-                    );
+                );
             }
 
-            if (isAuthorized)
-            {
+            if (isAuthorized) {
                 this.logService.log("AuthorizedRoute authorized", appSettings, userProfile, this.props, this.state);
                 return <Component {...this.props} appSettings={appSettings} apiService={apiService} userProfile={userProfile} logService={logService} />;
             }
-            else
-            {
+            else {
                 return Accessdenied();
             }
         };
 
-        return(
+        return (
             <Route {...rest}>
-               {renderApp()}
+                {renderApp()}
             </Route>
         );
     }
