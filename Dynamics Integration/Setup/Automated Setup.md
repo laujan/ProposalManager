@@ -1,7 +1,7 @@
 # Installing Proposal Manager - Dynamics 365 for Sales Integration
 The integration can be easily deployed using PowerShell. In this folder, a script called `Setup.ps1` is included for your convenience. This script is intended to run in that folder, with all of its files and folders.
 
-The script will deploy a Dynamics 365 package using the [Dynamics 365 Package Deployer](https://docs.microsoft.com/en-us/dynamics365/customer-engagement/admin/deploy-packages-using-package-deployer-windows-powershell). After installing the managed solution, the package will perform most of the steps documented in the Setup Guide of the Integration (located in Dynamics Integration/Documents/Setup Guide of this repo). Some of the steps will need to be done manually for now; these are:
+The script will deploy a Dynamics 365 package using the [Dynamics 365 Package Deployer](https://docs.microsoft.com/en-us/dynamics365/customer-engagement/admin/deploy-packages-using-package-deployer-windows-powershell). After installing the managed solution, the package will perform most of the steps documented in the [Manual Setup Guide of the Integration](https://github.com/OfficeDev/ProposalManager/blob/master/Manual%20Dynamics%20Integration/Documents/Setup%20Guide.md). Some of the steps will need to be done manually for now; these are:
 
  1. Partial Webhook registration
  2. Proposal Manager configuration

@@ -127,7 +127,7 @@ namespace WebReact.Api
         }
 
         /// <summary>
-        /// Processes the creation of an Opportunity from Dynamics 365. 
+        /// Processes the creation of an Opportunity from Dynamics 365. This method is executed asynchronously.
         /// Example payload avaliable in Dynamics Integration/Sample payloads/opportunity_creation.json
         /// </summary>
         /// <param name="event"></param>
@@ -171,7 +171,7 @@ namespace WebReact.Api
                 var creator = dynamicsLinkService.GetUserData(data["InitiatingUserId"].ToString());
                 var creatorRole = proposalManagerConfiguration.CreatorRole;
 
-                //Determine customer name
+                //Determine customer name. Gives priority to 'account' property; otherwise 'contact'.
                 string customerDisplayName = string.Empty;
                 var customer = GetAttribute(attributes, "customerid");
 
@@ -220,7 +220,7 @@ namespace WebReact.Api
                 var proposalManagerClient = await proposalManagerClientFactory.GetProposalManagerClientAsync();
                 string dealTypeToAssign = string.Empty;
 
-                //Deal type can be assigned either by configuration, or by Lookup in Dynamics.
+                //Deal type can be assigned either by configuration, or by Lookup in Dynamics. Gives priority to configuration.
                 if (!string.IsNullOrEmpty(dynamicsConfiguration.DefaultDealType))
                 {
                     dealTypeToAssign = dynamicsConfiguration.DefaultDealType;
@@ -248,6 +248,7 @@ namespace WebReact.Api
                     }
                 }
 
+                //Query metadata from Proposal Manager to map fields based on configuration
                 var metaDataResult = await proposalManagerClient.GetAsync("/api/MetaData");
                 if (!metaDataResult.IsSuccessStatusCode)
                 {
@@ -273,6 +274,7 @@ namespace WebReact.Api
                     }
                 }
 
+                //Query user to Proposal Manager by UPN, to verify it has the configured Opportunity Creator Role
                 var userProfileResult = await proposalManagerClient.GetAsync($"/api/UserProfile?upn={creator.Email}");
                 if (!userProfileResult.IsSuccessStatusCode)
                 {
@@ -284,6 +286,7 @@ namespace WebReact.Api
                 if (!userProfile.UserRoles.Any(ur => ur.AdGroupName == creatorRole.AdGroupName))
                     return BadRequest($"{creator.Email} is not a member of role {creatorRole.AdGroupName}.");
 
+                //POST Opportunity to Proposal Manager
                 var remoteEndpoint = $"/api/Opportunity";
                 var result = await proposalManagerClient.PostAsync(remoteEndpoint, new StringContent(JsonConvert.SerializeObject(opp), Encoding.UTF8, "application/json"));
 
@@ -338,7 +341,7 @@ namespace WebReact.Api
         }
 
         /// <summary>
-        /// Processes the creation of a Connection from Dynamics 365. 
+        /// Processes the creation of a Connection from Dynamics 365. This method is executed synchronously (speed is important to not hang Dynamics UI).
         /// Example payload avaliable in Dynamics Integration/Sample payloads/connection_creation.json
         /// </summary>
         [AllowAnonymous]
@@ -366,12 +369,14 @@ namespace WebReact.Api
                 var record1id = GetAttribute(attributes, "record1id");
                 var record2id = GetAttribute(attributes, "record2id");
 
+                //We only process connections between opportunities and system users
                 if (!record1id["LogicalName"].ToString().Equals(dynamicsConfiguration.OpportunityMapping.EntityName, StringComparison.OrdinalIgnoreCase) ||
                     !record2id["LogicalName"].ToString().Equals("systemuser", StringComparison.OrdinalIgnoreCase))
                 {
                     return new EmptyResult();
                 }
 
+                //We use tasks through this method to make parallel requests.
                 Task<HttpClient> taskClient = proposalManagerClientFactory.GetProposalManagerClientAsync();
                 var initiatingUser = dynamicsLinkService.GetUserData(data["InitiatingUserId"].ToString());
                 var client = await taskClient;
@@ -417,7 +422,7 @@ namespace WebReact.Api
 
                 if (role == null)
                 {
-                    //User is not a Loan Officer.
+                    //User is not a Loan Officer. We simply add it to the TeamMembers list.
                     role = userProfile.UserRoles.Where(r => r.DisplayName == roleName).FirstOrDefault();
 
                     if (role != null)
