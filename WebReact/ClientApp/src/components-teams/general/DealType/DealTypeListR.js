@@ -15,7 +15,9 @@ import { MessageBar, MessageBarType } from 'office-ui-fabric-react/lib/MessageBa
 import { LinkContainer } from 'react-router-bootstrap';
 import i18n from '../../../i18n';
 import Accessdenied from '../../../helpers/AccessDenied';
-
+/**
+ * Shows the dealType list in configuration page
+ * */
 export class DealTypeListR extends Component {
     displayName = DealTypeListR.name
 

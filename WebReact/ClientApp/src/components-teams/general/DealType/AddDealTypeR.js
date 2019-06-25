@@ -17,6 +17,10 @@ import ShowAddProcessModel from './ShowAddProcessModel';
 import ShowPreviewModel from './ShowPreviewModel';
 import { getQueryVariable } from '../../../common';
 
+/**
+ * Component to add dealtyp/template/business process
+ */
+
 export class AddDealTypeR extends Component {
     displayName = AddDealTypeR.name
 

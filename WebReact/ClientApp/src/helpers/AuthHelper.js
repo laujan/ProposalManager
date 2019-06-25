@@ -13,7 +13,7 @@ const webApiTokenStoreKey = localStorePrefix + 'WebApiToken';
 const userProfilPermissions = localStorePrefix + "UserProfilPermissions";
 
 const optionsUserAgentApp = {
-    navigateToLoginRequestUrl: true,
+    navigateToLoginRequestUrl: false,
     cacheLocation: 'localStorage',
     logger: new Logger((level, message, containsPII) => {
         logService.log(`AD: ${message}`);

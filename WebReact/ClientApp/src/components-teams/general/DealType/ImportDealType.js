@@ -15,6 +15,11 @@ import { PrimaryButton} from 'office-ui-fabric-react/lib/Button';
 import { MessageBarType } from 'office-ui-fabric-react/lib/MessageBar';
 import { MessageBar } from 'office-ui-fabric-react/lib/MessageBar';
 
+
+/**
+ *This component helps to import the dealType(business process) from template json file present in the solution
+ * */
+
 let tempModelMsgObject = {
     modelHeader: "",
     modelMsg: "",
@@ -110,6 +115,7 @@ const ImportDelaTypeJson = (props) => {
         return flag;
     };
 
+    //After reading parse the file to JSON object 
     const handleRead = async event => {
         if (!event.target || !event.target.files) {
             return;
@@ -155,6 +161,7 @@ const ImportDelaTypeJson = (props) => {
         }
     };
 
+    //REad the file from the disk as a promise
     const handleFileChosen = file => {
         const fileReader = new FileReader();
 
@@ -200,7 +207,7 @@ const ImportDelaTypeJson = (props) => {
     const delay = async (ms) => {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
-
+    //Create and update opportunity using the saved template
     const handleSaveButton = async () => {
         setMessagebarObject({
             isUpdate: true,
@@ -257,6 +264,7 @@ const ImportDelaTypeJson = (props) => {
         }
     };
 
+    //Create and update opportunity using the saved template
     const createOpportunityForTheTeamplate = async (templateName) => {
         setMessagebarObject({
             isUpdate: true,

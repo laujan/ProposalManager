@@ -1,6 +1,13 @@
 ﻿import i18n from "i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
 
+/**
+ * 
+ * i8n Component, 
+ * This encapsulates all the contants value, which we will inject in the index.js
+ * 
+ */
+
 i18n.use(LanguageDetector).init({
     // we init with resources
     resources: {

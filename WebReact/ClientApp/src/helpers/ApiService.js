@@ -3,6 +3,9 @@
 *  See LICENSE in the source repository root for complete license information. 
 */
 
+/**
+ * Responsible for performing the requests to the API.
+ * */
 export default class ApiService {
     constructor(token) {
         this.token = token;

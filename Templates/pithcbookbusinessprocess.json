@@ -1,0 +1,137 @@
+{
+	"rolemapping" : [
+										{
+											"id":100,
+											"adGroupName": "Managing Director",
+											"displayName": "ManagingDirector",
+											"permissions": [
+												{
+												  "id": "",
+												  "name": "Opportunities_ReadWrite_All"
+												},
+												{
+													"id": "",
+													"name": "Opportunity_Create"
+												}
+											  ],
+											"teamsMembership": {
+													"name": "Owner",
+													"value": 0
+												}
+										},
+										{
+											"id":101,
+											"adGroupName": "Vice President",
+											"displayName": "VicePresident",
+											"permissions": [
+												{
+													"id": "",
+													"name": "Opportunities_ReadWrite_All"
+												},
+												{
+												  "id": "",
+												  "name": "Opportunity_ReadWrite_Team"
+												},
+												{
+													"id": "",
+													"name": "Opportunity_ReadWrite_Dealtype"
+												}
+											  ],
+											"teamsMembership": {
+													"name": "Owner",
+													"value": 0
+												}
+										},
+										{
+											"id":102,
+											"adGroupName": "Analyst",
+											"displayName": "Analyst",
+											"permissions": [
+												{
+												  "id": "",
+												  "name": "Opportunity_ReadWrite_All"
+												}
+											  ],
+                      "teamsMembership": {
+													"name": "Member",
+													"value": 1
+											}
+										},
+										{
+											"id":103,
+											"adGroupName": "Associate Officers",
+											"displayName": "AssociateOfficers",
+											"permissions": [
+												{
+												  "id": "",
+												  "name": "Opportunity_ReadWrite_All"
+												}
+											  ],
+                      "teamsMembership": {
+													"name": "Member",
+													"value": 1
+											}
+										}
+									],
+	"processes" : [
+									{
+										"processStep": "Analyst",
+										"channel": "Analyst",
+										"processType": "CheckListTab",
+										"roleName": "Analyst",
+										"roleId":102
+									},
+									{
+										"processStep": "AssociateOfficers",
+										"channel": "AssociateOfficers",
+										"processType": "CheckListTab",
+										"roleName": "AssociateOfficers",
+										"roleId":103
+                                    }
+								],
+	"template" : {
+				  "templateName": "Pitchbook Business Process",
+				  "processes": [
+                    {
+                        "processStep": "Start Process",
+                        "channel": "None",
+                        "processType": "Base",
+                        "roleName": "",
+                        "roleId":"",
+					    "order": 1.1
+					},
+					{
+
+                        "processStep": "Analyst",
+                        "channel": "Analyst",
+                        "processType": "CheckListTab",
+                        "roleName": "Analyst",
+                        "roleId":102,
+					    "order": 2.1
+					},
+					{
+                        "processStep": "AssociateOfficers",
+                        "channel": "AssociateOfficers",
+                        "processType": "CheckListTab",
+                        "roleName": "AssociateOfficers",
+                        "roleId":103,
+					    "order": 2.2
+					},
+                    {
+                        "processStep": "Customer Decision",
+                        "channel": "Customer Decision",
+                        "processType": "customerDecisionTab",
+                        "roleName": "",
+                        "roleId":"",
+					    "order": 3.1
+                    },
+                    {
+                        "processStep": "Formal Proposal",
+                        "channel": "Formal Proposal",
+                        "processType": "proposalStatusTab",
+                        "roleName": "",
+                        "roleId":"",
+					    "order": 4.1
+					}]
+				}
+}

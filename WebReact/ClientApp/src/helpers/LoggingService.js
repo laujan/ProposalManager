@@ -4,6 +4,9 @@
 */
 import appSettingsObject from '../helpers/AppSettings';
 
+/**
+ * Responsible for performing the client-side logging. If logEnabled setting is true then logs are writen to the browser's console.
+ * */
 export default class LoggingService {
     constructor() {
     }

@@ -10,6 +10,14 @@ import { I18n, Trans } from "react-i18next";
 import { MessageBar, MessageBarType } from 'office-ui-fabric-react/lib/MessageBar';
 import ImportDealType from './general/DealType/ImportDealType';
 
+
+/**
+ * This component is for Setup page
+ * This will render different sections in the page
+ * Each section can be mandatory or optional.
+ * Each section has its own render function and methods.
+ */
+
 export class Setup extends Component {
     displayName = Setup.name
 
@@ -29,7 +37,6 @@ export class Setup extends Component {
             appId: "",
             PMTeamName: "",
             ADGroupName: "",
-            iSComponentDidMount: false,
             ProposalManagement_Misc: {
                 "UserProfileCacheExpiration": 0,
                 "GraphRequestUrl": "https://graph.microsoft.com/v1.0/",

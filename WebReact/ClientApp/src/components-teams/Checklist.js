@@ -25,6 +25,10 @@ import AccessDenied from '../helpers/AccessDenied';
 import AuthHelper from '../helpers/AuthHelper';
 //Granular Access end
 
+/**
+ * CheckList Page
+ */
+
 export class Checklist extends Component {
     displayName = Checklist.name
 

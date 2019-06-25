@@ -13,6 +13,9 @@ import { PrimaryButton } from 'office-ui-fabric-react/lib/Button';
 import Utils from './helpers/Utils';
 import LoggingService from './helpers/LoggingService';
 
+/**
+ * Responsible for handling the authentication for protected routes and injects the required component services as props.
+ * */
 export class AuthorizedRoute extends Route {
     constructor(props) {
         super(props);

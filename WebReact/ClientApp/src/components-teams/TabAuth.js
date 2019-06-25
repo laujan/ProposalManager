@@ -11,6 +11,13 @@ import { Spinner, SpinnerSize } from 'office-ui-fabric-react/lib/Spinner';
 import { Trans } from "react-i18next";
 import LoggingService from '../helpers/LoggingService';
 
+/**
+ * This component helps the authentication of Opportunity components
+ * after rendering inside the Teams
+ * This will try to get the JWT token silenty and authenticate with MSAL library.
+ * ON a error scenario, we will have reset token button to reset the token manually.
+ */
+
 export class TabAuth extends Component {
     displayName = TabAuth.name
 
@@ -36,11 +43,7 @@ export class TabAuth extends Component {
             })
             .catch(err => {
                 this.logService.log("TabAuth_componentDidMount_acquiringWebApiToken error:", err);
-                this.authHelper.loginRedirect()
-                    .catch(loginError => {
-                        this.logService.log("TabAuth_logonInteractive_loginRedirect:", loginError);
-                        microsoftTeams.authentication.notifyFailure(loginError);
-                    });
+                this.authHelper.loginRedirect();
             });
     }
 

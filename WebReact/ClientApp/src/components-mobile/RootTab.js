@@ -14,6 +14,12 @@ import { OpportunitySummary } from '../components-teams/general/Opportunity/Oppo
 import { OpportunityNotes } from '../components-teams/general/Opportunity/OpportunityNotes';
 import Accessdenied from '../helpers/AccessDenied';
 
+/**
+ * 
+ * Route Component, 
+ * This component shows Workflow page, Teamupdate page and opportunitynotes page.
+ * Along with Path to general page in mobile
+ */
 export class RootTab extends Component {
     displayName = RootTab.name
 
