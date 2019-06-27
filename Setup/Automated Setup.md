@@ -1,8 +1,15 @@
-# Pre-requisites
+# Installing Proposal Manager
+Proposal Manager can be easily installed using PowerShell. In this folder, a script called `Install-PMInstance.ps1` is included for your convenience.
+
+This script is intended to run in that folder, with the whole repo downloaded to your machine. Trying to download only the scripts and running them without the code **will not work**.
+
+Refer to this Automated Deployment Process [walkthrough video](https://www.youtube.com/watch?v=IXEX-tgD2Lg) for an overview of the process before you start. After this deployment process, refer to [this video](https://youtu.be/WmOT6D2mQPs) to configure the system, or refer to the Getting Started guide. 
+
+## Pre-requisites
 
 If running in _Full_, _BuildOnly_ or _NoDeploy_ mode:
 
-* .NET Core 2.1 (https://dotnet.microsoft.com/download/thank-you/dotnet-sdk-2.1.500-windows-x64-installer)
+* .NET Core 2.2 (https://dotnet.microsoft.com/download/thank-you/dotnet-sdk-2.2.300-windows-x64-installer)
 * .NET Framework 4.6.1 Developer Pack (https://www.microsoft.com/en-us/download/details.aspx?id=49978)
 * Node.js (https://nodejs.org/en/download/)
 
@@ -13,13 +20,6 @@ If including the bot in the setup:
 **Important**: after installing any of the pre-requisites displayed above, you will need to exit powershell and re-launch it to make sure all the environment variables are correctly picked up by the shell.
 
 **Important**: when you run any of these scripts, a free-tiered app service plan will be created. If your subscription already hit the 10 free app service plans limit, either change subscriptions, delete a free app service plan or move it to a different pricing tier so the setup can be completed.
-
-# Installing Proposal Manager
-Proposal Manager can be easily installed using PowerShell. In this folder, a script called `Install-PMInstance.ps1` is included for your convenience.
-
-This script is intended to run in that folder, with the whole repo downloaded to your machine. Trying to download only the scripts and running them without the code **will not work**.
-
-Refer to this Automated Deployment Process [walk-through video](https://youtu.be/Pd62rhF6Cy0) for an overview of the process before you start. After this deployment process refer to [configure-proposalmanager video](https://youtu.be/WmOT6D2mQPs) to configure the system or see the Getting Started guide. Refer [this video](https://youtu.be/_Y_SAhd3sBc) for a comprehensive walk-through including add-ins.
 
 Before running the script, please execute the following:
 
@@ -51,6 +51,8 @@ Force|FLAG; Specify only if you explicitly intend to overwrite an existing insta
 Verbose|FLAG; Specify only for troubleshooting purposes to include detailed information of the installation process.
 Mode|The *mode* of execution determines what tasks get done during the execution of the script. This is useful when you need to decouple, for example, the build from the deploy, to be able to build the application offline and then deploy them from a different security context in a different machine. See "available modes" for more details. **The default mode is _FULL_.**
 
+**Important**: If your user account login is enforced with Multi-Factor Authentication (MFA), you _must_ use the -MFA flag. Otherwise, the installation will fail.
+
 ### Execution modes
 
 The available running modes are:
@@ -63,15 +65,13 @@ BuildOnly|Yes|No|No
 RegisterDeploy|No|Yes|Yes
 Full|Yes|Yes|Yes
 
-**Important**: If your user account login is enforced with Multi-Factor Authentication (MFA), you _must_ use the -MFA flag. Otherwise, the installation will fail.
-
 **Note**: If no mode is specified, the _FULL_ mode will be used.
 
 **Note**: The "Registers the apps and generates manifests" column also includes the bot registration, if the -IncludeBot flag is included in the call, and the Group and SharePoint sites creation.
 
 Execution modes allow you to build the application offline and then deploy them using an online machine.
 
-For example, you might run the script in _BuildOnly_ mode in your workstation, hand off the full folder of Proposal Manager as is to the Ops team (it will contain the built applications), and let them run the script in _RegisterDeploy_ mode from the datacenter. This way, they don't need compilers and SDKs such as .NET Framework or npm; they only need a powershell console and a connection to Azure.
+For example, you might run the script in _BuildOnly_ mode in your workstation, hand off the full folder of Proposal Manager as is to the Ops team (it will contain the built applications), and let them run the script in _RegisterDeploy_ mode from the datacenter. This way, they don't need compilers and SDKs such as .NET Framework or npm; they only need a PowerShell console and a connection to Azure.
 
 An alternative is to build and register the applications yourself, using the _NoDeploy_ mode, and then let the ops team deploy the already registered applications by running the script in _DeployOnly_ mode.
 
@@ -116,9 +116,11 @@ The required parameters for this mode are:
 
 To find the subscription info, navigate to the [Azure Portal](https://portal.azure.com) and select Subscriptions. Pick the subscription  name or ID from the displayed list, for the subscription where you are planning to deploy the solution to.
 
-You will be prompted for credentials two times. The first time, you need to log in to office 365 with your **office tenant global administrator credentials**. Once this is done, the script will start setting up office 365 to prepare it for the installation of Proposal Manager.
+When executing the script, you may be prompted to install or update the NuGet provider. You can accept this as PowerShell will do so automatically. This provider will then install or update any necessary PS module (such as AzureAD and AzureRM).
 
-Once the tenant is ready, you will be asked to enter your **Azure contributor** credentials to deploy the Proposal Manager application to your azure account. The application will be installed in the default subscription. This can be changed later from the portal.
+If all pre-requesites are present, you will be prompted for credentials **two** times. The first time, you need to log in to Office 365 with your **Office tenant global administrator credentials**. Once this is done, the script will start setting up Office 365 to prepare it for the installation of Proposal Manager.
+
+Once the tenant is ready, you will be asked to enter your **Azure contributor** credentials to deploy the Proposal Manager application to your Azure account. 
 
 ## Examples
 
@@ -145,14 +147,12 @@ After deploying the app, the script will do 3 things to help you get started:
    * The url to the app
    * The SharePoint site url
    * The app id
-2. It will generate a zip file that you can sideload to Microsoft Teams as the Proposal Manager teams add-in (the zip file will be automatically opened at the end of the execution so you don't have to locate it manually). If you also specified the -IncludeAddins parameter, two manifests will be generated, one for each add-in, in `\Addins\ProjectSmartLink\` and `\Addins\ProposalCreation\Manifest\` respectevely. Instructions on how to upload these manifests are in the getting started guide of each of them.
-3. It will open your default browser in the first consent page. In order to get started with Proposal Manager:
+2. It will generate a zip file that you can sideload to Microsoft Teams as the Proposal Manager teams add-in (the zip file will be automatically opened at the end of the execution so you don't have to locate it manually). If you also specified the -IncludeAddins parameter, two manifests will be generated, one for each add-in, in `\Addins\ProjectSmartLink\` and `\Addins\ProposalCreation\Manifest\` respectevely. Instructions on how to upload these manifests are in the Getting Started Guide of each of them.
+3. It will open your default browser in the first permission consent page. In order to get started with Proposal Manager:
    1. Log in to the page that was opened, using your admin credentials.
    2. Give consent for the permissions displayed. You will be redirected to the Proposal Manager login page.
-   3. Log in to Proposal Manager, again with your admin credentials. You will be asked for a second consent. Give consent on behalf of the organization.
-   4. After having given consent the second time, you will still see the Proposal Manager login page. At this point, change the url to go to /Setup (under the same domain). You'll see there the same login page.
-   5. In the /Setup login page, sign in again, as always with your admin account. You'll see a third and final consent screen, which you need to accept on behalf of your organization once again.
-   6. You'll still see the sign in page. Click "Sign in" one last time, and the Setup page should show up. At this point, you can continue with step 8 of the Getting Started Guide (Guided Setup).
+   3. Log in to Proposal Manager, using the button in the upper right corner of the page, again with your admin credentials. You will be asked for a second consent. This time, you must give consent on behalf of the organization by clicking the corresponding checkbox.
+   4. After having given consent the second time, you will be redirected to the Proposal Manager launch screen. From here, you can move to https://teams.microsoft.com or open up the Microsoft Teams desktop client and upload the Proposal Manager Add-in, and complete setup. Continue with step 5 of the Getting Started Guide.   
 4. Upload add-in manifest files to SharePoint Application Catalog:
     1. Log in to your SharePoint admin site: https://{tenant}-admin.sharepoint.com/_layouts/15/online/tenantadminapps.aspx - You need to be a Global Administrator
     2. Select the apps menu item for managing your Applications
