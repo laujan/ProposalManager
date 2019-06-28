@@ -102,5 +102,11 @@ namespace ApplicationCore.Models
         public string WebhookPassword { get; set; }
         [JsonProperty("VaultBaseUrl", Order = 41)]
         public string VaultBaseUrl { get; set; }
+        [JsonProperty("AuditReportId", Order = 42)]
+        public string AuditReportId { get; set; }
+        [JsonProperty("AuditWorkspaceId", Order = 43)]
+        public string AuditWorkspaceId { get; set; }
+        [JsonProperty("AuditEnabled", Order = 43)]
+        public bool AuditEnabled { get; set; }
     }
 }

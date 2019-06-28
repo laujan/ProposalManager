@@ -30,7 +30,7 @@ New features in the latest release include:
   - Extensibility features for partners: Proposal Manager APIs, application channel tab customization, and Project Smart Link integration from external webservice.
   - Improved documentation and getting started videos in GitHub.
  
-Detailed documentation and links to instructional videos are available in Documents folders presented in the master and respective Add-Ins. 
+Detailed documentation and links to instructional videos are available in Documents folders present in the root folder and respective Add-Ins. 
 
 # Before you start
 Make sure that you have the following handy before starting the deployment process:
@@ -44,7 +44,7 @@ To facilitate quick deployment, Proposal Manager provides an automated experienc
 
 We have also published the following high level **walk-through videos** to help with the deployment process and to get a functional understanding:
   - [Proposal Manager - Automated Deployment](https://youtu.be/IXEX-tgD2Lg)
-  - [Proposal Manager - Functional Overview](https://youtu.be/GFi4hItyy5k)
+  - [Proposal Manager - Functional Overview](https://youtu.be/WfcyKNIVluM)
   - [Office Add-ins: Functional Overview](https://youtu.be/hy5TLFVum1E)
   - [Dynamics 365 Integration - Automated Deployment](https://youtu.be/22UyMAvEMeM)
   - [Dynamics 365 and Office add-ins - Functional Overview](https://youtu.be/cQfYfxT5a-I)

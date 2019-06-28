@@ -15,10 +15,12 @@ using Newtonsoft.Json.Linq;
 using ApplicationCore.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Newtonsoft.Json;
+using Audit.WebApi;
 
 namespace WebReact.Api
 {
     [Authorize(AuthenticationSchemes = "AzureAdBearer")]
+    [AuditApi(EventTypeName = "{verb}.{controller}.{action}.{url}", IncludeHeaders = true)]
     public class OpportunityController : BaseApiController<OpportunityController>
     {
         private readonly IOpportunityService _opportunityService;

@@ -13,6 +13,7 @@ import { AdminAllOpportunities } from './Administration/AdminAllOpportunities';
 import { Spinner, SpinnerSize } from 'office-ui-fabric-react/lib/Spinner';
 import Utils from '../../helpers/Utils';
 import Accessdenied from '../../helpers/AccessDenied';
+import { Audit } from './Audit';
 
 export class Administration extends Component {
     displayName = Administration.name
@@ -178,6 +179,14 @@ export class Administration extends Component {
                                     <PivotItem linkText={<Trans>archivedOpportunities</Trans>} itemKey="archivedOpportunities">
                                         <AdminArchivedOpportunities items={this.state.items} userRoleList={this.state.userRoleList} apiService={this.props.apiService} logService={this.props.logService} />
                                     </PivotItem>
+                                    {
+                                        this.props.appSettings.auditEnabled ?
+                                        <PivotItem linkText="Audit Logs" itemKey="audit">
+                                            <Audit apiService={this.props.apiService} logService={this.props.logService} appSettings={this.props.appSettings} />
+                                        </PivotItem>
+                                        :
+                                        <div />
+                                    }
                                 </Pivot>
                             :
                             <Accessdenied />

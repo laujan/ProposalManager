@@ -99,6 +99,7 @@ namespace Infrastructure.Helpers
             }";
             return json;
         }
+
         public static string PermissionJsonSchema(string displayName)
         {
             string json = @"{
@@ -292,6 +293,36 @@ namespace Infrastructure.Helpers
             }";
             return json;
         }
+
+        public static string AuditJsonSchema(string displayName)
+        {
+            string json = @"{
+              'displayName': '" + displayName + @"',
+              'columns': [
+                {
+                  'name': 'Log',
+                  'text': {'allowMultipleLines': true}
+                },
+                {
+                  'name': 'User',
+                  'text': {}
+                },
+                {
+                  'name': 'Action',
+                  'text': {}
+                },
+                {
+                  'name': 'Controller',
+                  'text': {}
+                },
+                {
+                  'name': 'Method',
+                  'text': {},
+                }
+              ]
+            }";
+            return json;
+        }
     }
 
     public enum ListSchema
@@ -304,6 +335,7 @@ namespace Infrastructure.Helpers
         Permissions,
         DashboardListId,
         OpportunityMetaDataId,
-        TasksListId
+        TasksListId,
+        AuditListId
     }
 }

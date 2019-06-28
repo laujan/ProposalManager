@@ -253,6 +253,9 @@ namespace Infrastructure.Services
                         case ListSchema.TasksListId:
                             htmlBody = SharePointListsSchemaHelper.TasksJsonSchema(_appOptions.TasksListId);
                             break;
+                        case ListSchema.AuditListId:
+                            htmlBody = SharePointListsSchemaHelper.AuditJsonSchema("Audit");
+                            break;
                     }
                     await _graphSharePointAppService.CreateSiteListAsync(htmlBody, siteRootId);
                 }
@@ -347,13 +350,12 @@ namespace Infrastructure.Services
             sharepointLists.Add(ListSchema.GroupsListId);
             sharepointLists.Add(ListSchema.OpportunitiesListId);
             sharepointLists.Add(ListSchema.ProcessListId);
-            
             sharepointLists.Add(ListSchema.RoleListId);
-          
             sharepointLists.Add(ListSchema.TemplateListId);
             sharepointLists.Add(ListSchema.Permissions);
             sharepointLists.Add(ListSchema.DashboardListId);
             sharepointLists.Add(ListSchema.TasksListId);
+            sharepointLists.Add(ListSchema.AuditListId);
 
             return sharepointLists;
         }

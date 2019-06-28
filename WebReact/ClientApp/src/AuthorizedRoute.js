@@ -66,7 +66,10 @@ export class AuthorizedRoute extends Route {
             teamsAppInstanceId: appSettingsObject.TeamsAppInstanceId,
             teamsAppName: appSettingsObject.TeamsAppName,
             reportId: appSettingsObject.ReportId,
-            workspaceId: appSettingsObject.WorkspaceId
+            workspaceId: appSettingsObject.WorkspaceId,
+            auditReportId: appSettingsObject.AuditReportId,
+            auditWorkspaceId: appSettingsObject.AuditWorkspaceId,
+            auditEnabled: appSettingsObject.AuditEnabled
         };
     }
 

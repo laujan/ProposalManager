@@ -28,6 +28,8 @@ using ApplicationCore.Interfaces.SmartLink;
 using Infrastructure.Services.SmartLink;
 using Microsoft.Extensions.Options;
 using IAuthorizationService = ApplicationCore.Interfaces.IAuthorizationService;
+using System;
+using WebReact.Api;
 
 namespace WebReact
 {
@@ -35,10 +37,13 @@ namespace WebReact
     public class Startup
 	{
         /// Startup constructor
-		public Startup(IConfiguration configuration)
-		{
-			Configuration = configuration;
-		}
+		private readonly IServiceProvider serviceProvider;
+
+        public Startup(IConfiguration configuration, IServiceProvider serviceProvider)
+        {
+            Configuration = configuration;
+            this.serviceProvider = serviceProvider;
+        }
 
         /// Configuration property
 		public IConfiguration Configuration { get; }
@@ -72,10 +77,10 @@ namespace WebReact
             .SetCompatibilityVersion(CompatibilityVersion.Version_2_1)
 			.AddDynamicsCRMWebHooks();
 
-
+            var auditEnabled = Configuration.GetSection("ProposalManagement").GetValue<bool>("AuditEnabled");
             // This sample uses an in-memory cache for tokens and subscriptions. Production apps will typically use some method of persistent storage.
 
-			services.AddSession();
+            services.AddSession();
 
 			// Register configuration options
 			services.Configure<AppOptions>(Configuration.GetSection("ProposalManagement"));
@@ -169,11 +174,17 @@ namespace WebReact
 				configuration.RootPath = "ClientApp/build";
 			});
 
-
-
             //Configure writing to appsettings
             services.ConfigureWritable<AppOptions>(Configuration.GetSection("ProposalManagement"));
             services.ConfigureWritable<DocumentIdActivatorConfiguration>(Configuration.GetSection("DocumentIdActivator"));
+
+            if (auditEnabled)
+            {
+                services.AddHttpContextAccessor();
+                services.AddSingleton<SharePointListDataProvider>();
+                var sp = services.BuildServiceProvider();
+                Audit.Core.Configuration.DataProvider = sp.GetService<SharePointListDataProvider>();
+            }
         }
 
         /// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

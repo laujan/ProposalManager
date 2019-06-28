@@ -49,28 +49,25 @@ namespace Infrastructure.Services
             var clientSettings = new ClientSettingsModel();
             clientSettings.SharePointHostName = _appOptions.SharePointHostName;
             clientSettings.ProposalManagementRootSiteId = _appOptions.ProposalManagementRootSiteId;
-            //clientSettings.CategoriesListId = _appOptions.CategoriesListId;
             clientSettings.TemplateListId = _appOptions.TemplateListId;
             clientSettings.RoleListId = _appOptions.RoleListId;
             clientSettings.Permissions = _appOptions.Permissions;
             clientSettings.ProcessListId = _appOptions.ProcessListId;
             clientSettings.WorkSpaceId = _appOptions.PBIWorkSpaceId;
-            //clientSettings.IndustryListId = _appOptions.IndustryListId;
-            //clientSettings.RegionsListId = _appOptions.RegionsListId;
             clientSettings.DashboardListId = _appOptions.DashboardListId;
-            //clientSettings.RoleMappingsListId = _appOptions.RoleMappingsListId;
             clientSettings.OpportunitiesListId = _appOptions.OpportunitiesListId;
             clientSettings.SharePointListsPrefix = _appOptions.SharePointListsPrefix;
-
             clientSettings.AllowedTenants = _appOptions.AllowedTenants;
             clientSettings.BotServiceUrl = _appOptions.BotServiceUrl;
             clientSettings.BotName = _appOptions.BotName;
             clientSettings.BotId = _appOptions.BotId;
-
             clientSettings.PBIApplicationId = _appOptions.PBIApplicationId;
             clientSettings.PBIWorkSpaceId = _appOptions.PBIWorkSpaceId;
             clientSettings.PBIReportId = _appOptions.PBIReportId;
             clientSettings.PBITenantId = _appOptions.PBITenantId;
+            clientSettings.AuditWorkspaceId = _appOptions.AuditWorkspaceId;
+            clientSettings.AuditReportId = _appOptions.AuditReportId;
+            clientSettings.AuditEnabled = _appOptions.AuditEnabled;
 
             try
             {
@@ -84,7 +81,6 @@ namespace Infrastructure.Services
                 clientSettings.PBIUserPassword = "";
             }
 
-
             clientSettings.GeneralProposalManagementTeam = _appOptions.GeneralProposalManagementTeam;
             clientSettings.ProposalManagerAddInName = _appOptions.ProposalManagerAddInName;
             clientSettings.ProposalManagerGroupID = _appOptions.ProposalManagerGroupID;
@@ -95,10 +91,8 @@ namespace Infrastructure.Services
             clientSettings.GraphBetaRequestUrl = _appOptions.GraphBetaRequestUrl;
             clientSettings.SharePointSiteRelativeName = _appOptions.SharePointSiteRelativeName;
             clientSettings.VaultBaseUrl = _appOptions.VaultBaseUrl;
-
             clientSettings.MicrosoftAppId = _appOptions.MicrosoftAppId;
             clientSettings.MicrosoftAppPassword = _appOptions.MicrosoftAppPassword;
-
             clientSettings.WebhookAddress = documentIdActivatorConfiguration.WebhookAddress;
             clientSettings.WebhookUsername = documentIdActivatorConfiguration.WebhookUsername;
             clientSettings.WebhookPassword = documentIdActivatorConfiguration.WebhookPassword;

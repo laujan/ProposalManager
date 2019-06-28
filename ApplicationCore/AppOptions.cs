@@ -97,5 +97,9 @@ namespace ApplicationCore
         public string VaultBaseUrl { get; set; }
 
         public string Version { get; set; }
+        public string AuditWorkspaceId { get; set; }
+        public string AuditReportId { get; set; }
+
+        public bool AuditEnabled { get; set; }
     }
 }
