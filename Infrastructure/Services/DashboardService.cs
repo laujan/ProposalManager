@@ -1,18 +1,19 @@
-﻿using System;
+﻿// Copyright(c) Microsoft Corporation. 
+// All rights reserved.
+//
+// Licensed under the MIT license. See LICENSE file in the solution root folder for full license information
+
+using ApplicationCore;
+using ApplicationCore.Artifacts;
+using ApplicationCore.Entities;
+using ApplicationCore.Helpers;
+using ApplicationCore.Interfaces;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using ApplicationCore.ViewModels;
-using ApplicationCore.Interfaces;
-using ApplicationCore;
-using ApplicationCore.Artifacts;
-using ApplicationCore.Services;
-using ApplicationCore.Helpers;
-using ApplicationCore.Models;
-using ApplicationCore.Entities;
-using ApplicationCore.Helpers.Exceptions;
 
 namespace Infrastructure.Services
 {
@@ -34,16 +35,16 @@ namespace Infrastructure.Services
             _logger.LogInformation($"RequestId: {requestId} - CreateDashBoardEntryAsync called.");
             try
             {
-                var targetDate = opportunity.Metadata.Fields.ToList().Find(x => x.DisplayName == "Target Date")?.Values;
-                var openedDate = opportunity.Metadata.Fields.ToList().Find(x => x.DisplayName == "Opened Date")?.Values;
+                var targetDate = opportunity.Metadata.Fields.ToList().Find(x => x.DisplayName.Equals("Target Date", StringComparison.OrdinalIgnoreCase))?.Values;
+                var openedDate = opportunity.Metadata.Fields.ToList().Find(x => x.DisplayName.Equals("Opened Date", StringComparison.OrdinalIgnoreCase))?.Values;
 
                 if (targetDate != null && openedDate != null)
                 {
                     var entity = new Dashboard();
-                    entity.CustomerName = opportunity.Metadata.Customer.DisplayName.ToString();
-                    entity.Status = opportunity.Metadata.OpportunityState.Name.ToString();
+                    entity.CustomerName = opportunity.Metadata.Customer.DisplayName;
+                    entity.Status = opportunity.Metadata.OpportunityState.Name;
                     entity.StartDate = openedDate ?? String.Empty;
-                    entity.OpportunityName = opportunity.DisplayName.ToString();
+                    entity.OpportunityName = opportunity.DisplayName;
                     entity.OpportunityId = opportunity.Id;
                     entity.Id = String.Empty;
                     entity.TotalNoOfDays = 0;
@@ -51,39 +52,33 @@ namespace Infrastructure.Services
                     entity.ProcessEndDateList = new List<DashboradProcessEndDateList>();
                     entity.ProcessLoanOfficerNames = new List<DashboardLoanOfficers>();
 
-                    var processList = (await _processRepository.GetAllAsync(requestId)).ToList();
+                    var processList = (await _processRepository.GetAllAsync(requestId)).ToList().Where(x => x.ProcessType.Equals("checklisttab", StringComparison.OrdinalIgnoreCase));
 
-                    foreach(var process in processList)
+                    foreach (var process in processList)
                     {
-                        if (process.ProcessType.ToLower()== "checklisttab")
+                        entity.ProcessList.Add(new DashboardProcessList
                         {
-                            entity.ProcessList.Add(new DashboardProcessList
-                            {
-                                ProcessName = process.Channel.ToLower(),
-                                ProcessEndDate = string.Empty,
-                                ProcessStartDate = string.Empty,
-                                NoOfDays = 0
-                            });
+                            ProcessName = process.Channel.ToLower(),
+                            ProcessEndDate = string.Empty,
+                            ProcessStartDate = string.Empty,
+                            NoOfDays = 0
+                        });
 
-                            entity.ProcessEndDateList.Add(new DashboradProcessEndDateList
-                            {
-                                Process = process.Channel.ToLower() + "enddate",
-                                EndDate = string.Empty
-                            });
-                        }
+                        entity.ProcessEndDateList.Add(new DashboradProcessEndDateList
+                        {
+                            Process = process.Channel.ToLower() + "enddate",
+                            EndDate = string.Empty
+                        });
                     }
 
-
-                    var loanOfficerAdgroup = opportunity.Content.TeamMembers.FirstOrDefault(mem => mem.Fields.Permissions.Any(per => per.Name.ToLower() == "opportunity_readwrite_dealtype"));
+                    var loanOfficerAdgroup = opportunity.Content.TeamMembers.FirstOrDefault(mem => mem.Fields.Permissions.Any(per => per.Name.Equals("opportunity_readwrite_dealtype", StringComparison.OrdinalIgnoreCase)));
                     entity.ProcessLoanOfficerNames.Add(new DashboardLoanOfficers
                     {
-                        AdGroupName = loanOfficerAdgroup != null ? loanOfficerAdgroup.RoleName.ToString():string.Empty,
-                        OfficerName = loanOfficerAdgroup != null ? loanOfficerAdgroup.DisplayName.ToString() : string.Empty
+                        AdGroupName = loanOfficerAdgroup != null ? loanOfficerAdgroup.RoleName : string.Empty,
+                        OfficerName = loanOfficerAdgroup != null ? loanOfficerAdgroup.DisplayName : string.Empty
                     });
 
-
                     await _dashboardRepository.CreateOpportunityAsync(entity, requestId);
-
                 }
             }
             catch (Exception ex)
@@ -105,72 +100,68 @@ namespace Infrastructure.Services
                     dashboard.OpportunityId = opportunity.Id;
                     var date = DateTimeOffset.Now.Date;
 
-                    if (dashboard.Status.ToLower() != opportunity.Metadata.OpportunityState.Name.ToLower()){
-                        dashboard.Status = opportunity.Metadata.OpportunityState.Name.ToString();
-                        if (dashboard.Status.ToLower().ToString() == "accepted" || dashboard.Status.ToLower().ToString() == "archived"){
+                    if (!dashboard.Status.Equals(opportunity.Metadata.OpportunityState.Name, StringComparison.OrdinalIgnoreCase))
+                    {
+                        dashboard.Status = opportunity.Metadata.OpportunityState.Name;
+                        if (dashboard.Status.Equals("accepted", StringComparison.OrdinalIgnoreCase) || dashboard.Status.Equals("archived", StringComparison.OrdinalIgnoreCase)) {
                             dashboard.TargetCompletionDate = date.ToString();
                             dashboard.TotalNoOfDays = GetDateDifference(DateTime.Parse(dashboard.StartDate.ToString()), date);
                         }
-
                     }
 
                     var oppCheckLists = opportunity.Content.Checklists.ToList();
 
-                    foreach (var process in opportunity.Content.Template.ProcessList)
+                    foreach (var process in opportunity.Content.Template.ProcessList.Where(x => x.ProcessType.Equals("checklisttab", StringComparison.OrdinalIgnoreCase)))
                     {
-                        if (process.ProcessType.ToLower() == "checklisttab")
+                        var checklistItm = oppCheckLists.Find(x => x.ChecklistChannel.Equals(process.Channel, StringComparison.OrdinalIgnoreCase));
+                        if (checklistItm != null)
                         {
-                            var checklistItm = oppCheckLists.Find(x => x.ChecklistChannel.ToLower() == process.Channel.ToLower());
-                            if (checklistItm != null)
+                            var dProcess = dashboard.ProcessList.ToList().Find(x => x.ProcessName.Equals(process.Channel, StringComparison.OrdinalIgnoreCase));
+                            if (dProcess != null)
                             {
-                                var dProcess = dashboard.ProcessList.ToList().Find(x => x.ProcessName.ToLower() == process.Channel.ToLower());
-                                if (dProcess != null)
+                                if (checklistItm.ChecklistStatus == ActionStatus.InProgress)
                                 {
-                                    if (checklistItm.ChecklistStatus == ActionStatus.InProgress)
-                                    {
-                                        dProcess.ProcessStartDate = date.ToString();
-                                    }
-                                    if (checklistItm.ChecklistStatus == ActionStatus.Completed && dProcess.NoOfDays == 0)
-                                    {
-                                        dProcess.ProcessEndDate = date.ToString();
-                                        dProcess.NoOfDays = GetDateDifference(DateTime.Parse(dProcess.ProcessStartDate), date);
-                                    }
-                                }
-                                else
-                                {
-                                    dProcess = new DashboardProcessList();
-                                    dProcess.ProcessName = checklistItm.ChecklistChannel.ToLower();
                                     dProcess.ProcessStartDate = date.ToString();
-                                    dProcess.NoOfDays = 0;
-                                    dashboard.ProcessList.Add(dProcess);
                                 }
-
-                                var processEndDateObj = dashboard.ProcessEndDateList.ToList().Find(x => x.Process.ToLower() == process.Channel.ToLower() + "enddate");
-                                if (processEndDateObj != null)
+                                if (checklistItm.ChecklistStatus == ActionStatus.Completed && dProcess.NoOfDays == 0)
                                 {
-                                    if (checklistItm.ChecklistStatus == ActionStatus.Completed)
-                                    {
-                                        processEndDateObj.EndDate = date.ToString();                                     
-                                    }
-                                }
-                                else
-                                {
-                                    processEndDateObj = new DashboradProcessEndDateList();
-                                    processEndDateObj.Process = checklistItm.ChecklistChannel.ToLower() + "enddate";
-                                    processEndDateObj.EndDate = string.Empty;
-                                    dashboard.ProcessEndDateList.Add(processEndDateObj);
-
+                                    dProcess.ProcessEndDate = date.ToString();
+                                    dProcess.NoOfDays = GetDateDifference(DateTime.Parse(dProcess.ProcessStartDate), date);
                                 }
                             }
-                        }
+                            else
+                            {
+                                dProcess = new DashboardProcessList();
+                                dProcess.ProcessName = checklistItm.ChecklistChannel.ToLower();
+                                dProcess.ProcessStartDate = date.ToString();
+                                dProcess.NoOfDays = 0;
+                                dashboard.ProcessList.Add(dProcess);
+                            }
 
+                            var processEndDateObj = dashboard.ProcessEndDateList.ToList().Find(x => x.Process.ToLower() == process.Channel.ToLower() + "enddate");
+                            if (processEndDateObj != null)
+                            {
+                                if (checklistItm.ChecklistStatus == ActionStatus.Completed)
+                                {
+                                    processEndDateObj.EndDate = date.ToString();
+                                }
+                            }
+                            else
+                            {
+                                processEndDateObj = new DashboradProcessEndDateList();
+                                processEndDateObj.Process = checklistItm.ChecklistChannel.ToLower() + "enddate";
+                                processEndDateObj.EndDate = string.Empty;
+                                dashboard.ProcessEndDateList.Add(processEndDateObj);
+
+                            }
+                        }
                     }
 
-                    var loanOfficerAdgroup = opportunity.Content.TeamMembers.FirstOrDefault(mem => mem.Fields.Permissions.Any(per => per.Name.ToLower() == "opportunity_readwrite_dealtype"));
+                    var loanOfficerAdgroup = opportunity.Content.TeamMembers.FirstOrDefault(mem => mem.Fields.Permissions.Any(per => per.Name.Equals("opportunity_readwrite_dealtype", StringComparison.OrdinalIgnoreCase)));
                     if (loanOfficerAdgroup !=null)
                     {
-                        var obj = dashboard.ProcessLoanOfficerNames.ToList().Find(x => x.AdGroupName.ToLower() == loanOfficerAdgroup.RoleName.ToLower());
-                        if (obj != null) obj.OfficerName = loanOfficerAdgroup.DisplayName.ToString();
+                        var obj = dashboard.ProcessLoanOfficerNames.ToList().Find(x => x.AdGroupName.Equals(loanOfficerAdgroup.RoleName, StringComparison.OrdinalIgnoreCase));
+                        if (obj != null) obj.OfficerName = loanOfficerAdgroup.DisplayName;
                     }
 
                     await _dashboardRepository.UpdateOpportunityAsync(dashboard, requestId);

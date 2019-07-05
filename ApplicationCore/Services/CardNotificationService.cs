@@ -3,7 +3,6 @@
 //
 // Licensed under the MIT license. See LICENSE file in the solution root folder for full license information
 
-using ApplicationCore;
 using ApplicationCore.Artifacts;
 using ApplicationCore.Entities;
 using ApplicationCore.Helpers;
@@ -13,7 +12,6 @@ using Microsoft.Bot.Connector.Teams;
 using Microsoft.Bot.Connector.Teams.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Protocols;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;

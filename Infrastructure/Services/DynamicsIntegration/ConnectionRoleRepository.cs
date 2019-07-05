@@ -6,7 +6,6 @@
 using ApplicationCore;
 using ApplicationCore.Interfaces;
 using Microsoft.Extensions.Configuration;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -16,8 +15,7 @@ using System.Net.Http;
 
 namespace Infrastructure.Services
 {
-
-	public class ConnectionRoleRepository : IConnectionRoleRepository
+    public class ConnectionRoleRepository : IConnectionRoleRepository
 	{
 		private readonly IConnectionRolesCache connectionRolesCache;
 		private IReadOnlyDictionary<string, string> _connectionRoles;
@@ -50,7 +48,5 @@ namespace Infrastructure.Services
 		}
 
 		public IReadOnlyDictionary<string, string> ConnectionRoles => _connectionRoles ?? (_connectionRoles = new ReadOnlyDictionary<string, string>(connectionRolesCache.ConnectionRoles));
-
 	}
-
 }
