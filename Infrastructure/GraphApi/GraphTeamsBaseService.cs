@@ -278,16 +278,7 @@ namespace Infrastructure.GraphApi
             {
                 Guard.Against.Null(displayName, nameof(displayName));
 
-                JObject createGroup;
-
-                if (_userContext.User.Identity.Name != null)
-                {
-                    createGroup = await CreateGroupAsync(displayName, description);
-                }
-                else
-                {
-                    createGroup = await CreateGroupAsync(displayName, description, creatorId);
-                }
+                JObject createGroup = await CreateGroupAsync(displayName, description);
 
                 var groupId = createGroup["id"].ToString();
 
@@ -570,7 +561,7 @@ namespace Infrastructure.GraphApi
                 }
 
                 var json = "{" +
-                           "\"displayName\": \"Proposal Manager\", " +
+                           "\"displayName\": \"" + _appOptions.GeneralProposalManagementTeam + "\", " +
                            "\"teamsApp@odata.bind\" : \"https://graph.microsoft.com/v1.0/appCatalogs/teamsApps/" + await GetTeamsAppInstanceIdAsync() + "\", " +
                            "\"configuration\": { " +
                                                  "\"entityId\": \"PM" + displayName + "\", " +
@@ -1109,7 +1100,7 @@ namespace Infrastructure.GraphApi
                 return await memoryCache.GetOrCreateAsync(TeamsAppInstanceIdKey,
                     async x =>
                     {
-                        var requestUrl = _appOptions.GraphRequestUrl + "appCatalogs/teamsApps?$filter=startswith(displayName, 'Proposal Manager') and distributionMethod eq 'organization'&$select=id";
+                        var requestUrl = _appOptions.GraphRequestUrl + "appCatalogs/teamsApps?$filter=startswith(displayName, '"+_appOptions.GeneralProposalManagementTeam+"') and distributionMethod eq 'organization'&$select=id";
 
                         // Create the request message and add the content.
                         var hrm = new HttpRequestMessage(HttpMethod.Get, requestUrl);
