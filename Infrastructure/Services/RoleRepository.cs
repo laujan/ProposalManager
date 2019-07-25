@@ -1,33 +1,34 @@
 ﻿// Copyright(c) Microsoft Corporation. 
 // All rights reserved.
-// 
+//
 // Licensed under the MIT license. See LICENSE file in the solution root folder for full license information
 
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+using ApplicationCore;
+using ApplicationCore.Entities;
+using ApplicationCore.Entities.GraphServices;
+using ApplicationCore.Helpers;
+using ApplicationCore.Helpers.Exceptions;
+using ApplicationCore.Interfaces;
+using ApplicationCore.Services;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using ApplicationCore.Interfaces;
-using ApplicationCore.Entities;
-using ApplicationCore.Services;
-using ApplicationCore;
-using ApplicationCore.Helpers;
-using ApplicationCore.Entities.GraphServices;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Microsoft.Extensions.Caching.Memory;
+using System;
+using System.Collections.Generic;
 using System.Linq;
-using ApplicationCore.Helpers.Exceptions;
+using System.Threading.Tasks;
 
 namespace Infrastructure.Services
 {
     public class RoleRepository : BaseRepository<Role>, IRoleRepository
     {
         private readonly GraphSharePointAppService _graphSharePointAppService;
-        private IMemoryCache _cache;
+        private readonly IMemoryCache _cache;
         private readonly GraphUserAppService _graphUserAppService;
         private readonly GraphTeamsAppService _graphTeamsAppService;
+        private const string RoleCacheKey = "PM_RoleList";
 
         public RoleRepository(
             ILogger<RoleRepository> logger,
@@ -45,6 +46,11 @@ namespace Infrastructure.Services
             _cache = memoryCache;
             _graphUserAppService = graphUserAppService;
             _graphTeamsAppService = graphTeamsAppService;
+        }
+
+        public void CleanCache()
+        {
+            _cache.Remove(RoleCacheKey);
         }
 
         public async Task<StatusCodes> CreateItemAsync(Role entity, string requestId = "")
@@ -83,8 +89,6 @@ namespace Infrastructure.Services
                 await _graphSharePointAppService.CreateListItemAsync(siteList, itemJson.ToString(), requestId);
 
                 _logger.LogInformation($"RequestId: {requestId} - RolesRepo_CreateItemAsync finished creating SharePoint list item.");
-
-                await SetCacheAsync(requestId);
 
                 return StatusCodes.Status201Created;
 
@@ -146,8 +150,6 @@ namespace Infrastructure.Services
 
                 _logger.LogInformation($"RequestId: {requestId} - RolesRepo_DeleteItemAsync finished creating SharePoint list item.");
 
-                await SetCacheAsync(requestId);
-
                 return StatusCodes.Status204NoContent;
 
             }
@@ -192,12 +194,9 @@ namespace Infrastructure.Services
                 itemFieldsJson.TeamsMembership = entity.TeamsMembership.Name.ToString();
                 itemFieldsJson.Permissions = JsonConvert.SerializeObject(entity.Permissions, Formatting.Indented);
 
-
                 await _graphSharePointAppService.UpdateListItemAsync(siteList, entity.Id, itemFieldsJson.ToString(), requestId);
 
                 _logger.LogInformation($"RequestId: {requestId} - RolesRepo_UpdateItemAsync finished creating SharePoint list item.");
-
-                await SetCacheAsync(requestId);
 
                 return StatusCodes.Status200OK;
 
@@ -221,7 +220,7 @@ namespace Infrastructure.Services
                 }
                 else
                 {
-                    var isExist = _cache.TryGetValue("PM_RoleList", out roleList);
+                    var isExist = _cache.TryGetValue(RoleCacheKey, out roleList);
 
                     if (!isExist)
                     {
@@ -230,7 +229,7 @@ namespace Infrastructure.Services
                         var cacheEntryOptions = new MemoryCacheEntryOptions()
                             .SetAbsoluteExpiration(TimeSpan.FromMinutes(_appOptions.UserProfileCacheExpiration));
 
-                        _cache.Set("PM_RoleList", roleList, cacheEntryOptions);
+                        _cache.Set(RoleCacheKey, roleList, cacheEntryOptions);
                     }
                 }
 
@@ -278,29 +277,12 @@ namespace Infrastructure.Services
                     }
                 }
 
-
                 return itemsList;
             }
             catch (Exception ex)
             {
                 _logger.LogError($"RequestId: {requestId} - RolesRepo_GetRoleListAsync error: {ex}");
                 throw;
-            }
-        }
-
-        private async Task SetCacheAsync(string requestId)
-        {
-            try
-            {
-                var roleList = (await GetRoleListAsync(requestId)).ToList();
-
-                var cacheEntryOptions = new MemoryCacheEntryOptions()
-                    .SetAbsoluteExpiration(TimeSpan.FromMinutes(_appOptions.UserProfileCacheExpiration));
-                _cache.Set("PM_RoleList", roleList, cacheEntryOptions);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"RequestId: {requestId} - Role_SetCahceAsync error: {ex}");
             }
         }
     }

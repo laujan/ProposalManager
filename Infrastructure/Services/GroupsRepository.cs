@@ -1,6 +1,6 @@
 ﻿// Copyright(c) Microsoft Corporation. 
 // All rights reserved.
-// 
+//
 // Licensed under the MIT license. See LICENSE file in the solution root folder for full license information
 
 using System;
@@ -24,7 +24,8 @@ namespace Infrastructure.Services
     public class GroupsRepository: BaseRepository<Groups>, IGroupsRepository
     {
         private readonly GraphSharePointAppService _graphSharePointAppService;
-        private IMemoryCache _cache;
+        private readonly IMemoryCache _cache;
+        private const string GroupCacheKey = "PM_GroupsList";
 
         public GroupsRepository(
         ILogger<GroupsRepository> logger,
@@ -35,6 +36,11 @@ namespace Infrastructure.Services
             Guard.Against.Null(graphSharePointAppService, nameof(graphSharePointAppService));
             _graphSharePointAppService = graphSharePointAppService;
             _cache = memoryCache;
+        }
+
+        public void CleanCache()
+        {
+            _cache.Remove(GroupCacheKey);
         }
 
         public async Task<StatusCodes> CreateItemAsync(Groups entity, string requestId = "")
@@ -163,7 +169,7 @@ namespace Infrastructure.Services
                 }
                 else
                 {
-                    var isExist = _cache.TryGetValue("PM_GroupsList", out groupsList);
+                    var isExist = _cache.TryGetValue(GroupCacheKey, out groupsList);
 
                     if (!isExist)
                     {
@@ -172,7 +178,7 @@ namespace Infrastructure.Services
                         var cacheEntryOptions = new MemoryCacheEntryOptions()
                             .SetAbsoluteExpiration(TimeSpan.FromMinutes(_appOptions.UserProfileCacheExpiration));
 
-                        _cache.Set("PM_GroupsList", groupsList, cacheEntryOptions);
+                        _cache.Set(GroupCacheKey, groupsList, cacheEntryOptions);
                     }
                 }
                 return groupsList;

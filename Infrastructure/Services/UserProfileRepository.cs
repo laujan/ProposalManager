@@ -1,35 +1,35 @@
 ﻿// Copyright(c) Microsoft Corporation. 
 // All rights reserved.
-// 
+//
 // Licensed under the MIT license. See LICENSE file in the solution root folder for full license information
 
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+using ApplicationCore;
+using ApplicationCore.Entities;
+using ApplicationCore.Helpers;
+using ApplicationCore.Helpers.Exceptions;
+using ApplicationCore.Interfaces;
+using ApplicationCore.Services;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using ApplicationCore.Interfaces;
-using ApplicationCore.Entities;
-using ApplicationCore.Services;
-using ApplicationCore;
-using ApplicationCore.Helpers;
-using Newtonsoft.Json.Linq;
-using ApplicationCore.Helpers.Exceptions;
-using Microsoft.Extensions.Caching.Memory;
+using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Infrastructure.Services
 {
     public class UserProfileRepository : BaseRepository<UserProfile>, IUserProfileRepository
 	{
-		private IMemoryCache _cache;
+		private readonly IMemoryCache _cache;
 		private readonly GraphSharePointAppService _graphSharePointAppService;
 		private readonly GraphUserAppService _graphUserAppService;
         private readonly IRoleRepository _roleRepository;
         private readonly IUserContext _userContext;
-		private List<UserProfile> _usersList;
+		private readonly List<UserProfile> _usersList;
+        private const string UserProfileCacheKey = "PM_UsersList";
 
-		public UserProfileRepository(ILogger<UserProfileRepository> logger,
+        public UserProfileRepository(ILogger<UserProfileRepository> logger,
 			 GraphSharePointAppService graphSharePointAppService,
 			 GraphUserAppService graphUserAppService,
              IRoleRepository roleRepository,
@@ -50,6 +50,11 @@ namespace Infrastructure.Services
 
 			_usersList = new List<UserProfile>();
 		}
+
+        public void CleanCache()
+        {
+            _cache.Remove(UserProfileCacheKey);
+        }
 
 		public async Task<UserProfile> GetItemByIdAsync(string id, string requestId = "")
 		{
@@ -118,8 +123,6 @@ namespace Infrastructure.Services
 				throw new ResponseException($"RequestId: {requestId} - GetAllAsync Service Exception: {ex}");
 			}
 		}
-
-
 
 		private async Task<List<UserProfile>> GetUsersListAsync(string requestId = "")
 		{
@@ -207,7 +210,7 @@ namespace Infrastructure.Services
 				}
 				else
 				{
-					var isExist = _cache.TryGetValue("PM_UsersList", out userProfileList);
+					var isExist = _cache.TryGetValue(UserProfileCacheKey, out userProfileList);
 
 					if (!isExist)
 					{
@@ -216,7 +219,7 @@ namespace Infrastructure.Services
 						var cacheEntryOptions = new MemoryCacheEntryOptions()
 							.SetAbsoluteExpiration(TimeSpan.FromMinutes(_appOptions.UserProfileCacheExpiration));
 
-						_cache.Set("PM_UsersList", userProfileList, cacheEntryOptions);
+						_cache.Set(UserProfileCacheKey, userProfileList, cacheEntryOptions);
 					}
 				}
 

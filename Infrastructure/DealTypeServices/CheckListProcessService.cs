@@ -1,6 +1,6 @@
 ﻿// Copyright(c) Microsoft Corporation. 
 // All rights reserved.
-// 
+//
 // Licensed under the MIT license. See LICENSE file in the solution root folder for full license information
 
 using System;
@@ -20,6 +20,7 @@ using ApplicationCore.Services;
 using ApplicationCore.Models;
 using Infrastructure.Authorization;
 using ApplicationCore.Authorization;
+using System.Text;
 
 namespace Infrastructure.DealTypeServices
 {
@@ -150,12 +151,13 @@ namespace Infrastructure.DealTypeServices
                         {
                             if (statusChangedChecklists.Count > 0)
                             {
-                                var checkLists = String.Empty;
+                                var sb = new StringBuilder();
                                 foreach (var chkItm in statusChangedChecklists)
                                 {
-                                    checkLists = checkLists + $"'{chkItm.ChecklistChannel}' ";
+                                    sb.Append($"'{chkItm.ChecklistChannel}' ");
                                 }
 
+                                var checkLists = sb.ToString();
                                 var sendToList = new List<UserProfile>();
 
                                 //WAVE-4 GENERIC ACCELERATOR Change : start
@@ -232,20 +234,13 @@ namespace Infrastructure.DealTypeServices
             {
                 foreach (var item in entity.Content.Checklists)
                 {
-                    //Granular bug fix : Start
-                    //Temp fix for checklist process update
-                    //Overriding granular access while getting exsiting opportunity model from sharepoint
                     var overrideAccess = _authorizationService.GetGranularAccessOverride();
-                    //Granular bug fix : End
-
                     //Granular Access : Start
-                    var permissionsNeeded = new List<ApplicationCore.Entities.Permission>();
-                    List<string> list = new List<string>();
+                    var list = new List<string>() { Access.Opportunities_Read_All.ToString(), Access.Opportunities_ReadWrite_All.ToString() };
                     var access = true;
                     //going for super access
-                    list.AddRange(new List<string> { Access.Opportunities_Read_All.ToString(), Access.Opportunities_ReadWrite_All.ToString() });
-                    permissionsNeeded = (await _permissionRepository.GetAllAsync(requestId)).ToList().Where(x => list.Any(x.Name.Contains)).ToList();
-                    if (!(StatusCodes.Status200OK == await _authorizationService.CheckAccessAsync(permissionsNeeded,requestId)))
+                    var permissionsNeeded = (await _permissionRepository.GetAllAsync(requestId)).ToList().Where(x => list.Any(x.Name.Contains)).ToList();
+                    if (!(StatusCodes.Status200OK == await _authorizationService.CheckAccessAsync(permissionsNeeded, requestId)))
                     {
                         //going for opportunity access
                         access = await _authorizationService.CheckAccessInOpportunityAsync(entity, PermissionNeededTo.Read, requestId);
@@ -256,16 +251,13 @@ namespace Infrastructure.DealTypeServices
                             if (access)
                             {
                                 var channel = item.ChecklistChannel.Replace(" ", "");
-                                List<string> partialList = new List<string>();
-                                partialList.AddRange(new List<string> { $"{channel.ToLower()}_read", $"{channel.ToLower()}_readwrite" });
+                                List<string> partialList = new List<string>() { $"{channel.ToLower()}_read", $"{channel.ToLower()}_readwrite" };
                                 permissionsNeeded = (await _permissionRepository.GetAllAsync(requestId)).ToList().Where(x => partialList.Any(x.Name.ToLower().Contains)).ToList();
                                 access = StatusCodes.Status200OK == await _authorizationService.CheckAccessAsync(permissionsNeeded, requestId) ? true : false;
                             }
                             else
                                 access = false;
-
                         }
-
                     }
 
                     if (access || overrideAccess)
@@ -306,6 +298,7 @@ namespace Infrastructure.DealTypeServices
         {
             return await UpdateCheckList(opportunity, requestId);
         }
+
         public async Task<Opportunity> UpdateCheckList(Opportunity opportunity, string requestId = "")
         {
             try

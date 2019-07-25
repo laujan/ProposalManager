@@ -1,6 +1,6 @@
 ﻿// Copyright(c) Microsoft Corporation. 
 // All rights reserved.
-// 
+//
 // Licensed under the MIT license. See LICENSE file in the solution root folder for full license information
 
 
@@ -22,14 +22,17 @@ namespace Infrastructure.Services
     public class RoleService : BaseService<RoleService>, IRoleService
     {
         private readonly IRoleRepository _rolesRepository;
+        private readonly IUserProfileRepository userProfileRepository;
 
         public RoleService(
             ILogger<RoleService> logger,
             IOptionsMonitor<AppOptions> appOptions,
-            IRoleRepository rolesRepository) : base(logger, appOptions)
+            IRoleRepository rolesRepository,
+            IUserProfileRepository userProfileRepository) : base(logger, appOptions)
         {
             Guard.Against.Null(rolesRepository, nameof(rolesRepository));
             _rolesRepository = rolesRepository;
+            this.userProfileRepository = userProfileRepository;
         }
         public async Task<StatusCodes> CreateItemAsync(RoleModel modelObject, string requestId = "")
         {
@@ -39,11 +42,19 @@ namespace Infrastructure.Services
             Guard.Against.NullOrEmpty(modelObject.DisplayName, nameof(modelObject.DisplayName), requestId);
             try
             {
-                var entityObject = MapToEntity(modelObject, requestId);
+                var entityObject = MapToEntity(modelObject);
 
                 var result = await _rolesRepository.CreateItemAsync(entityObject, requestId);
 
                 Guard.Against.NotStatus201Created(result, "RolesSvc_CreateItemAsync", requestId);
+
+                _logger.LogInformation($"Permission created: {modelObject}");
+
+                userProfileRepository.CleanCache();
+                _logger.LogInformation("Cleaned user profile cache");
+
+                _rolesRepository.CleanCache();
+                _logger.LogInformation("Cleaned role cache");
 
                 return result;
             }
@@ -64,6 +75,14 @@ namespace Infrastructure.Services
                 var result = await _rolesRepository.DeleteItemAsync(id, requestId);
 
                 Guard.Against.NotStatus204NoContent(result, $"Roles_DeleteItemAsync failed for id: {id}", requestId);
+
+                _logger.LogInformation($"Permission deleted: {id}");
+
+                userProfileRepository.CleanCache();
+                _logger.LogInformation("Cleaned user profile cache");
+
+                _rolesRepository.CleanCache();
+                _logger.LogInformation("Cleaned role cache");
 
                 return result;
             }
@@ -106,11 +125,19 @@ namespace Infrastructure.Services
 
             try
             {
-                var entityObject = MapToEntity(modelObject, requestId);
+                var entityObject = MapToEntity(modelObject);
 
                 var result = await _rolesRepository.UpdateItemAsync(entityObject, requestId);
 
                 Guard.Against.NotStatus200OK(result, "CategorySvc_UpdateItemAsync", requestId);
+
+                _logger.LogInformation($"Permission updated: {modelObject}");
+
+                userProfileRepository.CleanCache();
+                _logger.LogInformation("Cleaned user profile cache");
+
+                _rolesRepository.CleanCache();
+                _logger.LogInformation("Cleaned role cache");
 
                 return result;
             }
@@ -121,9 +148,8 @@ namespace Infrastructure.Services
             }
         }
 
-        private RoleModel MapToModel(Role entity, string requestId = "")
+        private RoleModel MapToModel(Role entity)
         {
-
             return new RoleModel
             {
                 Id = entity.Id ?? String.Empty,
@@ -139,7 +165,7 @@ namespace Infrastructure.Services
 
         }
 
-        private Role MapToEntity(RoleModel entity, string requestId = "")
+        private Role MapToEntity(RoleModel entity)
         {
             return new Role
             {
