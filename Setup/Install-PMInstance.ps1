@@ -38,15 +38,15 @@
 #>
 [CmdletBinding()]
 param(
-    [Parameter(Mandatory = $true)]
+    [Parameter(Mandatory = $false)]
     [string]$PMAdminUpn,
     [Parameter(Mandatory = $false)]
     [string]$PMSiteAlias,
-    [Parameter(Mandatory = $true)]
+    [Parameter(Mandatory = $false)]
     [string]$OfficeTenantName,
-    [Parameter(Mandatory = $true)]
+    [Parameter(Mandatory = $false)]
     [string]$AzureResourceLocation,
-    [Parameter(Mandatory = $true)]
+    [Parameter(Mandatory = $false)]
     [string]$AzureSubscription,
     [Parameter(Mandatory = $false)]
     [string]$ResourceGroupName,
@@ -77,14 +77,6 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $InformationPreference = 'Continue'
-
-# Create Proposal Manager Team
-if(!$TeamName)
-{
-    $TeamName = "Proposal Manager Team"
-}
-
-Write-Information "MS Teams Name: $TeamName"
 
 if($Mode -in 'Full', 'NoDeploy', 'RegisterDeploy')
 {
@@ -154,6 +146,38 @@ if($builds)
         Write-Error "You need to install the .NET Framework 4.6.1 Developer Pack or later. Please do so by navigating to https://www.microsoft.com/en-us/download/details.aspx?id=49978"
     }
 
+
+    if($Mode -eq 'BuildOnly')
+    {
+        cd ..\WebReact\ClientApp
+
+        # Install all required dependencies
+        $ErrorActionPreference = 'Inquire'
+        npm install
+        $ErrorActionPreference = 'Stop'
+
+        cd ..\..\Setup
+
+        # Publish Proposal Manager
+        $solutionDir = (Get-Item -Path "..\").FullName
+
+        Write-Information "Restoring Nuget solution packages..."
+        .\nuget.exe restore "..\ProposalManagement.sln" -SolutionDirectory ..\
+        Write-Information "Nuget solution packages successfully retrieved"
+
+        cd "..\Dynamics Integration\OneDriveSubscriptionRenewal"
+        dotnet restore
+        dotnet msbuild "OneDriveSubscriptionRenewal.csproj" "/p:SolutionDir=`"$($solutionDir)\\`";Configuration=Release;DebugSymbols=false;DebugType=None"
+        cd ..\..\Setup
+        cd "..\Utilities\OpportunitySiteProvisioner"
+        dotnet msbuild "OpportunitySiteProvisioner.csproj" "/p:SolutionDir=`"$($solutionDir)\\`";Configuration=Release;DebugSymbols=false;DebugType=None"
+        cd ..\..\Setup
+        rd ..\WebReact\bin\Release\netcoreapp2.2\publish -Recurse -ErrorAction Ignore
+        dotnet publish ..\WebReact -c Release
+
+        cd ..\Setup
+        Exit
+    }
 }
 
 if($registers -and $IncludeBot)
@@ -171,6 +195,35 @@ if($registers -and $IncludeBot)
 
 # Verify required modules are available
 Verify-RequiredModules
+
+# Validate mandatory parameters
+if(!$PMAdminUpn)
+{
+    throw 'The PMAdminUpn is required.'
+}
+
+if(!$PMSiteAlias)
+{
+    throw 'The PMSiteAlias is required.'
+}
+
+if(!$OfficeTenantName)
+{
+    throw 'The OfficeTenantName is required.'
+}
+
+if(!$AzureSubscription)
+{
+    throw 'The AzureSubscription is required.'
+}
+
+# Create Proposal Manager Team
+if(!$TeamName)
+{
+    $TeamName = "Proposal Manager Team"
+}
+
+Write-Information "MS Teams Name: $TeamName"
 
 if(!$ApplicationName)
 {
