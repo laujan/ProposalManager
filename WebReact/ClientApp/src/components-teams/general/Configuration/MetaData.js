@@ -13,6 +13,7 @@ import { Dropdown } from 'office-ui-fabric-react/lib/Dropdown';
 import Utils from '../../../helpers/Utils';
 import { Modal } from 'office-ui-fabric-react/lib/Modal';
 import { Link } from 'office-ui-fabric-react/lib/Link';
+import { Checkbox } from 'office-ui-fabric-react/lib/Checkbox';
 
 export class MetaData extends Component {
     displayName = MetaData.name
@@ -42,7 +43,7 @@ export class MetaData extends Component {
                 className: 'docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg8',
                 fieldName: 'displayName',
                 minWidth: 150,
-                maxWidth: 250,
+                maxWidth: 240,
                 isRowHeader: true,
                 onRender: (item) => {
                     return (
@@ -61,7 +62,7 @@ export class MetaData extends Component {
                 className: 'docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg8',
                 fieldName: 'fieldType',
                 minWidth: 150,
-                maxWidth: 300,
+                maxWidth: 290,
                 isRowHeader: true,
                 onRender: (item) => {
                     return (
@@ -90,7 +91,7 @@ export class MetaData extends Component {
                 className: 'docs-TextFieldExample ms-Grid-col ms-sm6 ms-md6 ms-lg8',
                 fieldName: 'values',
                 minWidth: 150,
-                maxWidth: 250,
+                maxWidth: 240,
                 isRowHeader: true,
                 onRender: (item) => {
                     return (
@@ -136,6 +137,25 @@ export class MetaData extends Component {
                             id={'txtScreen' + item.id}
                             value={item.screen ? item.screen : ""}
                             onBlur={(e) => this.onBlurColName(e, item, "screen")}
+                        />
+                    );
+                }
+            },
+            {
+                key: 'column5',
+                name: <Trans>required</Trans>,
+                headerClassName: 'ms-List-th browsebutton',
+                className: 'docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg8',
+                fieldName: 'screen',
+                minWidth: 70,
+                maxWidth: 70,
+                isRowHeader: true,
+                onRender: (item) => {
+                    return (
+                        <Checkbox id={'chkCompleted' + item.id}
+                            onChange={(e) => this.onBlurColName(e, item, "required")}
+                            ariaDescribedBy={'descriptionID'}
+                            checked={item.required}
                         />
                     );
                 }
@@ -450,6 +470,10 @@ export class MetaData extends Component {
                     trackFlag = true;
                 }
                 break;
+            case "required":
+                currentItem.required = !e.currentTarget.checked;
+                trackFlag = true;
+                break;
             default:
                 break;
         }
@@ -466,8 +490,6 @@ export class MetaData extends Component {
 
             this.setState({ currentItem, items });
         }
-
-        
     }
 
     async saveRow(e, item) {

@@ -1,6 +1,6 @@
 ﻿// Copyright(c) Microsoft Corporation. 
 // All rights reserved.
-// 
+//
 // Licensed under the MIT license. See LICENSE file in the solution root folder for full license information.
 
 using System;
@@ -47,6 +47,12 @@ namespace ApplicationCore.Artifacts
         [JsonProperty("fieldType")]
         public FieldType FieldType { get; set; }
 
+        [JsonProperty("required")]
+        public bool Required { get; set; }
+
+        [JsonProperty("uniqueId")]
+        public string UniqueId { get; set; }
+
         /// <summary>
         ///  Empty object
         /// </summary>
@@ -60,7 +66,9 @@ namespace ApplicationCore.Artifacts
                 DisplayName = String.Empty,
                 FieldType = FieldType.None,
                 Values = null,
-                Screen = String.Empty
+                Screen = String.Empty,
+                UniqueId = string.Empty,
+                Required = false
             };
         }
     }

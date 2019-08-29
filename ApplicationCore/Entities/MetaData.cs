@@ -37,12 +37,22 @@ namespace ApplicationCore.Entities
         /// 
         [JsonProperty("fieldType", Order = 5)]
         public FieldType FieldType { get; set; }
+       
+        /// <summary>
+        ///  Specifies if value is required
+        /// </summary>
+        [JsonProperty("required", Order = 6)]
+        public bool Required { get; set; }
+        /// <summary>
+        ///  Unique identifier
+        /// </summary>
+        [JsonProperty("uniqueId", Order = 7)]
+        public string UniqueId { get; set; }
 
         /// <summary>
         ///  Empty object
         /// </summary>
         /// 
-
         public static MetaData Empty
         {
             get => new MetaData
@@ -51,7 +61,9 @@ namespace ApplicationCore.Entities
                 DisplayName = String.Empty,
                 FieldType = FieldType.None,
                 Values = null,
-                Screen = String.Empty
+                Screen = String.Empty,
+                Required = false,
+                UniqueId = string.Empty
             };
         }
     }

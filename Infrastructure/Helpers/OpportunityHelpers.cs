@@ -116,7 +116,9 @@ namespace Infrastructure.Helpers
                                 DisplayName = field.DisplayName,  
                                 FieldType= field.FieldType,
                                 Screen = field.Screen,
-                                Values = field.Values
+                                Values = field.Values,
+                                UniqueId = field.UniqueId,
+                                Required = field.Required
                             }
                         ).ToList(),
                     //TODO : WAVE-4 GENERIC ACCELERATOR Change : end
@@ -410,7 +412,9 @@ namespace Infrastructure.Helpers
                                 DisplayName = field.DisplayName ?? String.Empty,
                                 FieldType = field.FieldType ?? FieldType.None,
                                 Screen = field.Screen ?? String.Empty,
-                                Values = field.Values ?? String.Empty
+                                Values = field.Values ?? String.Empty,
+                                UniqueId = field.UniqueId,
+                                Required = field.Required
                             });
                         }
                     

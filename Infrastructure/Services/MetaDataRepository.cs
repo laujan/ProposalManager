@@ -44,7 +44,6 @@ namespace Infrastructure.Services
              };
         }
 
-
         public async Task<StatusCodes> CreateItemAsync(MetaData entity, string requestId = "")
         {
             _logger.LogInformation($"RequestId: {requestId} - MetaDataRepo_CreateItemAsync called.");
@@ -54,12 +53,14 @@ namespace Infrastructure.Services
                 // Create Json object for SharePoint create list item
                 dynamic itemFieldsJson = new JObject();
                 itemFieldsJson.FieldName = entity.DisplayName;
+                itemFieldsJson.FieldUniqueId = string.IsNullOrWhiteSpace(entity.UniqueId) ? entity.DisplayName.ToLowerInvariant().Replace(" ", "") : entity.UniqueId;
                 itemFieldsJson.FieldType = entity.FieldType.Name.ToString();
                 if(entity.FieldType.Name==FieldType.DropDown.Name)
                     itemFieldsJson.FieldValue = JsonConvert.SerializeObject(entity.Values, Formatting.Indented);
                 else
                     itemFieldsJson.FieldValue = entity.Values;
                 itemFieldsJson.FieldScreen = entity.Screen;
+                itemFieldsJson.FieldRequired = entity.Required.ToString();
 
                 dynamic itemJson = new JObject();
                 itemJson.fields = itemFieldsJson;
@@ -93,6 +94,7 @@ namespace Infrastructure.Services
                 else
                     itemFieldsJson.FieldValue = entity.Values;
                 itemFieldsJson.FieldScreen = entity.Screen;
+                itemFieldsJson.FieldRequired = entity.Required.ToString();
 
                 await _graphSharePointAppService.UpdateListItemAsync(siteList, entity.Id, itemFieldsJson.ToString(), requestId);
 
@@ -154,8 +156,12 @@ namespace Infrastructure.Services
                     if (!String.IsNullOrEmpty(metaData.Id))
                     {
                         metaData.FieldType = FieldType.FromName(item["fields"]["FieldType"].ToString());
+                        metaData.UniqueId = item.SelectToken("fields.FieldUniqueId")?.ToObject<string>();
                         metaData.DisplayName = item.SelectToken("fields.FieldName")?.ToObject<string>();
                         metaData.Screen = item.SelectToken("fields.FieldScreen")?.ToObject<string>();
+
+                        var required = item.SelectToken("fields.FieldRequired")?.ToObject<bool>();
+                        metaData.Required = required == null ? false : required.Value;
 
                         try
                         {

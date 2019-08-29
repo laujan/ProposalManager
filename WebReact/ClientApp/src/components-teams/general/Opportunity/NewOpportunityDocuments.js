@@ -325,8 +325,8 @@ export class NewOpportunityDocuments extends Component {
     onBlurProperty(e, key) {
         if (e.target.value.length !== 0) {
             this.opportunity.metaDataFields.forEach(obj => {
-                if (obj.id === key) {
-                    this.logService.log("NewOpportunityDocuments_onBlurProperty : ", obj.id);
+                if (obj.uniqueId === key) {
+                    this.logService.log("NewOpportunityDocuments_onBlurProperty : ", obj.uniqueId);
                     obj.values = e.target.value;
                 }
             });
@@ -335,8 +335,8 @@ export class NewOpportunityDocuments extends Component {
 
     _onSelectTargetDate = (date, key) => {
         this.opportunity.metaDataFields.forEach(obj => {
-            if (obj.id === key) {
-                this.logService.log("NewOpportunity_onChangeDropDown : ", obj.id, this._onFormatDate(date));
+            if (obj.uniqueId === key) {
+                this.logService.log("NewOpportunity_onChangeDropDown : ", obj.uniqueId, this._onFormatDate(date));
                 obj.values = this._onFormatDate(date);
             }
         });
@@ -392,13 +392,13 @@ export class NewOpportunityDocuments extends Component {
     _rendermetaData() {
         let metaDataComponents = null;
         if (this.metaData.length > 0) {
-            this.metaData = this.metaData.filter(x => x.displayName !== "Category" && x.fieldType.name !== "DropDown");
+            this.metaData = this.metaData.filter(x => x.uniqueId !== "category" && x.fieldType.name !== "DropDown");
             metaDataComponents = this.metaData.map((metaDataObj) => {
                 let component = null;
                 let id = metaDataObj.displayName.toLowerCase().replace(/\s/g, '');
                 switch (metaDataObj.fieldType.name) {
                     case "Date":
-                        let tardate = this.opportunity.metaDataFields.find(x => x.id === id).values;
+                        let tardate = this.opportunity.metaDataFields.find(x => x.uniqueId === id).values;
                         component = (<div className='docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg6' key={metaDataObj.id}>
                             <DatePicker strings={DayPickerStrings}
                                 label={metaDataObj.displayName}
@@ -418,7 +418,7 @@ export class NewOpportunityDocuments extends Component {
 
                     case "DropDown":
                         let placeHolder = `Select ${metaDataObj.displayName}`;
-                        let dropvalue = this.opportunity.metaDataFields.find(x => x.id === id).values;
+                        let dropvalue = this.opportunity.metaDataFields.find(x => x.uniqueId === id).values;
                         component = (<div className='docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg6' key={metaDataObj.id}>
                             <Dropdown
                                 placeHolder={placeHolder}
@@ -435,7 +435,7 @@ export class NewOpportunityDocuments extends Component {
                         break;
 
                     default:
-                        let textvalue = this.opportunity.metaDataFields.find(x => x.id === id).values;
+                        let textvalue = this.opportunity.metaDataFields.find(x => x.uniqueId === id).values;
                         component = (<div className='docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg6' key={metaDataObj.id}>
                             <TextField
                                 id={id}

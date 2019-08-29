@@ -220,7 +220,7 @@ namespace Infrastructure.Services
                                     Dealsize = item.MetaDataFields.ToList().Find(x => x.DisplayName == "Deal Size")?.Values.ToString(),
                                     OpenedDate = item.MetaDataFields.ToList().Find(x => x.DisplayName == "Opened Date").Values.ToString()
 
-                                }).ToList(),
+                    }).ToList(),
 
                     PaginationInfo = new PaginationInfoViewModel
                     {

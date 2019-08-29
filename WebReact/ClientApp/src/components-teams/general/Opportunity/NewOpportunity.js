@@ -86,46 +86,42 @@ export class NewOpportunity extends Component {
         };
     }    
 
-    onBlurProperty(e,key) {
-        if (e.target.value.length !== 0) {
-            switch (key) {
-                case "opportunity":
-                    this.opportunity.displayName = e.target.value;
-                    break;
-                case "customer":
-                    this.opportunity.customer.displayName = e.target.value;
-                    break;
-                case "notes":
-                    let note = {
-                        id: this.utils.guid(),
-                        noteBody: e.target.value,
-                        createdDateTime: "",
-                        createdBy: {
-                            id: "",
-                            displayName: "",
-                            userPrincipalName: "",
-                            userRoles: []
-                        }
-                    };
+    onBlurProperty(e,item) {
+        switch (item.uniqueId) {
+            case "opportunity":
+                this.opportunity.displayName = e.target.value;
+                break;
+            case "customer":
+                this.opportunity.customer.displayName = e.target.value;
+                break;
+            case "notes":
+                let note = {
+                    id: this.utils.guid(),
+                    noteBody: e.target.value,
+                    createdDateTime: "",
+                    createdBy: {
+                        id: "",
+                        displayName: "",
+                        userPrincipalName: "",
+                        userRoles: []
+                    }
+                };
             
-                    this.opportunity.notes.push(note);
-                    break;
-                default:
-                    break;
-            }
-            this.opportunity.metaDataFields.forEach(obj=>{
-                if(obj.id===key){
-                    obj.values=e.target.value;
-                }
-            });
-            this._checkNextEnabled();
-        } 
+                this.opportunity.notes.push(note);
+                break;
+            default:
+                break;
+        }
+
+        item.values=e.target.value;
+        this._checkNextEnabled();
     }
 
-    onChangeDropDown (e,key){
+    onChangeDropDown(e, key) {
+        //dropvalue.values = e.text;
         if(e.text.length>0){
             this.opportunity.metaDataFields.forEach(obj=>{
-                if(obj.id===key){
+                if (obj.uniqueId===key){
                     obj.values=e.text;
                 }
             });
@@ -133,33 +129,28 @@ export class NewOpportunity extends Component {
     }
 
     _checkNextEnabled(){
-        let count = 0;
-        this.opportunity.metaDataFields.forEach(element => {
-            if (["opportunity", "customer", "openeddate", "targetdate"].includes(element.id)) {
-                if(element.values.length>0) {
-                    this.logService.log("_checkNextEnabled : ",count);
-                    ++count;
-                }
-            }
-        });
+        let valid = true;
 
-        if (["opportunity", "customer", "openeddate", "targetdate"].length === count) this.setState({ nextDisabled: true });
+        let requiredItems = this.opportunity.metaDataFields.filter(item => item.required && item.screen === "Screen1");
+        for (let element of requiredItems) {
+            if (element.values.length === 0) {
+                valid = false;
+                break;
+            }
+        }
+
+        this.setState({ nextDisabled: valid });
     }
 
-    _onSelectTargetDate = (date,key) => {
-        this.opportunity.metaDataFields.forEach(obj=>{
-            if(obj.id===key){
-                this.logService.log("NewOpportunity_onChangeDropDown : ", obj.id,this._onFormatDate(date));
-                obj.values=this._onFormatDate(date);
-            }
-        });
+    _onSelectTargetDate = (date, item) => {
+        item.values = this._onFormatDate(date);
 
-        if(key==="targetdate"){
-            this.opportunity.metaDataFields.forEach(obj=>{
-                if(obj.id==="openeddate" && obj.values.length===0){
-                    obj.values=this._onFormatDate(this._setItemDate(Date.now()));
-                }
-            });
+        if (item.uniqueId === "targetdate") {
+            let openedDate = this.opportunity.metaDataFields.find(obj => obj.uniqueId === "openeddate");
+
+            if (openedDate && openedDate.values.length === 0) {
+                openedDate.values = this._onFormatDate(this._setItemDate(Date.now()));
+            }
         }
 
         this._checkNextEnabled();
@@ -205,19 +196,20 @@ export class NewOpportunity extends Component {
         if(this.metaData.length>0){
             metaDataComponents= this.metaData.map((metaDataObj)=>{
                 let component = null;
-                let id = metaDataObj.displayName.toLowerCase().replace(/\s/g, '');
+                let id = metaDataObj.uniqueId;
                 switch (metaDataObj.fieldType.name) {
                     case "Date":
-                        let tardate = this.opportunity.metaDataFields.find(x=>x.id===id).values;
-                        component = (<div className='docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg6' key={metaDataObj.id}>
+                        let tardate = this.opportunity.metaDataFields.find(x => x.uniqueId === id);
+                        let tarDateValue = tardate.values;
+                        component = (<div className='docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg6' key={metaDataObj.uniqueId}>
                             <DatePicker strings={DayPickerStrings}
                                 label={metaDataObj.displayName}
                                 showWeekNumbers={false}
                                 firstWeekOfYear={1}
                                 showMonthPickerAsOverlay='true'
                                 iconProps={{ iconName: 'Calendar' }}
-                                value={tardate ? this._setItemDate(tardate) : ""}
-                                onSelectDate={(date) => this._onSelectTargetDate(date, id)}
+                                value={tarDateValue ? this._setItemDate(tarDateValue) : ""}
+                                onSelectDate={(date) => this._onSelectTargetDate(date, tardate)}
                                 formatDate={this._onFormatDate}
                                 parseDateFromString={this._onParseDateFromString}
                                 minDate={new Date()}
@@ -228,8 +220,8 @@ export class NewOpportunity extends Component {
 
                     case "DropDown":
                         let placeHolder = `Select ${metaDataObj.displayName}`;
-                        let dropvalue = this.opportunity.metaDataFields.find(x => x.id === id).values;
-                        component = ( <div className='docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg6' key={metaDataObj.id}>
+                        let dropvalue = this.opportunity.metaDataFields.find(x => x.uniqueId === id).values;
+                        component = (<div className='docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg6' key={metaDataObj.uniqueId}>
                                 <Dropdown
                                     placeHolder={placeHolder}
                                     label={metaDataObj.displayName}
@@ -239,19 +231,19 @@ export class NewOpportunity extends Component {
                                     options={metaDataObj.values.map(x=>{return {'key':x.id,'text':x.name}})}
                                     defaultSelectedKey={metaDataObj.values.map(x => { if (x.name === dropvalue) return x.id; })}
                                     componentRef=''
-                                    onChanged={(e) => this.onChangeDropDown(e,id)}
+                                onChanged={(e) => this.onChangeDropDown(e, id)}
                                 />
                             </div>);
                         break;
 
                     default:
-                        let textvalue = this.opportunity.metaDataFields.find(x=>x.id===id).values;  
-                        component = (<div className='docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg6' key={metaDataObj.id}>
+                        let textItem = this.opportunity.metaDataFields.find(x => x.uniqueId === id);
+                        component = (<div className='docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg6' key={metaDataObj.uniqueId}>
                                 <TextField
                                     id={id}
-                                    value={textvalue}
+                                    value={textItem.values}
                                     label={metaDataObj.displayName}
-                                    onBlur={(e) => this.onBlurProperty(e,id)}
+                                    onBlur={(e) => this.onBlurProperty(e, textItem)}
                                 />
                             </div>);
                         break;

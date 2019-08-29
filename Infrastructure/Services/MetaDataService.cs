@@ -126,6 +126,8 @@ namespace Infrastructure.Services
             model.DisplayName = entity.DisplayName ?? String.Empty;
             model.Screen = entity.Screen ?? String.Empty;
             model.FieldType = entity.FieldType ?? FieldType.None;
+            model.Required = entity.Required;
+            model.UniqueId = entity.UniqueId;
             if (model.FieldType == FieldType.DropDown)
             {
                 model.Values = new List<DropDownMetaDataValue>();
@@ -150,6 +152,8 @@ namespace Infrastructure.Services
             entity.DisplayName = model.DisplayName ?? String.Empty;
             entity.Screen = model.Screen ?? String.Empty;
             entity.FieldType = model.FieldType ?? FieldType.None;
+            entity.Required = model.Required;
+            entity.UniqueId = model.UniqueId;
             if (entity.FieldType.Name == FieldType.DropDown.Name)
             {
                 JArray jsonArray = JArray.Parse(model.Values.ToString());

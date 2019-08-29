@@ -269,7 +269,9 @@ namespace WebReact.Api
                             DisplayName = metadata.DisplayName,
                             Values = GetNativeAttribute(attributes, formattedValues, mappingName.From, metadata.FieldType),
                             FieldType = metadata.FieldType,
-                            Screen = metadata.Screen
+                            Screen = metadata.Screen,
+                            Required = metadata.Required,
+                            UniqueId = metadata.UniqueId
                         });
                     }
                 }

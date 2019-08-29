@@ -3,11 +3,7 @@
 //
 // Licensed under the MIT license. See LICENSE file in the solution root folder for full license information.
 
-using System;
-using System.Collections.Generic;
-using System.Text;
 using Newtonsoft.Json;
-using ApplicationCore.Artifacts;
 
 namespace ApplicationCore.Models
 {
@@ -44,5 +40,10 @@ namespace ApplicationCore.Models
         [JsonProperty("fieldType")]
         public FieldType FieldType { get; set; }
 
+        [JsonProperty("required")]
+        public bool Required { get; set; }
+
+        [JsonProperty("uniqueId")]
+        public string UniqueId { get; set; }
     }
 }

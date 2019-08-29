@@ -151,7 +151,7 @@ export class General extends Component {
                     for (let i = 0; i < data.length; i++) {
                         metaDataList.push(data[i]);
                     }
-                    let temp = metaDataList.find(x => x.displayName === "Category" && x.fieldType.name === "DropDown").values;
+                    let temp = metaDataList.find(x => x.uniqueId === "category" && x.fieldType.name === "DropDown").values;
                     categoryList = temp.map(x => { return { 'key': x.id, 'text': x.name }; });
                     this.setState({ metaDataList, categoryList });
                 }
@@ -235,9 +235,11 @@ export class General extends Component {
                     metaData.push({
                         id: metaobj.displayName.toLowerCase().replace(/\s/g, ''),
                         displayName: metaobj.displayName,
-                        values: "",
+                        values: metaobj.fieldType.name === "DropDown" ? "" : metaobj.values,
                         screen: metaobj.screen,
-                        fieldType: metaobj.fieldType
+                        fieldType: metaobj.fieldType,
+                        required: metaobj.required,
+                        uniqueId: metaobj.uniqueId
                     });
                 }
             });

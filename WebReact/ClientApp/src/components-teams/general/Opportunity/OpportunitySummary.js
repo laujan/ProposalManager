@@ -369,7 +369,7 @@ export class OpportunitySummary extends Component {
         }
 
         let metaFields = oppDeatils.metaDataFields.map((field, index) => {
-            if (field.values && !["Customer", "Opportunity"].includes(field.displayName))
+            if (field.values && !["customer", "opportunity"].includes(field.uniqueId))
                 return (
                     <div className=' ms-Grid-col ms-sm12 ms-md12 ms-lg4 pb10' key={index}>
                     <Label><Trans>{field.displayName}</Trans> </Label>

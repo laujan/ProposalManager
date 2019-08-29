@@ -89,16 +89,8 @@ export class NewOpportunityOthers extends Component {
             updatedTeamMembers.splice(-2,2);
         }
         this.opportunity.teamMembers = updatedTeamMembers;
-        let selLO = [];
-        this.opportunity.teamMembers.forEach(element => {
-            element.permissions.forEach((userrole) => {
-                if (userrole.name.toLowerCase() === "Opportunity_ReadWrite_Dealtype".toLocaleLowerCase()) {
-                    if (!selLO.includes(element)) selLO.push(element);
-                }
-            });
-        });
-        let disableSubmit = selLO.length > 0 ? false : true;
-        this.setState({ disableSubmit });
+
+        this.checkNextEnabled();
     }
 
     addBaseProcessPersonal(value,role,processstep){
@@ -128,29 +120,40 @@ export class NewOpportunityOthers extends Component {
         this.opportunity.template = selTemplate[0];
     }
 
-    onBlurProperty(e,key) {
-        if (e.target.value.length !== 0) {
-            this.opportunity.metaDataFields.forEach(obj=>{
-                if(obj.id===key){
-                    obj.values=e.target.value;
-                }
-            });
-        } 
+    onBlurProperty(e, item) {
+        item.values = e.target.value;
+        this.checkNextEnabled();
+    }
+
+    checkNextEnabled() {
+        
+        let disableSubmit = this.getSelectedUsers().length === 0;
+        let shouldDisable = false;
+
+        let requiredItems = this.opportunity.metaDataFields.filter(item => item.required && item.screen === "Screen3");
+        for (let element of requiredItems) {
+            if (element.values.length === 0) {
+                shouldDisable = true;
+                break;
+            }
+        }
+
+
+        this.setState({ disableSubmit: disableSubmit || shouldDisable });
     }
 
     _rendermetaData(){
         let metaDataComponents = null;
         if(this.metaData.length>0){
             metaDataComponents= this.metaData.map((metaDataObj)=>{
-                let component = null;
-                let id = metaDataObj.displayName.toLowerCase().replace(/\s/g, '');
-                let value = this.opportunity.metaDataFields.find(x=>x.id===id).values;
+                let value = this.opportunity.metaDataFields.find(x => x.id === metaDataObj.uniqueId);
+               
                 return (
                     <div className='docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg4' key={metaDataObj.id}>
                                 <TextField
-                                    label={metaDataObj.displayName} 
-                                    value={value}
-                                    onBlur={(e) => this.onBlurProperty(e,id)}
+                                label={metaDataObj.displayName}
+                                value={value.values}
+                                onBlur={(e) => this.onBlurProperty(e, value)}
                                 />
                     </div>
                 );
@@ -163,9 +166,6 @@ export class NewOpportunityOthers extends Component {
     render() {
 
         let selectedUsers = this.getSelectedUsers();
-        let disableSubmit = selectedUsers.length > 0 ? false : true;
-        disableSubmit = this.setState.disableSubmit ? this.setState.disableSubmit : disableSubmit;
-
         let loanOfficerADName =  <Trans>loanOfficer</Trans>; //TODO from appsettings
         if(this.state.teamMembers.length>0){
             if(this.state.teamMembers[0].userRoles.length>0){
@@ -222,7 +222,7 @@ export class NewOpportunityOthers extends Component {
                             <PrimaryButton className='backbutton pull-left' onClick={this.props.onClickBack}><Trans>back</Trans></PrimaryButton>
                         </div>
                         <div className='ms-Grid-col ms-sm6 ms-md6 ms-lg6 pb20'><br />
-                            <PrimaryButton disabled={disableSubmit} className='pull-right' onClick={this.props.onClickNext}><Trans>submit</Trans></PrimaryButton>
+                            <PrimaryButton disabled={this.state.disableSubmit} className='pull-right' onClick={this.props.onClickNext}><Trans>submit</Trans></PrimaryButton>
                         </div>
                     </div><br /><br />
                 </div>

@@ -288,6 +288,14 @@ namespace Infrastructure.Helpers
                 {
                   'name': 'FieldValue',
                   'text': {'allowMultipleLines': true}
+                },
+                {
+                  'name': 'FieldRequired',
+                  'text': {}
+                },
+                {
+                  'name': 'FieldUniqueId',
+                  'text': {}
                 }
               ]
             }";

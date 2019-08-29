@@ -438,6 +438,8 @@ namespace Infrastructure.Services
                         itemFieldsJson.FieldType = entity.FieldType.Name.ToString();
                         itemFieldsJson.FieldValue = entity.Values;
                         itemFieldsJson.FieldScreen = entity.Screen;
+                        itemFieldsJson.FieldRequired = entity.Required.ToString();
+                        itemFieldsJson.FieldUniqueId = entity.UniqueId;
 
                         dynamic itemJson = new JObject();
                         itemJson.fields = itemFieldsJson;
@@ -474,7 +476,9 @@ namespace Infrastructure.Services
                 DisplayName = "Customer",
                 FieldType = FieldType.String,
                 Values = "",
-                Screen = "Screen1"
+                Screen = "Screen1",
+                Required = true,
+                UniqueId = "customer"
             });
 
             metaDataList.Add(new MetaData
@@ -482,7 +486,9 @@ namespace Infrastructure.Services
                 DisplayName = "Opportunity",
                 FieldType = FieldType.String,
                 Values = "",
-                Screen = "Screen1"
+                Screen = "Screen1",
+                Required = true,
+                UniqueId = "opportunity"
             });
 
             metaDataList.Add(new MetaData
@@ -490,7 +496,9 @@ namespace Infrastructure.Services
                 DisplayName = "Opened Date",
                 FieldType = FieldType.Date,
                 Values = "",
-                Screen = "Screen1"
+                Screen = "Screen1",
+                Required = true,
+                UniqueId = "openeddate"
             });
 
             metaDataList.Add(new MetaData
@@ -498,7 +506,9 @@ namespace Infrastructure.Services
                 DisplayName = "Target Date",
                 FieldType = FieldType.Date,
                 Values = "",
-                Screen = "Screen1"
+                Screen = "Screen1",
+                Required = true,
+                UniqueId = "targetdate"
             });
 
             metaDataList.Add(new MetaData
@@ -506,7 +516,9 @@ namespace Infrastructure.Services
                 DisplayName = "Deal Size",
                 FieldType = FieldType.Double,
                 Values = "0",
-                Screen = "Screen1"
+                Screen = "Screen1",
+                Required = false,
+                UniqueId = "dealsize"
             });
 
             metaDataList.Add(new MetaData
@@ -514,7 +526,9 @@ namespace Infrastructure.Services
                 DisplayName = "Annual Revenue",
                 FieldType = FieldType.Double,
                 Values = "0",
-                Screen = "Screen1"
+                Screen = "Screen1",
+                Required = false,
+                UniqueId = "annualrevenue"
             });
 
             metaDataList.Add(new MetaData
@@ -531,7 +545,9 @@ namespace Infrastructure.Services
                             'id': '2',
                             'name': 'Industry 2'
                             }]",
-                Screen = "Screen1"
+                Screen = "Screen1",
+                Required = false,
+                UniqueId = "industry"
             });
 
             metaDataList.Add(new MetaData
@@ -548,7 +564,9 @@ namespace Infrastructure.Services
                             'id': '2',
                             'name': 'Region 2'
                             }]",
-                Screen = "Screen1"
+                Screen = "Screen1",
+                Required = false,
+                UniqueId = "region"
             });
 
             metaDataList.Add(new MetaData
@@ -556,7 +574,9 @@ namespace Infrastructure.Services
                 DisplayName = "Notes",
                 FieldType = FieldType.String,
                 Values = "",
-                Screen = "Screen1"
+                Screen = "Screen1",
+                Required = false,
+                UniqueId = "notes"
             });
 
             metaDataList.Add(new MetaData
@@ -573,7 +593,9 @@ namespace Infrastructure.Services
                             'id': '2',
                             'name': 'Category 2'
                             }]",
-                Screen = "Screen2"
+                Screen = "Screen2",
+                Required = false,
+                UniqueId = "category"
             });
 
             //Screen3
@@ -583,7 +605,9 @@ namespace Infrastructure.Services
                 DisplayName = "Margin",
                 FieldType = FieldType.Double,
                 Values = "0",
-                Screen = "Screen3"
+                Screen = "Screen3",
+                Required = false,
+                UniqueId = "margin"
             });
 
             metaDataList.Add(new MetaData
@@ -591,7 +615,9 @@ namespace Infrastructure.Services
                 DisplayName = "Debt Ratio",
                 FieldType = FieldType.Double,
                 Values = "0",
-                Screen = "Screen3"
+                Screen = "Screen3",
+                Required = false,
+                UniqueId = "debtratio"
             });
 
             metaDataList.Add(new MetaData
@@ -599,7 +625,9 @@ namespace Infrastructure.Services
                 DisplayName = "Rate",
                 FieldType = FieldType.Double,
                 Values = "0",
-                Screen = "Screen3"
+                Screen = "Screen3",
+                Required = false,
+                UniqueId = "rate"
             });
 
             metaDataList.Add(new MetaData
@@ -607,7 +635,9 @@ namespace Infrastructure.Services
                 DisplayName = "Purpose",
                 FieldType = FieldType.String,
                 Values = "",
-                Screen = "Screen3"
+                Screen = "Screen3",
+                Required = false,
+                UniqueId = "purpose"
             });
 
             metaDataList.Add(new MetaData
@@ -615,7 +645,9 @@ namespace Infrastructure.Services
                 DisplayName = "Disbursement Schedule",
                 FieldType = FieldType.String,
                 Values = "",
-                Screen = "Screen3"
+                Screen = "Screen3",
+                Required = false,
+                UniqueId = "disbursementschedule"
             });
 
             metaDataList.Add(new MetaData
@@ -623,7 +655,9 @@ namespace Infrastructure.Services
                 DisplayName = "Collateral Amount",
                 FieldType = FieldType.Double,
                 Values = "0",
-                Screen = "Screen3"
+                Screen = "Screen3",
+                Required = false,
+                UniqueId = "collateralamount"
             });
 
             metaDataList.Add(new MetaData
@@ -631,7 +665,9 @@ namespace Infrastructure.Services
                 DisplayName = "Guarantees",
                 FieldType = FieldType.Double,
                 Values = "0",
-                Screen = "Screen3"
+                Screen = "Screen3",
+                Required = false,
+                UniqueId = "guarantees"
             });
 
             return metaDataList;
