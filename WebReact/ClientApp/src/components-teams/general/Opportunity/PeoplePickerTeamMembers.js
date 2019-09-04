@@ -139,7 +139,7 @@ export class PeoplePickerTeamMembers extends Component {
         if (!items || !items.length || items.length === 0) {
             return false;
         }
-        return items.filter(item => item.primaryText === persona.primaryText).length > 0;
+        return items.filter(item => item.text === persona.text).length > 0;
     }
 
     // Handler for when text is entered into the picker control.
@@ -147,7 +147,7 @@ export class PeoplePickerTeamMembers extends Component {
     _onFilterChanged(filterText, items) {
         if (this._peopleList) {
             return filterText ? this._peopleList.concat(this._searchResults)
-                .filter(item => item.primaryText.toLowerCase().indexOf(filterText.toLowerCase()) === 0)
+                .filter(item => item.text.toLowerCase().indexOf(filterText.toLowerCase()) === 0)
                 .filter(item => !this._listContainsPersona(item, items)) : [];
         }
     }
@@ -189,7 +189,7 @@ export class PeoplePickerTeamMembers extends Component {
         let message = 'Query loading. Please try again.';
         if (!this.state.isLoadingPeople) {
             const people = this._peopleList.map((p) => {
-                return `\n${p.primaryText}`;
+                return `\n${p.text}`;
             });
             message = people.toString();
         }
@@ -223,14 +223,12 @@ export class PeoplePickerTeamMembers extends Component {
                     pickerSuggestionsProps={{
                         suggestionsHeaderText: 'Team Members',
                         noResultsFoundText: 'No results found',
-                        searchForMoreText: 'Search',
                         loadingText: 'Loading pictures...',
                         isLoading: this.state.isLoadingPics
                     }}
-                    getTextFromItem={(persona) => persona.primaryText}
+                    getTextFromItem={(persona) => persona.text}
                     onEmptyInputFocus={this.onEmptyInputFocusHandler.bind(this)}
                     onChange={this.props.onChange}
-                    onGetMoreResults={this._onGetMoreResults.bind(this)}
                     className='ms-PeoplePicker normalPicker'
                     key='normal-people-picker'
                     itemLimit={this.props.itemLimit ? this.props.itemLimit : '1'}

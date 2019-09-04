@@ -166,6 +166,7 @@ export class NewOpportunityOthers extends Component {
     render() {
 
         let selectedUsers = this.getSelectedUsers();
+        let hasMetadata = this.metaData.length > 0;
         let loanOfficerADName =  <Trans>loanOfficer</Trans>; //TODO from appsettings
         if(this.state.teamMembers.length>0){
             if(this.state.teamMembers[0].userRoles.length>0){
@@ -175,16 +176,18 @@ export class NewOpportunityOthers extends Component {
 
         let defaultTemplateAvailable = this.state.templateList.some(name=>name.defaultTemplate);
         return (
-            <div>
-                <div className='ms-Grid'>
-                    <div className='ms-grid-row'>
-                        <h3 className="pageheading"><Trans>opportunityProperties</Trans></h3>
-                        <div className='ms-lg12 ibox-content pb20'>
-                            {this._rendermetaData()}
+                <div>
+                {
+                    hasMetadata === false ? null :
+                    <div className='ms-Grid'>
+                        <div className='ms-grid-row'>
+                            <h3 className="pageheading"><Trans>opportunityProperties</Trans></h3>
+                            <div className='ms-lg12 ibox-content pb20'>
+                                {this._rendermetaData()}
+                            </div>
                         </div>
                     </div>
-                </div>
-
+                }
                 {
                     defaultTemplateAvailable ? null :             
                         <div className='ms-Grid'>
