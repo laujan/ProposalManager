@@ -620,13 +620,7 @@ if($deploys)
     # Include MS Teams helper
     . .\CreateMSTeam.ps1
     
-    if($MFA)
-    {
-        Write-Information "Enter your credentials for creating the MS Team: $TeamName"
-        $credential = Get-Credential
-    }
-
-    Create-NewTeam -TeamName $TeamName -Credential $credential
+    Create-NewTeam -TeamName $TeamName -Credential $credential -MFA $MFA
     
     $adminConsentUrl = "https://login.microsoftonline.com/common/adminconsent?client_id=$($appRegistration.AppId)&state=12345&redirect_uri=$applicationUrl"
 
