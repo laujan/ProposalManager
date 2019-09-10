@@ -257,7 +257,9 @@ function New-PMTeamsAddInManifest {
         [Parameter(Mandatory = $true)]
         [string]$AppDomain,
         [Parameter(Mandatory = $false)]
-        [string]$BotId
+        [string]$BotId,
+        [Parameter(Mandatory = $false)]
+        [string]$TeamName
     )
     process {
         Write-Information "Creating teams add-in package..."
@@ -269,7 +271,8 @@ function New-PMTeamsAddInManifest {
                     Replace('<addInId>', (New-Guid).ToString()).
                     Replace('<webAppUrl>', $AppUrl).
                     Replace('<botId>', $BotId).
-                    Replace('<webDomain>', $AppDomain)
+                    Replace('<webDomain>', $AppDomain).
+                    Replace('<pmTeamName>', $TeamName)
         if(Get-Item ProposalManager -ErrorAction SilentlyContinue)
         {
             rd ProposalManager -Recurse

@@ -629,7 +629,7 @@ if($deploys)
 
 if($registers)
 {
-    New-PMTeamsAddInManifest -AppUrl $applicationUrl -AppDomain $applicationDomain -BotId $botRegistration.AppId
+    New-PMTeamsAddInManifest -AppUrl $applicationUrl -AppDomain $applicationDomain -BotId $botRegistration.AppId -TeamName $TeamName
     .\ProposalManager.zip
 }
 

@@ -8,7 +8,7 @@ function Create-NewTeam
             [Parameter(Mandatory = $false)]
             [pscredential]$Credential,
             [Parameter(Mandatory = $false)]
-            [switch]$MFA
+            [bool]$MFA
          )   
   Process
     {

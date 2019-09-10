@@ -15,8 +15,8 @@
     "outline": "outline.png"
   },
   "name": {
-    "short": "Proposal Manager",
-    "full": "Proposal Manager Tab Add-in for Microsoft Teams"
+    "short": "<pmTeamName>",
+    "full": "<pmTeamName> Tab Add-in for Microsoft Teams"
   },
   "description": {
     "short": "Empower banking with Proposal Manager tool.",
@@ -33,13 +33,6 @@
     }
   ],
   "bots": [
-    {
-      "botId": "<botId>",
-      "scopes": [
-        "personal",
-        "team"
-      ]
-    }
   ],
   "permissions": [
     "identity",
