@@ -1,45 +1,52 @@
 {
-  "$schema": "https://statics.teams.microsoft.com/sdk/v1.2/manifest/MicrosoftTeams.schema.json",
-  "manifestVersion": "1.2",
-  "version": "1.0.0",
-  "id": "<addInId>",
-  "packageName": "com.microsoft.proposalmanager",
-  "developer": {
-    "name": "Microsoft",
-    "websiteUrl": "<webAppUrl>/",
-    "privacyUrl": "<webAppUrl>/tab/privacy",
-    "termsOfUseUrl": "<webAppUrl>/tab/termsofuse"
-  },
-  "icons": {
-    "color": "color.png",
-    "outline": "outline.png"
-  },
-  "name": {
-    "short": "<pmTeamName>",
-    "full": "<pmTeamName> Tab Add-in for Microsoft Teams"
-  },
-  "description": {
-    "short": "Empower banking with Proposal Manager tool.",
-    "full": "Empower banking with Proposal Manager tool."
-  },
-  "accentColor": "#FFFFFF",
-  "configurableTabs": [
-    {
-      "configurationUrl": "<webAppUrl>/tab/config?channelName={channelName}&teamName={teamName}&groupId={groupId}&channelId={channelId}&loginHint={loginHint}&locale={locale}",
-      "canUpdateConfiguration": true,
-      "scopes": [
-        "team"
-      ]
-    }
-  ],
-  "bots": [
-  ],
-  "permissions": [
-    "identity",
-    "messageTeamMembers"
-  ],
-  "validDomains": [
-    "<webDomain>",
-    "login.microsoftonline.com"
-  ]
+	"$schema": "https://statics.teams.microsoft.com/sdk/v1.2/manifest/MicrosoftTeams.schema.json",
+	"manifestVersion": "1.5",
+	"version": "1.0.0",
+	"id": "<addInId>",
+	"packageName": "com.microsoft.proposalmanager",
+	"developer": {
+		"name": "Microsoft",
+		"websiteUrl": "<webAppUrl>/",
+		"privacyUrl": "<webAppUrl>/tab/privacy",
+		"termsOfUseUrl": "<webAppUrl>/tab/termsofuse"
+	},
+	"icons": {
+		"color": "color.png",
+		"outline": "outline.png"
+	},
+	"name": {
+		"short": "<pmTeamName>",
+		"full": "<pmTeamName> Tab Add-in for Microsoft Teams"
+	},
+	"description": {
+		"short": "Empower banking with Proposal Manager tool.",
+		"full": "Empower banking with Proposal Manager tool."
+	},
+	"accentColor": "#FFFFFF",
+	"configurableTabs": [
+		{
+			"configurationUrl": "<webAppUrl>/tab/config?channelName={channelName}&teamName={teamName}&groupId={groupId}&channelId={channelId}&loginHint={loginHint}&locale={locale}",
+			"canUpdateConfiguration": true,
+			"scopes": [
+				"team"
+			]
+		}
+	],
+	"bots": [
+		{
+			"botId": "<botId>",
+			"scopes": [
+				"personal",
+				"team"
+			]
+		}
+	],
+	"permissions": [
+		"identity",
+		"messageTeamMembers"
+	],
+	"validDomains": [
+		"<webDomain>",
+		"login.microsoftonline.com"
+	]
 }
