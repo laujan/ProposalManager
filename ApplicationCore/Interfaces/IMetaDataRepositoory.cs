@@ -6,12 +6,13 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using ApplicationCore.Entities;
+using Newtonsoft.Json.Linq;
 
 namespace ApplicationCore.Interfaces
 {
     public interface IMetaDataRepository
     {
-        Task<StatusCodes> CreateItemAsync(MetaData entity, string requestId = "");
+        Task<JObject> CreateItemAsync(MetaData entity, string requestId = "");
 
         Task<StatusCodes> UpdateItemAsync(MetaData entity, string requestId = "");
 

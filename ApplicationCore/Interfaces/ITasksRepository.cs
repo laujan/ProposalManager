@@ -6,12 +6,13 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using ApplicationCore.Entities;
+using Newtonsoft.Json.Linq;
 
 namespace ApplicationCore.Interfaces
 {
     public interface ITasksRepository
     {
-        Task<StatusCodes> CreateItemAsync(Tasks entity, string requestId = "");
+        Task<JObject> CreateItemAsync(Tasks entity, string requestId = "");
 
         Task<StatusCodes> UpdateItemAsync(Tasks entity, string requestId = "");
 

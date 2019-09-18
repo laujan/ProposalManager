@@ -38,7 +38,7 @@ namespace Infrastructure.Services
             _cache = memoryCache;
         }
 
-        public async Task<StatusCodes> CreateItemAsync(Permission entity, string requestId = "")
+        public async Task<JObject> CreateItemAsync(Permission entity, string requestId = "")
         {
             _logger.LogInformation($"RequestId: {requestId} - PermissionRepo_CreateItemAsync called.");
 
@@ -58,13 +58,13 @@ namespace Infrastructure.Services
                 dynamic itemJson = new JObject();
                 itemJson.fields = itemFieldsJson;
 
-                await _graphSharePointAppService.CreateListItemAsync(siteList, itemJson.ToString(), requestId);
+                var result = await _graphSharePointAppService.CreateListItemAsync(siteList, itemJson.ToString(), requestId);
 
                 _logger.LogInformation($"RequestId: {requestId} - PermissionRepo_CreateItemAsync finished creating SharePoint list item.");
 
                 await SetCacheAsync(requestId);
 
-                return StatusCodes.Status201Created;
+                return result;
 
             }
             catch (Exception ex)

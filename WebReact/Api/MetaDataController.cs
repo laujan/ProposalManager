@@ -95,19 +95,9 @@ namespace WebReact.Api
                     return BadRequest(errorResponse);
                 }
 
-                var resultCode = await _metaDataService.CreateItemAsync(modelObject, requestId);
+                var result = await _metaDataService.CreateItemAsync(modelObject, requestId);
 
-                if (resultCode != ApplicationCore.StatusCodes.Status201Created)
-                {
-                    _logger.LogError($"RequestID:{requestId} - MetaData_Create error: {resultCode.Name}");
-                    var errorResponse = JsonErrorResponse.BadRequest($"MetaData_Create error: {resultCode.Name}", requestId);
-
-                    return BadRequest(errorResponse);
-                }
-
-                //var location = "/MetaData/Create/new"; // TODO: Get the id from the results but need to wire from factory to here
-
-                return Ok(resultCode);// Created(location, $"RequestId: {requestId} - MetaData created.");
+                return new CreatedResult(result.SelectToken("id").ToString(), null);
             }
             catch (Exception ex)
             {

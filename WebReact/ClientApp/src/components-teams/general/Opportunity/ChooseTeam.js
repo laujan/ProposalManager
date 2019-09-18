@@ -426,7 +426,11 @@ export class ChooseTeam extends Component {
                                             <div className='ms-Grid-col ms-sm12 ms-md12 ms-lg10 TeamsBGnew pb15'>
                                                 {
                                                     this.state.isFinalizeTeam ?
-                                                        <Spinner size={SpinnerSize.small} label={<Trans>finalizingTeam</Trans>} ariaLive='assertive' className="pull-right p-5" />
+                                                        <div className='overlay on'>
+                                                            <div className='overlayModal'>
+                                                                <Spinner size={SpinnerSize.small} label={<Trans>finalizingTeam</Trans>} className='savingSpinner pull-right p-5' />
+                                                            </div>
+                                                        </div>
                                                         : ""
                                                 }
                                                 {
@@ -503,7 +507,11 @@ export class ChooseTeam extends Component {
                                         <div className='ms-Grid-col ms-sm12 ms-md6 ms-lg5 '>
                                             {
                                                 this.state.isfileUpload ?
-                                                    <Spinner size={SpinnerSize.small} ariaLive='assertive' className="pull-right p-5" />
+                                                    <div className='overlay on'>
+                                                        <div className='overlayModal'>
+                                                            <Spinner size={SpinnerSize.small} className='savingSpinner pull-right p-5' label='Uploading file' />
+                                                        </div>
+                                                    </div>
                                                     : ""
                                             }
 

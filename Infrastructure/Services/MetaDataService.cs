@@ -32,7 +32,7 @@ namespace Infrastructure.Services
             _metaDataRepository = metaDataRepository;
         }
 
-        public async Task<StatusCodes> CreateItemAsync(MetaDataModel modelObject, string requestId = "")
+        public async Task<JObject> CreateItemAsync(MetaDataModel modelObject, string requestId = "")
         {
             _logger.LogInformation($"RequestId: {requestId} - MetaData_CreateItemAsync called.");
 
@@ -41,11 +41,7 @@ namespace Infrastructure.Services
             {
                 var entityObject = MapToEntity(modelObject, requestId);
 
-                var result = await _metaDataRepository.CreateItemAsync(entityObject, requestId);
-
-                Guard.Against.NotStatus201Created(result, "Metadata_CreateItemAsync", requestId);
-
-                return result;
+                return await _metaDataRepository.CreateItemAsync(entityObject, requestId);
             }
             catch (Exception ex)
             {

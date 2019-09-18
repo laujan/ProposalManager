@@ -3,23 +3,22 @@
 //
 // Licensed under the MIT license. See LICENSE file in the solution root folder for full license information
 
-using System;
-using System.Collections.Generic;
-using System.Text;
-using ApplicationCore.Authorization;
 using ApplicationCore;
-using Infrastructure.Services;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using ApplicationCore.Interfaces;
-using ApplicationCore.Helpers;
 using ApplicationCore.Artifacts;
-using System.Threading.Tasks;
-using ApplicationCore.Helpers.Exceptions;
+using ApplicationCore.Authorization;
 using ApplicationCore.Entities;
-using System.Linq;
+using ApplicationCore.Helpers;
+using ApplicationCore.Helpers.Exceptions;
+using ApplicationCore.Interfaces;
+using Infrastructure.Services;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Infrastructure.Authorization
 {
@@ -30,7 +29,6 @@ namespace Infrastructure.Authorization
         private readonly IPermissionRepository _permissionRepository;
 
         private readonly IUserContext _userContext;
-        private IMemoryCache _cache;
         private bool _overrdingAccess;
         private readonly string _clientId;
         public AuthorizationService(
@@ -49,7 +47,6 @@ namespace Infrastructure.Authorization
             _roleRepository = roleRepository;
             _permissionRepository = permissionRepository;
             _userContext = userContext;
-            _cache = cache;
             _overrdingAccess = false;
 
             var azureOptions = new AzureAdOptions();
@@ -63,7 +60,7 @@ namespace Infrastructure.Authorization
             var currentUserPermissionList = new List<Permission>();
             var roleList = new List<Role>();
 
-            var currentUser = (_userContext.User.Claims).ToList().Find(x => x.Type == "preferred_username")?.Value;
+            var currentUser = (_userContext.User.Claims).ToList().Find(x => x.Type.Equals("preferred_username", StringComparison.OrdinalIgnoreCase))?.Value;
 
             if (!(string.IsNullOrEmpty(currentUser)))
             {
@@ -72,32 +69,25 @@ namespace Infrastructure.Authorization
 
                 roleList = (await _roleRepository.GetAllAsync(requestId)).ToList();
 
-                currentUserPermissionList = (from curroles in selectedUserProfile.Fields.UserRoles
-                                             from roles in roleList
-                                             where curroles.DisplayName == roles.DisplayName
-                                             select roles.Permissions).SelectMany(x => x).ToList();
+                currentUserPermissionList = selectedUserProfile.Fields.UserRoles
+                       .Join(roleList, current => current.DisplayName, role => role.DisplayName, (current, role) => role)
+                       .SelectMany(x => x.Permissions).ToList();
             }
             else
             {
-                var aud = (_userContext.User.Claims).ToList().Find(x => x.Type == "aud")?.Value;
-                var azp = (_userContext.User.Claims).ToList().Find(x => x.Type == "azp")?.Value;
+                var aud = (_userContext.User.Claims).SingleOrDefault(x => x.Type.Equals("aud", StringComparison.OrdinalIgnoreCase))?.Value;
+                var azp = (_userContext.User.Claims).SingleOrDefault(x => x.Type.Equals("azp", StringComparison.OrdinalIgnoreCase))?.Value;
 
                 if (azp == _clientId)
                 {
-                    roleList = (await _roleRepository.GetAllAsync(requestId)).
-                        Where(x => x.AdGroupName == $"aud_{aud}").ToList();
-                    currentUserPermissionList = (from rolemapping in roleList
-                                                 select rolemapping.Permissions).SelectMany(x => x).ToList();
+                    currentUserPermissionList = (await _roleRepository.GetAllAsync(requestId))
+                        .Where(x => x.AdGroupName.Equals($"aud_{aud}", StringComparison.OrdinalIgnoreCase)).SelectMany(x => x.Permissions).ToList();
                 }else
                     return StatusCodes.Status401Unauthorized;
 
             }
-            bool check = false;
-            foreach(var userPermission in currentUserPermissionList)
-            {
-                if(userPermission.Name == Access.Administrator.ToString())
-                    check = true;
-            }
+
+            bool check = currentUserPermissionList.Any(x => x.Name.Equals(Access.Administrator.ToString(), StringComparison.OrdinalIgnoreCase));
 
             //throw an exception if the user doesnt have admin access.
             if (!check)
@@ -134,10 +124,9 @@ namespace Infrastructure.Authorization
 
                     var selectedUserProfile = await _userProfileRepository.GetItemByUpnAsync(currentUser, requestId);
                     roleList = (await _roleRepository.GetAllAsync(requestId)).ToList();
-                    currentUserPermissionList = (from curroles in selectedUserProfile.Fields.UserRoles
-                                                 from roles in roleList
-                                                 where curroles.DisplayName == roles.DisplayName
-                                                 select roles.Permissions).SelectMany(x => x).ToList();
+                    currentUserPermissionList = selectedUserProfile.Fields.UserRoles
+                        .Join(roleList, current => current.DisplayName, role => role.DisplayName, (current, role) => role)
+                        .SelectMany(x => x.Permissions).ToList();
                 }
                 else
                 {
@@ -146,17 +135,16 @@ namespace Infrastructure.Authorization
 
                     if (azp == _clientId)
                     {
-                        roleList = (await _roleRepository.GetAllAsync(requestId)).
-                            Where(x => x.AdGroupName == $"aud_{aud}").ToList();
-                        currentUserPermissionList = (from rolemapping in roleList
-                                                     select rolemapping.Permissions).SelectMany(x => x).ToList();
+                        currentUserPermissionList = (await _roleRepository.GetAllAsync(requestId))
+                            .Where(x => x.AdGroupName.Equals($"aud_{aud}", StringComparison.OrdinalIgnoreCase))
+                            .SelectMany(x => x.Permissions).ToList();
                     }
                     else
                         return StatusCodes.Status401Unauthorized;
 
                 }
 
-                if (currentUserPermissionList.Any(curnt_per => permissionsRequested.Any(req_per => req_per.Name.ToLower() == curnt_per.Name.ToLower())))
+                if (currentUserPermissionList.Any(curnt_per => permissionsRequested.Any(req_per => req_per.Name.Equals(curnt_per.Name, StringComparison.OrdinalIgnoreCase))))
                     return StatusCodes.Status200OK;
                 else
                     return StatusCodes.Status401Unauthorized;
@@ -223,13 +211,10 @@ namespace Infrastructure.Authorization
                         break;
                 }
 
-                //toLower
-                permissionsNeeded = (await _permissionRepository.GetAllAsync(requestId)).ToList().
-                    //Where(x => list.Any(x.Name.Contains)).ToList();
-                    Where(permissions => list.Any(req_per => req_per.ToLower() == permissions.Name.ToLower())).ToList();
-                var result = await CheckAccessAsync(permissionsNeeded, requestId);
+                permissionsNeeded = (await _permissionRepository.GetAllAsync(requestId))
+                    .Where(permissions => list.Any(req_per => req_per.Equals(permissions.Name, StringComparison.OrdinalIgnoreCase))).ToList();
 
-                return result;
+                return await CheckAccessAsync(permissionsNeeded, requestId);
             }
             catch (Exception ex)
             {
@@ -247,8 +232,8 @@ namespace Infrastructure.Authorization
 
                 if (StatusCodes.Status200OK == await CheckAccessFactoryAsync(access, requestId))
                 {
-                    var currentUser = (_userContext.User.Claims).ToList().Find(x => x.Type == "preferred_username")?.Value;
-                    if (!(opportunity.Content.TeamMembers).ToList().Any(teamMember => teamMember.Fields.UserPrincipalName == currentUser))
+                    var currentUser = (_userContext.User.Claims).SingleOrDefault(x => x.Type.Equals("preferred_username", StringComparison.OrdinalIgnoreCase))?.Value;
+                    if (!(opportunity.Content.TeamMembers).ToList().Any(teamMember => teamMember.Fields.UserPrincipalName.Equals(currentUser, StringComparison.OrdinalIgnoreCase)))
                     {
                         // This user is not having any write permissions, so he won't be able to update
                         _logger.LogError($"RequestId: {requestId} - CheckAccessInOpportunityAsync current user: {currentUser} AccessDeniedException");

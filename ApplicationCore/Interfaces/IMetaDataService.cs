@@ -8,12 +8,13 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using ApplicationCore.Models;
 using ApplicationCore.ViewModels;
+using Newtonsoft.Json.Linq;
 
 namespace ApplicationCore.Interfaces
 {
     public interface IMetaDataService
     {
-        Task<StatusCodes> CreateItemAsync(MetaDataModel modelObject, string requestId = "");
+        Task<JObject> CreateItemAsync(MetaDataModel modelObject, string requestId = "");
 
         Task<StatusCodes> UpdateItemAsync(MetaDataModel modelObject, string requestId = "");
 

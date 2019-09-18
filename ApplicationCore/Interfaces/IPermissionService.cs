@@ -4,16 +4,15 @@
 // Licensed under the MIT license. See LICENSE file in the solution root folder for full license information
 
 using ApplicationCore.Models;
-using System;
+using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace ApplicationCore.Interfaces
 {
     public interface IPermissionService
     {
-        Task<StatusCodes> CreateItemAsync(PermissionModel modelObject, string requestId = "");
+        Task<JObject> CreateItemAsync(PermissionModel modelObject, string requestId = "");
 
         Task<StatusCodes> DeleteItemAsync(string id, string requestId = "");
 

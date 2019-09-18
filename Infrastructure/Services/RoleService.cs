@@ -16,6 +16,7 @@ using ApplicationCore.Helpers;
 using ApplicationCore.Models;
 using ApplicationCore.Entities;
 using ApplicationCore.Helpers.Exceptions;
+using Newtonsoft.Json.Linq;
 
 namespace Infrastructure.Services
 {
@@ -34,7 +35,7 @@ namespace Infrastructure.Services
             _rolesRepository = rolesRepository;
             this.userProfileRepository = userProfileRepository;
         }
-        public async Task<StatusCodes> CreateItemAsync(RoleModel modelObject, string requestId = "")
+        public async Task<JObject> CreateItemAsync(RoleModel modelObject, string requestId = "")
         {
             _logger.LogInformation($"RequestId: {requestId} - RolesSvc_CreateItemAsync called.");
 
@@ -46,7 +47,13 @@ namespace Infrastructure.Services
 
                 var result = await _rolesRepository.CreateItemAsync(entityObject, requestId);
 
-                Guard.Against.NotStatus201Created(result, "RolesSvc_CreateItemAsync", requestId);
+                _logger.LogInformation($"Permission created: {result}");
+
+                userProfileRepository.CleanCache();
+                _logger.LogInformation("Cleaned user profile cache");
+
+                _rolesRepository.CleanCache();
+                _logger.LogInformation("Cleaned role cache");
 
                 _logger.LogInformation($"Permission created: {modelObject}");
 

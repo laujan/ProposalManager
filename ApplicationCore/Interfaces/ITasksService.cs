@@ -8,12 +8,13 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using ApplicationCore.Models;
 using ApplicationCore.ViewModels;
+using Newtonsoft.Json.Linq;
 
 namespace ApplicationCore.Interfaces
 {
     public interface ITasksService
     {
-        Task<StatusCodes> CreateItemAsync(TasksModel modelObject, string requestId = "");
+        Task<JObject> CreateItemAsync(TasksModel modelObject, string requestId = "");
 
         Task<StatusCodes> UpdateItemAsync(TasksModel modelObject, string requestId = "");
 

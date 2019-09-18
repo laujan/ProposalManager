@@ -8,12 +8,13 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using ApplicationCore.Models;
 using ApplicationCore.ViewModels;
+using Newtonsoft.Json.Linq;
 
 namespace ApplicationCore.Interfaces
 {
     public interface IRoleService
     {
-        Task<StatusCodes> CreateItemAsync(RoleModel modelObject, string requestId = "");
+        Task<JObject> CreateItemAsync(RoleModel modelObject, string requestId = "");
 
         Task<StatusCodes> UpdateItemAsync(RoleModel modelObject, string requestId = "");
 

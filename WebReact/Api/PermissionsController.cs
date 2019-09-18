@@ -66,19 +66,9 @@ namespace WebReact.Api
                     return BadRequest(errorResponse);
                 }
 
-                var resultCode = await _permissionService.CreateItemAsync(modelObject, requestId);
+                JObject result = await _permissionService.CreateItemAsync(modelObject, requestId);
 
-                if (resultCode != ApplicationCore.StatusCodes.Status201Created)
-                {
-                    _logger.LogError($"RequestID:{requestId} - Permission_Create error: {resultCode.Name}");
-                    var errorResponse = JsonErrorResponse.BadRequest($"Permission_Create error: {resultCode.Name}", requestId);
-
-                    return BadRequest(errorResponse);
-                }
-
-                var location = "/Role/Create/new"; // TODO: Get the id from the results but need to wire from factory to here
-
-                return Created(location, $"RequestId: {requestId} - Role created.");
+                return new CreatedResult(result.SelectToken("id").ToString(), null);
             }
             catch (Exception ex)
             {

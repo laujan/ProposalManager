@@ -323,10 +323,11 @@ i18n.use(LanguageDetector).init({
                 "Create": "Create",
                 "SetOnBehalfToken": "Set Authentication Token",
                 "tasks": "Tasks",
-                "tasksAddedSuccess": "Tasks added successfully.",
-                "tasksUpdatedSuccess": "Tasks updated successfully.",
-                "tasksDeletedSuccess": "Tasks deleted successfully.",
-                "tasksCannotbeEmpty": "Task can not be empty.",
+                "tasksAddedSuccess": "The Task was added.",
+                "tasksUpdatedSuccess": "The Task was updated.",
+                "tasksDeletedSuccess": "The Task was deleted.",
+                "tasksCannotbeEmpty": "The Task name cannot be empty.",
+                "tasksExist": "The Task name already exists.",
                 "itemsNotFound": "Items not found.",
                 "template": "Template",
                 "selectTemplate": "Select Template",
@@ -357,7 +358,8 @@ i18n.use(LanguageDetector).init({
                 "useTheWebapp": "use the web app",
                 "toContinueStepsMSTeams": "To continue, proceed with the following steps:",
                 "continueStep1": "- Upload Proposal Manager add-in to the Teams app store",
-                "continueStep2": "- Access the General Proposal Manager team created at the time of setup and add the add-in"
+                "continueStep2": "- Access the General Proposal Manager team created at the time of setup and add the add-in",
+                "required": "Required"
             }
         },
         es: {
@@ -699,7 +701,8 @@ i18n.use(LanguageDetector).init({
                 "useTheWebapp": "usar la aplicación web",
                 "toContinueStepsMSTeams": "Para continuar, proceda con los siguientes pasos:",
                 "continueStep1": "- Cargue el complemento Proposal Manager en la tienda de aplicaciones Teams",
-                "continueStep2": "- Acceda al equipo del Gestor de propuestas general creado en el momento de la configuración y agregue el complemento"
+                "continueStep2": "- Acceda al equipo del Gestor de propuestas general creado en el momento de la configuración y agregue el complemento",
+                "required": "Requerido"
             }
         },
         ja: {
@@ -753,7 +756,8 @@ i18n.use(LanguageDetector).init({
                 "collateralAmount": "担保額",
                 "guarantees": "保証",
                 "riskRating": "リスク評価",
-                "loanOfficer": "融資担当者"
+                "loanOfficer": "融資担当者",
+                "required": "Required"
             }
         }
     },

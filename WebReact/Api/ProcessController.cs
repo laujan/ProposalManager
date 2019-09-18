@@ -90,19 +90,9 @@ namespace WebReact.Api
                     return BadRequest(errorResponse);
                 }
 
-                var resultCode = await _processService.CreateItemAsync(modelObject, requestId);
+                var result = await _processService.CreateItemAsync(modelObject, requestId);
 
-                if (resultCode != ApplicationCore.StatusCodes.Status201Created)
-                {
-                    _logger.LogError($"RequestID:{requestId} - Process_Create error: {resultCode.Name}");
-                    var errorResponse = JsonErrorResponse.BadRequest($"Process_Create error: {resultCode.Name}", requestId);
-
-                    return BadRequest(errorResponse);
-                }
-
-                var location = "/Process/Create/new";
-
-                return Created(location, $"RequestId: {requestId} - Process created.");
+                return new CreatedResult(result.SelectToken("id").ToString(), null);
             }
             catch (Exception ex)
             {

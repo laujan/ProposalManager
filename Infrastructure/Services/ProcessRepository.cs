@@ -36,7 +36,7 @@ namespace Infrastructure.Services
             _graphSharePointAppService = graphSharePointAppService;
         }
 
-        public async Task<StatusCodes> CreateItemAsync(ProcessesType process, string requestId = "")
+        public async Task<JObject> CreateItemAsync(ProcessesType process, string requestId = "")
         {
             _logger.LogInformation($"RequestId: {requestId} - ProcessRepository_CreateItemAsync called.");
 
@@ -67,11 +67,11 @@ namespace Infrastructure.Services
                     ListId = _appOptions.ProcessListId
                 };
 
-                await _graphSharePointAppService.CreateListItemAsync(processSiteList, processJson.ToString(), requestId);
+                var result = await _graphSharePointAppService.CreateListItemAsync(processSiteList, processJson.ToString(), requestId);
 
                 _logger.LogInformation($"RequestId: {requestId} - processRepository_CreateItemAsync finished creating SharePoint List for process.");
 
-                return StatusCodes.Status201Created;
+                return result;
             }
             catch (Exception ex)
             {

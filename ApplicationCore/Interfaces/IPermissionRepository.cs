@@ -4,6 +4,7 @@
 // Licensed under the MIT license. See LICENSE file in the solution root folder for full license information
 
 using ApplicationCore.Entities;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -13,7 +14,7 @@ namespace ApplicationCore.Interfaces
 {
     public interface IPermissionRepository
     {
-        Task<StatusCodes> CreateItemAsync(Permission entity, string requestId = "");
+        Task<JObject> CreateItemAsync(Permission entity, string requestId = "");
 
         Task<StatusCodes> DeleteItemAsync(string id, string requestId = "");
 

@@ -212,7 +212,7 @@ export class OpportunityNotes extends Component {
                                             rows={6}
                                             value={this.state.addNotes}
                                             onChanged={(value) => this.handleChangeNewNotes(value)}
-
+                                            required={true}
                                         />
                                     </div>
 
@@ -222,7 +222,11 @@ export class OpportunityNotes extends Component {
                                     <div className=' ms-Grid-col ms-sm6 ms-md8 ms-lg10'>
                                         {
                                             newNotesLoading ?
-                                                <Spinner size={SpinnerSize.large} label='' ariaLive='assertive' className="pt15 pull-right" />
+                                                <div className='overlay on'>
+                                                    <div className='overlayModal'>
+                                                        <Spinner size={SpinnerSize.large} className='pt15 pull-right savingSpinner' label='Saving data' />
+                                                    </div>
+                                                </div>
                                                 : ""
                                         }
                                         {

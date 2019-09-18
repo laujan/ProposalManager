@@ -51,6 +51,7 @@ export class MetaData extends Component {
                             id={'txtDisplayName' + item.id}
                             value={item.displayName}
                             onBlur={(e) => this.onBlurColName(e, item, "displayName")}
+                            required={true}
                         />
                     );
                 }
@@ -137,6 +138,26 @@ export class MetaData extends Component {
                             id={'txtScreen' + item.id}
                             value={item.screen ? item.screen : ""}
                             onBlur={(e) => this.onBlurColName(e, item, "screen")}
+                            required={true}
+                        />
+                    );
+                }
+            },
+            {
+                key: 'column5',
+                name: <Trans>required</Trans>,
+                headerClassName: 'ms-List-th browsebutton',
+                className: 'docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg8',
+                fieldName: 'screen',
+                minWidth: 70,
+                maxWidth: 70,
+                isRowHeader: true,
+                onRender: (item) => {
+                    return (
+                        <Checkbox id={'chkCompleted' + item.id}
+                            onChange={(e) => this.onBlurColName(e, item, "required")}
+                            ariaDescribedBy={'descriptionID'}
+                            checked={item.required}
                         />
                     );
                 }
@@ -300,24 +321,41 @@ export class MetaData extends Component {
     }
 
     async deleteRow(item) {
-        this.apiService.callApi('MetaData', 'DELETE', { id: item.id })
-            .then(async (response) => {
-                if (response.ok) {
-                    await this.getMetaDataList();
-                    
-                    this.setMessage(false, true, MessageBarType.success, "Meta data deleted successfully.");
-                } else {
-                    throw new Error("Meta data delete failed.");
-                }
-            })
-            .catch(error => {
-                this.setState({ isUpdate: false });
+        let items = this.state.items; 
+        if (item.id && item.id.length > 0) {
+            if (!window.confirm("Do you want to delete the item?")) {
+                return;
+            }
 
-                return false;
-            })
-            .finally(() => {
-                this.setState({ currentItem: this.schema });
-            });
+            this.setState({ isUpdate: true });
+            items = items.filter(p => p.id !== item.id);
+            await this.apiService.callApi('MetaData', 'DELETE', { id: item.id })
+                .then(async (response) => {
+                    if (response.ok) {
+                        this.setMessage(false, true, MessageBarType.success, "Metadata deleted successfully.");
+                    } else {
+                        throw new Error("Metadata delete failed.");
+                    }
+                })
+                .catch(error => {
+                    this.setMessage(false, true, MessageBarType.error, error);
+                    return false;
+                });
+        }
+        else {
+            items = items.reduce((result, element) => {
+                if (element.displayName !== item.displayName) {
+                    result.push(element);
+                }
+                else if (element.id !== item.id) {
+                    result.push(element);
+                }
+
+                return result;
+            }, []);
+        }
+
+        this.setState({ currentItem: this.schema, items: items, isUpdate: false });
     }
 
     setMessage(isUpdate, isUpdateMsg, MessageBarType, MessagebarText) {
@@ -356,30 +394,36 @@ export class MetaData extends Component {
     }
 
     onBlurTxtName(e, item) {
-        this.setState({ isModelUpdate: true });
-
         let value = e.target.value;
-        let currentItem = JSON.parse(JSON.stringify(this.state.currentItem));
-        let items = JSON.parse(JSON.stringify(this.state.items));
+        let currentItem = this.state.currentItem;
+        let items = this.state.items;
         this.logService.log("MetaData_onBlurTxtName : ", currentItem , item ,value);
-        if(value){
+        if (value) {
             try {
                 //Checking item is already present
-                if (this.checkDropOptionValueIsAlreadyExist(value)) return;
+                if (this.checkDropOptionValueIsAlreadyExist(value))
+                {
+                    this.setMessage(false, true, MessageBarType.error, <Trans>optionValueAlreadyExist</Trans>);
+                    return;
+                }
+
                 currentItem.values.forEach((c) => {
                     if (c.id === item.id) {
                         c.name = value;
                         c.id = item.id;
                     }
                 });
-                
-            } catch (error) {
+
+            }
+            catch (error) {
                 this.logService.log(error.message);
-                this.setMessage(false, true, MessageBarType.error, error.message);    
-            } finally {
+                this.setMessage(false, true, MessageBarType.error, error.message);
+            }
+            finally {
                 if (currentItem.id.length === 0) {
                     items[items.length - 1] = currentItem;
-                } else {
+                }
+                else {
                     let index = items.findIndex(obj => obj.id === currentItem.id);
                     if (index !== -1) {
                         items[index] = currentItem;
@@ -390,7 +434,6 @@ export class MetaData extends Component {
                 });
             }
         }
-
     }
 
     checkDropOptionValueIsAlreadyExist(value) {
@@ -418,7 +461,6 @@ export class MetaData extends Component {
         });
     }
 
-
     renderDropdownOptionsList(columns, isCompactMode, selDpItem) {
         let items = selDpItem.values;
         this.logService.log("Metadata_renderDropdownOptionsList items : ", items);
@@ -441,8 +483,8 @@ export class MetaData extends Component {
     }
 
     onBlurColName(e, item, colName) {
-        let items = JSON.parse(JSON.stringify(this.state.items));
-        let currentItem = item.id === this.state.currentItem.id ? JSON.parse(JSON.stringify(this.state.currentItem)) : item;
+        let items = this.state.items;
+        let currentItem = item.id === this.state.currentItem.id ? this.state.currentItem : item;
         
         let trackFlag = false;
         switch (colName.toLowerCase()) {
@@ -493,23 +535,41 @@ export class MetaData extends Component {
     }
 
     async saveRow(e, item) {
+        if (item.displayName.length === 0) {
+            this.setMessage(false, true, MessageBarType.error, "You must enter a Display Name.");
+            return;
+        }
+
+        if (item.fieldType.name.length === 0) {
+            this.setMessage(false, true, MessageBarType.error, "You must select a Field Type.");
+            return;
+        }
+
+        if (item.screen.length === 0) {
+            this.setMessage(false, true, MessageBarType.error, "You must enter a Screen.");
+            return;
+        }
+
         let dispSuccessMsg = "";
         if (item.id.length === 0) {
-            dispSuccessMsg = "Meta data added successfully.";
+            dispSuccessMsg = "Metadata added successfully.";
             await this.addOrUpdateMetaData(item, "POST", dispSuccessMsg);
         } else if (item.id.length > 0) {
-            dispSuccessMsg = "Meta data updated successfully.";
+            dispSuccessMsg = "Metadata updated successfully.";
             await this.addOrUpdateMetaData(item, "PATCH", dispSuccessMsg);
         }
-        
     }
 
-
     async addOrUpdateMetaData(metaDataItem, methodType, dispSuccessMsg) {
+        this.setState({ isUpdate: true });
         this.apiService.callApi('MetaData', methodType, { body: JSON.stringify(metaDataItem) })
             .then(async (response) => {
                 if (response.ok) {
-                    await this.getMetaDataList();
+
+                    if (methodType === "POST") {
+                        let newId = response.headers.get("location");
+                        metaDataItem.id = newId;
+                    }
 
                     this.setMessage(false, true, MessageBarType.success, dispSuccessMsg);
                 } else {
@@ -523,7 +583,7 @@ export class MetaData extends Component {
                 this.setMessage(false, true, MessageBarType.error, dispSuccessMsg);
             })
             .finally(() => {                
-                this.setState({ currentItem: this.schema });
+                this.setState({ currentItem: this.schema, isUpdate: false });
             });
     }
 
@@ -555,20 +615,24 @@ export class MetaData extends Component {
                     </div>
                     <div className='ms-Grid-row'>
                         <div className='ms-Grid-col ms-sm12 ms-md12 ms-lg12'>
+                            {
+                                this.state.isUpdateMsg ?
+                                    <MessageBar
+                                        messageBarType={this.state.MessageBarType}
+                                        isMultiline={false}
+                                    >
+                                        {this.state.MessagebarText}
+                                    </MessageBar>
+                                    : ""
+                            }
                             <div className='ms-BasicSpinnersExample p-10'>
                                 {
                                     this.state.isUpdate ?
-                                        <Spinner size={SpinnerSize.large} ariaLive='assertive' />
-                                        : ""
-                                }
-                                {
-                                    this.state.isUpdateMsg ?
-                                        <MessageBar
-                                            messageBarType={this.state.MessageBarType}
-                                            isMultiline={false}
-                                        >
-                                            {this.state.MessagebarText}
-                                        </MessageBar>
+                                        <div className='overlay on'>
+                                            <div className='overlayModal'>
+                                                <Spinner size={SpinnerSize.large} className='savingSpinner' label='Saving data' />
+                                            </div>
+                                        </div>
                                         : ""
                                 }
                             </div>
@@ -611,7 +675,11 @@ export class MetaData extends Component {
                                             <div className='ms-BasicSpinnersExample p-10'>
                                                 {
                                                     this.state.isModelUpdate ?
-                                                        <Spinner size={SpinnerSize.large} ariaLive='assertive' />
+                                                        <div className='overlay on'>
+                                                            <div className='overlayModal'>
+                                                                <Spinner size={SpinnerSize.large} className='savingSpinner' label='Saving data' />
+                                                            </div>
+                                                        </div>
                                                         : ""
                                                 }
                                                 {

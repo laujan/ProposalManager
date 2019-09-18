@@ -213,7 +213,7 @@ export class NewOpportunity extends Component {
                                 formatDate={this._onFormatDate}
                                 parseDateFromString={this._onParseDateFromString}
                                 minDate={new Date()}
-                                isRequired={false}
+                                isRequired={metaDataObj.required}
                             />
                         </div>);
                         break;
@@ -230,6 +230,7 @@ export class NewOpportunity extends Component {
                                     value={dropvalue}
                                     options={metaDataObj.values.map(x=>{return {'key':x.id,'text':x.name}})}
                                     defaultSelectedKey={metaDataObj.values.map(x => { if (x.name === dropvalue) return x.id; })}
+                                    isRequired={metaDataObj.required}
                                     componentRef=''
                                 onChanged={(e) => this.onChangeDropDown(e, id)}
                                 />
@@ -240,10 +241,11 @@ export class NewOpportunity extends Component {
                         let textItem = this.opportunity.metaDataFields.find(x => x.uniqueId === id);
                         component = (<div className='docs-TextFieldExample ms-Grid-col ms-sm12 ms-md12 ms-lg6' key={metaDataObj.uniqueId}>
                                 <TextField
-                                    id={id}
-                                    value={textItem.values}
-                                    label={metaDataObj.displayName}
-                                    onBlur={(e) => this.onBlurProperty(e, textItem)}
+                                id={id}
+                                value={textItem.values}
+                                label={metaDataObj.displayName}
+                                onBlur={(e) => this.onBlurProperty(e, textItem)}
+                                required={metaDataObj.required}
                                 />
                             </div>);
                         break;

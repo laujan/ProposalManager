@@ -39,6 +39,7 @@ export class Tasks extends Component {
                             id={'txtTasks' + item.id}
                             value={item.name}
                             onBlur={(e) => this.onBlurTasksName(e, item)}
+                            required={true}
                         />
                     );
                 }
@@ -53,6 +54,7 @@ export class Tasks extends Component {
                 onRender: (item) => {
                     return (
                         <div>
+                            <IconButton iconProps={{ iconName: 'Save' }} onClick={e => this.addTask(item)} />&nbsp;&nbsp;&nbsp;
                             <IconButton iconProps={{ iconName: 'Delete' }} onClick={e => this.deleteRow(item)} />
                         </div>
                     );
@@ -77,21 +79,15 @@ export class Tasks extends Component {
 
     onAddRow() {
         let items = this.state.items.slice(0);
-        items.push({ id: items.length + 1, name: "" });
+        items.push({ id: "", name: "" });
         this.setState({ items });
     }
 
     checkTasksIsAlreadyPresent(value) {
-        let flag = false;
-        let items = this.state.items.slice(0);
-        let index = items.findIndex(tasks => tasks.name.toLowerCase() === value.toLowerCase());
-        if (index !== -1) {
-            this.setMessage(false, true, MessageBarType.error, <Trans>tasksExist</Trans>);
-            this.setState({ items });
+        let items = this.state.items;
+        let tasks = items.filter(x => x.name.toLowerCase() === value.toLowerCase());
 
-            flag = true;
-        }
-        return flag;
+        return tasks.length > 0;
     }
 
     tasksList(columns, isCompactMode, items) {
@@ -143,49 +139,80 @@ export class Tasks extends Component {
             });
     }
 
-    async onBlurTasksName(e, item) {
-        this.setState({ isUpdate: true });
-
-        let id = item.id;
-        let value = e.target.value;
-        let method = item.name.length === 0 ? "POST" : "PATCH";
-
-        // Checking item value is null
-        if (parseInt(value.length) === 0) {
+    async addTask(item) {
+        if (item.name.length === 0) {
             this.setMessage(false, true, MessageBarType.error, <Trans>tasksCannotbeEmpty</Trans>);
             return;
         }
 
-        //Checking item is already present
-        if (this.checkTasksIsAlreadyPresent(value)) return;
+        let items = this.state.items;
+        let tasks = items.filter(x => x.name.toLowerCase() === item.name.toLowerCase() && x.id !== item.id);
+
+        if (tasks.length > 0) {
+            this.setMessage(false, true, MessageBarType.error, <Trans>tasksExist</Trans>);
+            return;
+        }
+
+        this.setState({ isUpdate: true });
+
+        let id = item.id;
+        let value = item.name;
+        let method = item.id.length === 0 ? "POST" : "PATCH";
 
         this.apiService.callApi('Tasks', method, { body: JSON.stringify({ "id": id, "name": value }) })
             .then(async (response) => {
                 response = this.utils.handleErrors(response);
+
+                if (method === "POST") {
+                    let newId = response.headers.get("location");
+                    item.id = newId;
+                }
+
                 this.setMessage(false, true, MessageBarType.success, method === "PATCH" ? <Trans>tasksUpdatedSuccess</Trans> : <Trans>tasksAddedSuccess</Trans>);
             })
             .catch(error => {
                 this.setMessage(false, true, MessageBarType.error, <Trans>errorOoccuredPleaseTryAgain</Trans> + " " + error.message);
-            })
-            .finally(async () => {
-                await this.getTasks();
             });
     }
 
-    async deleteRow(tasksItem) {
-        this.setState({ isUpdate: true });
+    onBlurTasksName(e, item) {
+        let value = e.target.value;
+        item.name = value;
+    }
 
-        this.apiService.callApi('Tasks', "DELETE", { id: tasksItem.id })
-            .then(async (response) => {
-                response = this.utils.handleErrors(response);
-                this.setMessage(false, true, MessageBarType.success, <Trans>tasksDeletedSuccess</Trans>);
-            })
-            .catch(error => {
-                this.setMessage(false, true, MessageBarType.error, <Trans>errorOoccuredPleaseTryAgain</Trans> + " " + error.message);
-            })
-            .finally(async () => {
-                await this.getTasks();
-            });
+    async deleteRow(tasksItem) {
+        let items = this.state.items;
+        
+        if (tasksItem.id.length > 0) {
+            if (!window.confirm("Do you want to delete the the Task?")) {
+                return;
+            }
+            this.setState({ isUpdate: true });
+
+            items = items.filter(p => p.id !== tasksItem.id);
+            this.apiService.callApi('Tasks', "DELETE", { id: tasksItem.id })
+                .then(async (response) => {
+                    response = this.utils.handleErrors(response);
+                    this.setMessage(false, true, MessageBarType.success, <Trans>tasksDeletedSuccess</Trans>);
+                })
+                .catch(error => {
+                    this.setMessage(false, true, MessageBarType.error, <Trans>errorOoccuredPleaseTryAgain</Trans> + " " + error.message);
+                });
+        }
+        else {
+            items = items.reduce((result, element) => {
+                if (element.name !== tasksItem.name) {
+                    result.push(element);
+                }
+                else if (element.id !== tasksItem.id) {
+                    result.push(element);
+                }
+
+                return result;
+            }, []);
+        }
+
+        this.setState({ items: items });
     }
 
     render() {
@@ -215,7 +242,11 @@ export class Tasks extends Component {
                             <div className='ms-BasicSpinnersExample p-10'>
                                 {
                                     this.state.isUpdate ?
-                                        <Spinner size={SpinnerSize.large} ariaLive='assertive' />
+                                        <div className='overlay on'>
+                                            <div className='overlayModal'>
+                                                <Spinner size={SpinnerSize.large} className='savingSpinner' label='Saving data'/>
+                                            </div>
+                                        </div>
                                         : ""
                                 }
                                 {

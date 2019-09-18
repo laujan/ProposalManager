@@ -11,6 +11,7 @@ using ApplicationCore.Interfaces;
 using ApplicationCore.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -31,7 +32,7 @@ namespace Infrastructure.Services
             _tasksRepository = tasksRepository;
         }
 
-        public async Task<StatusCodes> CreateItemAsync(TasksModel modelObject, string requestId = "")
+        public async Task<JObject> CreateItemAsync(TasksModel modelObject, string requestId = "")
         {
             _logger.LogInformation($"RequestId: {requestId} - Tasks_CreateItemAsync called.");
 
@@ -41,11 +42,7 @@ namespace Infrastructure.Services
             {
                 var entityObject = MapToEntity(modelObject, requestId);
 
-                var result = await _tasksRepository.CreateItemAsync(entityObject, requestId);
-
-                Guard.Against.NotStatus201Created(result, "Tasks_CreateItemAsync", requestId);
-
-                return result;
+                return await _tasksRepository.CreateItemAsync(entityObject, requestId);
             }
             catch (Exception ex)
             {

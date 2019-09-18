@@ -44,7 +44,7 @@ namespace Infrastructure.Services
              };
         }
 
-        public async Task<StatusCodes> CreateItemAsync(MetaData entity, string requestId = "")
+        public async Task<JObject> CreateItemAsync(MetaData entity, string requestId = "")
         {
             _logger.LogInformation($"RequestId: {requestId} - MetaDataRepo_CreateItemAsync called.");
 
@@ -65,12 +65,11 @@ namespace Infrastructure.Services
                 dynamic itemJson = new JObject();
                 itemJson.fields = itemFieldsJson;
 
-                await _graphSharePointAppService.CreateListItemAsync(siteList, itemJson.ToString(), requestId);
+                var result = await _graphSharePointAppService.CreateListItemAsync(siteList, itemJson.ToString(), requestId);
 
                 _logger.LogInformation($"RequestId: {requestId} - MetaDataRepo_CreateItemAsync finished creating SharePoint list item.");
 
-                return StatusCodes.Status201Created;
-
+                return result;
             }
             catch (Exception ex)
             {

@@ -50,6 +50,7 @@ export class ProcessTypesList extends Component {
                             value={item.processStep}
                             onBlur={(e) => this.onChangeProperty(e, item, "processStep")}
                             disabled={item.isDisable}
+                            required={true}
                         />
                     );
                 }
@@ -73,6 +74,7 @@ export class ProcessTypesList extends Component {
                                 defaultSelectedKey={item.roleId}
                                 onChanged={(e) => this.onChangeProperty(e, item, "roleName")}
                                 disabled={item.isDisable}
+                                required={true}
                             />
                         </div>
                     );
@@ -246,6 +248,30 @@ export class ProcessTypesList extends Component {
     }
 
     async addRow(item) {
+        if (item.processStep.length === 0) {
+            this.setMessage(false, true, MessageBarType.error, "You must enter Process Step.");
+            return;
+        }
+
+        let items = this.state.items;
+
+        let processes = items.filter(x => x.processStep === item.processStep && x.id !== item.id);
+
+        if (processes.length > 0) {
+            this.setMessage(false, true, MessageBarType.error, "A Process Step with that name already exists.");
+            return;
+        }
+
+        if (item.roleId.length === 0) {
+            this.setMessage(false, true, MessageBarType.error, "You must select a Role Name.");
+            return;
+        }
+
+        if (item.processType.length === 0) {
+            this.setMessage(false, true, MessageBarType.error, "You must select a Process Type.");
+            return;
+        }
+
         this.logService.log("ProcessTypeList_log : addRow ", item);
         if (item.id.length === 0) {
             await this.addOrUpdateProcess(item, "POST");
@@ -305,31 +331,54 @@ export class ProcessTypesList extends Component {
         this.apiService.callApi('Process', methodType, { body: JSON.stringify(item) })
             .then(async (response) => {
                 this.utils.handleErrors(response);
+
+                if (methodType === "POST") {
+                    let newId = response.headers.get("location");
+                    item.id = newId;
+                }
+
                 this.setMessage(false, true, MessageBarType.success, methodType === "PATCH" ? <Trans>processTypeUpdatedSuccess</Trans> : <Trans>processTypeAddSuccess</Trans>);
             })
             .catch(error => {
                 this.setMessage(false, true, MessageBarType.error, <Trans>errorOoccuredPleaseTryAgain</Trans> + " " + error.message);
-            })
-            .finally(async () => {
-                this.setState({ item: this.schema });
-                await this.getProcessTypeList();
             });
     }
 
     async deleteRow(processTypeItem) {
-        this.setState({ isUpdate: true });
 
-        this.apiService.callApi('Process', 'DELETE', { id: processTypeItem.id })
-            .then(async (response) => {
-                this.utils.handleErrors(response);
-                this.setMessage(false, true, MessageBarType.success, <Trans>processTypeDeletedSuccess</Trans>);
-            })
-            .catch (error => {
-                this.setMessage(false, true, MessageBarType.error, <Trans>errorOoccuredPleaseTryAgain</Trans> + " " + error.message);
-            })
-            .finally(async () => {
-                await this.getProcessTypeList();
-            });
+        let items = this.state.items;
+
+        if (processTypeItem.id.length > 0) {
+            if (!window.confirm("Do you want to delete the the Process Type?")) {
+                return;
+            }
+
+            this.setState({ isUpdate: true });
+
+            items = items.filter(p => p.id !== processTypeItem.id);
+            this.apiService.callApi('Process', 'DELETE', { id: processTypeItem.id })
+                .then(async (response) => {
+                    this.utils.handleErrors(response);
+                    this.setMessage(false, true, MessageBarType.success, <Trans>processTypeDeletedSuccess</Trans>);
+                })
+                .catch(error => {
+                    this.setMessage(false, true, MessageBarType.error, <Trans>errorOoccuredPleaseTryAgain</Trans> + " " + error.message);
+                });
+        }
+        else {
+            items = items.reduce((result, element) => {
+                if (element.processStep !== processTypeItem.processStep) {
+                    result.push(element);
+                }
+                else if (element.id !== processTypeItem.id) {
+                    result.push(element);
+                }
+
+                return result;
+            }, []);
+        }
+
+        this.setState({ items: items });
     }
 
     createRowItem() {
@@ -369,7 +418,11 @@ export class ProcessTypesList extends Component {
                             <div className='ms-BasicSpinnersExample p-10'>
                                 {
                                     this.state.isUpdate ?
-                                        <Spinner size={SpinnerSize.large} ariaLive='assertive' />
+                                        <div className='overlay on'>
+                                            <div className='overlayModal'>
+                                                <Spinner size={SpinnerSize.large} className='savingSpinner' label='Saving data' />
+                                            </div>
+                                        </div>
                                         : ""
                                 }
                                 {

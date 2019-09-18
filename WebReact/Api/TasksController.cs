@@ -64,19 +64,9 @@ namespace WebReact.Api
                     return BadRequest(errorResponse);
                 }
 
-                var resultCode = await _tasksService.CreateItemAsync(modelObject, requestId);
+                JObject result = await _tasksService.CreateItemAsync(modelObject, requestId);
 
-                if (resultCode != ApplicationCore.StatusCodes.Status201Created)
-                {
-                    _logger.LogError($"RequestID:{requestId} - Tasks_Create error: {resultCode.Name}");
-                    var errorResponse = JsonErrorResponse.BadRequest($"Tasks_Create error: {resultCode.Name}", requestId);
-
-                    return BadRequest(errorResponse);
-                }
-
-                var location = "/Tasks/Create/new"; // TODO: Get the id from the results but need to wire from factory to here
-
-                return Created(location, $"RequestId: {requestId} - Tasks created.");
+                return new CreatedResult(result.SelectToken("id").ToString(), null);
             }
             catch (Exception ex)
             {

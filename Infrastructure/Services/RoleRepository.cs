@@ -53,7 +53,7 @@ namespace Infrastructure.Services
             _cache.Remove(RoleCacheKey);
         }
 
-        public async Task<StatusCodes> CreateItemAsync(Role entity, string requestId = "")
+        public async Task<JObject> CreateItemAsync(Role entity, string requestId = "")
         {
             _logger.LogInformation($"RequestId: {requestId} - RolesRepo_CreateItemAsync called.");
 
@@ -86,11 +86,11 @@ namespace Infrastructure.Services
                 itemFieldsJson.Permissions = JsonConvert.SerializeObject(entity.Permissions, Formatting.Indented);
                 itemJson.fields = itemFieldsJson;
 
-                await _graphSharePointAppService.CreateListItemAsync(siteList, itemJson.ToString(), requestId);
+                var result = await _graphSharePointAppService.CreateListItemAsync(siteList, itemJson.ToString(), requestId);
 
                 _logger.LogInformation($"RequestId: {requestId} - RolesRepo_CreateItemAsync finished creating SharePoint list item.");
 
-                return StatusCodes.Status201Created;
+                return result;
 
             }
             catch (Exception ex)

@@ -11,6 +11,7 @@ using ApplicationCore.Interfaces;
 using ApplicationCore.ViewModels;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -36,7 +37,7 @@ namespace Infrastructure.Services
             _roleRepository = roleRepository;
         }
 
-        public async Task<StatusCodes> CreateItemAsync(ProcessTypeViewModel modelObject, string requestId = "")
+        public async Task<JObject> CreateItemAsync(ProcessTypeViewModel modelObject, string requestId = "")
         {
             _logger.LogInformation($"RequestId: {requestId} - Process_CreateItemAsync called.");
 
@@ -48,7 +49,6 @@ namespace Infrastructure.Services
 
                 var result = await _processRepository.CreateItemAsync(entityObject, requestId);
 
-                Guard.Against.NotStatus201Created(result, "Process_CreateItemAsync", requestId);
                 //Granular Access Start
                 try
                 {
@@ -72,7 +72,6 @@ namespace Infrastructure.Services
                     _logger.LogError($"RequestId: {requestId} - Process_CreateItemAsync Service Exception, error while creating permissions: {ex}");
                 }
                 //Granular Access End
-
 
                 //Adding new role
                 try

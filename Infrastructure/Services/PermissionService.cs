@@ -4,19 +4,19 @@
 // Licensed under the MIT license. See LICENSE file in the solution root folder for full license information
 
 
+using ApplicationCore;
+using ApplicationCore.Entities;
+using ApplicationCore.Helpers;
+using ApplicationCore.Helpers.Exceptions;
+using ApplicationCore.Interfaces;
+using ApplicationCore.Models;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using ApplicationCore.Interfaces;
-using ApplicationCore;
-using ApplicationCore.Helpers;
-using ApplicationCore.Models;
-using ApplicationCore.Entities;
-using ApplicationCore.Helpers.Exceptions;
-
 
 namespace Infrastructure.Services
 {
@@ -32,7 +32,7 @@ namespace Infrastructure.Services
             Guard.Against.Null(permissionRepository, nameof(permissionRepository));
             _permissionRepository = permissionRepository;
         }
-        public async Task<StatusCodes> CreateItemAsync(PermissionModel modelObject, string requestId = "")
+        public async Task<JObject> CreateItemAsync(PermissionModel modelObject, string requestId = "")
         {
             _logger.LogInformation($"RequestId: {requestId} - PermissionSVC_CreateItemAsync called.");
 
@@ -42,11 +42,7 @@ namespace Infrastructure.Services
             {
                 var entityObject = MapToEntity(modelObject, requestId);
 
-                var result = await _permissionRepository.CreateItemAsync(entityObject, requestId);
-
-                Guard.Against.NotStatus201Created(result, "PermissionSvc_CreateItemAsync", requestId);
-
-                return result;
+                return await _permissionRepository.CreateItemAsync(entityObject, requestId);
             }
             catch (Exception ex)
             {

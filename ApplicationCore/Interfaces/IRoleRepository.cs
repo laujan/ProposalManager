@@ -6,12 +6,13 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using ApplicationCore.Entities;
+using Newtonsoft.Json.Linq;
 
 namespace ApplicationCore.Interfaces
 {
     public interface IRoleRepository
     {
-        Task<StatusCodes> CreateItemAsync(Role entity, string requestId = "");
+        Task<JObject> CreateItemAsync(Role entity, string requestId = "");
 
         Task<StatusCodes> UpdateItemAsync(Role entity, string requestId = "");
 

@@ -154,6 +154,7 @@ export class NewOpportunityOthers extends Component {
                                 label={metaDataObj.displayName}
                                 value={value.values}
                                 onBlur={(e) => this.onBlurProperty(e, value)}
+                                required={metaDataObj.required}
                                 />
                     </div>
                 );

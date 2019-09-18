@@ -38,6 +38,7 @@ export class Permissions extends Component {
                             id={'txtAdGroupName' + item.id}
                             value={item.adGroupName}
                             onBlur={(e) => this.onChangeProperty(e, item, "adGroupName")}
+                            required={true}
                         />
                     );
                 }
@@ -57,6 +58,7 @@ export class Permissions extends Component {
                             id={'txtRole' + item.id}
                             value={item.displayName}
                             onBlur={(e) => this.onChangeProperty(e, item, "displayName")}
+                            required={true}
                         />
                     );
                 }
@@ -142,8 +144,6 @@ export class Permissions extends Component {
             }
         ];
 
-        let rowCounter = 0;
-
         this.schema = {
             adGroupName: "",
             displayName: "",
@@ -154,7 +154,7 @@ export class Permissions extends Component {
 
         this.state = {
             items: [],
-            rowItemCounter: rowCounter,
+            rowItemCounter: 0,
             columns: columns,
             isCompactMode: false,
             loading: true,
@@ -270,6 +270,21 @@ export class Permissions extends Component {
             this.setMessage(false, true, MessageBarType.error, <Trans>adGroupNameExist</Trans>);
         }
 
+        if (item.adGroupName.length === 0) {
+            this.setMessage(false, true, MessageBarType.error, "You must enter a AD Group Name.");
+            return;
+        }
+
+        if (item.displayName.length === 0) {
+            this.setMessage(false, true, MessageBarType.error, "You must enter a Display Name.");
+            return;
+        }
+
+        if (item.permissions.length === 0) {
+            this.setMessage(false, true, MessageBarType.error, "You must select a Permission.");
+            return;
+        }
+
         if (item.id.length === 0) {
             await this.addOrUpdatePermission(item, "POST");
         } else if (item.id.length > 0) {
@@ -278,8 +293,8 @@ export class Permissions extends Component {
     }
 
     onChangeProperty(e, item, property) {
-        let items = JSON.parse(JSON.stringify(this.state.items));
-        let permissionItem = item.id === this.state.permissionItem.id ? JSON.parse(JSON.stringify(this.state.permissionItem)) : item;
+        let items = this.state.items;
+        let permissionItem = item.id === this.state.permissionItem.id ? this.state.permissionItem : item;
         let changeFlag = false;
 
         switch (property) {
@@ -356,16 +371,31 @@ export class Permissions extends Component {
     }
 
     deleteRow(item) {
-        this.setState({ isUpdate: true });
+        let items = this.state.items;        
 
-        let items = this.state.items;
-        if (item.id === "" || item.id.length === 0) {
-            items = items.filter(p => p.adGroupName !== item.adGroupName);
-            this.setState({ items: items, isUpdate: false });
-            return false;
-        } else {
+        // remove item from backend
+        if (item.id && item.id.length > 0) {
+            if (!window.confirm("Do you want to delete the item?")) {
+                return;
+            }
+
+            items = items.filter(p => p.id !== item.id);
             this.deletePermission(item);
         }
+        else {
+            items = items.reduce((result, element) => {
+                if (element.adGroupName !== item.adGroupName) {
+                    result.push(element);
+                }
+                else if (element.id !== item.id) {
+                    result.push(element);
+                }
+
+                return result;
+            }, []);
+        }
+
+        this.setState({ items: items });
     }
 
     async addOrUpdatePermission(permissionItem, methodType) {
@@ -374,8 +404,8 @@ export class Permissions extends Component {
         this.apiService.callApi('Roles', methodType, { body: JSON.stringify(permissionItem) })
             .then(async (response) => {
                 if (response.ok) {
-                    await this.loadAllPermissionData();
-
+                    let newId = response.headers.get("location");
+                    permissionItem.id = newId;
                     this.setMessage(false, true, MessageBarType.success, methodType === "POST" ? <Trans>permissionAddSuccess</Trans> : <Trans>permissionUpdatedSuccess</Trans>);
                 } else {
                     this.setMessage(false, true, MessageBarType.error, <Trans>errorOoccuredPleaseTryAgain</Trans>);
@@ -388,18 +418,19 @@ export class Permissions extends Component {
     }
 
     async deletePermission(permissionItem) {
+        this.setState({ isUpdate: true });
+
         this.apiService.callApi('Roles', "DELETE", { id: permissionItem.id })
             .then(async (response) => {
                 if (response.ok) {
-                    await this.loadAllPermissionData();
-
-                    this.setMessage(false, true, MessageBarType.success, <Trans>permissionDeletedSuccess</Trans>);
+                     this.setMessage(false, true, MessageBarType.success, <Trans>permissionDeletedSuccess</Trans>);
                 } else {
                     this.setMessage(false, true, MessageBarType.error, <Trans>errorOoccuredPleaseTryAgain</Trans>);
                 }
             })
             .catch(error => {
                 this.logService.log("deletePermission: ", error);
+                this.setMessage(false, true, MessageBarType.error, <Trans>errorOoccuredPleaseTryAgain</Trans>);
             });
     }
 
@@ -426,7 +457,7 @@ export class Permissions extends Component {
         const { columns, isCompactMode, items } = this.state;
         if (this.state.loading) {
             return (
-                <div className='ms-BasicSpinnersExample ibox-content pt15 '>
+                <div className='ms-BasicSpinnersExample ibox-content pt15'>
                     <Spinner size={SpinnerSize.large} label={<Trans>loading</Trans>} ariaLive='assertive' />
                 </div>
             );
@@ -451,7 +482,11 @@ export class Permissions extends Component {
                             <div className='ms-BasicSpinnersExample p-10'>
                                 {
                                     this.state.isUpdate ?
-                                        <Spinner size={SpinnerSize.large} ariaLive='assertive' />
+                                        <div className='overlay on'>
+                                            <div className='overlayModal'>
+                                                <Spinner size={SpinnerSize.large} className='savingSpinner' label='Saving data'/>
+                                            </div>
+                                        </div>
                                         : ""
                                 }
                                 {

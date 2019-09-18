@@ -22,7 +22,7 @@ namespace WebReact.Api
     [Authorize(AuthenticationSchemes = "AzureAdBearer")]
     public class RolesController : BaseApiController<RolesController>
     {
-        public readonly IRoleService _roleService;
+        private readonly IRoleService roleService;
 
         public RolesController(
             ILogger<RolesController> logger,
@@ -30,7 +30,7 @@ namespace WebReact.Api
             IRoleService roleService) : base(logger, appOptions)
         {
             Guard.Against.Null(roleService, nameof(roleService));
-            _roleService = roleService;
+            this.roleService = roleService;
         }
 
 
@@ -66,19 +66,9 @@ namespace WebReact.Api
                     return BadRequest(errorResponse);
                 }
 
-                var resultCode = await _roleService.CreateItemAsync(modelObject, requestId);
-
-                if (resultCode != ApplicationCore.StatusCodes.Status201Created)
-                {
-                    _logger.LogError($"RequestID:{requestId} - Role_Create error: {resultCode.Name}");
-                    var errorResponse = JsonErrorResponse.BadRequest($"Role_Create error: {resultCode.Name}", requestId);
-
-                    return BadRequest(errorResponse);
-                }
-
-                var location = "/Role/Create/new"; // TODO: Get the id from the results but need to wire from factory to here
-
-                return Created(location, $"RequestId: {requestId} - Role created.");
+                var result = await roleService.CreateItemAsync(modelObject, requestId);
+                var roleId = result.SelectToken("id").ToString();
+                return new CreatedResult(roleId, null);
             }
             catch (Exception ex)
             {
@@ -101,7 +91,7 @@ namespace WebReact.Api
                 return NotFound($"RequestID:{requestId} - Role_Delete Null name passed");
             }
 
-            var resultCode = await _roleService.DeleteItemAsync(id, requestId);
+            var resultCode = await roleService.DeleteItemAsync(id, requestId);
 
             if (resultCode != ApplicationCore.StatusCodes.Status204NoContent)
             {
@@ -122,7 +112,7 @@ namespace WebReact.Api
 
             try
             {
-                var modelList = (await _roleService.GetAllAsync(requestId)).ToList();
+                var modelList = (await roleService.GetAllAsync(requestId)).ToList();
                 Guard.Against.Null(modelList, nameof(modelList), requestId);
 
                 if (modelList.Count == 0)
@@ -174,7 +164,7 @@ namespace WebReact.Api
                     return BadRequest(errorResponse);
                 }
 
-                var resultCode = await _roleService.UpdateItemAsync(modelObject, requestId);
+                var resultCode = await roleService.UpdateItemAsync(modelObject, requestId);
 
                 if (resultCode != ApplicationCore.StatusCodes.Status200OK)
                 {

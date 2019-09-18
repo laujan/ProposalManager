@@ -37,7 +37,7 @@ namespace Infrastructure.Services
             services.GetRequiredService<IAuthorizationService>());
         }
 
-        public async Task<StatusCodes> CreateItemAsync(Tasks entity, string requestId = "")
+        public async Task<JObject> CreateItemAsync(Tasks entity, string requestId = "")
         {
             _logger.LogInformation($"RequestId: {requestId} - TasksRepo_CreateItemAsync called.");
 
@@ -61,7 +61,7 @@ namespace Infrastructure.Services
 
                 _logger.LogInformation($"RequestId: {requestId} - TasksRepo_CreateItemAsync finished creating SharePoint list item.");
 
-                return StatusCodes.Status201Created;
+                return result;
 
             }
             catch (Exception ex)
