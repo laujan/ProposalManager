@@ -16,7 +16,7 @@ namespace ApplicationCore.Interfaces
     {
         Task<ProcessTypeListViewModel> GetAllAsync(string requestId = "");
         Task<JObject> CreateItemAsync(ProcessTypeViewModel modelObject, string requestId = "");
-        Task<StatusCodes> UpdateItemAsync(ProcessTypeViewModel modelObject, string requestId = "");
-        Task<StatusCodes> DeleteItemAsync(string id, string requestId = "");
+        Task<JObject> UpdateItemAsync(ProcessTypeViewModel modelObject, string requestId = "");
+        Task<StatusCodes> DeleteItemAsync(ProcessTypeViewModel modelObject, string requestId = "");
     }
 }

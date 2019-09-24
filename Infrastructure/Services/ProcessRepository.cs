@@ -146,18 +146,18 @@ namespace Infrastructure.Services
             }
         }
 
-        public async Task<StatusCodes> UpdateItemAsync(ProcessesType process, string requestId = "")
+        public async Task<JObject> UpdateItemAsync(ProcessesType process, string requestId = "")
         {
             _logger.LogInformation($"RequestId: {requestId} - ProcessRepository_UpdateItemAsync called.");
 
             try
             {
                 await DeleteItemAsync(process.Id.ToString(), requestId);
-                await CreateItemAsync(process, requestId);
+                var result = await CreateItemAsync(process, requestId);
 
                 _logger.LogInformation($"RequestId: {requestId} - ProcessRepository_UpdateItemAsync finished updating SharePoint List for process.");
 
-                return StatusCodes.Status201Created;
+                return result;
             }
             catch (Exception ex)
             {

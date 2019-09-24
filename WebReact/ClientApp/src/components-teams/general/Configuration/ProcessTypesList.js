@@ -23,15 +23,6 @@ export class ProcessTypesList extends Component {
         this.apiService = this.props.apiService;
         this.logService = this.props.logService;
         this.authHelper = window.authHelper;
-        this.schema = {
-            "id": "",
-            "processStep": "",
-            "channel": "",
-            "processType": "",
-            "roleName": "",
-            "roleId": "",
-            "isDisable": false
-        };
 
         const columns = [
             {
@@ -136,7 +127,7 @@ export class ProcessTypesList extends Component {
             MessagebarText: "",
             MessageBarType: MessageBarType.success,
             isUpdateMsg: false,
-            item: this.schema,
+            item: this.createRowItem(),
             rolesList: []
         };
     }
@@ -197,7 +188,7 @@ export class ProcessTypesList extends Component {
     }
 
     onAddRow() {
-        let newItems = [];
+        let newItems = [];  
         newItems.push(this.createRowItem());
 
         let currentItems = this.state.items.concat(newItems);
@@ -282,7 +273,7 @@ export class ProcessTypesList extends Component {
 
     onChangeProperty(e, item, property) {
         let items = this.state.items;
-        let updatedItem = item.id.length === 0 ? this.state.item : item;
+        let updatedItem = item;
         let changeFlag = false;
 
         switch (property) {
@@ -332,10 +323,8 @@ export class ProcessTypesList extends Component {
             .then(async (response) => {
                 this.utils.handleErrors(response);
 
-                if (methodType === "POST") {
-                    let newId = response.headers.get("location");
-                    item.id = newId;
-                }
+                let newId = response.headers.get("location");
+                item.id = newId;
 
                 this.setMessage(false, true, MessageBarType.success, methodType === "PATCH" ? <Trans>processTypeUpdatedSuccess</Trans> : <Trans>processTypeAddSuccess</Trans>);
             })
@@ -356,7 +345,7 @@ export class ProcessTypesList extends Component {
             this.setState({ isUpdate: true });
 
             items = items.filter(p => p.id !== processTypeItem.id);
-            this.apiService.callApi('Process', 'DELETE', { id: processTypeItem.id })
+            this.apiService.callApi('Process', 'DELETE', { body: JSON.stringify(processTypeItem) })
                 .then(async (response) => {
                     this.utils.handleErrors(response);
                     this.setMessage(false, true, MessageBarType.success, <Trans>processTypeDeletedSuccess</Trans>);
@@ -382,15 +371,15 @@ export class ProcessTypesList extends Component {
     }
 
     createRowItem() {
-        this.schema.id = "";
-        this.schema.processStep = "";
-        this.schema.channel = "";
-        this.schema.roleName = "";
-        this.schema.processType = "";
-        this.schema.roleId = "";
-        this.schema.isDisable = false;
-
-        return this.schema;
+        return {
+            "id": "",
+            "processStep": "",
+            "channel": "",
+            "processType": "",
+            "roleName": "",
+            "roleId": "",
+            "isDisable": false
+        };
     }
 
     render() {

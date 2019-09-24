@@ -26,6 +26,7 @@ namespace Infrastructure.Services
     {
         private readonly GraphSharePointAppService _graphSharePointAppService;
         private IMemoryCache _cache;
+        private const string PermissionCacheKey = "PM_PermissionList";
 
         public PermissionRepository(
         ILogger<PermissionRepository> logger,
@@ -131,7 +132,7 @@ namespace Infrastructure.Services
                 }
                 else
                 {
-                    var isExist = _cache.TryGetValue("PM_PermissionList", out roleList);
+                    var isExist = _cache.TryGetValue(PermissionCacheKey, out roleList);
 
                     if (!isExist)
                     {
@@ -140,7 +141,7 @@ namespace Infrastructure.Services
                         var cacheEntryOptions = new MemoryCacheEntryOptions()
                             .SetAbsoluteExpiration(TimeSpan.FromMinutes(_appOptions.UserProfileCacheExpiration));
 
-                        _cache.Set("PM_PermissionList", roleList, cacheEntryOptions);
+                        _cache.Set(PermissionCacheKey, roleList, cacheEntryOptions);
                     }
                 }
 
@@ -192,12 +193,17 @@ namespace Infrastructure.Services
 
                 var cacheEntryOptions = new MemoryCacheEntryOptions()
                     .SetAbsoluteExpiration(TimeSpan.FromMinutes(_appOptions.UserProfileCacheExpiration));
-                _cache.Set("PM_PermissionList", permissionList, cacheEntryOptions);
+                _cache.Set(PermissionCacheKey, permissionList, cacheEntryOptions);
             }
             catch (Exception ex)
             {
                 _logger.LogError($"RequestId: {requestId} - Role_SetCahceAsync error: {ex}");
             }
+        }
+
+        public void CleanCache()
+        {
+            _cache.Remove(PermissionCacheKey);
         }
     }
 }

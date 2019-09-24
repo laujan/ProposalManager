@@ -103,19 +103,27 @@ namespace WebReact.Api
             }
         }
         [Authorize]
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(string id)
+        [HttpDelete]
+        public async Task<IActionResult> Delete([FromBody] JObject jsonObject)
         {
             var requestId = Guid.NewGuid().ToString();
             _logger.LogInformation($"RequestID:{requestId} - Delete called.");
 
-            if (String.IsNullOrEmpty(id))
+            if (jsonObject == null)
             {
-                _logger.LogError($"RequestID:{requestId} - Delete id == null.");
-                return NotFound($"RequestID:{requestId} - Delete Null ID passed");
+                _logger.LogError($"RequestID:{requestId} - Process_Create error: null");
+                var errorResponse = JsonErrorResponse.BadRequest($"Process_Create error: null", requestId);
+
+                return BadRequest(errorResponse);
             }
 
-            var resultCode = await _processService.DeleteItemAsync(id, requestId);
+            var modelObject = JsonConvert.DeserializeObject<ProcessTypeViewModel>(jsonObject.ToString(), new JsonSerializerSettings
+            {
+                MissingMemberHandling = MissingMemberHandling.Ignore,
+                NullValueHandling = NullValueHandling.Ignore
+            });
+
+            var resultCode = await _processService.DeleteItemAsync(modelObject, requestId);
 
             if (resultCode != ApplicationCore.StatusCodes.Status204NoContent)
             {
@@ -159,17 +167,9 @@ namespace WebReact.Api
                     return BadRequest(errorResponse);
                 }
 
-                var resultCode = await _processService.UpdateItemAsync(modelObject, requestId);
+                var result = await _processService.UpdateItemAsync(modelObject, requestId);
 
-                if (resultCode != ApplicationCore.StatusCodes.Status201Created)
-                {
-                    _logger.LogError($"RequestID:{requestId} - Process_Update error: {resultCode.Name}");
-                    var errorResponse = JsonErrorResponse.BadRequest($"Process_Update error: {resultCode.Name}", requestId);
-
-                    return BadRequest(errorResponse);
-                }
-
-                return NoContent();
+                return new CreatedResult(result.SelectToken("id").ToString(), null);
             }
             catch (Exception ex)
             {

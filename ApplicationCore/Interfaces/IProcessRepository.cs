@@ -14,7 +14,7 @@ namespace ApplicationCore.Interfaces
     {
         Task<IList<ProcessesType>> GetAllAsync(string requestId = "");
         Task<JObject> CreateItemAsync(ProcessesType modelObject, string requestId = "");
-        Task<StatusCodes> UpdateItemAsync(ProcessesType modelObject, string requestId = "");
+        Task<JObject> UpdateItemAsync(ProcessesType modelObject, string requestId = "");
         Task<StatusCodes> DeleteItemAsync(string id, string requestId = "");
     }
 }

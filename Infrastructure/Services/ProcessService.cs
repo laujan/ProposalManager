@@ -21,9 +21,9 @@ namespace Infrastructure.Services
 {
     public class ProcessService : BaseService<ProcessService>, IProcessService
     {
-        private readonly IProcessRepository _processRepository;
-        private readonly IPermissionRepository _permissionRepository;
-        private readonly IRoleRepository _roleRepository;
+        private readonly IProcessRepository processRepository;
+        private readonly IPermissionRepository permissionRepository;
+        private readonly IRoleRepository roleRepository;
         public ProcessService(
         ILogger<ProcessService> logger,
         IOptionsMonitor<AppOptions> appOptions,
@@ -32,9 +32,9 @@ namespace Infrastructure.Services
         IProcessRepository processRepository) : base(logger, appOptions)
         {
             Guard.Against.Null(processRepository, nameof(processRepository));
-            _processRepository = processRepository;
-            _permissionRepository = permissionRepository;
-            _roleRepository = roleRepository;
+            this.processRepository = processRepository;
+            this.permissionRepository = permissionRepository;
+            this.roleRepository = roleRepository;
         }
 
         public async Task<JObject> CreateItemAsync(ProcessTypeViewModel modelObject, string requestId = "")
@@ -47,7 +47,7 @@ namespace Infrastructure.Services
             {
                 var entityObject = MapToProcessEntity(modelObject, requestId);
 
-                var result = await _processRepository.CreateItemAsync(entityObject, requestId);
+                var result = await processRepository.CreateItemAsync(entityObject, requestId);
 
                 //Granular Access Start
                 try
@@ -64,8 +64,10 @@ namespace Infrastructure.Services
                         Id = string.Empty,
                         Name = $"{channelName}_ReadWrite"
                     };
-                    await _permissionRepository.CreateItemAsync(permissionReadObj, requestId);
-                    await _permissionRepository.CreateItemAsync(permissionReadWriteObj, requestId);
+                    await permissionRepository.CreateItemAsync(permissionReadObj, requestId);
+                    await permissionRepository.CreateItemAsync(permissionReadWriteObj, requestId);
+
+                    permissionRepository.CleanCache();
                 }
                 catch(Exception ex)
                 {
@@ -81,7 +83,7 @@ namespace Infrastructure.Services
                         Id = string.Empty,
                         DisplayName = modelObject.ProcessStep
                     };
-                    await _roleRepository.CreateItemAsync(roleObj, requestId);
+                    await roleRepository.CreateItemAsync(roleObj, requestId);
                 }
                 catch (Exception ex)
                 {
@@ -98,17 +100,54 @@ namespace Infrastructure.Services
             }
         }
 
-        public async Task<StatusCodes> DeleteItemAsync(string id, string requestId = "")
+        public async Task<StatusCodes> DeleteItemAsync(ProcessTypeViewModel modelObject, string requestId = "")
         {
             _logger.LogInformation($"RequestId: {requestId} - DeleteItemAsync called.");
-            Guard.Against.Null(id, nameof(id));
 
-            var result = await _processRepository.DeleteItemAsync(id, requestId);
+            Guard.Against.Null(modelObject, nameof(modelObject), requestId);
+            Guard.Against.NullOrEmpty(modelObject.Id, nameof(modelObject.Id), requestId);
 
-            Guard.Against.NotStatus204NoContent(result, "DeleteItemAsync", requestId);
+            var entityObject = MapToProcessEntity(modelObject, requestId);
 
-            return result;
-        }
+            // Remove associated permissions
+            try
+            {
+                var channelName = modelObject.Channel.Replace(" ", "").ToString();
+
+                var permissionReadObj = $"{channelName}_Read";
+
+                var permissionReadWriteObj = $"{channelName}_ReadWrite";
+
+                var permissions = await permissionRepository.GetAllAsync();
+
+                var permissionReadId = permissions.FirstOrDefault(x => x.Name.Equals(permissionReadObj, StringComparison.OrdinalIgnoreCase))?.Id;
+                var permissionReadWriteId = permissions.FirstOrDefault(x => x.Name.Equals(permissionReadWriteObj, StringComparison.OrdinalIgnoreCase))?.Id;
+
+                await permissionRepository.DeleteItemAsync(permissionReadId, requestId);
+                await permissionRepository.DeleteItemAsync(permissionReadWriteId, requestId);
+
+                permissionRepository.CleanCache();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"RequestId: {requestId} - Process_DeleteItemAsync Service Exception, error while deleting associated permissions: {ex}");
+                throw new ResponseException($"RequestId: {requestId} - DeleteItemAsync Service Exception: {ex}");
+            }
+
+            try {
+                var result = await processRepository.DeleteItemAsync(modelObject.Id, requestId);
+
+                Guard.Against.NotStatus204NoContent(result, "DeleteItemAsync", requestId);
+
+                return result;
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"RequestId: {requestId} - Process_DeleteItemAsync Service Exception, error while deleting process: {ex}");
+                throw new ResponseException($"RequestId: {requestId} - DeleteItemAsync Service Exception: {ex}");
+            }
+        }           
 
         public async Task<ProcessTypeListViewModel> GetAllAsync(string requestId = "")
         {
@@ -118,7 +157,7 @@ namespace Infrastructure.Services
             {
 
                 var processTypeListViewModel = new ProcessTypeListViewModel();
-                processTypeListViewModel.ItemsList = (await _processRepository.GetAllAsync(requestId)).Select(item => MapToProcessViewModel(item)).ToList();
+                processTypeListViewModel.ItemsList = (await processRepository.GetAllAsync(requestId)).Select(item => MapToProcessViewModel(item)).ToList();
 
                 if (processTypeListViewModel.ItemsList.Count == 0)
                 {
@@ -135,7 +174,7 @@ namespace Infrastructure.Services
             }
         }
 
-        public async Task<StatusCodes> UpdateItemAsync(ProcessTypeViewModel modelObject, string requestId = "")
+        public async Task<JObject> UpdateItemAsync(ProcessTypeViewModel modelObject, string requestId = "")
         {
             _logger.LogInformation($"RequestId: {requestId} - Process_UpdateAsync called.");
 
@@ -143,13 +182,40 @@ namespace Infrastructure.Services
             Guard.Against.NullOrEmpty(modelObject.ProcessStep, nameof(modelObject.ProcessStep), requestId);
             try
             {
-                var entityObject = MapToProcessEntity(modelObject, requestId);
+                try
+                {
+                    var processes = await processRepository.GetAllAsync();
 
-                var result = await _processRepository.UpdateItemAsync(entityObject, requestId);
+                    var oldProcess = processes.FirstOrDefault(x => x.Id == modelObject.Id);
 
-                Guard.Against.NotStatus201Created(result, "Process_CreateItemAsync", requestId);
+                    var channelName = oldProcess.Channel.Replace(" ", "").ToString();
 
-                return result;
+                    var permissionReadObj = $"{channelName}_Read";
+
+                    var permissionReadWriteObj = $"{channelName}_ReadWrite";
+
+                    var permissions = await permissionRepository.GetAllAsync();
+
+                    var permissionReadId = permissions.FirstOrDefault(x => x.Name.Equals(permissionReadObj, StringComparison.OrdinalIgnoreCase))?.Id;
+                    var permissionReadWriteId = permissions.FirstOrDefault(x => x.Name.Equals(permissionReadWriteObj, StringComparison.OrdinalIgnoreCase))?.Id;
+
+                    await permissionRepository.DeleteItemAsync(permissionReadId, requestId);
+                    await permissionRepository.DeleteItemAsync(permissionReadWriteId, requestId);
+
+                    permissionRepository.CleanCache();
+                }
+                catch (ArgumentException ex)
+                {
+                    throw ex;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError($"RequestId: {requestId} - Process_DeleteItemAsync Service Exception, error while deleting associated permissions: {ex}");
+                }
+
+                await processRepository.DeleteItemAsync(modelObject.Id, requestId);
+
+                return await CreateItemAsync(modelObject, requestId);
             }
             catch (Exception ex)
             {
@@ -160,7 +226,6 @@ namespace Infrastructure.Services
 
         private ProcessTypeViewModel MapToProcessViewModel(ProcessesType entity, string requestId = "")
         {
-
             try
             {
                 return new ProcessTypeViewModel

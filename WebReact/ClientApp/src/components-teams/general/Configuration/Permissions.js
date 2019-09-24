@@ -144,14 +144,6 @@ export class Permissions extends Component {
             }
         ];
 
-        this.schema = {
-            adGroupName: "",
-            displayName: "",
-            id: "",
-            permissions: [],
-            teamsMembership: { name: "Member", value: 0 }
-        };
-
         this.state = {
             items: [],
             rowItemCounter: 0,
@@ -165,7 +157,7 @@ export class Permissions extends Component {
             isUpdateMsg: false,
             roles: [],
             permissionTypes: [],
-            permissionItem: this.schema,
+            permissionItem: this.createRowItem(),
             isAdGroupNameError: false
         };
     }
@@ -294,7 +286,7 @@ export class Permissions extends Component {
 
     onChangeProperty(e, item, property) {
         let items = this.state.items;
-        let permissionItem = item.id === this.state.permissionItem.id ? this.state.permissionItem : item;
+        let permissionItem = item;
         let changeFlag = false;
 
         switch (property) {
@@ -355,18 +347,25 @@ export class Permissions extends Component {
     }
 
     createRowItem() {
-        return this.schema;
+        return {
+            adGroupName: "",
+            displayName: "",
+            id: "",
+            permissions: [],
+            teamsMembership: { name: "Member", value: 0 }
+        };
     }
 
     onAddRow() {
+        let newItem = this.createRowItem();
         let newItems = [];
-        newItems.push(this.createRowItem());
+        newItems.push(newItem);
 
         let currentItems = this.state.items.concat(newItems);
 
         this.setState({
             items: currentItems,
-            permissionItem: this.schema
+            permissionItem: newItem
         });
     }
 

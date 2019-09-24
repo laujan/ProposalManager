@@ -19,5 +19,6 @@ namespace ApplicationCore.Interfaces
         Task<StatusCodes> DeleteItemAsync(string id, string requestId = "");
 
         Task<IList<Permission>> GetAllAsync(string requestId = "");
+        void CleanCache();
     }
 }

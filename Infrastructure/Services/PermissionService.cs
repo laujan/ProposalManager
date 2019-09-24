@@ -42,7 +42,12 @@ namespace Infrastructure.Services
             {
                 var entityObject = MapToEntity(modelObject, requestId);
 
-                return await _permissionRepository.CreateItemAsync(entityObject, requestId);
+                var result = await _permissionRepository.CreateItemAsync(entityObject, requestId);
+
+                _permissionRepository.CleanCache();
+                _logger.LogInformation("Cleaned permission cache");
+
+                return result;
             }
             catch (Exception ex)
             {
@@ -61,6 +66,9 @@ namespace Infrastructure.Services
                 var result = await _permissionRepository.DeleteItemAsync(id, requestId);
 
                 Guard.Against.NotStatus204NoContent(result, $"PermissionSvc_DeleteItemAsync failed for id: {id}", requestId);
+
+                _permissionRepository.CleanCache();
+                _logger.LogInformation("Cleaned permission cache");
 
                 return result;
             }
