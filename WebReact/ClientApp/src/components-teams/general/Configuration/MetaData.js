@@ -27,14 +27,6 @@ export class MetaData extends Component {
         this.accessGranted = false;
         let rowCounter = 0;
 
-        this.schema = {
-            id: "",
-            displayName: "",
-            fieldType: { name: "", value: "" },
-            screen: "",
-            values: ""
-        };
-
         const columns = [
             {
                 key: 'column1',
@@ -253,7 +245,7 @@ export class MetaData extends Component {
             isModelUpdateMsg: "",
             modelMessagebarText: "",
             modelMessageBarType: MessageBarType.success,
-            currentItem:this.schema
+            currentItem: this.createRowItem()
         };
     }
 
@@ -308,7 +300,13 @@ export class MetaData extends Component {
     }
 
     createRowItem() {
-        return this.schema;
+        return {
+            id: "",
+            displayName: "",
+            fieldType: { name: "", value: "" },
+            screen: "",
+            values: ""
+        };
     }
 
     onAddRow() {
@@ -355,7 +353,7 @@ export class MetaData extends Component {
             }, []);
         }
 
-        this.setState({ currentItem: this.schema, items: items, isUpdate: false });
+        this.setState({ currentItem: this.createRowItem(), items: items, isUpdate: false });
     }
 
     setMessage(isUpdate, isUpdateMsg, MessageBarType, MessagebarText) {
@@ -583,7 +581,7 @@ export class MetaData extends Component {
                 this.setMessage(false, true, MessageBarType.error, dispSuccessMsg);
             })
             .finally(() => {                
-                this.setState({ currentItem: this.schema, isUpdate: false });
+                this.setState({ currentItem: this.createRowItem(), isUpdate: false });
             });
     }
 
